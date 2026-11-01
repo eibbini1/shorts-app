@@ -6,7 +6,34 @@ import { synthesize } from '../voice/VoiceProvider.js';
 import { renderOverlay, type OverlayItem } from './overlayRenderer.js';
 import { makeCaption, makeWordmark, ensureLuxuryFont } from './luxuryText.js';
 import { writeAmbientBed, writeSfxWav, type SfxCue } from './sfx.js';
-import type { StillsSpec } from './types.js';
+import type { StillsSpec, SceneTransition } from './types.js';
+
+const GOLD = '0xC9A24B';
+
+/** ffmpeg filter fragment (with trailing comma) applied at the START of a scene entered with this transition. */
+export function transitionIn(t: SceneTransition = 'fade'): string {
+  switch (t) {
+    case 'flash': return 'fade=t=in:st=0:d=0.14:color=white,';
+    case 'gold': return `fade=t=in:st=0:d=0.22:color=${GOLD},`;
+    case 'cut': return '';
+    case 'whip': return "gblur=sigma=48:sigmaV=0:steps=2:enable='lt(t,0.12)',";
+    case 'punch': return "eq=brightness='0.32*max(0,1-t/0.16)':eval=frame,";
+    default: return 'fade=t=in:st=0:d=0.28,';
+  }
+}
+
+/** Fragment applied at the END of the scene that precedes a scene entered with transition t. */
+export function transitionOut(t: SceneTransition = 'fade', dur: number): string {
+  const at = (d: number) => (dur - d).toFixed(2);
+  switch (t) {
+    case 'flash': return `fade=t=out:st=${at(0.14)}:d=0.14:color=white,`;
+    case 'gold': return `fade=t=out:st=${at(0.22)}:d=0.22:color=${GOLD},`;
+    case 'whip': return `gblur=sigma=48:sigmaV=0:steps=2:enable='gte(t,${(dur - 0.1).toFixed(2)})',`;
+    case 'cut':
+    case 'punch': return '';
+    default: return `fade=t=out:st=${at(0.28)}:d=0.28,`;
+  }
+}
 
 const W = 720;
 const H = 1280;
@@ -47,13 +74,14 @@ export async function assembleStills(specPath: string, repoRoot: string): Promis
     const z = { in: `1+0.2*on/${frames}`, out: `1.2-0.2*on/${frames}`, left: '1.14', right: '1.14' }[motion];
     const x = { in: 'iw/2-(iw/zoom/2)', out: 'iw/2-(iw/zoom/2)', left: `(iw-iw/zoom)*(1-on/${frames})`, right: `(iw-iw/zoom)*(on/${frames})` }[motion];
     const f = path.join(tmp, `s${i}.mp4`);
-    const fadeOutSt = (dur - 0.28).toFixed(2);
+    const inFx = i === 0 ? '' : transitionIn(sc.transition);
+    const outFx = last ? `fade=t=out:st=${(dur - 0.28).toFixed(2)}:d=0.28,` : transitionOut(spec.scenes[i + 1]!.transition, dur);
     await runFfmpeg([
       '-threads', '2', '-filter_threads', '1', '-filter_complex_threads', '1',
       '-loop', '1', '-framerate', String(fps), '-t', dur.toFixed(3), '-i', abs(sc.image), '-i', v0.audioFile,
       '-filter_complex',
       `[0:v]scale=1152:2048:force_original_aspect_ratio=increase,crop=1152:2048,zoompan=z='${z}':x='${x}':y='ih/2-(ih/zoom/2)':d=${frames}:s=${W}x${H}:fps=${fps},` +
-        `eq=contrast=1.07:saturation=1.1:gamma=0.97,vignette=PI/4.5,noise=alls=4:allf=t,${i === 0 ? '' : 'fade=t=in:st=0:d=0.28,'}fade=t=out:st=${fadeOutSt}:d=0.28,format=yuv420p[v];` +
+        `eq=contrast=1.07:saturation=1.1:gamma=0.97,vignette=PI/4.5,noise=alls=4:allf=t,${inFx}${outFx}format=yuv420p[v];` +
         `[1:a]${trim > 0 ? `atrim=start=${trim.toFixed(3)},asetpts=PTS-STARTPTS,` : ''}aresample=48000,aformat=channel_layouts=stereo,adelay=${Math.max(1, Math.round(lead * 1000))}:all=1,apad=whole_dur=${dur.toFixed(3)}[a]`,
       '-map', '[v]', '-map', '[a]', '-t', dur.toFixed(3),
       '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '17', '-r', String(fps), '-c:a', 'aac', '-ar', '48000', '-b:a', '192k', f,
@@ -90,7 +118,7 @@ export async function assembleStills(specPath: string, repoRoot: string): Promis
       });
       void gi;
     });
-    if (si > 0) cues.push({ t: sc.start - 0.12, kind: 'whoosh', gain: 0.22 });
+    if (si > 0 && spec.scenes[si]!.transition !== 'cut') cues.push({ t: sc.start - 0.12, kind: 'whoosh', gain: 0.22 });
   });
   if (spec.hookText) items.push({ start: 0, end: 2.4, bmp: makeWordmark(spec.hookText.toUpperCase(), 54), cx: W / 2, cy: 250, shake: false, static: true, fadeIn: 0.001, fadeOut: 0.3 });
   if (spec.kicker && !spec.hookText) items.push({ start: 0.3, end: 4.2, bmp: makeWordmark(spec.kicker.toUpperCase(), 25), cx: W / 2, cy: 175, shake: false, static: true, fadeIn: 0.6, fadeOut: 0.6 });

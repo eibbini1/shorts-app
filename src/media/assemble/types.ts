@@ -60,7 +60,13 @@ export interface StillsScene {
   /** Narration for this scene (voiced + captioned word by word). */
   text: string;
   motion?: 'in' | 'out' | 'left' | 'right';
+  /** How this scene is entered from the previous one. Default 'fade' (dip to black). */
+  transition?: SceneTransition;
 }
+
+/** fade = dip to black, flash = white flash, gold = gold dip, cut = hard cut (no whoosh), punch = hard cut with a brief brightness pop. */
+export type SceneTransition = 'fade' | 'flash' | 'gold' | 'cut' | 'punch' | 'whip';
+// whip = hard cut with a horizontal motion blur on the last 0.10 s of the outgoing scene and first 0.12 s of the incoming one.
 
 /** Luxury / documentary mode: stills + cinematic camera moves + ElevenLabs narration + gold captions. */
 export interface StillsSpec {
