@@ -1,0 +1,46 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/menu-cut-dessert/menu-cut-dessert-final.mp4",
+  "fps": 24,
+  "voice": {
+    "provider": "elevenlabs",
+    "speed": 1,
+    "stability": 0.45,
+    "style": 0.5
+  },
+  "kicker": "DESSERT",
+  "brand": {
+    "name": "Billionaire Bites",
+    "sub": "Taste the extraordinary"
+  },
+  "music": "ambient",
+  "scenes": [
+    {
+      "image": "storage/episodes/menu-long/photos/s23.jpg",
+      "text": "A $25,000 dessert, and the spoon is yours to keep. Worth it?",
+      "motion": "in"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s23.jpg",
+      "text": "Now the final course. The chef turns to the most famous luxury dessert in the world. It was served at Serendipity 3 in New York for twenty five thousand dollars, and it set a Guinness record.",
+      "motion": "in"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s24.jpg",
+      "text": "The goblet is lined with edible gold, and it sits on an eighteen karat gold bracelet with diamonds.",
+      "motion": "left"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s25.jpg",
+      "text": "You eat it with a gold spoon set with diamonds, and you get to keep it.",
+      "motion": "in"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s25.jpg",
+      "text": "Team dessert or team rent money? Comment your pick below.",
+      "motion": "out"
+    }
+  ],
+  "tightOpen": true,
+  "hookText": "$25,000 dessert"
+}

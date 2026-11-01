@@ -1,0 +1,157 @@
+{
+  "output": "storage/episodes/chicago-ep1/chicago-ep1-final.mp4",
+  "fps": 24,
+  "chip": "ABDUL ACROSS AMERICA  |  STOP 1: ILLINOIS",
+  "clips": [
+    {
+      "file": "storage/episodes/chicago-ep1/flow-export/Boy_looking_at_Chicago_skyline_1bce9d0a.mp4",
+      "punchInSec": 2.0833
+    },
+    {
+      "file": "storage/episodes/chicago-ep1/flow-export/Boy_notices_two_lost_kids_b0a3b65c.mp4"
+    },
+    {
+      "file": "storage/episodes/chicago-ep1/flow-export/Children_sharing_and_hugging_791e0363.mp4"
+    },
+    {
+      "file": "storage/episodes/chicago-ep1/flow-export/Children_sharing_pizza_in_restau…_1a9f9771.mp4"
+    },
+    {
+      "file": "storage/episodes/chicago-ep1/flow-export/Friends_playing_at_Millennium_Park_591fb6c5.mp4"
+    }
+  ],
+  "teaser": [
+    {
+      "clip": 3,
+      "at": 3.4,
+      "word": "ABDUL",
+      "color": "yellow"
+    },
+    {
+      "clip": 2,
+      "at": 6.3,
+      "word": "ACROSS",
+      "color": "cyan"
+    },
+    {
+      "clip": 4,
+      "at": 1.6,
+      "word": "AMERICA",
+      "color": "pink"
+    },
+    {
+      "clip": 0,
+      "at": 6.4,
+      "word": "CHICAGO!",
+      "color": "white"
+    }
+  ],
+  "events": [
+    {
+      "clip": 0,
+      "at": 0.1,
+      "dur": 2.4,
+      "kind": "word",
+      "text": "WHERE AM I?!",
+      "color": "yellow",
+      "size": 104,
+      "shake": true
+    },
+    {
+      "clip": 0,
+      "at": 2.5,
+      "dur": 2.8,
+      "kind": "stamp",
+      "text": "NAVY PIER, CHICAGO",
+      "sub": "Chicago, Illinois",
+      "color": "purple"
+    },
+    {
+      "clip": 0,
+      "at": 5.6,
+      "dur": 2.3,
+      "kind": "stamp",
+      "text": "WILLIS TOWER",
+      "sub": "110 floors tall!",
+      "color": "blue"
+    },
+    {
+      "clip": 1,
+      "at": 0.3,
+      "dur": 3,
+      "kind": "stamp",
+      "text": "NAVY PIER FERRIS WHEEL",
+      "sub": "Spins high over Lake Michigan",
+      "color": "teal"
+    },
+    {
+      "clip": 1,
+      "at": 4.2,
+      "dur": 3.1,
+      "kind": "word",
+      "text": "NEW FRIENDS?!",
+      "color": "pink",
+      "size": 96
+    },
+    {
+      "clip": 2,
+      "at": 0.4,
+      "dur": 3.8,
+      "kind": "word",
+      "text": "SHARING",
+      "color": "yellow",
+      "size": 112,
+      "line2": {
+        "text": "IS CARING!",
+        "color": "cyan"
+      },
+      "sparkle": true
+    },
+    {
+      "clip": 2,
+      "at": 5,
+      "dur": 2.7,
+      "kind": "word",
+      "text": "BEST FRIENDS!",
+      "color": "pink",
+      "size": 96,
+      "sparkle": true
+    },
+    {
+      "clip": 3,
+      "at": 0.3,
+      "dur": 3.3,
+      "kind": "stamp",
+      "text": "CHICAGO DEEP-DISH PIZZA",
+      "sub": "Cheesy veggie slice. Yum!",
+      "color": "orange"
+    },
+    {
+      "clip": 3,
+      "at": 4.2,
+      "dur": 3.2,
+      "kind": "word",
+      "text": "YUM!!",
+      "color": "yellow",
+      "size": 150
+    },
+    {
+      "clip": 4,
+      "at": 0.3,
+      "dur": 3.3,
+      "kind": "stamp",
+      "text": "CLOUD GATE (THE BEAN)",
+      "sub": "Millennium Park, Chicago",
+      "color": "red"
+    },
+    {
+      "clip": 4,
+      "at": 4.3,
+      "dur": 3.3,
+      "kind": "word",
+      "text": "SILLY REFLECTIONS!",
+      "color": "cyan",
+      "size": 76
+    }
+  ]
+}

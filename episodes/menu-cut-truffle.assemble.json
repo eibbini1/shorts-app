@@ -1,0 +1,46 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/menu-cut-truffle/menu-cut-truffle-final.mp4",
+  "fps": 24,
+  "voice": {
+    "provider": "elevenlabs",
+    "speed": 1,
+    "stability": 0.45,
+    "style": 0.5
+  },
+  "kicker": "TRUFFLE",
+  "brand": {
+    "name": "Billionaire Bites",
+    "sub": "Taste the extraordinary"
+  },
+  "music": "ambient",
+  "scenes": [
+    {
+      "image": "storage/episodes/menu-long/photos/s8.jpg",
+      "text": "You will never guess what this lump of dirt costs.",
+      "motion": "in"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s8.jpg",
+      "text": "Course two begins at night, in an Italian forest near Alba. Hunters rely on trained dogs to sniff out the white truffle, hidden among tree roots.",
+      "motion": "in"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s9.jpg",
+      "text": "Nobody has ever farmed it reliably. This ugly lump of dirt can cost more than gold, and its aroma fades within days.",
+      "motion": "out"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s10.jpg",
+      "text": "Did you already know? One giant white truffle once sold for over three hundred thousand dollars.",
+      "motion": "out"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s10.jpg",
+      "text": "Genius or scam? Drop your take below.",
+      "motion": "out"
+    }
+  ],
+  "tightOpen": true,
+  "hookText": "Dirt that costs thousands"
+}

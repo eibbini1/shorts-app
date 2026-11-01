@@ -1,0 +1,18 @@
+{
+  "video": "storage/episodes/menu-cut-saffron/menu-cut-saffron-final.mp4",
+  "thumbnails": [
+    "storage/episodes/menu-cut-saffron/thumbs/thumb_A.jpg",
+    "storage/episodes/menu-cut-saffron/thumbs/thumb_B.jpg",
+    "storage/episodes/menu-cut-saffron/thumbs/thumb_C.jpg"
+  ],
+  "subtitles": [
+    "episodes/menu-cut-saffron.srt",
+    "episodes/menu-cut-saffron.vtt"
+  ],
+  "meta": "episodes/menu-cut-saffron.meta.json",
+  "title": "It takes 150 flowers to make 1 gram of this spice",
+  "hookScore": 36,
+  "pinnedComment": "If you had $1,000 right now, are you spending it on SAFFRON or something else? Be honest.",
+  "region": "us",
+  "builtAt": "2026-11-01T10:17:33.656Z"
+}

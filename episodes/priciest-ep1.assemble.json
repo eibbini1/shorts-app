@@ -1,0 +1,43 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/priciest-ep1/priciest-ep1-final.mp4",
+  "fps": 24,
+  "voice": {
+    "provider": "elevenlabs",
+    "speed": 1.0,
+    "stability": 0.45,
+    "style": 0.5
+  },
+  "kicker": "The world's priciest ingredients",
+  "brand": {
+    "name": "Billionaire Bites",
+    "sub": "Taste the extraordinary"
+  },
+  "music": "ambient",
+  "scenes": [
+    {
+      "image": "storage/episodes/priciest-ep1/stills/scene1.jpg",
+      "text": "Three ingredients cost a fortune. Can you guess them?"
+    },
+    {
+      "image": "storage/episodes/priciest-ep1/stills/scene2.jpg",
+      "text": "First, caviar. The rarest comes from an albino sturgeon and can cost tens of thousands of dollars a kilo."
+    },
+    {
+      "image": "storage/episodes/priciest-ep1/stills/scene3.jpg",
+      "text": "Second, vanilla. Every orchid flower opens for just one day, so farmers pollinate each one by hand."
+    },
+    {
+      "image": "storage/episodes/priciest-ep1/stills/scene4.jpg",
+      "text": "Third, edible bird's nest, made from the dried saliva of swiftlets."
+    },
+    {
+      "image": "storage/episodes/priciest-ep1/stills/scene5.jpg",
+      "text": "Which one would you try first?"
+    },
+    {
+      "image": "storage/episodes/priciest-ep1/stills/scene6.jpg",
+      "text": "Follow for the next luxury secret."
+    }
+  ]
+}

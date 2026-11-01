@@ -1,0 +1,18 @@
+{
+  "video": "storage/episodes/pigs-ep1/pigs-ep1-final.mp4",
+  "thumbnails": [
+    "storage/episodes/pigs-ep1/thumbs/thumb_A.jpg",
+    "storage/episodes/pigs-ep1/thumbs/thumb_B.jpg",
+    "storage/episodes/pigs-ep1/thumbs/thumb_C.jpg"
+  ],
+  "subtitles": [
+    "episodes/pigs-ep1.srt",
+    "episodes/pigs-ep1.vtt"
+  ],
+  "meta": "episodes/pigs-ep1.meta.json",
+  "title": "Truffles cost thousands a kilo, and pigs are banned from finding them",
+  "hookScore": 87,
+  "pinnedComment": "Is the truffle hunting rule smart, or just food snobbery? Take a side.",
+  "region": "us",
+  "builtAt": "2026-11-01T09:19:42.129Z"
+}

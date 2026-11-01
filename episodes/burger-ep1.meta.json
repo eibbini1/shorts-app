@@ -1,0 +1,36 @@
+{
+  "title": "Would you pay $1,000 for a burger?",
+  "description": "Would you pay $1,000 for a burger? Some of these burgers sell for more than $1,000. Would you take a bite? Follow for more.\n\nFollow Billionaire Bites for the world's most extraordinary food.\nVoiceover and visuals are AI-generated.\nKeywords: luxury food, most expensive food, billionaire food, Billionaire Bites, food facts, shorts, edible gold, A5 wagyu, caviar, gold burger\n#luxuryfood #ediblegold #a5wagyu #shorts",
+  "tags": [
+    "luxury food",
+    "most expensive food",
+    "billionaire food",
+    "Billionaire Bites",
+    "food facts",
+    "shorts",
+    "edible gold",
+    "A5 wagyu",
+    "caviar",
+    "gold burger"
+  ],
+  "categoryId": "24",
+  "language": "en",
+  "madeForKids": false,
+  "containsSyntheticMedia": true,
+  "region": "us",
+  "hookScore": 85,
+  "breakdown": {
+    "price": 20,
+    "number": 5,
+    "shortHook": 15,
+    "luxury": 0,
+    "curiosity": 10,
+    "cta": 12,
+    "length": 10,
+    "pacing": 8,
+    "loop": 5
+  },
+  "fixes": [
+    "Name the luxury element (gold, caviar, truffle) in the first sentence for the niche match."
+  ]
+}

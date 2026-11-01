@@ -1,0 +1,18 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/pigs-ep1/pigs-ep1-final.mp4",
+  "fps": 24,
+  "voice": { "provider": "elevenlabs", "speed": 1, "stability": 0.45, "style": 0.5 },
+  "kicker": "truffle hunting",
+  "tightOpen": true,
+  "hookText": "Pigs are banned",
+  "brand": { "name": "Billionaire Bites", "sub": "Taste the extraordinary" },
+  "music": "ambient",
+  "scenes": [
+    { "image": "storage/episodes/menu-long/photos/s10.jpg", "text": "Truffles cost thousands a kilo, and pigs are banned from finding them.", "motion": "in" },
+    { "image": "storage/episodes/menu-long/photos/s8.jpg", "text": "Since 1985, Italian hunters have had to use trained dogs instead.", "motion": "left" },
+    { "image": "storage/episodes/menu-long/photos/s9.jpg", "text": "Pigs can smell a truffle from far away, but they eat the prize.", "motion": "out" },
+    { "image": "storage/episodes/menu-long/photos/s9.jpg", "text": "Their hooves also tear up the soil where the next truffles grow.", "motion": "right" },
+    { "image": "storage/episodes/menu-long/photos/s11.jpg", "text": "Smart law or food snobbery? Drop your take below.", "motion": "in" }
+  ]
+}

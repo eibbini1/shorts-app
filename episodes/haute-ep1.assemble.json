@@ -1,0 +1,43 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/haute-ep1/haute-ep1-final.mp4",
+  "fps": 24,
+  "voice": {
+    "provider": "elevenlabs",
+    "speed": 1.0,
+    "stability": 0.45,
+    "style": 0.5
+  },
+  "kicker": "The $25,000 dessert",
+  "brand": {
+    "name": "Billionaire Bites",
+    "sub": "Taste the extraordinary"
+  },
+  "music": "ambient",
+  "scenes": [
+    {
+      "image": "storage/episodes/haute-ep1/stills/scene1.jpg",
+      "text": "This dessert costs twenty five thousand dollars."
+    },
+    {
+      "image": "storage/episodes/haute-ep1/stills/scene2.jpg",
+      "text": "It was served at Serendipity 3 in New York, and it set a Guinness record."
+    },
+    {
+      "image": "storage/episodes/haute-ep1/stills/scene3.jpg",
+      "text": "The goblet is lined with edible gold, and it sits on an eighteen karat gold bracelet with diamonds."
+    },
+    {
+      "image": "storage/episodes/haute-ep1/stills/scene4.jpg",
+      "text": "You eat it with a gold spoon set with diamonds, and you get to keep it."
+    },
+    {
+      "image": "storage/episodes/haute-ep1/stills/scene5.jpg",
+      "text": "Would you pay that for one dessert?"
+    },
+    {
+      "image": "storage/episodes/haute-ep1/stills/scene6.jpg",
+      "text": "Follow for more jewelry on a plate."
+    }
+  ]
+}

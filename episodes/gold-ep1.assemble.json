@@ -1,0 +1,43 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/gold-ep1/gold-ep1-final.mp4",
+  "fps": 24,
+  "voice": {
+    "provider": "elevenlabs",
+    "speed": 1.0,
+    "stability": 0.45,
+    "style": 0.5
+  },
+  "kicker": "Food covered in real gold",
+  "brand": {
+    "name": "Billionaire Bites",
+    "sub": "Taste the extraordinary"
+  },
+  "music": "ambient",
+  "scenes": [
+    {
+      "image": "storage/episodes/gold-ep1/stills/scene1.jpg",
+      "text": "This dessert is covered in real gold."
+    },
+    {
+      "image": "storage/episodes/gold-ep1/stills/scene2.jpg",
+      "text": "Twenty-four karat gold leaf is so thin, it is completely edible."
+    },
+    {
+      "image": "storage/episodes/gold-ep1/stills/scene3.jpg",
+      "text": "Chefs press it onto chocolate, cakes, even steak."
+    },
+    {
+      "image": "storage/episodes/gold-ep1/stills/scene4.jpg",
+      "text": "Gold has no taste. It simply passes through your body."
+    },
+    {
+      "image": "storage/episodes/gold-ep1/stills/scene5.jpg",
+      "text": "Would you eat a bite of gold?"
+    },
+    {
+      "image": "storage/episodes/gold-ep1/stills/scene6.jpg",
+      "text": "Follow for more jewelry on a plate."
+    }
+  ]
+}

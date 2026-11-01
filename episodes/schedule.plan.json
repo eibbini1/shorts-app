@@ -1,0 +1,26 @@
+[
+  {
+    "file": "episodes/biryani-ep1.meta.json",
+    "title": "This biryani costs a thousand dirhams",
+    "region": "in",
+    "publishAtUtc": "2026-11-02T14:30:00.000Z",
+    "local": "2026-11-02 17:30",
+    "window": "India 8pm / UK 2:30pm / US East 9:30am"
+  },
+  {
+    "file": "episodes/steak-ep1.meta.json",
+    "title": "This steak costs one hundred fifty nine pounds",
+    "region": "uk",
+    "publishAtUtc": "2026-11-02T19:00:00.000Z",
+    "local": "2026-11-02 22:00",
+    "window": "UK 7pm / US East 2pm / Canada 2pm"
+  },
+  {
+    "file": "episodes/burger-ep1.meta.json",
+    "title": "Would you pay a thousand dollars for a burger?",
+    "region": "us",
+    "publishAtUtc": "2026-11-03T00:00:00.000Z",
+    "local": "2026-11-03 03:00",
+    "window": "US East 7pm / US West 4pm"
+  }
+]

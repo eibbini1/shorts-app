@@ -1,0 +1,37 @@
+{
+  "title": "This dessert is covered in real gold",
+  "description": "This dessert is covered in real gold. Follow for more jewelry on a plate.\n\nFollow Billionaire Bites for the world's most extraordinary food.\nVoiceover and visuals are AI-generated.\nKeywords: luxury food, most expensive food, billionaire food, Billionaire Bites, food facts, shorts, edible gold, gold steak, most expensive dessert\n#luxuryfood #ediblegold #goldsteak #shorts",
+  "tags": [
+    "luxury food",
+    "most expensive food",
+    "billionaire food",
+    "Billionaire Bites",
+    "food facts",
+    "shorts",
+    "edible gold",
+    "gold steak",
+    "most expensive dessert"
+  ],
+  "categoryId": "24",
+  "language": "en",
+  "madeForKids": false,
+  "containsSyntheticMedia": true,
+  "region": "us",
+  "hookScore": 48,
+  "breakdown": {
+    "price": 0,
+    "number": 0,
+    "shortHook": 15,
+    "luxury": 10,
+    "curiosity": 0,
+    "cta": 0,
+    "length": 10,
+    "pacing": 8,
+    "loop": 5
+  },
+  "fixes": [
+    "Open with a concrete price in the first sentence (\"This steak costs 159 pounds.\").",
+    "Add a curiosity gap in the first two lines (\"Here's why\", \"Guess the price\", \"What's inside?\").",
+    "End with a question or \"pick one\" to drive comments and replays."
+  ]
+}

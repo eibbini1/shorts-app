@@ -1,0 +1,43 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/vs-burger-ep1/vs-burger-ep1-final.mp4",
+  "fps": 24,
+  "voice": {
+    "provider": "elevenlabs",
+    "speed": 1.0,
+    "stability": 0.45,
+    "style": 0.5
+  },
+  "kicker": "One dollar versus one thousand",
+  "brand": {
+    "name": "Billionaire Bites",
+    "sub": "Taste the extraordinary"
+  },
+  "music": "ambient",
+  "scenes": [
+    {
+      "image": "storage/episodes/vs-burger-ep1/stills/scene1.jpg",
+      "text": "This burger costs one dollar."
+    },
+    {
+      "image": "storage/episodes/burger-ep1/stills/scene1.jpg",
+      "text": "This one costs one thousand."
+    },
+    {
+      "image": "storage/episodes/vs-burger-ep1/stills/scene3.jpg",
+      "text": "One is a flat patty on a plain bun."
+    },
+    {
+      "image": "storage/episodes/burger-ep1/stills/scene6.jpg",
+      "text": "The other is wagyu, caviar and real gold leaf."
+    },
+    {
+      "image": "storage/episodes/vs-burger-ep1/stills/scene5.jpg",
+      "text": "Same food. A thousand times the price."
+    },
+    {
+      "image": "storage/episodes/burger-ep1/stills/scene5.jpg",
+      "text": "Which one would you eat? Follow for more."
+    }
+  ]
+}

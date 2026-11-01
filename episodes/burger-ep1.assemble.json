@@ -1,0 +1,43 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/burger-ep1/burger-ep1-final.mp4",
+  "fps": 24,
+  "voice": {
+    "provider": "elevenlabs",
+    "speed": 1.0,
+    "stability": 0.45,
+    "style": 0.5
+  },
+  "kicker": "The golden wagyu burger",
+  "brand": {
+    "name": "Billionaire Bites",
+    "sub": "Taste the extraordinary"
+  },
+  "music": "ambient",
+  "scenes": [
+    {
+      "image": "storage/episodes/burger-ep1/stills/scene1.jpg",
+      "text": "Would you pay a thousand dollars for a burger?"
+    },
+    {
+      "image": "storage/episodes/burger-ep1/stills/scene2.jpg",
+      "text": "It starts with a thick wagyu patty, seared until the fat glistens."
+    },
+    {
+      "image": "storage/episodes/burger-ep1/stills/scene3.jpg",
+      "text": "Then it's stacked on a toasted brioche bun."
+    },
+    {
+      "image": "storage/episodes/burger-ep1/stills/scene4.jpg",
+      "text": "Next comes a spoonful of caviar, the salted eggs of the sturgeon fish."
+    },
+    {
+      "image": "storage/episodes/burger-ep1/stills/scene5.jpg",
+      "text": "And the finishing touch is real, edible, twenty-four karat gold leaf."
+    },
+    {
+      "image": "storage/episodes/burger-ep1/stills/scene6.jpg",
+      "text": "Some of these burgers sell for more than a thousand dollars. Would you take a bite? Follow for more."
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "video": "storage/episodes/menu-cut-truffle/menu-cut-truffle-final.mp4",
+  "thumbnails": [
+    "storage/episodes/menu-cut-truffle/thumbs/thumb_A.jpg",
+    "storage/episodes/menu-cut-truffle/thumbs/thumb_B.jpg",
+    "storage/episodes/menu-cut-truffle/thumbs/thumb_C.jpg"
+  ],
+  "subtitles": [
+    "episodes/menu-cut-truffle.srt",
+    "episodes/menu-cut-truffle.vtt"
+  ],
+  "meta": "episodes/menu-cut-truffle.meta.json",
+  "title": "You will never guess what this lump of dirt costs",
+  "hookScore": 61,
+  "pinnedComment": "If you had $1,000 right now, are you spending it on TRUFFLE or something else? Be honest.",
+  "region": "us",
+  "builtAt": "2026-11-01T10:19:52.207Z"
+}

@@ -1,0 +1,18 @@
+{
+  "video": "storage/episodes/menu-cut-wagyu/menu-cut-wagyu-final.mp4",
+  "thumbnails": [
+    "storage/episodes/menu-cut-wagyu/thumbs/thumb_A.jpg",
+    "storage/episodes/menu-cut-wagyu/thumbs/thumb_B.jpg",
+    "storage/episodes/menu-cut-wagyu/thumbs/thumb_C.jpg"
+  ],
+  "subtitles": [
+    "episodes/menu-cut-wagyu.srt",
+    "episodes/menu-cut-wagyu.vtt"
+  ],
+  "meta": "episodes/menu-cut-wagyu.meta.json",
+  "title": "Hundreds of dollars for 1 steak, and it is no scam",
+  "hookScore": 70,
+  "pinnedComment": "If you had $1,000 right now, are you spending it on WAGYU or something else? Be honest.",
+  "region": "us",
+  "builtAt": "2026-11-01T10:21:30.495Z"
+}

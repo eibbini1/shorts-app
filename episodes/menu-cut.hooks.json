@@ -1,0 +1,7 @@
+{
+  "saffron": { "hook": "It takes 150 flowers to make one gram of this spice.", "hookText": "150 flowers, 1 gram", "cta": "Worth the price or a total rip-off? Drop your take below." },
+  "truffle": { "hook": "You will never guess what this lump of dirt costs.", "hookText": "Dirt that costs thousands", "cta": "Genius or scam? Drop your take below." },
+  "wagyu": { "hook": "Hundreds of dollars for one steak, and it is no scam.", "hookText": "Not a scam", "cta": "Worth it or overrated? Drop your take below." },
+  "burger": { "hook": "Is this gold burger genius or a total scam?", "hookText": "Genius or scam?", "cta": "Team burger or team scam? Comment your pick below." },
+  "dessert": { "hook": "A $25,000 dessert, and the spoon is yours to keep. Worth it?", "hookText": "$25,000 dessert", "cta": "Team dessert or team rent money? Comment your pick below." }
+}

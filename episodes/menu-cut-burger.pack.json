@@ -1,0 +1,18 @@
+{
+  "video": "storage/episodes/menu-cut-burger/menu-cut-burger-final.mp4",
+  "thumbnails": [
+    "storage/episodes/menu-cut-burger/thumbs/thumb_A.jpg",
+    "storage/episodes/menu-cut-burger/thumbs/thumb_B.jpg",
+    "storage/episodes/menu-cut-burger/thumbs/thumb_C.jpg"
+  ],
+  "subtitles": [
+    "episodes/menu-cut-burger.srt",
+    "episodes/menu-cut-burger.vtt"
+  ],
+  "meta": "episodes/menu-cut-burger.meta.json",
+  "title": "Is this gold burger genius or a total scam?",
+  "hookScore": 59,
+  "pinnedComment": "If you had $1,000 right now, are you spending it on BURGER or something else? Be honest.",
+  "region": "us",
+  "builtAt": "2026-11-01T10:15:01.288Z"
+}

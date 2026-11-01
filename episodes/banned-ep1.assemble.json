@@ -1,0 +1,43 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/banned-ep1/banned-ep1-final.mp4",
+  "fps": 24,
+  "voice": {
+    "provider": "elevenlabs",
+    "speed": 1.0,
+    "stability": 0.45,
+    "style": 0.5
+  },
+  "kicker": "Foods banned in other countries",
+  "brand": {
+    "name": "Billionaire Bites",
+    "sub": "Taste the extraordinary"
+  },
+  "music": "ambient",
+  "scenes": [
+    {
+      "image": "storage/episodes/banned-ep1/stills/scene1.jpg",
+      "text": "Some foods are so strange, they are actually illegal."
+    },
+    {
+      "image": "storage/episodes/banned-ep1/stills/scene2.jpg",
+      "text": "In the United States, Kinder Surprise eggs are banned, because the toy is hidden inside the chocolate."
+    },
+    {
+      "image": "storage/episodes/banned-ep1/stills/scene3.jpg",
+      "text": "Real Scottish haggis has been blocked from import, because it contains sheep lung."
+    },
+    {
+      "image": "storage/episodes/banned-ep1/stills/scene4.jpg",
+      "text": "And in Italy, a Sardinian cheese called casu marzu is illegal to sell, because it is eaten with live maggots."
+    },
+    {
+      "image": "storage/episodes/banned-ep1/stills/scene5.jpg",
+      "text": "Would you break the rules for a bite?"
+    },
+    {
+      "image": "storage/episodes/banned-ep1/stills/scene6.jpg",
+      "text": "Follow for more forbidden food."
+    }
+  ]
+}

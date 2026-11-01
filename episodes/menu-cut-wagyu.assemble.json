@@ -1,0 +1,46 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/menu-cut-wagyu/menu-cut-wagyu-final.mp4",
+  "fps": 24,
+  "voice": {
+    "provider": "elevenlabs",
+    "speed": 1,
+    "stability": 0.45,
+    "style": 0.5
+  },
+  "kicker": "WAGYU",
+  "brand": {
+    "name": "Billionaire Bites",
+    "sub": "Taste the extraordinary"
+  },
+  "music": "ambient",
+  "scenes": [
+    {
+      "image": "storage/episodes/menu-long/photos/s12.jpg",
+      "text": "Hundreds of dollars for one steak, and it is no scam.",
+      "motion": "in"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s12.jpg",
+      "text": "Course three comes from Japan. Real Kobe beef comes only from Hyogo, and every cut is tracked from farm to plate.",
+      "motion": "in"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s13.jpg",
+      "text": "It's A5 wagyu, the highest grade of beef on Earth. Inspectors score the marbling, those white ribbons of fat, from one to twelve.",
+      "motion": "in"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s14.jpg",
+      "text": "In the pan, the fat melts at a lower temperature than normal beef, so it dissolves on your tongue. Good to know: a few thin slices are enough.",
+      "motion": "in"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s14.jpg",
+      "text": "Worth it or overrated? Drop your take below.",
+      "motion": "out"
+    }
+  ],
+  "tightOpen": true,
+  "hookText": "Not a scam"
+}

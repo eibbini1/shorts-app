@@ -1,0 +1,18 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/menu-ep1/menu-ep1-final.mp4",
+  "fps": 24,
+  "voice": { "provider": "elevenlabs", "speed": 1.0, "stability": 0.45, "style": 0.5 },
+  "kicker": "The billionaire's menu",
+  "brand": { "name": "Billionaire Bites", "sub": "Taste the extraordinary" },
+  "music": "ambient",
+  "scenes": [
+    { "image": "storage/episodes/menu-ep1/stills/scene1.jpg", "text": "You can only pick one. Choose wisely." },
+    { "image": "storage/episodes/menu-ep1/stills/scene2.jpg", "text": "Number one. Japanese A5 wagyu, the highest grade of beef." },
+    { "image": "storage/episodes/menu-ep1/stills/scene3.jpg", "text": "Number two. A white truffle from Alba. One sold for over three hundred thousand dollars." },
+    { "image": "storage/episodes/menu-ep1/stills/scene4.jpg", "text": "Number three. Caviar from the rare albino sturgeon." },
+    { "image": "storage/episodes/menu-ep1/stills/scene5.jpg", "text": "Number four. A dessert wrapped in twenty-four karat gold." },
+    { "image": "storage/episodes/menu-ep1/stills/scene6.jpg", "text": "Number five. The thousand dollar burger, with caviar and gold." },
+    { "image": "storage/episodes/menu-ep1/stills/scene7.jpg", "text": "Comment your number. Follow for more." }
+  ]
+}

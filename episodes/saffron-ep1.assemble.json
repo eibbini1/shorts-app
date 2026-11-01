@@ -1,0 +1,40 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/saffron-ep1/saffron-ep1-final.mp4",
+  "voice": {
+    "provider": "elevenlabs",
+    "speed": 0.94
+  },
+  "kicker": "The world's most expensive spice",
+  "brand": {
+    "name": "Billionaire Bites",
+    "sub": "Taste the extraordinary"
+  },
+  "music": "ambient",
+  "scenes": [
+    {
+      "image": "storage/episodes/saffron-ep1/stills/scene1.jpg",
+      "text": "One gram of this spice takes about one hundred and fifty flowers."
+    },
+    {
+      "image": "storage/episodes/saffron-ep1/stills/scene2.jpg",
+      "text": "Each flower blooms for only a few days a year — and holds just three crimson threads."
+    },
+    {
+      "image": "storage/episodes/saffron-ep1/stills/scene3.jpg",
+      "text": "Every thread is picked by hand, at dawn, before the sun can fade it."
+    },
+    {
+      "image": "storage/episodes/saffron-ep1/stills/scene4.jpg",
+      "text": "Then slow-dried, until deep red turns to liquid gold."
+    },
+    {
+      "image": "storage/episodes/saffron-ep1/stills/scene5.jpg",
+      "text": "A few threads are all a chef needs, to turn simple rice into something unforgettable."
+    },
+    {
+      "image": "storage/episodes/saffron-ep1/stills/scene6.jpg",
+      "text": "Saffron. The most expensive spice on Earth — and now, you know why."
+    }
+  ]
+}

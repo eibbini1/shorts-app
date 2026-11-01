@@ -1,0 +1,72 @@
+{
+  "title": "Chicago Ep1 - Sharing is Caring",
+  "location": "Chicago, Illinois",
+  "episode": "Chicago Ep1",
+  "lesson": "The best souvenir from any city is the friends you make.",
+  "narration": "Abdul just landed in Chicago - and WOW, look at that! Navy Pier sparkled, the lake shimmered, and the skyline touched the clouds. Then Abdul spotted two kids by the Ferris wheel - Mia and Leo. They looked lost, and their tummies were rumbling. So Abdul ran over and shared his map and his snack - and just like that, they were best friends! Together they shared a cheesy deep-dish pizza. Then they laughed at their silly reflections in the Bean and played until sunset! The best souvenir from any city? The friends you make! Next stop - New York!",
+  "beats": [
+    {
+      "index": 0,
+      "atText": "Abdul just landed",
+      "objective": "HOOK: extreme close-up of Abdul's face, huge sparkling hazel eyes, mouth open in amazement showing a tooth gap, white kufi tilted, freckles, golden city bokeh. Reaction BEFORE the reveal.",
+      "mustShow": ["Abdul close-up face", "huge wide eyes", "open mouth amazement", "white kufi tilted", "freckles", "golden bokeh"],
+      "avoid": ["full body", "skyline", "other characters", "text"],
+      "mood": "shock-wonder",
+      "continuity": ""
+    },
+    {
+      "index": 1,
+      "atText": "Navy Pier sparkled",
+      "objective": "REVEAL: wide shot, Abdul seen from behind at the Navy Pier railing with arms wide open, real Chicago skyline (Willis Tower, Hancock Center) across Lake Michigan in golden morning light.",
+      "mustShow": ["Abdul from behind arms wide", "red backpack with US-map patch", "Willis Tower", "Hancock Center", "Lake Michigan sparkling", "Navy Pier railing"],
+      "avoid": ["other people", "crowds", "text", "night"],
+      "mood": "wonder-excitement",
+      "continuity": "Same Abdul as the hook: white kufi, mustard hoodie, red backpack. He just arrived at Navy Pier."
+    },
+    {
+      "index": 2,
+      "atText": "Then Abdul spotted",
+      "objective": "DISCOVERY: on Navy Pier by the Ferris wheel, Mia (purple raincoat, hair puffs) studies an upside-down map and Leo (round glasses, green fox sweater) holds his rumbling tummy. Abdul notices them with a folded map and a snack bag, caring curiosity.",
+      "mustShow": ["Mia and Leo looking lost", "Leo holding tummy", "Abdul holding map and snack bag", "Navy Pier Ferris wheel", "Lake Michigan"],
+      "avoid": ["phones", "crowds", "logos", "text", "crying"],
+      "mood": "gentle-caring",
+      "continuity": "Same pier and golden morning light as scene 2. Abdul still has his red backpack and kufi."
+    },
+    {
+      "index": 3,
+      "atText": "So Abdul",
+      "objective": "HELPING: Abdul runs in with cap flying, handing his map to Mia and his snack to Leo; their worried faces turn into delighted smiles. Three hands meeting is the key image.",
+      "mustShow": ["Abdul running", "map handed to Mia", "snack to Leo", "kufi flying", "all smiling", "Ferris wheel"],
+      "avoid": ["phones", "adults", "logos", "text"],
+      "mood": "joy-generosity",
+      "continuity": "Same map and snack bag from scene 3. Same pier and Ferris wheel."
+    },
+    {
+      "index": 4,
+      "atText": "Together they",
+      "objective": "FOOD: cozy red-checkered booth in a Chicago pizzeria, vegetarian cheese deep-dish pizza with a long cheese pull, Abdul serving Leo, Mia clapping, lit Navy Pier Ferris wheel through the window at golden hour.",
+      "mustShow": ["deep-dish pizza cheese pull", "three kids laughing", "red-checkered booth", "Ferris wheel through window"],
+      "avoid": ["meat toppings", "pork", "adults", "text", "logos"],
+      "mood": "happy-delicious",
+      "continuity": "Same three friends. Same Navy Pier Ferris wheel seen from the pizzeria window."
+    },
+    {
+      "index": 5,
+      "atText": "Then they",
+      "objective": "PLAY AND IMAGINATION: Mia, Leo and Abdul jump in front of Cloud Gate (the Bean) in Millennium Park, silly stretched reflections, skyline reflected, pigeons, soccer ball, golden sparkles.",
+      "mustShow": ["Cloud Gate Bean", "three kids jumping", "stretched reflections", "skyline reflected", "pigeons", "soccer ball"],
+      "avoid": ["crowds", "text on sculpture", "sad faces"],
+      "mood": "peak-joy-laughter",
+      "continuity": "Same three friends, same outfits. Millennium Park is a new location, same group."
+    },
+    {
+      "index": 6,
+      "atText": "The best souvenir",
+      "objective": "FAREWELL, FULL CIRCLE: golden-hour sunset on Navy Pier, same railing and Ferris wheel as the opening. Abdul hugs Mia and Leo, holds up his sticker journal with a glowing Illinois star sticker, looks at camera ready to wave goodbye.",
+      "mustShow": ["Abdul hugging Mia and Leo", "sticker journal with Illinois star", "sunset skyline", "Navy Pier", "Abdul looking at camera"],
+      "avoid": ["sad faces", "crowds", "text"],
+      "mood": "warm-cozy-invitation",
+      "continuity": "Back at Navy Pier, same place as scenes 2-4, now at sunset. Same outfits and friends."
+    }
+  ]
+}

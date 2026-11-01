@@ -1,0 +1,18 @@
+{
+  "video": "storage/episodes/menu-cut-dessert/menu-cut-dessert-final.mp4",
+  "thumbnails": [
+    "storage/episodes/menu-cut-dessert/thumbs/thumb_A.jpg",
+    "storage/episodes/menu-cut-dessert/thumbs/thumb_B.jpg",
+    "storage/episodes/menu-cut-dessert/thumbs/thumb_C.jpg"
+  ],
+  "subtitles": [
+    "episodes/menu-cut-dessert.srt",
+    "episodes/menu-cut-dessert.vtt"
+  ],
+  "meta": "episodes/menu-cut-dessert.meta.json",
+  "title": "A $25,000 dessert, and the spoon is yours to keep. Worth it?",
+  "hookScore": 70,
+  "pinnedComment": "If you had $1,000 right now, are you spending it on DESSERT or something else? Be honest.",
+  "region": "us",
+  "builtAt": "2026-11-01T10:22:42.775Z"
+}

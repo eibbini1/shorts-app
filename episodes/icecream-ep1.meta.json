@@ -1,0 +1,38 @@
+{
+  "title": "Guess the price of this 1 scoop of ice cream",
+  "description": "Guess the price of this 1 scoop of ice cream. Would you pay $817 for 1 scoop? Follow for more jewelry on a plate.\n\nFollow Billionaire Bites for the world's most extraordinary food.\nVoiceover and visuals are AI-generated.\nKeywords: luxury food, most expensive food, billionaire food, Billionaire Bites, food facts, shorts, edible gold, saffron, white truffle, gold ice cream, Dubai\n#luxuryfood #ediblegold #saffron #shorts",
+  "tags": [
+    "luxury food",
+    "most expensive food",
+    "billionaire food",
+    "Billionaire Bites",
+    "food facts",
+    "shorts",
+    "edible gold",
+    "saffron",
+    "white truffle",
+    "gold ice cream",
+    "Dubai"
+  ],
+  "categoryId": "24",
+  "language": "en",
+  "madeForKids": false,
+  "containsSyntheticMedia": true,
+  "region": "us",
+  "hookScore": 65,
+  "breakdown": {
+    "price": 0,
+    "number": 5,
+    "shortHook": 15,
+    "luxury": 0,
+    "curiosity": 10,
+    "cta": 12,
+    "length": 10,
+    "pacing": 8,
+    "loop": 5
+  },
+  "fixes": [
+    "Open with a concrete price in the first sentence (\"This steak costs 159 pounds.\").",
+    "Name the luxury element (gold, caviar, truffle) in the first sentence for the niche match."
+  ]
+}

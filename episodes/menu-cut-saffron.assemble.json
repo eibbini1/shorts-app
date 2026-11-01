@@ -1,0 +1,51 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/menu-cut-saffron/menu-cut-saffron-final.mp4",
+  "fps": 24,
+  "voice": {
+    "provider": "elevenlabs",
+    "speed": 1,
+    "stability": 0.45,
+    "style": 0.5
+  },
+  "kicker": "SAFFRON",
+  "brand": {
+    "name": "Billionaire Bites",
+    "sub": "Taste the extraordinary"
+  },
+  "music": "ambient",
+  "scenes": [
+    {
+      "image": "storage/episodes/menu-long/photos/s3.jpg",
+      "text": "It takes 150 flowers to make one gram of this spice.",
+      "motion": "in"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s3.jpg",
+      "text": "Course one begins in a field at dawn. One gram of saffron takes about one hundred and fifty flowers.",
+      "motion": "in"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s4.jpg",
+      "text": "Each flower blooms for only a few days a year, and holds just three crimson threads. Every thread is picked by hand, before the sun can fade it.",
+      "motion": "in"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s5.jpg",
+      "text": "The threads are slowly dried, until deep red turns to liquid gold. Did you already know? That is why saffron is the most expensive spice on Earth.",
+      "motion": "right"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s6.jpg",
+      "text": "Back in the kitchen, the chef soaks the threads in warm milk. Good to know: this releases the color and flavor, so a pinch can paint a whole pot of rice.",
+      "motion": "left"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s6.jpg",
+      "text": "Worth the price or a total rip-off? Drop your take below.",
+      "motion": "out"
+    }
+  ],
+  "tightOpen": true,
+  "hookText": "150 flowers, 1 gram"
+}

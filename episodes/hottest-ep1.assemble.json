@@ -1,0 +1,17 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/hottest-ep1/hottest-ep1-final.mp4",
+  "fps": 24,
+  "voice": { "provider": "elevenlabs", "speed": 1.0, "stability": 0.45, "style": 0.5 },
+  "kicker": "The hottest dishes on Earth",
+  "brand": { "name": "Billionaire Bites", "sub": "Taste the extraordinary" },
+  "music": "ambient",
+  "scenes": [
+    { "image": "storage/episodes/hottest-ep1/stills/scene1.jpg", "text": "Some dishes don't just burn. They break grown men." },
+    { "image": "storage/episodes/hottest-ep1/stills/scene2.jpg", "text": "In Birmingham, England, curry houses invented the phall in nineteen seventy-one. Hotter than vindaloo." },
+    { "image": "storage/episodes/hottest-ep1/stills/scene3.jpg", "text": "In Sichuan, China, the pepper numbs your tongue, so every bite of hot pot tingles." },
+    { "image": "storage/episodes/hottest-ep1/stills/scene4.jpg", "text": "In Nashville, hot chicken is fried crisp, then coated in a blazing cayenne paste." },
+    { "image": "storage/episodes/hottest-ep1/stills/scene5.jpg", "text": "And the hottest pepper on Earth? Pepper X. Guinness crowned it in twenty twenty-three, at about two point seven million Scoville units." },
+    { "image": "storage/episodes/hottest-ep1/stills/scene6.jpg", "text": "Would you take the challenge? Follow for the next fire dish." }
+  ]
+}

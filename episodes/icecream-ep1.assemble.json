@@ -1,0 +1,43 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/icecream-ep1/icecream-ep1-final.mp4",
+  "fps": 24,
+  "voice": {
+    "provider": "elevenlabs",
+    "speed": 1.0,
+    "stability": 0.45,
+    "style": 0.5
+  },
+  "kicker": "The $817 scoop",
+  "brand": {
+    "name": "Billionaire Bites",
+    "sub": "Taste the extraordinary"
+  },
+  "music": "ambient",
+  "scenes": [
+    {
+      "image": "storage/episodes/icecream-ep1/photos/s1.jpg",
+      "text": "Guess the price of this one scoop of ice cream."
+    },
+    {
+      "image": "storage/episodes/icecream-ep1/photos/s2.jpg",
+      "text": "It's called Black Diamond, and a Dubai cafe sold it for eight hundred seventeen dollars."
+    },
+    {
+      "image": "storage/episodes/icecream-ep1/photos/s3.jpg",
+      "text": "The base is Madagascar vanilla, with Italian truffles."
+    },
+    {
+      "image": "storage/episodes/icecream-ep1/photos/s4.jpg",
+      "text": "Then Iranian saffron and twenty-three karat gold flakes."
+    },
+    {
+      "image": "storage/episodes/icecream-ep1/photos/s5.jpg",
+      "text": "It came in a Versace bowl with a matching spoon, and you kept both."
+    },
+    {
+      "image": "storage/episodes/icecream-ep1/photos/s6.jpg",
+      "text": "Would you pay eight hundred seventeen dollars for one scoop? Follow for more jewelry on a plate."
+    }
+  ]
+}

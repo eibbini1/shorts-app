@@ -1,0 +1,46 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/menu-cut-burger/menu-cut-burger-final.mp4",
+  "fps": 24,
+  "voice": {
+    "provider": "elevenlabs",
+    "speed": 1,
+    "stability": 0.45,
+    "style": 0.5
+  },
+  "kicker": "BURGER",
+  "brand": {
+    "name": "Billionaire Bites",
+    "sub": "Taste the extraordinary"
+  },
+  "music": "ambient",
+  "scenes": [
+    {
+      "image": "storage/episodes/menu-long/photos/s16.jpg",
+      "text": "Is this gold burger genius or a total scam?",
+      "motion": "in"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s16.jpg",
+      "text": "Course four is a surprise. The chef takes that wagyu and builds a burger, a thick patty seared until the fat glistens, on a toasted brioche bun.",
+      "motion": "in"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s17.jpg",
+      "text": "Next comes a spoonful of caviar, the salted eggs of the sturgeon fish. The rarest comes from an albino sturgeon, and can cost tens of thousands of dollars a kilo.",
+      "motion": "left"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s18.jpg",
+      "text": "The finishing touch is real, edible, twenty four karat gold leaf. Did you already know? It is so thin, it is completely edible.",
+      "motion": "in"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s18.jpg",
+      "text": "Team burger or team scam? Comment your pick below.",
+      "motion": "out"
+    }
+  ],
+  "tightOpen": true,
+  "hookText": "Genius or scam?"
+}

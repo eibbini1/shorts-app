@@ -1,0 +1,40 @@
+{
+  "title": "Is this gold burger genius or a total scam?",
+  "description": "Is this gold burger genius or a total scam? Team burger or team scam? Comment your pick below.\n\nFull story: https://youtu.be/J3umbToLmSo\n\nFollow Billionaire Bites for the world's most extraordinary food.\nVoiceover and visuals are AI-generated.\nKeywords: luxury food, most expensive food, billionaire food, Billionaire Bites, food facts, shorts, edible gold, A5 wagyu, caviar, gold burger\n#luxuryfood #ediblegold #a5wagyu #shorts",
+  "tags": [
+    "luxury food",
+    "most expensive food",
+    "billionaire food",
+    "Billionaire Bites",
+    "food facts",
+    "shorts",
+    "edible gold",
+    "A5 wagyu",
+    "caviar",
+    "gold burger"
+  ],
+  "categoryId": "24",
+  "language": "en",
+  "madeForKids": false,
+  "containsSyntheticMedia": true,
+  "region": "us",
+  "hookScore": 59,
+  "breakdown": {
+    "price": 0,
+    "number": 0,
+    "shortHook": 15,
+    "luxury": 8,
+    "tension": 10,
+    "curiosity": 0,
+    "cta": 12,
+    "length": 6,
+    "pacing": 8,
+    "loop": 0
+  },
+  "fixes": [
+    "Open with a concrete price in the first sentence (\"This steak costs 159 pounds.\").",
+    "Add a curiosity gap in the first two lines (\"Here's why\", \"Guess the price\", \"What's inside?\")."
+  ],
+  "pinnedComment": "If you had $1,000 right now, are you spending it on BURGER or something else? Be honest.",
+  "bridge": "https://youtu.be/J3umbToLmSo"
+}

@@ -1,0 +1,120 @@
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { runFfmpeg, getMediaDuration } from '../shared/ffmpegExec.js';
+import { logger } from '../../shared/logger.js';
+import { synthesize } from '../voice/VoiceProvider.js';
+import { renderOverlay, type OverlayItem } from './overlayRenderer.js';
+import { makeCaption, makeWordmark, ensureLuxuryFont } from './luxuryText.js';
+import { writeAmbientBed, writeSfxWav, type SfxCue } from './sfx.js';
+import type { StillsSpec } from './types.js';
+
+const W = 720;
+const H = 1280;
+const LEAD = 0.18;
+const TAIL = 0.5;
+const END_TAIL = 3.2;
+
+const PUNCT_BREAK = /[.,!?;:—–-]$/;
+
+/** Luxury/documentary Short: stills with slow camera moves, ElevenLabs narration, word-by-word gold captions, ambient bed. */
+export async function assembleStills(specPath: string, repoRoot: string): Promise<string> {
+  const spec = JSON.parse((await readFile(specPath, 'utf8')).replace(/^﻿/, '')) as StillsSpec;
+  const fps = spec.fps ?? 24;
+  const abs = (p: string) => (path.isAbsolute(p) ? p : path.join(repoRoot, p));
+  const out = abs(spec.output);
+  const tmp = path.join(path.dirname(out), '_assemble');
+  await mkdir(tmp, { recursive: true });
+  ensureLuxuryFont(repoRoot);
+
+  const voiceDir = path.join(path.dirname(out), '_voice'); // cached: re-runs never re-spend credits
+  const sceneFiles: string[] = [];
+  const timeline: { start: number; lead: number; dur: number; audioDur: number; words: { word: string; start: number; end: number }[] }[] = [];
+  let cursor = 0;
+  for (let i = 0; i < spec.scenes.length; i++) {
+    const sc = spec.scenes[i]!;
+    const v0 = await synthesize(sc.text, voiceDir, spec.voice);
+    const last = i === spec.scenes.length - 1;
+    // Tight open: cut dead air before the first spoken word so sound + text land at ~0.0 s
+    const tight = !!spec.tightOpen && i === 0;
+    const trim = tight ? Math.max(0, (v0.words[0]?.start ?? 0) - 0.03) : 0;
+    const lead = tight ? 0.02 : LEAD;
+    const v = trim > 0
+      ? { ...v0, durationSec: v0.durationSec - trim, words: v0.words.map((w) => ({ ...w, start: w.start - trim, end: w.end - trim })) }
+      : v0;
+    const dur = lead + v.durationSec + (last ? END_TAIL : TAIL);
+    const frames = Math.round(dur * fps);
+    const motion = sc.motion ?? (['in', 'out', 'left', 'right'] as const)[i % 4]!;
+    const z = { in: `1+0.2*on/${frames}`, out: `1.2-0.2*on/${frames}`, left: '1.14', right: '1.14' }[motion];
+    const x = { in: 'iw/2-(iw/zoom/2)', out: 'iw/2-(iw/zoom/2)', left: `(iw-iw/zoom)*(1-on/${frames})`, right: `(iw-iw/zoom)*(on/${frames})` }[motion];
+    const f = path.join(tmp, `s${i}.mp4`);
+    const fadeOutSt = (dur - 0.28).toFixed(2);
+    await runFfmpeg([
+      '-threads', '2', '-filter_threads', '1', '-filter_complex_threads', '1',
+      '-loop', '1', '-framerate', String(fps), '-t', dur.toFixed(3), '-i', abs(sc.image), '-i', v0.audioFile,
+      '-filter_complex',
+      `[0:v]scale=1152:2048:force_original_aspect_ratio=increase,crop=1152:2048,zoompan=z='${z}':x='${x}':y='ih/2-(ih/zoom/2)':d=${frames}:s=${W}x${H}:fps=${fps},` +
+        `eq=contrast=1.07:saturation=1.1:gamma=0.97,vignette=PI/4.5,noise=alls=4:allf=t,${i === 0 ? '' : 'fade=t=in:st=0:d=0.28,'}fade=t=out:st=${fadeOutSt}:d=0.28,format=yuv420p[v];` +
+        `[1:a]${trim > 0 ? `atrim=start=${trim.toFixed(3)},asetpts=PTS-STARTPTS,` : ''}aresample=48000,aformat=channel_layouts=stereo,adelay=${Math.max(1, Math.round(lead * 1000))}:all=1,apad=whole_dur=${dur.toFixed(3)}[a]`,
+      '-map', '[v]', '-map', '[a]', '-t', dur.toFixed(3),
+      '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '17', '-r', String(fps), '-c:a', 'aac', '-ar', '48000', '-b:a', '192k', f,
+    ]);
+    sceneFiles.push(f);
+    timeline.push({ start: cursor, lead, dur, audioDur: v.durationSec, words: v.words });
+    cursor += dur;
+  }
+  const list = path.join(tmp, 'list.txt');
+  await writeFile(list, sceneFiles.map((p) => `file '${p.replace(/\\/g, '/')}'`).join('\n'), 'utf8');
+  const base = path.join(tmp, 'base.mp4');
+  await runFfmpeg(['-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', base]);
+  const totalSec = await getMediaDuration(base);
+
+  // Captions: groups of up to 3 words, break at punctuation; gold on the spoken word
+  const items: OverlayItem[] = [];
+  const cues: SfxCue[] = [{ t: 0.05, kind: 'sparkle', gain: 0.22 }];
+  timeline.forEach((sc, si) => {
+    const ws = sc.words;
+    const groups: number[][] = [];
+    let g: number[] = [];
+    ws.forEach((w, i) => {
+      g.push(i);
+      if (g.length >= 3 || PUNCT_BREAK.test(w.word)) { groups.push(g); g = []; }
+    });
+    if (g.length) groups.push(g);
+    groups.forEach((grp, gi) => {
+      const texts = grp.map((i) => ws[i]!.word);
+      grp.forEach((wi, k) => {
+        const w = ws[wi]!;
+        const start = sc.start + sc.lead + w.start;
+        const nextStart = k + 1 < grp.length ? sc.start + sc.lead + ws[grp[k + 1]!]!.start : sc.start + sc.lead + w.end + 0.22;
+        items.push({ start, end: Math.max(start + 0.12, nextStart), bmp: makeCaption(texts, k), cx: W / 2, cy: 905, shake: false, static: true, fadeIn: k === 0 ? 0.1 : 0.001, fadeOut: k === grp.length - 1 ? 0.12 : 0.001 });
+      });
+      void gi;
+    });
+    if (si > 0) cues.push({ t: sc.start - 0.12, kind: 'whoosh', gain: 0.22 });
+  });
+  if (spec.hookText) items.push({ start: 0, end: 2.4, bmp: makeWordmark(spec.hookText.toUpperCase(), 54), cx: W / 2, cy: 250, shake: false, static: true, fadeIn: 0.001, fadeOut: 0.3 });
+  if (spec.kicker && !spec.hookText) items.push({ start: 0.3, end: 4.2, bmp: makeWordmark(spec.kicker.toUpperCase(), 25), cx: W / 2, cy: 175, shake: false, static: true, fadeIn: 0.6, fadeOut: 0.6 });
+  const lastSc = timeline[timeline.length - 1]!;
+  items.push({ start: lastSc.start + lastSc.lead + lastSc.audioDur + 0.35, end: totalSec - 0.05, bmp: makeWordmark(spec.brand.name.toUpperCase(), 40, spec.brand.sub), cx: W / 2, cy: 300, shake: false, static: true, fadeIn: 0.9, fadeOut: 0.3 });
+
+  const overlay = path.join(tmp, 'overlay.mov');
+  await renderOverlay({ items, width: W, height: H, fps, totalSec, outFile: overlay });
+  const sfx = path.join(tmp, 'sfx.wav');
+  await writeSfxWav(sfx, cues, totalSec);
+
+  const inputs = ['-i', base, '-i', overlay, '-i', sfx];
+  let graph = '[0:v][1:v]overlay=0:0:format=auto[v];[2:a]volume=0.8[s];';
+  const musicWanted = spec.music ?? 'ambient';
+  if (musicWanted !== 'none') {
+    let musicFile: string;
+    if (musicWanted === 'ambient') { musicFile = path.join(tmp, 'bed.wav'); await writeAmbientBed(musicFile, totalSec); } else musicFile = abs(musicWanted);
+    inputs.push('-i', musicFile);
+    graph += `[3:a]volume=${spec.musicVolume ?? 1.6}[m0];[0:a]asplit=2[vo][vsc];[m0][vsc]sidechaincompress=threshold=0.02:ratio=9:attack=15:release=500[md];[vo][md][s]amix=inputs=3:duration=first:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=11[a]`;
+  } else {
+    graph += '[0:a][s]amix=inputs=2:duration=first:normalize=0,loudnorm=I=-14:TP=-1.5:LRA=11[a]';
+  }
+  await mkdir(path.dirname(out), { recursive: true });
+  await runFfmpeg([...inputs, '-filter_complex', graph, '-map', '[v]', '-map', '[a]', '-t', totalSec.toFixed(3), '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '21', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', out]);
+  logger.info('Assembled luxury episode', { out, totalSec });
+  return out;
+}

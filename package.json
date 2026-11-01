@@ -1,0 +1,51 @@
+{
+  "name": "ai-shorts-platform",
+  "version": "0.1.0",
+  "description": "Automated AI YouTube Shorts content factory",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint src --ext .ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "create-short": "tsx src/cli/createShort.ts",
+    "upload-video": "tsx src/cli/uploadVideo.ts",
+    "scheduler": "tsx src/cli/runScheduler.ts",
+    "verify-live-run": "tsx src/cli/verifyLiveRun.ts",
+    "list-pending": "tsx src/cli/listPending.ts",
+    "render-demo": "tsx src/cli/renderDemo.ts",
+    "create-abdul": "tsx src/cli/createAbdulEpisode.ts",
+    "assemble-abdul": "tsx src/cli/assembleEpisode.ts",
+    "split-long": "tsx src/cli/splitLong.ts",
+    "meta-gen": "tsx src/cli/metaGen.ts",
+    "plan-schedule": "tsx src/cli/planSchedule.ts",
+    "yt-upload": "tsx src/cli/ytUpload.ts",
+    "export-subs": "tsx src/cli/exportSubs.ts",
+    "qa-check": "tsx src/cli/qaCheck.ts",
+    "make-thumbs": "tsx src/cli/makeThumbs.ts",
+    "variation": "tsx src/cli/variation.ts",
+    "pipeline": "tsx src/cli/pipeline.ts"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.65",
+    "dotenv": "^16.4.5",
+    "google-auth-library": "^9.14.1",
+    "googleapis": "^140.0.1",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.4",
+    "@types/node-cron": "^3.0.11",
+    "@typescript-eslint/eslint-plugin": "^8.5.0",
+    "@typescript-eslint/parser": "^8.5.0",
+    "eslint": "^8.57.0",
+    "playwright": "^1.64.1",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.1"
+  }
+}

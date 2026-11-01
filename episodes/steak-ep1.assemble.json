@@ -1,0 +1,43 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/steak-ep1/steak-ep1-final.mp4",
+  "fps": 24,
+  "voice": {
+    "provider": "elevenlabs",
+    "speed": 1.0,
+    "stability": 0.45,
+    "style": 0.5
+  },
+  "kicker": "The gold steak",
+  "brand": {
+    "name": "Billionaire Bites",
+    "sub": "Taste the extraordinary"
+  },
+  "music": "ambient",
+  "scenes": [
+    {
+      "image": "storage/episodes/steak-ep1/photos/s1.jpg",
+      "text": "This steak costs one hundred fifty nine pounds. Here's why."
+    },
+    {
+      "image": "storage/episodes/steak-ep1/photos/s2.jpg",
+      "text": "It's a tomahawk from a steakhouse in Liverpool."
+    },
+    {
+      "image": "storage/episodes/steak-ep1/photos/s3.jpg",
+      "text": "The same cut without gold costs thirty nine pounds."
+    },
+    {
+      "image": "storage/episodes/steak-ep1/photos/s4.jpg",
+      "text": "The difference is twenty-four karat gold leaf, and it's completely edible."
+    },
+    {
+      "image": "storage/episodes/steak-ep1/photos/s5.jpg",
+      "text": "The gold adds no flavor. You're paying for the look."
+    },
+    {
+      "image": "storage/episodes/steak-ep1/photos/s6.jpg",
+      "text": "Would you pay a hundred and twenty pounds extra for gold? Follow for more jewelry on a plate."
+    }
+  ]
+}

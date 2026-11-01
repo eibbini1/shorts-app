@@ -1,0 +1,43 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/jewel-ep1/jewel-ep1-final.mp4",
+  "fps": 24,
+  "voice": {
+    "provider": "elevenlabs",
+    "speed": 1.0,
+    "stability": 0.45,
+    "style": 0.5
+  },
+  "kicker": "Food that looks like jewelry",
+  "brand": {
+    "name": "Billionaire Bites",
+    "sub": "Taste the extraordinary"
+  },
+  "music": "ambient",
+  "scenes": [
+    {
+      "image": "storage/episodes/jewel-ep1/stills/scene1.jpg",
+      "text": "These desserts look like jewelry. But you can eat every piece."
+    },
+    {
+      "image": "storage/episodes/jewel-ep1/stills/scene2.jpg",
+      "text": "Sugar pearls shimmer just like the real thing."
+    },
+    {
+      "image": "storage/episodes/jewel-ep1/stills/scene3.jpg",
+      "text": "Rock candy crystals grow slowly, just like gemstones."
+    },
+    {
+      "image": "storage/episodes/jewel-ep1/stills/scene4.jpg",
+      "text": "Pastry chefs set glossy sugar gems into gold dusted chocolate."
+    },
+    {
+      "image": "storage/episodes/jewel-ep1/stills/scene5.jpg",
+      "text": "Which gem would you taste first?"
+    },
+    {
+      "image": "storage/episodes/jewel-ep1/stills/scene6.jpg",
+      "text": "Follow for more jewelry on a plate."
+    }
+  ]
+}

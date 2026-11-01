@@ -1,0 +1,43 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/biryani-ep1/biryani-ep1-final.mp4",
+  "fps": 24,
+  "voice": {
+    "provider": "elevenlabs",
+    "speed": 1.0,
+    "stability": 0.45,
+    "style": 0.5
+  },
+  "kicker": "The gold biryani",
+  "brand": {
+    "name": "Billionaire Bites",
+    "sub": "Taste the extraordinary"
+  },
+  "music": "ambient",
+  "scenes": [
+    {
+      "image": "storage/episodes/biryani-ep1/photos/s1.jpg",
+      "text": "This biryani costs a thousand dirhams. Here's why."
+    },
+    {
+      "image": "storage/episodes/biryani-ep1/photos/s2.jpg",
+      "text": "It's the Royal Gold Biryani, served at a Dubai restaurant in the financial district."
+    },
+    {
+      "image": "storage/episodes/biryani-ep1/photos/s3.jpg",
+      "text": "The rice is infused with saffron."
+    },
+    {
+      "image": "storage/episodes/biryani-ep1/photos/s4.jpg",
+      "text": "It comes with lamb chops, kebabs and koftas."
+    },
+    {
+      "image": "storage/episodes/biryani-ep1/photos/s5.jpg",
+      "text": "And it's topped with edible twenty-three karat gold."
+    },
+    {
+      "image": "storage/episodes/biryani-ep1/photos/s6.jpg",
+      "text": "Would you pay a thousand dirhams for dinner? Follow for more jewelry on a plate."
+    }
+  ]
+}

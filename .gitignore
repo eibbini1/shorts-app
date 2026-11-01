@@ -1,0 +1,30 @@
+# secrets
+.env
+.env.*
+!.env.example
+*.pem
+client_secret*.json
+token*.json
+oauth*.json
+
+# deps / build
+node_modules/
+dist/
+
+# generated media and caches (large, reproducible)
+out/
+storage/
+*.mp4
+*.mp3
+*.wav
+*.mov
+*.png
+*.jpg
+*.jpeg
+!assets/**/*.png
+!assets/**/*.jpg
+
+# local machine helpers
+*.log
+.DS_Store
+Thumbs.db

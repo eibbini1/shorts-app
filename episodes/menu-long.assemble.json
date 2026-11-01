@@ -1,0 +1,206 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/menu-long/menu-long-final.mp4",
+  "fps": 24,
+  "width": 1280,
+  "height": 720,
+  "voice": {
+    "provider": "elevenlabs",
+    "speed": 1.0,
+    "stability": 0.45,
+    "style": 0.5
+  },
+  "kicker": "One night. Five courses.",
+  "brand": {
+    "name": "Billionaire Bites",
+    "sub": "Taste the extraordinary"
+  },
+  "music": "ambient",
+  "scenes": [
+    {
+      "image": "storage/episodes/menu-long/photos/s30.jpg",
+      "text": "A burger covered in gold. A truffle that once sold for over three hundred thousand dollars. A dessert that comes with diamonds. And it's all one dinner.",
+      "motion": "hook"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s31.jpg",
+      "text": "Welcome to Billionaire Bites. Our vision is simple: to take you inside the world's most extraordinary food, where every dish is jewelry on a plate, and every price has a story.",
+      "motion": "in",
+      "transition": "flash"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s1.jpg",
+      "text": "Tonight, one table in a dark dining room is set for a single guest. His order to the chef was simple: cook me the most expensive dinner on Earth.",
+      "motion": "in",
+      "transition": "gold"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s2.jpg",
+      "text": "The chef has one night, and a menu of five courses. Every ingredient must come from the best place in the world. So the journey begins.",
+      "motion": "reveal",
+      "transition": "gold"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s3.jpg",
+      "text": "Course one begins in a field at dawn. One gram of saffron takes about one hundred and fifty flowers.",
+      "motion": "tiltdown",
+      "transition": "gold"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s4.jpg",
+      "text": "Each flower blooms for only a few days a year, and holds just three crimson threads. Every thread is picked by hand, before the sun can fade it.",
+      "motion": "in",
+      "transition": "fade"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s5.jpg",
+      "text": "The threads are slowly dried, until deep red turns to liquid gold. Did you already know? That is why saffron is the most expensive spice on Earth.",
+      "motion": "diag",
+      "transition": "fade"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s6.jpg",
+      "text": "Back in the kitchen, the chef soaks the threads in warm milk. Good to know: this releases the color and flavor, so a pinch can paint a whole pot of rice.",
+      "motion": "side",
+      "transition": "gold"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s7.jpg",
+      "text": "The first plate reaches the table, golden and fragrant. One course down. Now the chef needs something from the forest.",
+      "motion": "in",
+      "transition": "fade"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s8.jpg",
+      "text": "Course two begins at night, in an Italian forest near Alba. Hunters rely on trained dogs to sniff out the white truffle, hidden among tree roots.",
+      "motion": "in",
+      "transition": "gold"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s9.jpg",
+      "text": "Nobody has ever farmed it reliably. This ugly lump of dirt can cost more than gold, and its aroma fades within days.",
+      "motion": "reveal",
+      "transition": "fade"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s10.jpg",
+      "text": "Did you already know? One giant white truffle once sold for over three hundred thousand dollars.",
+      "motion": "out",
+      "transition": "fade"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s11.jpg",
+      "text": "So the truffle races to the kitchen, and is shaved fresh over a warm plate. Good to know: truffles are never really cooked. The heat of the dish is enough to wake up the aroma.",
+      "motion": "tiltup",
+      "transition": "gold"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s12.jpg",
+      "text": "Course three comes from Japan. Real Kobe beef comes only from Hyogo, and every cut is tracked from farm to plate.",
+      "motion": "left",
+      "transition": "gold"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s13.jpg",
+      "text": "It's A5 wagyu, the highest grade of beef on Earth. Inspectors score the marbling, those white ribbons of fat, from one to twelve.",
+      "motion": "tiltdown",
+      "transition": "fade"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s14.jpg",
+      "text": "In the pan, the fat melts at a lower temperature than normal beef, so it dissolves on your tongue. Good to know: a few thin slices are enough.",
+      "motion": "in",
+      "transition": "fade"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s15.jpg",
+      "text": "One steak can cost hundreds of dollars. The plate is set before the guest, but the chef is saving the boldest idea for course four.",
+      "motion": "side",
+      "transition": "fade"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s16.jpg",
+      "text": "Course four is a surprise. The chef takes that wagyu and builds a burger, a thick patty seared until the fat glistens, on a toasted brioche bun.",
+      "motion": "tiltdown",
+      "transition": "gold"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s17.jpg",
+      "text": "Next comes a spoonful of caviar, the salted eggs of the sturgeon fish. The rarest comes from an albino sturgeon, and can cost tens of thousands of dollars a kilo.",
+      "motion": "side",
+      "transition": "fade"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s18.jpg",
+      "text": "The finishing touch is real, edible, twenty four karat gold leaf. Did you already know? It is so thin, it is completely edible.",
+      "motion": "in",
+      "transition": "flash"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s19.jpg",
+      "text": "Good to know: gold has no taste. It simply passes through your body. You are paying for the look, and the story. Some of these burgers sell for more than a thousand dollars.",
+      "motion": "out",
+      "transition": "gold"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s20.jpg",
+      "text": "Before dessert, the chef serves a palate cleanser, with vanilla. Every orchid flower opens for just one day, so farmers pollinate each one by hand.",
+      "motion": "tiltup",
+      "transition": "gold"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s21.jpg",
+      "text": "And edible bird's nest, made from the dried saliva of swiftlets, prized in Chinese cooking for centuries.",
+      "motion": "left",
+      "transition": "fade"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s22.jpg",
+      "text": "Notice the pattern. Hand picking, hand pollinating, hand harvesting. Luxury food is usually expensive because of human time, not just rare ingredients.",
+      "motion": "diag",
+      "transition": "fade"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s23.jpg",
+      "text": "Now the final course. The chef turns to the most famous luxury dessert in the world. It was served at Serendipity 3 in New York for twenty five thousand dollars, and it set a Guinness record.",
+      "motion": "tiltdown",
+      "transition": "gold"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s24.jpg",
+      "text": "The goblet is lined with edible gold, and it sits on an eighteen karat gold bracelet with diamonds.",
+      "motion": "side",
+      "transition": "fade"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s25.jpg",
+      "text": "You eat it with a gold spoon set with diamonds, and you get to keep it.",
+      "motion": "in",
+      "transition": "fade"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s26.jpg",
+      "text": "Five courses. A spice from a flower field, a truffle from a forest, beef from Japan, a burger crowned in caviar and gold, and a dessert that doubles as jewelry.",
+      "motion": "reveal",
+      "transition": "gold"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s27.jpg",
+      "text": "The candle burns low. The table is empty, and the guest is gone. All that is left is the story of where every bite came from.",
+      "motion": "in",
+      "transition": "fade"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s28.jpg",
+      "text": "Now it's your turn. If you could only pick one course from tonight's menu, which would it be? Tell us in the comments.",
+      "motion": "diag",
+      "transition": "fade"
+    },
+    {
+      "image": "storage/episodes/menu-long/photos/s29.jpg",
+      "text": "Follow Billionaire Bites for more jewelry on a plate. Next time, we'll find an even more expensive menu.",
+      "motion": "out",
+      "transition": "fade"
+    }
+  ]
+}
