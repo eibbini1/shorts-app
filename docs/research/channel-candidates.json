@@ -92,7 +92,13 @@
         "YuZFW10T2Uo",
         "Z601ZyJ3_VI"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for food hook review",
+        "reason": "Matched samples cover caviar, gourmet food, rare fruit and luxury dining.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCkLNHZZsC3LKdUAroKNwOOw",
@@ -126,7 +132,13 @@
         "uWSsps159rw",
         "zPxQjuFoUBc"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for cooking motion review",
+        "reason": "Matched samples cover grilled cheese and food presentation.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCAJnyTWJPpKXuwgWQDdNWrQ",
@@ -429,7 +441,13 @@
         "Xg5eyXFgmJo",
         "blDev_gChA4"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for luxury food review",
+        "reason": "Matched samples cover wagyu pasta and food price comparisons.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UC_35hRJlT4PEmvFCcU6l_3Q",
@@ -443,7 +461,13 @@
       "sampleVideoIds": [
         "ppwAv7x7c60"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for dessert motion review",
+        "reason": "Matched sample is a lava dessert.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCE6dS5o_2zxZgwfCwvvg2tQ",
@@ -591,7 +615,13 @@
         "8sS4IgZVzKQ",
         "za3P5iA8GPI"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for comparison hook review",
+        "reason": "Matched samples include cheap versus expensive steak and noodles.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCA4CQI6AmD3dgqfSoErBWQA",
@@ -634,7 +664,13 @@
       "sampleVideoIds": [
         "ky6cV2YdLaI"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for food presentation review",
+        "reason": "Matched sample is a Korean style burger.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCH5CEZ8vYsCGLfJEr8LAuRQ",
@@ -677,7 +713,13 @@
         "uwvHlGm0hBc",
         "sr5F--sFWOc"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "adjacent reference only",
+        "reason": "Matched samples are dining and eating experiences.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCytgnJE6TrzTTq19GYCOyTg",
@@ -751,7 +793,13 @@
       "sampleVideoIds": [
         "C-V_kSnBSwg"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for dessert texture review",
+        "reason": "Matched sample is a chocolate cake recipe.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCQVwn0HNVFhg52-8ln0WJSw",
@@ -767,7 +815,13 @@
         "LAZIsOsC62Q",
         "t0ixOjMd7L0"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for food transformation review",
+        "reason": "Matched sample turns a frozen dinner into gourmet food.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCilcnu178Z2ULEHzJPJbWdQ",
@@ -826,7 +880,13 @@
       "sampleVideoIds": [
         "GFYsZ2yRvrw"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "adjacent reference only",
+        "reason": "Matched sample is a black truffle drink.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCuuLy9wn33DAE7qNt7oVGww",
@@ -843,7 +903,13 @@
         "C8C1XXuM4AA",
         "_LAFdbULobc"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "adjacent reference only",
+        "reason": "Matched samples focus on restaurant and price comparisons.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCYS6mSp3x-dP0rxzWoM3x_Q",
@@ -885,7 +951,13 @@
       "sampleVideoIds": [
         "2RlIdN-9ER0"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for food test review",
+        "reason": "Matched sample tests expensive pasta.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCl90rgsYqIKsVHDJLHqKp_Q",
@@ -945,7 +1017,13 @@
       "sampleVideoIds": [
         "Wo0smJajSuM"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for cooking motion review",
+        "reason": "Matched sample is a full English breakfast.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCzQtGpWcgOyG0iCc-si1MWw",
@@ -1003,7 +1081,13 @@
         "X0fKtjapZJY",
         "c-BHISpQA_Q"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for cooking sequence review",
+        "reason": "Matched samples are fine dining on a budget episodes.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCQLJFXhxbl5SMfcGZSnURhQ",
@@ -1031,7 +1115,13 @@
       "sampleVideoIds": [
         "-9St-k_izrc"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for ingredient explanation review",
+        "reason": "Matched sample explains Parmigiano Reggiano naming.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UC2MtuHEvnlp5I9GhTuC0R1A",
