@@ -32,7 +32,8 @@
     "automate": "tsx src/cli/automate.ts",
     "automate:watch": "tsx src/cli/automate.ts --watch",
     "draft-shorts": "tsx src/cli/draftShorts.ts",
-    "approve-draft": "tsx src/cli/approveDraft.ts"
+    "approve-draft": "tsx src/cli/approveDraft.ts",
+    "channel-snapshot": "tsx src/cli/channelSnapshot.ts"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.65",

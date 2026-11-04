@@ -104,3 +104,11 @@ Quantized or CPU offload alternatives require separate measurement and visual QA
 A Seedance-like output quality claim remains unverified.
 
 Source https://github.com/Wan-Video/Wan2.2
+
+## Repeatable channel statistics
+
+Run npm run channel-snapshot to collect the connected BB channel's current video
+metadata and public counters. It checks the expected channel ID, traverses the
+uploads playlist, batches video requests and saves an archived snapshot plus
+storage/analytics/bb-latest.json. These local files remain ignored by Git.
+The command does not provide retention curves or stayed to watch.
