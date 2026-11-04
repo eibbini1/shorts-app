@@ -272,3 +272,14 @@ stylized animation, fantasy effects, tutorials and unrelated samples. This is a
 completed metadata triage pass, not 122 completed visual reviews. Five sampled
 visual reviews are recorded separately. The requested best 100 comparison and
 retention-based validation remain unfinished.
+
+## Verified Analytics API prerequisite
+
+A read only YouTube Analytics report request on November 4 2026 returned HTTP
+403 accessNotConfigured. Google reported that youtubeanalytics.googleapis.com
+is disabled or unused in the connected Cloud project. Enable YouTube Analytics
+API in that project before retrying. OAuth analytics permission may also require
+a separate consent step after the service is enabled; this has not been tested.
+The existing Data API connection remains usable for metadata snapshots.
+
+Reference https://developers.google.com/youtube/analytics/reference/reports/query
