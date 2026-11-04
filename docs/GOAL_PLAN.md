@@ -217,3 +217,37 @@ ASMR. Public candidate IDs, query provenance, sampled video IDs and metric
 snapshots are versioned in docs/research/channel-candidates.json. Candidates are
 sorted by visible subscriber count for triage. This does not establish a top
 100 ranking. Relevance, format, identity and visual review remain required.
+
+## Confirmed Mac profile and next runtime test
+
+The user reports a MacBook Pro with Apple M1 and 16 GB unified memory.
+Actual macOS version, free storage and access to that machine remain pending.
+
+The community dgrauet/ltx-2-mlx project documents M1 support, image conditioning
+and a 16 GB int4 configuration. It is the next smoke test candidate.
+scripts/test-mac-motion.sh prepares a 49 frame, 24 fps, 384 by 640 portrait test
+using the 2.3 q4 pack and low RAM mode. Shell syntax was checked on Windows.
+Generation has not been run or visually validated on the Mac.
+
+Install and review the upstream runtime in a separate environment on the Mac.
+Use its documented setup and model license flow. Set LTX_MLX_BIN to the
+environment's executable if it is not on PATH. First run may download model
+weights. Inspect available disk space before setup. The script preserves
+existing output files. It does not install packages or connect to paid APIs.
+
+Example after setup
+
+    sh scripts/test-mac-motion.sh source.jpg "Fine salt falls onto the fries and settles naturally. Preserve food geometry." storage/motion/salt-test.mp4
+
+Pass accepted output clips into the episode scene video fields. The short test
+checks compatibility before generating the shots for the 10 second acceptance
+test. It does not change the final quality target.
+
+Sources checked November 4 2026
+
+- https://github.com/dgrauet/ltx-2-mlx
+- https://github.com/Lightricks/LTX-Desktop
+
+The current official LTX Desktop requirements place 16 GB Macs below its local
+generation floor. Its installation alone would not prove a local route for this
+Mac. The separate MLX candidate needs its own runtime and quality verification.
