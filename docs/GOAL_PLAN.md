@@ -189,3 +189,12 @@ YouTube's reported average view duration or average percentage viewed.
 Golden Fries has only eight views in this reporting window, so this export alone
 cannot establish its creative quality or compare it fairly to newly published
 videos. It is a period export, not a lifetime performance record.
+
+Competitor research pilot collected public YouTube Data API metadata and counts
+for 20 recent uploads from each of eight food channels on November 4 2026.
+The exact handles are NickDiGiovanni, GugaFoods, JoshuaWeissman, BayashiTV,
+ZachChoi, ChefRush, albert_cancook and itsQCP. Raw evidence is stored locally at
+storage/analytics/competitor-pilot.json. This is a purposive pilot of 160 uploads,
+not the requested 100 channel study. The clips still require visual review,
+Shorts classification and equal age normalization before creative conclusions.
+Public view counts do not expose retention or causal effects.
