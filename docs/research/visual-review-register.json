@@ -1,0 +1,33 @@
+{
+  "updatedAt": "2026-11-04",
+  "method": "Browser playback with sampled frame observations. This register does not imply full frame by frame review.",
+  "reviews": [
+    {
+      "videoId": "wfTISOEGVqQ",
+      "channel": "Nick DiGiovanni",
+      "url": "https://www.youtube.com/watch?v=wfTISOEGVqQ",
+      "coverage": "Opening, around seven seconds and ending",
+      "purpose": "Physical food action, progression markers and interior reveal",
+      "style": "filmed human led cooking",
+      "notes": "docs/COMPETITOR_REVIEW.md"
+    },
+    {
+      "videoId": "L5y_cvweBgQ",
+      "channel": "Max the Meat Guy",
+      "url": "https://www.youtube.com/watch?v=L5y_cvweBgQ",
+      "coverage": "Opening and around 22 seconds; ending not assessed",
+      "purpose": "Luxury ingredient scale and utensil contact",
+      "style": "filmed human led cooking",
+      "notes": "docs/COMPETITOR_REVIEW.md"
+    },
+    {
+      "videoId": "yj2n8F8rB6E",
+      "channel": "Tiny Masala magic",
+      "url": "https://www.youtube.com/watch?v=yj2n8F8rB6E",
+      "coverage": "Opening and around 24 seconds",
+      "purpose": "Ingredient to preparation sequence",
+      "style": "stylized miniature AI animation; separate from realistic target",
+      "notes": "docs/COMPETITOR_REVIEW.md"
+    }
+  ]
+}
