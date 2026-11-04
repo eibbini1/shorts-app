@@ -36,3 +36,21 @@ defects before publishing.
 
 The source is human led filmed content. It does not establish that an AI
 generated BB video will reproduce its audience response.
+
+## Second sampled review
+
+Max the Meat Guy, $2,000 Wagyu Parm Pasta.
+https://www.youtube.com/watch?v=L5y_cvweBgQ
+
+The visible opening presents a full parmesan wheel on a work surface with the
+creator behind it. A later sampled frame around 22 seconds shows a spoon moving
+inside the hollowed wheel. The material texture and the visible hand action make
+the preparation legible. The sampled session did not capture the final food
+reveal, so no ending assessment is recorded.
+
+A BB candidate is a single coherent action shot that shows the tool, contact
+surface and food response together. For generated motion, a spoon stirring a
+small amount of sauce is a bounded initial test. Inspect contact, liquid motion
+and the wheel geometry before adding larger flames or complex movements.
+
+This observation does not identify the cause of the video's view count.
