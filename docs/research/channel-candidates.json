@@ -20,7 +20,13 @@
         "jGAJCAuV3pQ",
         "LgbyEFILLJI"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "adjacent reference only",
+        "reason": "Several matched samples use food price comparisons, but the channel covers broad entertainment.",
+        "basis": "Matched sample title in video-candidates.json; full visual review pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCPuEAY09CtdTzFNWuqVZgDw",
@@ -134,7 +140,13 @@
       "sampleVideoIds": [
         "egK37yP_bAk"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison",
+        "reason": "Matched sample is a childrens animation clip about sharing snacks.",
+        "basis": "Matched sample title in video-candidates.json; full visual review pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCtM58H2QaTXTi7OIRAVgAGg",
@@ -212,7 +224,13 @@
       "sampleVideoIds": [
         "lj61qUDy5A4"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "adjacent reference only",
+        "reason": "Matched sample tests car boots with a cucumber; automotive subject.",
+        "basis": "Matched sample title in video-candidates.json; full visual review pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCXMVaxrax7RNDPdfRrXXgtQ",
@@ -271,7 +289,13 @@
       "sampleVideoIds": [
         "CvUw-xwfC8U"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison",
+        "reason": "Matched sample is a nursery rhyme about feeding farm animals.",
+        "basis": "Matched sample title in video-candidates.json; full visual review pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCDtz84R5bn4fY8AgHuouojg",
@@ -1063,7 +1087,13 @@
       "sampleVideoIds": [
         "B7eX1klo0j0"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison",
+        "reason": "Matched sample discusses constipation rather than appetizing food presentation.",
+        "basis": "Matched sample title in video-candidates.json; full visual review pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCis6L5qigp3HHig1aFZGm8A",
@@ -1290,7 +1320,13 @@
       "sampleVideoIds": [
         "tT3JwqEgOuw"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison",
+        "reason": "Matched sample is an inflamed gut animation.",
+        "basis": "Matched sample title in video-candidates.json; full visual review pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCn7C6ijXTzxaCiVSodRpE4g",
@@ -1335,7 +1371,13 @@
       "sampleVideoIds": [
         "oBshm2hxp54"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison",
+        "reason": "Matched sample is an endoscopic constipation animation.",
+        "basis": "Matched sample title in video-candidates.json; full visual review pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCZ1TAoYQ47tRgM9OlYS4Udw",
@@ -1392,7 +1434,13 @@
       "sampleVideoIds": [
         "V0ALvVPHz-8"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison",
+        "reason": "Matched sample presents artery health claims.",
+        "basis": "Matched sample title in video-candidates.json; full visual review pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCkul5eYwNYWNk3jYSoENhhQ",
@@ -1523,7 +1571,13 @@
       "sampleVideoIds": [
         "NZqg5QbH-I8"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison",
+        "reason": "Matched sample concerns game characters and AI animation.",
+        "basis": "Matched sample title in video-candidates.json; full visual review pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UClPfXMBI2JnDED6hWfW0v7w",
@@ -1677,7 +1731,13 @@
       "sampleVideoIds": [
         "fFt9cZpf6fU"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "technique reference only",
+        "reason": "Matched sample concerns AI food video generation. Creator comparison requires further review.",
+        "basis": "Matched sample title in video-candidates.json; full visual review pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCbHNboMp9enGYZaxVffgbzQ",
