@@ -115,3 +115,32 @@ target, test an ordinary edible filling with plausible viscosity and texture.
 Keep the real or AI framing separate from claims about a real restaurant dish.
 The sampled view does not establish the actual generation model or whether a
 local model can reproduce the shot.
+
+## Seventh sampled review
+
+Patrick Zeinali, Lava Dessert.
+https://www.youtube.com/watch?v=ppwAv7x7c60
+
+The opening combines an inset lava-like food image with the creator's reaction.
+A sampled frame around 14 seconds shows a red mixture stretching from a whisk
+over a saucepan. Treat the opening reference and the filmed recipe sequence as
+different evidence. The sampled frames do not verify the actual generation
+model used for the inset.
+
+A BB test can use a visible filling or sauce stretch as the action while keeping
+the source food's material properties plausible. Do not assume that the reaction
+format or the lava appearance itself fits BB's narration style.
+
+## Eighth sampled review
+
+Chocolate Cacao, Ultimate chocolate moist cake.
+https://www.youtube.com/watch?v=C-V_kSnBSwg
+
+The sampled opening places chocolate packages on a worktop. Around 27 seconds,
+an ingredient is added to a saucepan. A later frame around 52 seconds shows the
+dense chocolate dessert on a cutting board. This is a preparation sequence with
+an observable material change between ingredients and finished dessert.
+
+A BB motion prompt can isolate a single preparation action and use a separate
+finished-texture shot for the payoff. These sampled observations do not establish
+exact pacing, the final serving shot, or an audience effect.
