@@ -806,7 +806,15 @@
       "sampleVideoIds": [
         "Ev35I5945XI"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "price test reference",
+        "sampleTitles": [
+          "World’s Most Expensive Chocolate Bar: $500 Taste Test"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCZ4fHlVQNtIGssKm0VcJVfw",
@@ -824,7 +832,19 @@
         "B-jzxGAmw6k",
         "yxYNngtdsPE"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating challenge reference",
+        "sampleTitles": [
+          "Couple Eating Emojis Challenge | #asmr #food #shorts",
+          "Eating Challenge ( 8 drumsticks, 5 mochi, 2 lb ghost pepper noodles) #asmr #food #shorts",
+          "Funny Sisters Emoji Eating Challenge | #asmr #food #shorts",
+          "Sisters Emoji Eating Challenge | #asmr #food #funny #eating #shorts",
+          "Eating Faster like a good girl | #asmr #food #funny #shorts"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCBSGboqYmgfWFkiwURwPMsg",
@@ -838,7 +858,15 @@
       "sampleVideoIds": [
         "K9BHsS7UIxk"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "drink preparation reference",
+        "sampleTitles": [
+          "Pulse Mojito ASMR || #shorts #asmr #indianasmrworld #pulse #mojito #food #streetfood"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCFhMOIr1FZNaLwHXNIkBMSg",
@@ -876,7 +904,15 @@
       "sampleVideoIds": [
         "t3cAd2mrMSk"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison; matched sample concerns fidget toys",
+        "sampleTitles": [
+          "Fidgets that Look Like Burger King Food Satisfying Video ASMR! #shorts #fidgets #asmr"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UC19x8yVdc96ogGHQyb4gfwg",
@@ -891,7 +927,16 @@
         "qjaiBfTi60g",
         "LdclP_rQBtw"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "price comparison reference",
+        "sampleTitles": [
+          "I tested rupees 30 vs 400 rupees  luxury noodles  #ytshorts #minivlog",
+          "I ate the most expensive Indian street food   1200 Choley Bhature  #minivlog #ytshorts"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCJQVsC3XcvuRMRr-jD_kTPw",
@@ -925,7 +970,15 @@
       "sampleVideoIds": [
         "R0e30r3bSeI"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "price comparison reference",
+        "sampleTitles": [
+          "5-Star Hotel vs Dhabha ka Khana 😱 | ₹45 vs. ₹2000 Food  @Param_aedy #shorts #shortsfeed"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCm3uwvJw2KHp4aWRjj_IWTQ",
@@ -939,7 +992,15 @@
       "sampleVideoIds": [
         "ZPQ-pqM__jQ"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "price comparison reference",
+        "sampleTitles": [
+          "Cheap v/s expensive famous momos😱😍 | Delhi Street Food Challenge 😍 | @sosaute #shorts"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCamdvUq4-BoneYsHZt0Agrw",
@@ -974,7 +1035,15 @@
       "sampleVideoIds": [
         "hBchw5-EQrI"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "price hook reference",
+        "sampleTitles": [
+          "World's Most Expensive Pizza"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCk-VjT9epcCoRsE1nnQCUiQ",
@@ -988,7 +1057,15 @@
       "sampleVideoIds": [
         "12M8_m_Vm_s"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for food cinematography technique review",
+        "sampleTitles": [
+          "Cinematic enough to make chutney feel expensive 😍 #bts #chutney #cinematic #cinematography #food"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UC5zS0_6TYr17qTnvw_9vang",
@@ -1002,7 +1079,15 @@
       "sampleVideoIds": [
         "wf-jiMQgRvk"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "restaurant reference",
+        "sampleTitles": [
+          "Most Expensive Restaurant In India 🤑🍛"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCcqa2nmuSt_YpPQFRFmV88g",
@@ -1019,7 +1104,17 @@
         "_T-JdrnvvNI",
         "twcc83e5kSE"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "food review and comparison reference",
+        "sampleTitles": [
+          "VANDE BHARAT🥘#food #foodie #vandebharatexpress #review #foodvlogs #irctc #train #shorts #foodreview",
+          "MOMOS🥟#food #foodie #momos #streetfood #foodvlog #comparison #cheap #expensive #spicyfood #minivlog",
+          "Cholle Bhature🥘#food #foodie #cheap #expensive #rain #localfood #bhature #foodvlog #comparison #new"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCqzebzc9N19X3MVFnuFYtRw",
@@ -1078,7 +1173,17 @@
         "6qbEGeqTing",
         "7SXaLUEGj4E"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating challenge reference",
+        "sampleTitles": [
+          "ASMR Mukbang 💚 Eating Random Green Food #shorts #food #asmr #mukbang #challenge #spicyfood",
+          "ASMR Mukbang 🖤💀 Eating Random Black Food #funny #shorts #mukbang #eating #food",
+          "Random Black Food ASMR Mukbang #3 ♠️🕷️☕️ #shorts  #food #asmr #mukbang #challenge"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCqJQKRhBP1w1PcRmIpbQZwQ",
@@ -1092,7 +1197,15 @@
       "sampleVideoIds": [
         "xviHiciSxjA"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "food product review reference",
+        "sampleTitles": [
+          "Expensive Chewing Gum Review🍭 #fun2ooshfood #youtubepartner #shorts @Fun2oosh Food"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCsKc38DDpGkNTHwsYjA0rbA",
@@ -1107,7 +1220,16 @@
         "deHhOLWlC7s",
         "w48lbMAJX0Y"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "food discovery reference",
+        "sampleTitles": [
+          "Day 1/100 of Trying Unique and New Food Dishes 😍😍",
+          "Trying Food at Chef Harpal Singh’s Restaurant 😍"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCp4nL9M78_HF6JL1MNzh-NQ",
@@ -1164,7 +1286,15 @@
       "sampleVideoIds": [
         "41xEYyILlg8"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "restaurant food presentation reference",
+        "sampleTitles": [
+          "Best bbq  @thesmokefactory_ny 5805 W Irlo Bronson Memorial Hwy, Kissimmee, FL 34746 #foodie #shorts"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCZDCkQWcA3fh8rvrPXUb16g",
@@ -1178,7 +1308,15 @@
       "sampleVideoIds": [
         "SEea9znaIHQ"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "food price comparison reference",
+        "sampleTitles": [
+          "Rating pasta from cheap to expensive in Paris 🍝"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UC6ILA0ufdGI_RxNIj2-aSFw",
@@ -1212,7 +1350,15 @@
       "sampleVideoIds": [
         "Q52ptkEpa9g"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "food price challenge reference",
+        "sampleTitles": [
+          "🥪₹50 vs. ₹500 Sandwich Challenge! Cheap vs. Expensive food comparison! #funnyshorts #foodchallenge"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCMpVQVKYRb_xXnevxQjYepQ",
@@ -1229,7 +1375,17 @@
         "kYwTNWfMbYs",
         "7SLmjtNmjNw"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for cooking comparison review",
+        "sampleTitles": [
+          "Cheap Vs Expensive Pasta #cooking #food #foodasmr #recipe",
+          "These scare me #cooking #food #foodasmr #recipe",
+          "Cheap Vs Expensive TV Dinner #cooking #food #foodasmr #recipe"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCAQsADLPq8SHu77zjG2lmSQ",
@@ -1244,7 +1400,15 @@
       "sampleVideoIds": [
         "XdxWszPLCz4"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "food platter presentation reference",
+        "sampleTitles": [
+          "Gourmet Platter Delicious Food"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCWq3Kp5CSMhzRHUbHJsDDZQ",
@@ -1278,7 +1442,15 @@
       "sampleVideoIds": [
         "eHoqMy9et9U"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison; matched sample concerns a luxury spa",
+        "sampleTitles": [
+          "24 HR LUXURY SPA IN CHINA🇨🇳🤩 #china #shanghai #spa #beauty #massage"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCgkq0lFYCF3dWSn2TCoKgrg",
@@ -1292,7 +1464,15 @@
       "sampleVideoIds": [
         "DZ54zFJ9E4k"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for food sensory review",
+        "sampleTitles": [
+          "Pakhala Bhat ASMR #Shorts"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UC-LysfLQb3pT8wZNvgj_Eag",
@@ -1306,7 +1486,15 @@
       "sampleVideoIds": [
         "gm5FJRL3EWU"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating sounds reference; attribution review needed",
+        "sampleTitles": [
+          "[ASMR] eating emoji 🍮💦 credits:‎‎ @SatisfyingLips || close req || #eatingsounds #asmremoji"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCkk43V0FMRnQQSbG6s3VR3A",
@@ -1342,7 +1530,15 @@
       "sampleVideoIds": [
         "Bt9-hLJrOc8"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "food price comparison reference",
+        "sampleTitles": [
+          "Ordering the most EXPENSIVE FOOD from INEXPENSIVE RESTAURANTS #shorts"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCzHOkzGn75jgxMR6-IJVfVA",
@@ -1376,7 +1572,15 @@
       "sampleVideoIds": [
         "5ufArqNNAfY"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI food interpretation reference; realism review pending",
+        "sampleTitles": [
+          "Show me Momos😋🥟 | AI Confused!"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCH68duckGT6BFUcIKuQUD6g",
@@ -1390,7 +1594,15 @@
       "sampleVideoIds": [
         "TnwN73Y3FXc"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating challenge reference",
+        "sampleTitles": [
+          "🍭🍒😋ASMR EATING emoji challenge #shorts"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCMVw8QtbECBcazBFdN-cZiw",
