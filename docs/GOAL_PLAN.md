@@ -170,3 +170,12 @@ A green test suite or a rendered still montage alone cannot prove the full goal.
 
 These generation projects are research candidates. Inclusion does not establish
 compatibility or quality on the user's Mac.
+
+## Latest analytics evidence
+
+A read only YouTube API snapshot was saved locally on November 4 2026 at
+storage/analytics/bb-baseline.json. It contains metadata and statistics for 36
+BB videos, including 23 public videos at capture time. It is ignored by Git.
+These Data API statistics do not include retention or stayed to watch.
+A channel performance conclusion still requires those metrics and equal age
+comparison windows. The separate requested competitor research remains open.
