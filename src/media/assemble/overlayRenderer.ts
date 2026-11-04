@@ -145,14 +145,14 @@ const easeOutBack = (x: number): number => {
 export async function renderOverlay(opts: {
   items: OverlayItem[];
   chip?: Canvas;
-  chipFrom: number;
+  chipFrom?: number;
   width: number;
   height: number;
   fps: number;
   totalSec: number;
   outFile: string;
 }): Promise<void> {
-  const { items, chip, chipFrom, width: W, height: H, fps, totalSec, outFile } = opts;
+  const { items, chip, chipFrom = 0, width: W, height: H, fps, totalSec, outFile } = opts;
   const child = spawn('ffmpeg', [
     '-y', '-hide_banner', '-loglevel', 'error',
     '-f', 'rawvideo', '-pix_fmt', 'rgba', '-s', `${W}x${H}`, '-r', String(fps), '-i', '-',

@@ -28,3 +28,6 @@ storage/
 *.log
 .DS_Store
 Thumbs.db
+
+# OAuth client and refresh tokens
+secrets/

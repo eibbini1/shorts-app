@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { scoreHook, pinnedComment, CTA_BANK } from '../viralUtils.js';
-import { compare, fingerprint, jaccard } from '../variation.js';
+import { compare, fingerprint, jaccard, hardVariationIssues } from '../variation.js';
 
 describe('hook score v2', () => {
   it('rewards tension + opinion-gap close over a plain showcase', () => {
@@ -42,6 +42,10 @@ describe('variation guard', () => {
     const issues = compare(a, b);
     expect(issues.some((s) => s.includes('same opener'))).toBe(true);
     expect(issues).toContain('identical closing line');
+  });
+  it('warns on common short openers but blocks actual duplicated content', () => {
+    expect(hardVariationIssues(compare(fingerprint(['Would you pay for elephant coffee?', 'Coffee ending.']), fingerprint(['Would you pay for a burger?', 'Burger ending.'])))).toEqual([]);
+    expect(hardVariationIssues(compare(fingerprint(['A unique hook with many words.', 'Same ending.']), fingerprint(['A unique hook with many words.', 'Same ending.']))).length).toBeGreaterThan(0);
   });
   it('passes a genuinely different Short', () => {
     const c = fingerprint(['In Sardinia, one cheese is outlawed.', 'z', 'Should this stay illegal? Drop your take below.']);

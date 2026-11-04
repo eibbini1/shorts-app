@@ -98,7 +98,7 @@ function require(name: string, val: string | undefined): string {
 // ---------------------------------------------------------------------------
 async function main(): Promise<void> {
   const episodePath = resolve(require('episode', arg('episode')));
-  const outDir = resolve(arg('out', './storage/episodes'));
+  const outDir = resolve(arg('out', './storage/episodes')!);
   const audioArg = arg('audio');
   const providerMode = (arg('provider') ?? process.env.ABDUL_PROVIDER ?? 'browser') as 'browser' | 'api';
   const dryRun = flag('dry-run');

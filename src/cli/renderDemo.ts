@@ -67,7 +67,7 @@ async function main(): Promise<void> {
     ...(sound.musicPath ? { musicPath: sound.musicPath } : {}),
     sfxCues: sound.sfxCues, outputBaseName: arg('name', 'demo'),
   });
-  // eslint-disable-next-line no-console
+
   console.log(`Rendered ${result.path} (${result.durationSec.toFixed(1)}s)`);
 }
 

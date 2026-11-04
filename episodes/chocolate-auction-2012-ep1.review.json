@@ -1,0 +1,20 @@
+{
+  "reviewedAt": "2026-11-02T14:31:54.044Z",
+  "draftDigest": "984a227673c036d7718baa271c8e911cb46a2cb779bdc61195d714d1506c98bc",
+  "factsReviewed": true,
+  "paidGenerationApproved": false,
+  "sources": [
+    {
+      "url": "https://www.guinnessworldrecords.com/news/2012/3/worlds-most-expensive-chocolate-egg-sells-for-7000-in-london",
+      "title": "Guinness World Records report, 21 March 2012",
+      "checkedAt": "2026-11-02",
+      "claims": [
+        "A 50 kilogram chocolate egg sold for £7,000 at a London charity auction in March 2012.",
+        "It was designed by William Curley.",
+        "Seven chocolatiers worked for three days.",
+        "Fillings included muscovado caramel, Japanese black vinegar, rosemary and olive oil.",
+        "The report described a non-jewelled chocolate egg record in 2012, not a current record."
+      ]
+    }
+  ]
+}

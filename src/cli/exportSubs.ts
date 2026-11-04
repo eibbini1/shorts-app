@@ -28,7 +28,7 @@ const cues: { start: number; end: number; text: string }[] = [];
 const sceneStarts: number[] = [];
 let cursor = 0;
 for (const [si, sc] of spec.scenes.entries()) {
-  const v = await synthesize(sc.text, voiceDir, spec.voice);
+  const v = await synthesize(sc.text, voiceDir, spec.voice, true);
   sceneStarts.push(cursor);
   // mirror the renderer's tight-open trim so cues stay in sync
   const tight = !!spec.tightOpen && si === 0;

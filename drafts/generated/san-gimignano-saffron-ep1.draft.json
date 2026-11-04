@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "id": "san-gimignano-saffron-ep1",
+  "title": "This saffron helped build a skyline",
+  "status": "review-required",
+  "createdAt": "2026-11-02T14:17:56.173Z",
+  "sources": [
+    {
+      "url": "https://www.visittuscany.com/en/flavors/pdo-san-gimignano-saffron/",
+      "title": "Visit Tuscany official tourism: PDO San Gimignano saffron",
+      "checkedAt": "2026-11-02",
+      "claims": [
+        "Saffron trade profits helped some families finance San Gimignano towers.",
+        "Trade is documented from the thirteenth century.",
+        "The PDO production area is the territory of San Gimignano.",
+        "Flower picking, separating stigmas and drying still involve manual work."
+      ]
+    }
+  ],
+  "narrationCharacters": 466,
+  "estimatedNarrationSeconds": 30,
+  "hookScore": 28,
+  "visualPrompts": [
+    "9:16 vertical, photoreal luxury food photography, dark cinematic lighting, warm gold accents, crisp food texture. Authentic-looking view of San Gimignano medieval towers at warm sunrise. No text, no watermark. AI illustration; do not imply documentary evidence.",
+    "9:16 vertical, photoreal luxury food photography, dark cinematic lighting, warm gold accents, crisp food texture. Saffron filaments on a dark plate with medieval town softly visible behind. No text, no watermark. AI illustration; do not imply documentary evidence.",
+    "9:16 vertical, photoreal luxury food photography, dark cinematic lighting, warm gold accents, crisp food texture. Illustrative saffron filaments in foreground and stone towers in background, no fabricated historical scene. No text, no watermark. AI illustration; do not imply documentary evidence.",
+    "9:16 vertical, photoreal luxury food photography, dark cinematic lighting, warm gold accents, crisp food texture. Crocus field in the San Gimignano countryside. No text, no watermark. AI illustration; do not imply documentary evidence.",
+    "9:16 vertical, photoreal luxury food photography, dark cinematic lighting, warm gold accents, crisp food texture. Close view of hands carefully separating red saffron stigmas from purple flowers. No text, no watermark. AI illustration; do not imply documentary evidence.",
+    "9:16 vertical, photoreal luxury food photography, dark cinematic lighting, warm gold accents, crisp food texture. Saffron risotto in foreground with town scenery out of focus. No text, no watermark. AI illustration; do not imply documentary evidence."
+  ],
+  "proposedSpec": {
+    "kind": "stills",
+    "output": "storage/episodes/san-gimignano-saffron-ep1/san-gimignano-saffron-ep1-final.mp4",
+    "fps": 24,
+    "voice": {
+      "provider": "elevenlabs",
+      "speed": 1,
+      "stability": 0.45,
+      "style": 0.5
+    },
+    "brand": {
+      "name": "Billionaire Bites",
+      "sub": "Taste the extraordinary"
+    },
+    "music": "ambient",
+    "tightOpen": true,
+    "hookText": "A SPICE BUILT TOWERS?",
+    "kicker": "TUSCANY FOOD STORY",
+    "scenes": [
+      {
+        "text": "A spice helped pay for the towers of an Italian town.",
+        "image": "storage/episodes/san-gimignano-saffron-ep1/stills/scene1.jpg",
+        "motion": "in"
+      },
+      {
+        "text": "In San Gimignano, saffron trade is documented from the thirteenth century.",
+        "image": "storage/episodes/san-gimignano-saffron-ep1/stills/scene2.jpg",
+        "motion": "right",
+        "transition": "whip"
+      },
+      {
+        "text": "Tuscany tourism says some families put their saffron profits into the town's famous towers.",
+        "image": "storage/episodes/san-gimignano-saffron-ep1/stills/scene3.jpg",
+        "motion": "left",
+        "transition": "flash"
+      },
+      {
+        "text": "Today, this protected saffron comes from the territory of San Gimignano.",
+        "image": "storage/episodes/san-gimignano-saffron-ep1/stills/scene4.jpg",
+        "motion": "out",
+        "transition": "cut"
+      },
+      {
+        "text": "Flowers are picked in the early morning, with delicate work still done by hand.",
+        "image": "storage/episodes/san-gimignano-saffron-ep1/stills/scene5.jpg",
+        "motion": "in",
+        "transition": "gold"
+      },
+      {
+        "text": "A skyline with a food story behind it. Would you rather explore the towers, or taste the saffron?",
+        "image": "storage/episodes/san-gimignano-saffron-ep1/stills/scene6.jpg",
+        "motion": "right",
+        "transition": "fade"
+      }
+    ]
+  },
+  "variationWarnings": [],
+  "reviewChecklist": [
+    "Review the narration and factual claims against the linked primary sources.",
+    "Confirm historical dates and avoid presenting an old record as current.",
+    "Review image prompts and keep AI visual disclosure.",
+    "Supply or explicitly approve generating the scene images.",
+    "Approve narration spending separately before using a paid voice provider."
+  ]
+}

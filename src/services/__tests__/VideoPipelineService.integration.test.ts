@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest';
 import { rm } from 'node:fs/promises';
-import Database from 'better-sqlite3';
+import type { LocalDatabase } from '../../database/connection.js';
+import os from 'node:os';
+import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { getDb, __resetDbForTests } from '../../database/connection.js';
 import { VideosRepository } from '../../database/VideosRepository.js';
 import { JobsRepository } from '../../database/JobsRepository.js';
@@ -9,10 +12,10 @@ import { MockTTSProvider } from '../../media/tts/MockTTSProvider.js';
 import { MockImageProvider } from '../../media/images/MockImageProvider.js';
 import { VideoPipelineService } from '../VideoPipelineService.js';
 
-const TEST_STORAGE = '/tmp/video-pipeline-integration-test';
+const TEST_STORAGE = path.join(os.tmpdir(), 'video-pipeline-integration-test-' + randomUUID());
 
 describe('VideoPipelineService (integration, real ffmpeg)', () => {
-  let db: Database.Database;
+  let db: LocalDatabase;
 
   beforeEach(() => {
     __resetDbForTests();

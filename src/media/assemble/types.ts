@@ -57,9 +57,13 @@ export interface AssembleSpec {
 export interface StillsScene {
   /** Still image (e.g. from Flow/Nano Banana). Relative to the repo root or absolute. */
   image: string;
+  /** Optional local footage for the portrait scene. */
+  video?: string;
   /** Narration for this scene (voiced + captioned word by word). */
   text: string;
   motion?: 'in' | 'out' | 'left' | 'right';
+  openingStill?: { image: string; seconds: number };
+  pushIn?: { x: number; y: number; holdSec: number };
   /** How this scene is entered from the previous one. Default 'fade' (dip to black). */
   transition?: SceneTransition;
 }

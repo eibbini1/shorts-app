@@ -1,0 +1,56 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/chocolate-auction-2012-ep1/chocolate-auction-2012-ep1-final.mp4",
+  "fps": 24,
+  "voice": {
+    "provider": "elevenlabs",
+    "speed": 1,
+    "stability": 0.45,
+    "style": 0.5
+  },
+  "brand": {
+    "name": "Billionaire Bites",
+    "sub": "Taste the extraordinary"
+  },
+  "music": "ambient",
+  "tightOpen": true,
+  "hookText": "£7,000 CHOCOLATE",
+  "kicker": "AN AUCTION STORY",
+  "scenes": [
+    {
+      "text": "Seven thousand pounds for chocolate. This happened at a London charity auction in twenty twelve.",
+      "image": "storage/episodes/chocolate-auction-2012-ep1/stills/scene1.jpg",
+      "motion": "in"
+    },
+    {
+      "text": "The egg weighed fifty kilos and was designed by chocolatier William Curley.",
+      "image": "storage/episodes/chocolate-auction-2012-ep1/stills/scene2.jpg",
+      "motion": "right",
+      "transition": "whip"
+    },
+    {
+      "text": "Seven chocolatiers spent three days making it.",
+      "image": "storage/episodes/chocolate-auction-2012-ep1/stills/scene3.jpg",
+      "motion": "left",
+      "transition": "flash"
+    },
+    {
+      "text": "Inside were fillings including caramel, Japanese black vinegar, rosemary and olive oil.",
+      "image": "storage/episodes/chocolate-auction-2012-ep1/stills/scene4.jpg",
+      "motion": "out",
+      "transition": "cut"
+    },
+    {
+      "text": "Guinness reported the non-jewelled chocolate egg record then. This is a historical auction story.",
+      "image": "storage/episodes/chocolate-auction-2012-ep1/stills/scene5.jpg",
+      "motion": "in",
+      "transition": "gold"
+    },
+    {
+      "text": "Would you break it open, or keep it untouched? Pick your side.",
+      "image": "storage/episodes/chocolate-auction-2012-ep1/stills/scene6.jpg",
+      "motion": "right",
+      "transition": "fade"
+    }
+  ]
+}

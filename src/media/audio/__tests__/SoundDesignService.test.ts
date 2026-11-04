@@ -1,3 +1,6 @@
+import os from 'node:os';
+import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { SoundDesignService } from '../SoundDesignService.js';
@@ -8,7 +11,7 @@ vi.mock('../../shared/ffmpegExec.js', () => ({
   runFfmpeg: (...args: unknown[]) => runFfmpegMock(...args),
 }));
 
-const TEST_ROOT = '/tmp/sound-design-service-test';
+const TEST_ROOT = path.join(os.tmpdir(), 'sound-design-service-test-' + randomUUID());
 const PLACEHOLDER_DIR = `${TEST_ROOT}/placeholders`;
 const MUSIC_LIB = `${TEST_ROOT}/music`;
 

@@ -4,7 +4,7 @@ A Node + TypeScript toolkit that turns a script and still images into a finished
 
 ## Requirements
 
-- Node 20 or newer
+- Node 22.16 or newer (Node 26 is installed on this PC)
 - FFmpeg on PATH
 - A text-to-speech API key (ElevenLabs is supported; cached voice lines cost nothing to reuse)
 - Optional: a Google OAuth client for `yt-upload`, and an image provider for generated visuals
@@ -52,6 +52,14 @@ Hook scoring rewards tension, concrete prices or numbers and an opinion-gap clos
 ## Notes
 
 - On Windows, run commands through `cmd /c` or node scripts; PowerShell mangles nested quotes.
-- Two legacy VideoPipelineService suites fail to load (missing `database/connection.js`); they are unrelated to the CLI tools.
+- The legacy VideoPipelineService modules are restored and tested with built-in SQLite, offline providers, and real FFmpeg integration.
 
 See `QUICKSTART.md` for the original quickstart.
+
+## Unattended processing and scheduled publishing
+
+See [docs/AUTOMATION.md](docs/AUTOMATION.md). Run `npm run automate -- --dry-run` to preview the five recent Shorts, `npm run automate -- --prepare-only` to render and package without uploading, and `npm run automate:watch` to keep processing and schedule publication after connecting YouTube. The default is one video daily at 20:00 Amman time with at least one hour of lead. Voice spending stays disabled unless explicitly enabled in automation.json.
+
+Connect once using [docs/YOUTUBE_SETUP.md](docs/YOUTUBE_SETUP.md), then `npm run yt-upload -- --auth`. Complete packs include a passing QA report and checksums. Uploads remain private until thumbnails and captions are attached and YouTube confirms the future publication time. Saved remote IDs prevent duplicate uploads on reruns; ambiguous upload results require checking Studio before retrying.
+
+`npm run list-pending` shows queue and upload state. `npm run verify-live-run` verifies all configured packs against current inputs and artifact checksums. `npm run build`, `npm run lint` and `npm test` are the validation commands.

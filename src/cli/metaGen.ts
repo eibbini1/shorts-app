@@ -1,7 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { StillsSpec } from '../media/assemble/types.js';
-import { spokenToDigits, scoreHook, pinnedComment } from './viralUtils.js';
+import { spokenToDigits, scoreHook, pinnedComment, shortTitle } from './viralUtils.js';
 
 /**
  * Upload metadata + viral-readiness score from a stills spec.
@@ -31,7 +31,7 @@ for (const [re, t] of KEYWORDS) if (re.test(all)) tags.add(t);
 
 const { score, fixes, breakdown } = scoreHook(texts);
 const rawTitle = first.replace(/\s+Here's why\.?$/i, '').replace(/\.$/, '');
-const title = (arg('title') ?? spokenToDigits(rawTitle)).slice(0, 70) || spec.kicker || 'Luxury food';
+const title = shortTitle(arg('title') ?? spokenToDigits(rawTitle)) || spec.kicker || 'Luxury food';
 const hashtags = ['#luxuryfood', ...[...tags].slice(6, 8).map((t) => '#' + t.replace(/\W+/g, '').toLowerCase()), '#shorts'];
 const description = [
   spokenToDigits(`${first} ${last}`).replace(/\s+/g, ' ').trim(),
@@ -43,7 +43,7 @@ const description = [
   hashtags.join(' '),
 ].join('\n');
 
-const region = arg('region') ?? (/[£]|pounds|london|liverpool/i.test(all) ? 'uk' : /dirham|biryani|rupee|india/i.test(all) ? 'in' : 'us');
+const region = arg('region') ?? (/[£]|london|liverpool|(?:costs?|pay|price)[^.!?]{0,45}pounds/i.test(all) ? 'uk' : /dirham|biryani|rupee|india/i.test(all) ? 'in' : 'us');
 const family = /illegal|banned|forbidden/i.test(all) ? 'taboo' : /only one|pick one|vs\.?\b/i.test(all) ? 'choice' : 'price';
 const topic = spec.kicker || [...tags][6] || 'this';
 const pinned = pinnedComment(family, topic);

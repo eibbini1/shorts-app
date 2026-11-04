@@ -318,5 +318,5 @@ function buildConcatChain(sceneCount: number): { filter: string; outputLabel: st
 
 /** Escapes characters that break the ffmpeg subtitles filter's quoted filename arg. */
 function escapeForFilter(path: string): string {
-  return path.replace(/:/g, '\\:').replace(/'/g, "\\'");
+  return escapeFilterPath(path);
 }

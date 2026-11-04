@@ -1,0 +1,106 @@
+{
+  "createdAt": "2026-11-04T07:05:20.464Z",
+  "purpose": "Reviewable open question and visible payoff variants for approved topics. Existing approved briefs remain the current content.",
+  "variants": [
+    {
+      "id": "parmigiano-crystals-ep1",
+      "opening": "What are these white crystals inside your Parmigiano?",
+      "openingVisual": "Begin on a macro image with the crystals visible. Show a small piece breaking away with stable geometry.",
+      "payoff": "They are tyrosine crystals, formed as the cheese matures.",
+      "payoffVisual": "Reveal the same crystals in the cheese interior with a concise tyrosine caption.",
+      "sequence": [
+        "Ask the visible crystal question.",
+        "Explain that maturation breaks down milk proteins.",
+        "Show the crystals and explain the release of amino acids.",
+        "Name tyrosine and connect it to the original close-up.",
+        "Finish with the existing viewer question."
+      ],
+      "review": "Keep useful explanation between question and answer. Check the appearance against a real cheese reference.",
+      "status": "review-required",
+      "paidGenerationApproved": false,
+      "originalOpening": "Those white crystals in Parmigiano Reggiano are not salt.",
+      "sources": [
+        {
+          "url": "https://www.parmigianoreggiano.com/faq",
+          "title": "Parmigiano Reggiano Consortium FAQ",
+          "checkedAt": "2026-11-02",
+          "claims": [
+            "The visible white crystals described in the FAQ are tyrosine, an amino acid.",
+            "Tyrosine is released as proteins break down during maturation.",
+            "The crystals become larger and more numerous with longer maturation.",
+            "The minimum maturation is 12 months."
+          ]
+        }
+      ],
+      "experimentRule": "Compare against the original hook with the same topic, total duration, voice, captions and movement. Timing is provisional until narrated.",
+      "performanceEvidence": "No viewer test has run."
+    },
+    {
+      "id": "chocolate-auction-2012-ep1",
+      "opening": "What was inside this chocolate egg that sold for seven thousand pounds?",
+      "openingVisual": "Show a partially opened illustrative chocolate shell. Put 2012 charity auction on screen.",
+      "payoff": "The fillings included caramel, Japanese black vinegar, rosemary and olive oil.",
+      "payoffVisual": "Reveal an illustrative filling cutaway. Keep the AI illustration disclosure.",
+      "sequence": [
+        "Ask the filling question with the historical date visible.",
+        "State London charity auction in 2012 and the fifty kilo weight.",
+        "Explain the three days of work by seven chocolatiers.",
+        "Reveal the documented fillings.",
+        "Finish with break it open or keep it untouched."
+      ],
+      "review": "Do not imply that the generated interior is documentary evidence of the actual auction egg.",
+      "status": "review-required",
+      "paidGenerationApproved": false,
+      "originalOpening": "Seven thousand pounds for chocolate. This happened at a London charity auction in twenty twelve.",
+      "sources": [
+        {
+          "url": "https://www.guinnessworldrecords.com/news/2012/3/worlds-most-expensive-chocolate-egg-sells-for-7000-in-london",
+          "title": "Guinness World Records report, 21 March 2012",
+          "checkedAt": "2026-11-02",
+          "claims": [
+            "A 50 kilogram chocolate egg sold for £7,000 at a London charity auction in March 2012.",
+            "It was designed by William Curley.",
+            "Seven chocolatiers worked for three days.",
+            "Fillings included muscovado caramel, Japanese black vinegar, rosemary and olive oil.",
+            "The report described a non-jewelled chocolate egg record in 2012, not a current record."
+          ]
+        }
+      ],
+      "experimentRule": "Compare against the original hook with the same topic, total duration, voice, captions and movement. Timing is provisional until narrated.",
+      "performanceEvidence": "No viewer test has run."
+    },
+    {
+      "id": "san-gimignano-saffron-ep1",
+      "opening": "How did saffron help pay for these Italian towers?",
+      "openingVisual": "Connect visible saffron threads with an illustrative view of San Gimignano. Avoid fabricated historical imagery presented as evidence.",
+      "payoff": "Some families used profits from the saffron trade to help finance their towers.",
+      "payoffVisual": "Return to the skyline when the financing explanation lands.",
+      "sequence": [
+        "Ask the connection question.",
+        "Identify San Gimignano and the documented medieval saffron trade.",
+        "Resolve the financing question with the limited some families claim.",
+        "Show current manual harvesting work.",
+        "Finish with the existing towers or saffron choice."
+      ],
+      "review": "Keep helped finance and some families. Avoid implying saffron alone built the skyline.",
+      "status": "review-required",
+      "paidGenerationApproved": false,
+      "originalOpening": "A spice helped pay for the towers of an Italian town.",
+      "sources": [
+        {
+          "url": "https://www.visittuscany.com/en/flavors/pdo-san-gimignano-saffron/",
+          "title": "Visit Tuscany official tourism: PDO San Gimignano saffron",
+          "checkedAt": "2026-11-02",
+          "claims": [
+            "Saffron trade profits helped some families finance San Gimignano towers.",
+            "Trade is documented from the thirteenth century.",
+            "The PDO production area is the territory of San Gimignano.",
+            "Flower picking, separating stigmas and drying still involve manual work."
+          ]
+        }
+      ],
+      "experimentRule": "Compare against the original hook with the same topic, total duration, voice, captions and movement. Timing is provisional until narrated.",
+      "performanceEvidence": "No viewer test has run."
+    }
+  ]
+}

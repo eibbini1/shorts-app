@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "id": "parmigiano-crystals-ep1",
+  "title": "Those cheese crystals are not salt",
+  "status": "review-required",
+  "createdAt": "2026-11-02T14:17:56.060Z",
+  "sources": [
+    {
+      "url": "https://www.parmigianoreggiano.com/faq",
+      "title": "Parmigiano Reggiano Consortium FAQ",
+      "checkedAt": "2026-11-02",
+      "claims": [
+        "The visible white crystals described in the FAQ are tyrosine, an amino acid.",
+        "Tyrosine is released as proteins break down during maturation.",
+        "The crystals become larger and more numerous with longer maturation.",
+        "The minimum maturation is 12 months."
+      ]
+    }
+  ],
+  "narrationCharacters": 449,
+  "estimatedNarrationSeconds": 29,
+  "hookScore": 43,
+  "visualPrompts": [
+    "9:16 vertical, photoreal luxury food photography, dark cinematic lighting, warm gold accents, crisp food texture. Macro of white crystals inside a broken Parmigiano Reggiano wedge. No text, no watermark. AI illustration; do not imply documentary evidence.",
+    "9:16 vertical, photoreal luxury food photography, dark cinematic lighting, warm gold accents, crisp food texture. Macro of the same real cheese texture with crystals in focus. No text, no watermark. AI illustration; do not imply documentary evidence.",
+    "9:16 vertical, photoreal luxury food photography, dark cinematic lighting, warm gold accents, crisp food texture. Rows of whole cheese wheels ageing on wooden shelves. No text, no watermark. AI illustration; do not imply documentary evidence.",
+    "9:16 vertical, photoreal luxury food photography, dark cinematic lighting, warm gold accents, crisp food texture. Broken wedge with naturally visible white crystals. No text, no watermark. AI illustration; do not imply documentary evidence.",
+    "9:16 vertical, photoreal luxury food photography, dark cinematic lighting, warm gold accents, crisp food texture. Close view of a dated rind and an ageing room, no fabricated labels. No text, no watermark. AI illustration; do not imply documentary evidence.",
+    "9:16 vertical, photoreal luxury food photography, dark cinematic lighting, warm gold accents, crisp food texture. Appetizing cheese wedge on a dark ceramic plate. No text, no watermark. AI illustration; do not imply documentary evidence."
+  ],
+  "proposedSpec": {
+    "kind": "stills",
+    "output": "storage/episodes/parmigiano-crystals-ep1/parmigiano-crystals-ep1-final.mp4",
+    "fps": 24,
+    "voice": {
+      "provider": "elevenlabs",
+      "speed": 1,
+      "stability": 0.45,
+      "style": 0.5
+    },
+    "brand": {
+      "name": "Billionaire Bites",
+      "sub": "Taste the extraordinary"
+    },
+    "music": "ambient",
+    "tightOpen": true,
+    "hookText": "NOT SALT?",
+    "kicker": "LOOK CLOSER",
+    "scenes": [
+      {
+        "text": "Those white crystals in Parmigiano Reggiano are not salt.",
+        "image": "storage/episodes/parmigiano-crystals-ep1/stills/scene1.jpg",
+        "motion": "in"
+      },
+      {
+        "text": "The cheese consortium identifies them as tyrosine, an amino acid.",
+        "image": "storage/episodes/parmigiano-crystals-ep1/stills/scene2.jpg",
+        "motion": "right",
+        "transition": "whip"
+      },
+      {
+        "text": "As the cheese matures, enzymes break down milk proteins and release amino acids.",
+        "image": "storage/episodes/parmigiano-crystals-ep1/stills/scene3.jpg",
+        "motion": "left",
+        "transition": "flash"
+      },
+      {
+        "text": "Tyrosine can gather into the little crystals you see inside the cheese.",
+        "image": "storage/episodes/parmigiano-crystals-ep1/stills/scene4.jpg",
+        "motion": "out",
+        "transition": "cut"
+      },
+      {
+        "text": "Longer maturation brings more of them, and larger ones. Even the minimum ageing takes twelve months.",
+        "image": "storage/episodes/parmigiano-crystals-ep1/stills/scene5.jpg",
+        "motion": "in",
+        "transition": "gold"
+      },
+      {
+        "text": "Now look at your next wedge. Do the crystals make it more tempting, or less?",
+        "image": "storage/episodes/parmigiano-crystals-ep1/stills/scene6.jpg",
+        "motion": "right",
+        "transition": "fade"
+      }
+    ]
+  },
+  "variationWarnings": [],
+  "reviewChecklist": [
+    "Review the narration and factual claims against the linked primary sources.",
+    "Confirm historical dates and avoid presenting an old record as current.",
+    "Review image prompts and keep AI visual disclosure.",
+    "Supply or explicitly approve generating the scene images.",
+    "Approve narration spending separately before using a paid voice provider."
+  ]
+}

@@ -1,0 +1,8 @@
+{"kind":"stills","output":"storage/episodes/ortolan-ep1/ortolan-ep1-final.mp4","fps":24,"voice":{"provider":"elevenlabs","speed":1,"stability":0.45,"style":0.5},"kicker":"BANNED","brand":{"name":"Billionaire Bites","sub":"Taste the extraordinary"},"music":"ambient","tightOpen":true,"hookText":"Illegal delicacy",
+"scenes":[
+{"image":"storage/episodes/ortolan-ep1/stills/scene1.jpg","text":"A French delicacy you must eat under a napkin, and it is illegal.","motion":"in"},
+{"image":"storage/episodes/ortolan-ep1/stills/scene2.jpg","text":"It's the ortolan, a tiny songbird, served whole.","motion":"in","transition":"punch"},
+{"image":"storage/episodes/ortolan-ep1/stills/scene4.jpg","text":"First it's fattened on millet until it doubles in size.","motion":"left","transition":"whip"},
+{"image":"storage/episodes/ortolan-ep1/stills/scene3.jpg","text":"Then it's drowned in Armagnac brandy and cooked.","motion":"in","transition":"cut"},
+{"image":"storage/episodes/ortolan-ep1/stills/scene5.jpg","text":"France banned it in 1999, with fines up to six thousand euros. Tradition or cruelty? Comment your side.","motion":"out","transition":"flash"}
+]}

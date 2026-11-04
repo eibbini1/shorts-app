@@ -1,0 +1,2783 @@
+{
+  "capturedAt": "2026-11-04T06:42:07.528Z",
+  "selectionMethod": "Four relevance queries, up to 50 short-duration videos each ordered by current views. Search duration is not proof of Shorts format. Candidate channels require manual relevance and identity review.",
+  "limitation": "Subscriber sorting of search-derived candidates does not establish the 100 best or most comparable channels. Public metrics are snapshots.",
+  "candidates": [
+    {
+      "channelId": "UCX6OQ3DkcsbYNE6H8uQQuVA",
+      "title": "MrBeast",
+      "url": "https://www.youtube.com/channel/UCX6OQ3DkcsbYNE6H8uQQuVA",
+      "subscribers": 525000000,
+      "totalViews": 145677120382,
+      "matchedQueries": [
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "FD-0KG-h2-c",
+        "ZVt9ZJfWV1c",
+        "n7x4Jj9pdH8",
+        "ZGvn9ywXjpY",
+        "jGAJCAuV3pQ",
+        "LgbyEFILLJI"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "adjacent reference only",
+        "reason": "Several matched samples use food price comparisons, but the channel covers broad entertainment.",
+        "basis": "Matched sample title in video-candidates.json; full visual review pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCPuEAY09CtdTzFNWuqVZgDw",
+      "title": "Topper Guild",
+      "url": "https://www.youtube.com/channel/UCPuEAY09CtdTzFNWuqVZgDw",
+      "subscribers": 95900000,
+      "totalViews": 36369867504,
+      "matchedQueries": [
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "7kdkaY75W5U"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "price or luxury hook reference; visual relevance pending",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "EATING THE WORLD’S MOST EXPENSIVE STEAK 😱 - #shorts"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC6QZ_ss3i_8qLV_RczPZBkw",
+      "title": "ISSEI / いっせい",
+      "url": "https://www.youtube.com/channel/UC6QZ_ss3i_8qLV_RczPZBkw",
+      "subscribers": 75600000,
+      "totalViews": 62001907659,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "An_G9ItTHWk"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating or sensory reference; cooking motion relevance pending",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "Eggs ASMR - This is free Material -"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC4-79UOlP48-QNGgCko5p2g",
+      "title": "MrBeast 2",
+      "url": "https://www.youtube.com/channel/UC4-79UOlP48-QNGgCko5p2g",
+      "subscribers": 63000000,
+      "totalViews": 13062125389,
+      "matchedQueries": [
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "lZIlFyzeZig",
+        "ayFRfvX4QAM"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "price or luxury hook reference; visual relevance pending",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "World's Most Expensive Burger!",
+          "Tasting Expensive Chocolates From Around The World"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCMyOj6fhvKFMjxUCp3b_3gA",
+      "title": "Nick DiGiovanni",
+      "url": "https://www.youtube.com/channel/UCMyOj6fhvKFMjxUCp3b_3gA",
+      "subscribers": 48200000,
+      "totalViews": 24934212522,
+      "matchedQueries": [
+        "luxury food shorts",
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "qzkYcOM2_Q4",
+        "JyOYBJmhZ2Q",
+        "sd0hQ3D8PiU",
+        "oEoTLZaQJuQ",
+        "8dPfjoLWn_o",
+        "iUa2kZfYij8",
+        "sj24e3VM6K4",
+        "YuZFW10T2Uo",
+        "Z601ZyJ3_VI"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for food hook review",
+        "reason": "Matched samples cover caviar, gourmet food, rare fruit and luxury dining.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCkLNHZZsC3LKdUAroKNwOOw",
+      "title": "CuRe 구래",
+      "url": "https://www.youtube.com/channel/UCkLNHZZsC3LKdUAroKNwOOw",
+      "subscribers": 35300000,
+      "totalViews": 37737105892,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "nKtUJHjG3eM",
+        "uW4dymtQ86Y",
+        "8wIzfy7X-8s",
+        "3-ck17MVxfU"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating or sensory reference; cooking motion relevance pending",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "Random Red food MUKBANG🦑🍄 #shorts",
+          "Random Rainbow food MUKBANG🍬🍧 #shorts",
+          "Random Purple food MUKBANG🦄 #shorts",
+          "Random Gold Color food MUKBANG🐯🏆 #shorts"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCI78AdiI6f7VKhqW1i4B3Rw",
+      "title": "Zach Choi",
+      "url": "https://www.youtube.com/channel/UCI78AdiI6f7VKhqW1i4B3Rw",
+      "subscribers": 33700000,
+      "totalViews": 15502831934,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "dOOOeyBAQxQ",
+        "xkhdFTw4K5o",
+        "uWSsps159rw",
+        "zPxQjuFoUBc"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for cooking motion review",
+        "reason": "Matched samples cover grilled cheese and food presentation.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCAJnyTWJPpKXuwgWQDdNWrQ",
+      "title": "Netflix Jr.",
+      "url": "https://www.youtube.com/channel/UCAJnyTWJPpKXuwgWQDdNWrQ",
+      "subscribers": 26500000,
+      "totalViews": 20098353075,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "egK37yP_bAk"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison",
+        "reason": "Matched sample is a childrens animation clip about sharing snacks.",
+        "basis": "Matched sample title in video-candidates.json; full visual review pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCtM58H2QaTXTi7OIRAVgAGg",
+      "title": "Spizee",
+      "url": "https://www.youtube.com/channel/UCtM58H2QaTXTi7OIRAVgAGg",
+      "subscribers": 25000000,
+      "totalViews": 16160150604,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "L47ISYRQEhg",
+        "Z5xn0iI7FoU",
+        "Wd0Nf_Y2EmY"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating or sensory reference; cooking motion relevance pending",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "Left OR Right Spicy ASMR With My Little Sister! 🥵",
+          "Real VS Gummy! 🤤 (Gummy ASMR) ft. @TrendyTreats",
+          "I Got Cavities… 🦷💔 (Giant Sour ASMR)"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCnwY6Zz-FjqJEeD1Vv6K0bw",
+      "title": "LukeDidThat",
+      "url": "https://www.youtube.com/channel/UCnwY6Zz-FjqJEeD1Vv6K0bw",
+      "subscribers": 23700000,
+      "totalViews": 12137280710,
+      "matchedQueries": [
+        "luxury food shorts",
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "bR6suovYbNs",
+        "NLrldCr06eE",
+        "Odor6c4F2To",
+        "eMys8OU1RDQ",
+        "k00owwU7dJw"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating or sensory reference; cooking motion relevance pending",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "Pick a Restaurant!? 🥵 (Giant Food)",
+          "Extreme Sour Candy ASMR!? 🤤",
+          "Spicy Pink Food ASMR!? 🥵",
+          "Spicy Green Food ASMR!? 🥵",
+          "Spicy Indian Food ASMR!? 🇮🇳🥵"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCS4uc8cHDqcwwro8lGChaQQ",
+      "title": "FactoHolic",
+      "url": "https://www.youtube.com/channel/UCS4uc8cHDqcwwro8lGChaQQ",
+      "subscribers": 23300000,
+      "totalViews": 18046367704,
+      "matchedQueries": [
+        "luxury food shorts",
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "3CRJKg3kutU"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "price or luxury hook reference; visual relevance pending",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "World's Most Expensive Food 😱😱"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCybzQL-nUUIcbobgx6CrvkQ",
+      "title": "HUBA후바",
+      "url": "https://www.youtube.com/channel/UCybzQL-nUUIcbobgx6CrvkQ",
+      "subscribers": 22500000,
+      "totalViews": 15662853100,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "djxCmZBdCR4"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating or sensory reference; cooking motion relevance pending",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "ASMR MUKBANG | Spicy Chicken , black bean noodles! eating HUBA #shorts"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCKSVUHI9rbbkXhvAXK-2uxA",
+      "title": "Supercar Blondie",
+      "url": "https://www.youtube.com/channel/UCKSVUHI9rbbkXhvAXK-2uxA",
+      "subscribers": 22400000,
+      "totalViews": 13025424292,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "lj61qUDy5A4"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "adjacent reference only",
+        "reason": "Matched sample tests car boots with a cucumber; automotive subject.",
+        "basis": "Matched sample title in video-candidates.json; full visual review pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCXMVaxrax7RNDPdfRrXXgtQ",
+      "title": "Hafu Go",
+      "url": "https://www.youtube.com/channel/UCXMVaxrax7RNDPdfRrXXgtQ",
+      "subscribers": 19200000,
+      "totalViews": 7028703448,
+      "matchedQueries": [
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "UJngV3XWt9w"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "adjacent utensil comparison reference",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "$1 Knife vs $1,000 Knife"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCovfq4h24UvKIju6kqqNu4A",
+      "title": "Great Indian Asmr",
+      "url": "https://www.youtube.com/channel/UCovfq4h24UvKIju6kqqNu4A",
+      "subscribers": 16900000,
+      "totalViews": 11479077368,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "SOf0bp49jxQ",
+        "2dR6SzUwbpY",
+        "Moe3RaAo0QE"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for cooking action review",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "Egg Tower #shorts",
+          "Chicken Shawarma 🥙 #shorts",
+          "Veg Momos Asmr #shorts"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC819b_ngvl5eFJFnjgvgXDQ",
+      "title": "Chimkandi",
+      "url": "https://www.youtube.com/channel/UC819b_ngvl5eFJFnjgvgXDQ",
+      "subscribers": 15100000,
+      "totalViews": 9564372119,
+      "matchedQueries": [
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "MT4ljHQf1bk",
+        "b-HnomNwvsQ"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "adjacent restaurant entertainment reference",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "Most expensive dish 🧽💵😂 | Chimkandi",
+          "Most expensive dish🙂🥘 | Chimkandi"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC5mNk1y0O1awxC8DucC8r0w",
+      "title": "Lalafun - Nursery Rhymes",
+      "url": "https://www.youtube.com/channel/UC5mNk1y0O1awxC8DucC8r0w",
+      "subscribers": 15000000,
+      "totalViews": 11409254858,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "CvUw-xwfC8U"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison",
+        "reason": "Matched sample is a nursery rhyme about feeding farm animals.",
+        "basis": "Matched sample title in video-candidates.json; full visual review pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCDtz84R5bn4fY8AgHuouojg",
+      "title": "당비 Dangbee EATING",
+      "url": "https://www.youtube.com/channel/UCDtz84R5bn4fY8AgHuouojg",
+      "subscribers": 15000000,
+      "totalViews": 8790317988,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "3ugenmDRQZA",
+        "5yLd40n6364",
+        "sRIryXYWBEA"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating or sensory reference; cooking motion relevance pending",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "asmr EMOJI FOOD eating sounds(sped up)",
+          "asmr EMOJI FOOD 🍯🍇🐻🐣🍓👅🌈🍑🍫⭐️eating sounds(sped up)",
+          "asmr CHEESE TTEOKBOKKI EMOJI FOOD eating sounds(sped up)"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC42AMmteep9j7RAR2FuV4bw",
+      "title": "Bader Al Safar",
+      "url": "https://www.youtube.com/channel/UC42AMmteep9j7RAR2FuV4bw",
+      "subscribers": 14000000,
+      "totalViews": 4165747132,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "TFo4-BBtVbo",
+        "aJeepDtNkwE"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating or sensory reference; cooking motion relevance pending",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "Food ASMR Which one is the most satisfying?",
+          "Food ASMR Eating a Sonic Popsicle and All Blue Snacks!"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCJJjBdTbd_ws3J3nLA8I_Sg",
+      "title": "radmiru",
+      "url": "https://www.youtube.com/channel/UCJJjBdTbd_ws3J3nLA8I_Sg",
+      "subscribers": 14000000,
+      "totalViews": 26265359966,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "v3_v68cZhlE"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating or sensory reference; cooking motion relevance pending",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "Unusual jelly #shorts"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCZzQLLvcrATO7TsvwEV16Bg",
+      "title": "Sarthak Sachdeva Too",
+      "url": "https://www.youtube.com/channel/UCZzQLLvcrATO7TsvwEV16Bg",
+      "subscribers": 12700000,
+      "totalViews": 8702375518,
+      "matchedQueries": [
+        "luxury food shorts",
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "r0ikqGLK_DE"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "insufficient matched title detail; further relevance check required",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "restaurant #QuillBotPartner #ad"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCWEqIFOOjmL_olrETpSnGOQ",
+      "title": "Harsha Sai - For You Telugu",
+      "url": "https://www.youtube.com/channel/UCWEqIFOOjmL_olrETpSnGOQ",
+      "subscribers": 11400000,
+      "totalViews": 2309178035,
+      "matchedQueries": [
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "McBuV6fud1g"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "price or luxury hook reference; visual relevance pending",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "tasting expensive foods at 50y old 5-start hotel"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCUEbmdKaF-7ivp9TUbwIPZw",
+      "title": "MadCaP",
+      "url": "https://www.youtube.com/channel/UCUEbmdKaF-7ivp9TUbwIPZw",
+      "subscribers": 11100000,
+      "totalViews": 8226014928,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "elO7xUe8Bfw"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "price or luxury hook reference; visual relevance pending",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "Rich People Food"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC9IbBVJ0tg549Mk6Ves-3gg",
+      "title": "Ur SmartMaker Shorts",
+      "url": "https://www.youtube.com/channel/UC9IbBVJ0tg549Mk6Ves-3gg",
+      "subscribers": 10800000,
+      "totalViews": 5005186627,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "x7cu-8apE10"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "price or luxury hook reference; visual relevance pending",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "Enjoying luxurious food At 36,000 feet Heights 🥶 Business class ✈️😍 #shorts #vlog"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCJswRv22oiUgmT1FuFeUekw",
+      "title": "I am MoBo",
+      "url": "https://www.youtube.com/channel/UCJswRv22oiUgmT1FuFeUekw",
+      "subscribers": 10500000,
+      "totalViews": 7703031589,
+      "matchedQueries": [
+        "luxury food shorts",
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "-lPqD0Kj-gA"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "adjacent restaurant entertainment reference",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "When you finally go to a fancy restaurant..."
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC_pT_Iz6XjuM-eMTlXghdfw",
+      "title": "Max the Meat Guy",
+      "url": "https://www.youtube.com/channel/UC_pT_Iz6XjuM-eMTlXghdfw",
+      "subscribers": 10400000,
+      "totalViews": 7553506579,
+      "matchedQueries": [
+        "luxury food shorts",
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "L5y_cvweBgQ",
+        "Xg5eyXFgmJo",
+        "blDev_gChA4"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for luxury food review",
+        "reason": "Matched samples cover wagyu pasta and food price comparisons.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC_35hRJlT4PEmvFCcU6l_3Q",
+      "title": "Patrick Zeinali",
+      "url": "https://www.youtube.com/channel/UC_35hRJlT4PEmvFCcU6l_3Q",
+      "subscribers": 9550000,
+      "totalViews": 6206425538,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "ppwAv7x7c60"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for dessert motion review",
+        "reason": "Matched sample is a lava dessert.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCE6dS5o_2zxZgwfCwvvg2tQ",
+      "title": "ASMR FOOD",
+      "url": "https://www.youtube.com/channel/UCE6dS5o_2zxZgwfCwvvg2tQ",
+      "subscribers": 9420000,
+      "totalViews": 9630513812,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "K8tuG9Go0mA"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating or sensory reference; cooking motion relevance pending",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "美味しい食べ物のASMR _ ASMR FOOD 🍜🍝🍜🥓🥢🍗#asmr #美味しい食べ物#食べ物#vlog #funny #funnycouple #prank"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCmpIo1MVMCSyNaf1rRQS8RA",
+      "title": "Harsha Sai - For You Tamil",
+      "url": "https://www.youtube.com/channel/UCmpIo1MVMCSyNaf1rRQS8RA",
+      "subscribers": 8960000,
+      "totalViews": 1959261378,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "QrzDTNW5zps"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "price or luxury hook reference; visual relevance pending",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "tasting expensive food at 50y 5-star hotel"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCyqaWBh7wGv7IUS5UeLz67A",
+      "title": "VKADRE_KZ ",
+      "url": "https://www.youtube.com/channel/UCyqaWBh7wGv7IUS5UeLz67A",
+      "subscribers": 8910000,
+      "totalViews": 6411607893,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "t5lpoF8C8AU"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "adjacent restaurant entertainment reference",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "Tom & Jerry Steak and a million-star inflatable hotel 😍✨ This is Kazakhstan 🇰🇿😍"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCZ8MqcJVNNq6d1KARqqI19g",
+      "title": "Kim&Liz ASMR",
+      "url": "https://www.youtube.com/channel/UCZ8MqcJVNNq6d1KARqqI19g",
+      "subscribers": 8830000,
+      "totalViews": 4427177372,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "8p61a9DUy34"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating or sensory reference; cooking motion relevance pending",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "DON'T EVER BUY THIS ICE CREAM CANDY! #shorts #viral #mukbang"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCe7SFOrT6D_ubcwkQMUG7eA",
+      "title": "anna dreamy ASMR",
+      "url": "https://www.youtube.com/channel/UCe7SFOrT6D_ubcwkQMUG7eA",
+      "subscribers": 8340000,
+      "totalViews": 4867652555,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "ro4Mqm6r2mQ"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating or sensory reference; cooking motion relevance pending",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "eles foram os primeiros clientes da minha sorveteria fake 🍦 #asmr #satisfying #funny"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCR_J_SntqJh5eXw66d5hJxA",
+      "title": "Matthew Beem",
+      "url": "https://www.youtube.com/channel/UCR_J_SntqJh5eXw66d5hJxA",
+      "subscribers": 8180000,
+      "totalViews": 1578494549,
+      "matchedQueries": [
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "fnskZRFCagQ"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "price or luxury hook reference; visual relevance pending",
+        "reason": "Matched titles indicate this review category; full channel and clip review remain pending.",
+        "sampleTitles": [
+          "MrBeast $1,000 Chocolate Bar!"
+        ],
+        "basis": "Exact matched video titles; no visual or retention conclusion",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC7rsYYvQbqQrJDGhqWmtAgQ",
+      "title": "Kyle Krueger",
+      "url": "https://www.youtube.com/channel/UC7rsYYvQbqQrJDGhqWmtAgQ",
+      "subscribers": 7820000,
+      "totalViews": 6411895913,
+      "matchedQueries": [
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "Ev35I5945XI"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "price test reference",
+        "sampleTitles": [
+          "World’s Most Expensive Chocolate Bar: $500 Taste Test"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCZ4fHlVQNtIGssKm0VcJVfw",
+      "title": "Kawaii Eating Asmr",
+      "url": "https://www.youtube.com/channel/UCZ4fHlVQNtIGssKm0VcJVfw",
+      "subscribers": 7690000,
+      "totalViews": 3735381532,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "KeafpIfdfto",
+        "zBWsnVLeYk4",
+        "RISrmLmMxYs",
+        "B-jzxGAmw6k",
+        "yxYNngtdsPE"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating challenge reference",
+        "sampleTitles": [
+          "Couple Eating Emojis Challenge | #asmr #food #shorts",
+          "Eating Challenge ( 8 drumsticks, 5 mochi, 2 lb ghost pepper noodles) #asmr #food #shorts",
+          "Funny Sisters Emoji Eating Challenge | #asmr #food #shorts",
+          "Sisters Emoji Eating Challenge | #asmr #food #funny #eating #shorts",
+          "Eating Faster like a good girl | #asmr #food #funny #shorts"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCBSGboqYmgfWFkiwURwPMsg",
+      "title": "Indian ASMR World",
+      "url": "https://www.youtube.com/channel/UCBSGboqYmgfWFkiwURwPMsg",
+      "subscribers": 7580000,
+      "totalViews": 5486547924,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "K9BHsS7UIxk"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "drink preparation reference",
+        "sampleTitles": [
+          "Pulse Mojito ASMR || #shorts #asmr #indianasmrworld #pulse #mojito #food #streetfood"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCFhMOIr1FZNaLwHXNIkBMSg",
+      "title": "Chef Tyler",
+      "url": "https://www.youtube.com/channel/UCFhMOIr1FZNaLwHXNIkBMSg",
+      "subscribers": 7170000,
+      "totalViews": 7102949790,
+      "matchedQueries": [
+        "luxury food shorts",
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "UGlUEztkJF0",
+        "KeEJJMR00yk",
+        "8sS4IgZVzKQ",
+        "za3P5iA8GPI"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for comparison hook review",
+        "reason": "Matched samples include cheap versus expensive steak and noodles.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCA4CQI6AmD3dgqfSoErBWQA",
+      "title": "ShannyPOP",
+      "url": "https://www.youtube.com/channel/UCA4CQI6AmD3dgqfSoErBWQA",
+      "subscribers": 6190000,
+      "totalViews": 4420396118,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "t3cAd2mrMSk"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison; matched sample concerns fidget toys",
+        "sampleTitles": [
+          "Fidgets that Look Like Burger King Food Satisfying Video ASMR! #shorts #fidgets #asmr"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC19x8yVdc96ogGHQyb4gfwg",
+      "title": "wittySpace",
+      "url": "https://www.youtube.com/channel/UC19x8yVdc96ogGHQyb4gfwg",
+      "subscribers": 5730000,
+      "totalViews": 5225862317,
+      "matchedQueries": [
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "qjaiBfTi60g",
+        "LdclP_rQBtw"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "price comparison reference",
+        "sampleTitles": [
+          "I tested rupees 30 vs 400 rupees  luxury noodles  #ytshorts #minivlog",
+          "I ate the most expensive Indian street food   1200 Choley Bhature  #minivlog #ytshorts"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCJQVsC3XcvuRMRr-jD_kTPw",
+      "title": "Lisa Nguyen",
+      "url": "https://www.youtube.com/channel/UCJQVsC3XcvuRMRr-jD_kTPw",
+      "subscribers": 5450000,
+      "totalViews": 5867314392,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "ky6cV2YdLaI"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for food presentation review",
+        "reason": "Matched sample is a Korean style burger.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCH5CEZ8vYsCGLfJEr8LAuRQ",
+      "title": "Param Aedy",
+      "url": "https://www.youtube.com/channel/UCH5CEZ8vYsCGLfJEr8LAuRQ",
+      "subscribers": 5370000,
+      "totalViews": 6250778160,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "R0e30r3bSeI"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "price comparison reference",
+        "sampleTitles": [
+          "5-Star Hotel vs Dhabha ka Khana 😱 | ₹45 vs. ₹2000 Food  @Param_aedy #shorts #shortsfeed"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCm3uwvJw2KHp4aWRjj_IWTQ",
+      "title": "So Saute",
+      "url": "https://www.youtube.com/channel/UCm3uwvJw2KHp4aWRjj_IWTQ",
+      "subscribers": 5300000,
+      "totalViews": 8788842152,
+      "matchedQueries": [
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "ZPQ-pqM__jQ"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "price comparison reference",
+        "sampleTitles": [
+          "Cheap v/s expensive famous momos😱😍 | Delhi Street Food Challenge 😍 | @sosaute #shorts"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCamdvUq4-BoneYsHZt0Agrw",
+      "title": "KarissaEats",
+      "url": "https://www.youtube.com/channel/UCamdvUq4-BoneYsHZt0Agrw",
+      "subscribers": 5240000,
+      "totalViews": 5361082641,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "uwvHlGm0hBc",
+        "sr5F--sFWOc"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "adjacent reference only",
+        "reason": "Matched samples are dining and eating experiences.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCytgnJE6TrzTTq19GYCOyTg",
+      "title": "Tyler Blanchard",
+      "url": "https://www.youtube.com/channel/UCytgnJE6TrzTTq19GYCOyTg",
+      "subscribers": 5100000,
+      "totalViews": 3598469760,
+      "matchedQueries": [
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "hBchw5-EQrI"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "price hook reference",
+        "sampleTitles": [
+          "World's Most Expensive Pizza"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCk-VjT9epcCoRsE1nnQCUiQ",
+      "title": "Food for shot",
+      "url": "https://www.youtube.com/channel/UCk-VjT9epcCoRsE1nnQCUiQ",
+      "subscribers": 5070000,
+      "totalViews": 5436774338,
+      "matchedQueries": [
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "12M8_m_Vm_s"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for food cinematography technique review",
+        "sampleTitles": [
+          "Cinematic enough to make chutney feel expensive 😍 #bts #chutney #cinematic #cinematography #food"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC5zS0_6TYr17qTnvw_9vang",
+      "title": "Allen Choudhary",
+      "url": "https://www.youtube.com/channel/UC5zS0_6TYr17qTnvw_9vang",
+      "subscribers": 4830000,
+      "totalViews": 5445620174,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "wf-jiMQgRvk"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "restaurant reference",
+        "sampleTitles": [
+          "Most Expensive Restaurant In India 🤑🍛"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCcqa2nmuSt_YpPQFRFmV88g",
+      "title": "Proud Opinions ",
+      "url": "https://www.youtube.com/channel/UCcqa2nmuSt_YpPQFRFmV88g",
+      "subscribers": 4650000,
+      "totalViews": 4226423317,
+      "matchedQueries": [
+        "luxury food shorts",
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "F2KpMlLb9BE",
+        "_T-JdrnvvNI",
+        "twcc83e5kSE"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "food review and comparison reference",
+        "sampleTitles": [
+          "VANDE BHARAT🥘#food #foodie #vandebharatexpress #review #foodvlogs #irctc #train #shorts #foodreview",
+          "MOMOS🥟#food #foodie #momos #streetfood #foodvlog #comparison #cheap #expensive #spicyfood #minivlog",
+          "Cholle Bhature🥘#food #foodie #cheap #expensive #rain #localfood #bhature #foodvlog #comparison #new"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCqzebzc9N19X3MVFnuFYtRw",
+      "title": "Chocolate Cacao チョコレートカカオ",
+      "url": "https://www.youtube.com/channel/UCqzebzc9N19X3MVFnuFYtRw",
+      "subscribers": 4650000,
+      "totalViews": 993939778,
+      "matchedQueries": [
+        "expensive food shorts",
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "C-V_kSnBSwg"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for dessert texture review",
+        "reason": "Matched sample is a chocolate cake recipe.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCQVwn0HNVFhg52-8ln0WJSw",
+      "title": "Iron Chef Dad",
+      "url": "https://www.youtube.com/channel/UCQVwn0HNVFhg52-8ln0WJSw",
+      "subscribers": 4280000,
+      "totalViews": 2133449146,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "4Oh_dO4hy4Q",
+        "LAZIsOsC62Q",
+        "t0ixOjMd7L0"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for food transformation review",
+        "reason": "Matched sample turns a frozen dinner into gourmet food.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCilcnu178Z2ULEHzJPJbWdQ",
+      "title": "Toby",
+      "url": "https://www.youtube.com/channel/UCilcnu178Z2ULEHzJPJbWdQ",
+      "subscribers": 4250000,
+      "totalViews": 4920876292,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "jJ16zD4IiNA",
+        "6qbEGeqTing",
+        "7SXaLUEGj4E"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating challenge reference",
+        "sampleTitles": [
+          "ASMR Mukbang 💚 Eating Random Green Food #shorts #food #asmr #mukbang #challenge #spicyfood",
+          "ASMR Mukbang 🖤💀 Eating Random Black Food #funny #shorts #mukbang #eating #food",
+          "Random Black Food ASMR Mukbang #3 ♠️🕷️☕️ #shorts  #food #asmr #mukbang #challenge"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCqJQKRhBP1w1PcRmIpbQZwQ",
+      "title": "Fun2oosh Food",
+      "url": "https://www.youtube.com/channel/UCqJQKRhBP1w1PcRmIpbQZwQ",
+      "subscribers": 4140000,
+      "totalViews": 3240640343,
+      "matchedQueries": [
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "xviHiciSxjA"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "food product review reference",
+        "sampleTitles": [
+          "Expensive Chewing Gum Review🍭 #fun2ooshfood #youtubepartner #shorts @Fun2oosh Food"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCsKc38DDpGkNTHwsYjA0rbA",
+      "title": "cravingsandcalories vlogs",
+      "url": "https://www.youtube.com/channel/UCsKc38DDpGkNTHwsYjA0rbA",
+      "subscribers": 3950000,
+      "totalViews": 4507827332,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "deHhOLWlC7s",
+        "w48lbMAJX0Y"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "food discovery reference",
+        "sampleTitles": [
+          "Day 1/100 of Trying Unique and New Food Dishes 😍😍",
+          "Trying Food at Chef Harpal Singh’s Restaurant 😍"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCp4nL9M78_HF6JL1MNzh-NQ",
+      "title": "Vlad SlickBartender",
+      "url": "https://www.youtube.com/channel/UCp4nL9M78_HF6JL1MNzh-NQ",
+      "subscribers": 3780000,
+      "totalViews": 2741687895,
+      "matchedQueries": [
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "GFYsZ2yRvrw"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "adjacent reference only",
+        "reason": "Matched sample is a black truffle drink.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCuuLy9wn33DAE7qNt7oVGww",
+      "title": "DanCookedIt",
+      "url": "https://www.youtube.com/channel/UCuuLy9wn33DAE7qNt7oVGww",
+      "subscribers": 3210000,
+      "totalViews": 3511687582,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "L1urgN48rAU",
+        "0ka9ZYFu0V0",
+        "C8C1XXuM4AA",
+        "_LAFdbULobc"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "adjacent reference only",
+        "reason": "Matched samples focus on restaurant and price comparisons.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCYS6mSp3x-dP0rxzWoM3x_Q",
+      "title": "Biggroove",
+      "url": "https://www.youtube.com/channel/UCYS6mSp3x-dP0rxzWoM3x_Q",
+      "subscribers": 3180000,
+      "totalViews": 3524563580,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "41xEYyILlg8"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "restaurant food presentation reference",
+        "sampleTitles": [
+          "Best bbq  @thesmokefactory_ny 5805 W Irlo Bronson Memorial Hwy, Kissimmee, FL 34746 #foodie #shorts"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCZDCkQWcA3fh8rvrPXUb16g",
+      "title": "Baochi Travel",
+      "url": "https://www.youtube.com/channel/UCZDCkQWcA3fh8rvrPXUb16g",
+      "subscribers": 3150000,
+      "totalViews": 2886407110,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "SEea9znaIHQ"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "food price comparison reference",
+        "sampleTitles": [
+          "Rating pasta from cheap to expensive in Paris 🍝"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC6ILA0ufdGI_RxNIj2-aSFw",
+      "title": "Hey It's Honeysuckle",
+      "url": "https://www.youtube.com/channel/UC6ILA0ufdGI_RxNIj2-aSFw",
+      "subscribers": 3000000,
+      "totalViews": 3053267463,
+      "matchedQueries": [
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "2RlIdN-9ER0"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for food test review",
+        "reason": "Matched sample tests expensive pasta.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCl90rgsYqIKsVHDJLHqKp_Q",
+      "title": "Thakur Sisters",
+      "url": "https://www.youtube.com/channel/UCl90rgsYqIKsVHDJLHqKp_Q",
+      "subscribers": 2700000,
+      "totalViews": 3636986763,
+      "matchedQueries": [
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "Q52ptkEpa9g"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "food price challenge reference",
+        "sampleTitles": [
+          "🥪₹50 vs. ₹500 Sandwich Challenge! Cheap vs. Expensive food comparison! #funnyshorts #foodchallenge"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCMpVQVKYRb_xXnevxQjYepQ",
+      "title": "Louis Gantus",
+      "url": "https://www.youtube.com/channel/UCMpVQVKYRb_xXnevxQjYepQ",
+      "subscribers": 2620000,
+      "totalViews": 2820779331,
+      "matchedQueries": [
+        "luxury food shorts",
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "QYZLoczX2oc",
+        "kYwTNWfMbYs",
+        "7SLmjtNmjNw"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for cooking comparison review",
+        "sampleTitles": [
+          "Cheap Vs Expensive Pasta #cooking #food #foodasmr #recipe",
+          "These scare me #cooking #food #foodasmr #recipe",
+          "Cheap Vs Expensive TV Dinner #cooking #food #foodasmr #recipe"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCAQsADLPq8SHu77zjG2lmSQ",
+      "title": "Vannda ASMR",
+      "url": "https://www.youtube.com/channel/UCAQsADLPq8SHu77zjG2lmSQ",
+      "subscribers": 2440000,
+      "totalViews": 1215980549,
+      "matchedQueries": [
+        "luxury food shorts",
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "XdxWszPLCz4"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "food platter presentation reference",
+        "sampleTitles": [
+          "Gourmet Platter Delicious Food"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCWq3Kp5CSMhzRHUbHJsDDZQ",
+      "title": "Notorious Foodie",
+      "url": "https://www.youtube.com/channel/UCWq3Kp5CSMhzRHUbHJsDDZQ",
+      "subscribers": 1950000,
+      "totalViews": 940421323,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "Wo0smJajSuM"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for cooking motion review",
+        "reason": "Matched sample is a full English breakfast.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCzQtGpWcgOyG0iCc-si1MWw",
+      "title": "Aylen Park",
+      "url": "https://www.youtube.com/channel/UCzQtGpWcgOyG0iCc-si1MWw",
+      "subscribers": 1940000,
+      "totalViews": 1673264658,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "eHoqMy9et9U"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison; matched sample concerns a luxury spa",
+        "sampleTitles": [
+          "24 HR LUXURY SPA IN CHINA🇨🇳🤩 #china #shanghai #spa #beauty #massage"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCgkq0lFYCF3dWSn2TCoKgrg",
+      "title": "FooD Code ASMR",
+      "url": "https://www.youtube.com/channel/UCgkq0lFYCF3dWSn2TCoKgrg",
+      "subscribers": 1810000,
+      "totalViews": 1283461715,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "DZ54zFJ9E4k"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for food sensory review",
+        "sampleTitles": [
+          "Pakhala Bhat ASMR #Shorts"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC-LysfLQb3pT8wZNvgj_Eag",
+      "title": "ƙׁׅ֑ꪱׁׅᥣׁׅ֪ᥣׁׅ֪ɑׁׅ֮_hׁׅ֮ɑׁׅ֮ꭈׁׅꫀׁׅܻᥣׁׅ֪ᨮ꫶ׁׅ֮ꪀׁׅ",
+      "url": "https://www.youtube.com/channel/UC-LysfLQb3pT8wZNvgj_Eag",
+      "subscribers": 1670000,
+      "totalViews": 552108382,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "gm5FJRL3EWU"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating sounds reference; attribution review needed",
+        "sampleTitles": [
+          "[ASMR] eating emoji 🍮💦 credits:‎‎ @SatisfyingLips || close req || #eatingsounds #asmremoji"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCkk43V0FMRnQQSbG6s3VR3A",
+      "title": "SauccEats",
+      "url": "https://www.youtube.com/channel/UCkk43V0FMRnQQSbG6s3VR3A",
+      "subscribers": 1620000,
+      "totalViews": 886490930,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "VOxYd1xOXB0",
+        "X0fKtjapZJY",
+        "c-BHISpQA_Q"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for cooking sequence review",
+        "reason": "Matched samples are fine dining on a budget episodes.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCQLJFXhxbl5SMfcGZSnURhQ",
+      "title": "Matt Peterson",
+      "url": "https://www.youtube.com/channel/UCQLJFXhxbl5SMfcGZSnURhQ",
+      "subscribers": 1570000,
+      "totalViews": 1535612224,
+      "matchedQueries": [
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "Bt9-hLJrOc8"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "food price comparison reference",
+        "sampleTitles": [
+          "Ordering the most EXPENSIVE FOOD from INEXPENSIVE RESTAURANTS #shorts"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCzHOkzGn75jgxMR6-IJVfVA",
+      "title": "COOKING WITH SHEREEN",
+      "url": "https://www.youtube.com/channel/UCzHOkzGn75jgxMR6-IJVfVA",
+      "subscribers": 1480000,
+      "totalViews": 461270300,
+      "matchedQueries": [
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "-9St-k_izrc"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for ingredient explanation review",
+        "reason": "Matched sample explains Parmigiano Reggiano naming.",
+        "basis": "Matched sample titles in video-candidates.json; this is a metadata screen rather than a completed visual review",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC2MtuHEvnlp5I9GhTuC0R1A",
+      "title": "Mad Prateek",
+      "url": "https://www.youtube.com/channel/UC2MtuHEvnlp5I9GhTuC0R1A",
+      "subscribers": 1470000,
+      "totalViews": 1701060906,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "5ufArqNNAfY"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI food interpretation reference; realism review pending",
+        "sampleTitles": [
+          "Show me Momos😋🥟 | AI Confused!"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCH68duckGT6BFUcIKuQUD6g",
+      "title": "SHORTOFANS",
+      "url": "https://www.youtube.com/channel/UCH68duckGT6BFUcIKuQUD6g",
+      "subscribers": 1390000,
+      "totalViews": 2105531970,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "TnwN73Y3FXc"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating challenge reference",
+        "sampleTitles": [
+          "🍭🍒😋ASMR EATING emoji challenge #shorts"
+        ],
+        "basis": "Exact matched titles; visual review and whole channel relevance remain pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCMVw8QtbECBcazBFdN-cZiw",
+      "title": "JULIA VELCHEVA-LUTAK",
+      "url": "https://www.youtube.com/channel/UCMVw8QtbECBcazBFdN-cZiw",
+      "subscribers": 1240000,
+      "totalViews": 850266089,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "9IlG2MUK6ss"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for seafood preparation review",
+        "sampleTitles": [
+          "Grilled seafood🍱 #gourmetcooking #seafoodlovers #recipe #seafood #grilledseafood"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC3wmheybwSk_GMMapnPGl0Q",
+      "title": "Dr. Healthcare ",
+      "url": "https://www.youtube.com/channel/UC3wmheybwSk_GMMapnPGl0Q",
+      "subscribers": 1050000,
+      "totalViews": 743733075,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "B7eX1klo0j0"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison",
+        "reason": "Matched sample discusses constipation rather than appetizing food presentation.",
+        "basis": "Matched sample title in video-candidates.json; full visual review pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCis6L5qigp3HHig1aFZGm8A",
+      "title": "Avinash Dagar",
+      "url": "https://www.youtube.com/channel/UCis6L5qigp3HHig1aFZGm8A",
+      "subscribers": 946000,
+      "totalViews": 1145965293,
+      "matchedQueries": [
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "4cIuOYWN_QM"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "food price challenge reference",
+        "sampleTitles": [
+          "Cheap Vs Expensive Pizza 🍕😭!! #foodchallenge #foodie"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCh2H1SnNr2jIfZUDt1SgIqw",
+      "title": "MUKBANG Food",
+      "url": "https://www.youtube.com/channel/UCh2H1SnNr2jIfZUDt1SgIqw",
+      "subscribers": 877000,
+      "totalViews": 932709154,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "tKS5qqRkn2U"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating challenge reference",
+        "sampleTitles": [
+          "Eating Emoticons In Order😵🦟👨‍🎨 #shorts #seungbini"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCn-0wGMqV280lmti1mSaOCQ",
+      "title": "Spicy Momo",
+      "url": "https://www.youtube.com/channel/UCn-0wGMqV280lmti1mSaOCQ",
+      "subscribers": 848000,
+      "totalViews": 601384415,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "RbRYV1H8og0"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating sounds reference",
+        "sampleTitles": [
+          "(Spicy Food Eating) - Fresh Tofu with Chillies - mukbang ASMR | Sisters Eating #Shorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCt6HU1WJIMb5kZf1Of63H7w",
+      "title": "🍩𝙄𝙩'𝙨 𝙨𝙝𝙧𝙪🍕",
+      "url": "https://www.youtube.com/channel/UCt6HU1WJIMb5kZf1Of63H7w",
+      "subscribers": 821000,
+      "totalViews": 498779495,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "OlXPV9t3Xs0"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating sounds reference; attribution check needed",
+        "sampleTitles": [
+          "Asmr emojifood | @Sunny_EATING_ |sub💝 #youtube #koreanfood #반바지 #shorts #foodvideos #ytshorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC3LiwRzbujN4lhkcCWDc9Zg",
+      "title": "Rainlit Village",
+      "url": "https://www.youtube.com/channel/UC3LiwRzbujN4lhkcCWDc9Zg",
+      "subscribers": 654000,
+      "totalViews": 429909947,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "a4tHx-tr5_g"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "stylized village cooking reference",
+        "sampleTitles": [
+          "Fresh Paneer Butter Masala & Naan on a Rainy Day 🌧️🍛 | Village Cooking #ghiblistyle #asmr #shorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC3cr9447_7yd2XMyG-w56Uw",
+      "title": "tinta fooddiaries",
+      "url": "https://www.youtube.com/channel/UC3cr9447_7yd2XMyG-w56Uw",
+      "subscribers": 628000,
+      "totalViews": 431450093,
+      "matchedQueries": [
+        "luxury food shorts",
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "whmKhrX3a0k"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "luxury dining reference",
+        "sampleTitles": [
+          "10000rs dinner😅🙄 at ITC grand chola🙌"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCNc65f9akQs7hOo3bXrEaKA",
+      "title": "Asmr Noodles Mukbang ",
+      "url": "https://www.youtube.com/channel/UCNc65f9akQs7hOo3bXrEaKA",
+      "subscribers": 584000,
+      "totalViews": 287501063,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "jw3pW1yfKRA"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating sounds reference",
+        "sampleTitles": [
+          "#asmr #mukbang #eating #noodles #two #flavors #spiccy #yummy"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCLly3t24od-hzhISSCHmxFw",
+      "title": "Bento ASMR",
+      "url": "https://www.youtube.com/channel/UCLly3t24od-hzhISSCHmxFw",
+      "subscribers": 525000,
+      "totalViews": 288387679,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "iGxzqeT94FU"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for bento preparation review",
+        "sampleTitles": [
+          "ASMR🎧Let's Make My Bento🍜🥟#asmr #lunchbox #ramen"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCyOLNOsfv7mc0-C_UZl0ukA",
+      "title": "Ghibli Echoes",
+      "url": "https://www.youtube.com/channel/UCyOLNOsfv7mc0-C_UZl0ukA",
+      "subscribers": 480000,
+      "totalViews": 204276149,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "5drs2kAm_kA"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "stylized village cooking reference",
+        "sampleTitles": [
+          "Crispy Pumpkin Flower Fry |Peaceful Village Life 🌿 #Ghibli #CozyCooking #shorts #shortsfeed"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCATa9lVnmTTfxxe_5eL7Ddw",
+      "title": "Backpacker Indian",
+      "url": "https://www.youtube.com/channel/UCATa9lVnmTTfxxe_5eL7Ddw",
+      "subscribers": 454000,
+      "totalViews": 754095281,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "iofz7iluQ2E"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "luxury food tour reference",
+        "sampleTitles": [
+          "Ultra Rich Billionaire Shaadi ka Food Tour 🤤🔥"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCh2J0JpH8IBilcFRl3YBGeg",
+      "title": "little fairy",
+      "url": "https://www.youtube.com/channel/UCh2J0JpH8IBilcFRl3YBGeg",
+      "subscribers": 441000,
+      "totalViews": 182972142,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "f7SF7tWQUuU"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison; cat transformation sample",
+        "sampleTitles": [
+          "The Cat's Transformation，The Struggle of a Fat Cat #ai #cartoon#cat"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCgeNzYXS8ZUcS_zA0-XrD4w",
+      "title": "AI Animation world",
+      "url": "https://www.youtube.com/channel/UCgeNzYXS8ZUcS_zA0-XrD4w",
+      "subscribers": 440000,
+      "totalViews": 127501918,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "1W4NLuk7h0M",
+        "EunQCvotBk8"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI story reference; realism and food relevance pending",
+        "sampleTitles": [
+          "Saas Ne Diye Aansu Lekin Bahu Ne Banaya Sabse Sandwich 🥺🥪#viral#shorts #explore #trending #boost",
+          "Saas Ne Daanta 😱 Bahu Ne Bana Diye Crispy #shorts #explore #trend #boost"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC_plPQxPAIvx1WiwRY2j46Q",
+      "title": "AI Dreamland",
+      "url": "https://www.youtube.com/channel/UC_plPQxPAIvx1WiwRY2j46Q",
+      "subscribers": 326000,
+      "totalViews": 201713425,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "layTpSyS_oE",
+        "B7nKybWNT6s"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "adjacent AI comedy reference",
+        "sampleTitles": [
+          "പാല് കുടിക്കി  മക്കളെ | Jayaram Funny Malayalam Dialogue | #animation #ai #malayalamfunny",
+          "എന്നെപ്പോലെ ജിമ്മൻ ആവാം |Ai Malayalam Animation Song | K7 Parody Song |#aianimation #ai #k7maman #k7"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCVfyR5ktZfxU0F56cXve28Q",
+      "title": "Живи Королевой",
+      "url": "https://www.youtube.com/channel/UCVfyR5ktZfxU0F56cXve28Q",
+      "subscribers": 317000,
+      "totalViews": 141644804,
+      "matchedQueries": [
+        "food ASMR shorts"
+      ],
+      "sampleVideoIds": [
+        "hc6vRgVbXns"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating challenge reference",
+        "sampleTitles": [
+          "Viral Emoji Eating Challenge ASMR #shorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCe_UB2RpExmXEM8kc1Y6Y0Q",
+      "title": "Nikhil Yadav",
+      "url": "https://www.youtube.com/channel/UCe_UB2RpExmXEM8kc1Y6Y0Q",
+      "subscribers": 307000,
+      "totalViews": 774348402,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "DdXaM8euohE"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "fantasy food world reference",
+        "sampleTitles": [
+          "Walking Inside Gulab Jamun World 🍯⚪ | AI Cinematic Food World"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCQerhZP4bMT4lCH17pSNfZg",
+      "title": "Stomach Anatomy Pro",
+      "url": "https://www.youtube.com/channel/UCQerhZP4bMT4lCH17pSNfZg",
+      "subscribers": 252000,
+      "totalViews": 657738028,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "tT3JwqEgOuw"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison",
+        "reason": "Matched sample is an inflamed gut animation.",
+        "basis": "Matched sample title in video-candidates.json; full visual review pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCn7C6ijXTzxaCiVSodRpE4g",
+      "title": "Jelly Jam Studio",
+      "url": "https://www.youtube.com/channel/UCn7C6ijXTzxaCiVSodRpE4g",
+      "subscribers": 230000,
+      "totalViews": 78516340,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "Ir8UNk0GEIE",
+        "CYVk6c1r9IA",
+        "41ZOuVZZwvk",
+        "5ErF72RIBeE"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "stylized animal story reference",
+        "sampleTitles": [
+          "Orange cat cooking pig friend funny cartoon cute ai animation video",
+          "Eating feeding food video cartoon story shorts ai animation asmr",
+          "Eating feeding food video cartoon story shorts ai animation asmr",
+          "Orange cat cooking pig Funny cartoon animal video story cute ai animation pet"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCzrHLdRWBCQkpUmM610XEOw",
+      "title": "Tiny Masala magic",
+      "url": "https://www.youtube.com/channel/UCzrHLdRWBCQkpUmM610XEOw",
+      "subscribers": 225000,
+      "totalViews": 27825010,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "yj2n8F8rB6E"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "stylized miniature cooking reference; sampled visual review recorded",
+        "sampleTitles": [
+          "Tiny women making Punjabi style Gobhi Pratha #animation #ai"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCg5_vhawKt7ArxiIU3r3sPw",
+      "title": "Bio Anatomy Pro",
+      "url": "https://www.youtube.com/channel/UCg5_vhawKt7ArxiIU3r3sPw",
+      "subscribers": 217000,
+      "totalViews": 507375915,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "oBshm2hxp54"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison",
+        "reason": "Matched sample is an endoscopic constipation animation.",
+        "basis": "Matched sample title in video-candidates.json; full visual review pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCZ1TAoYQ47tRgM9OlYS4Udw",
+      "title": "Delhiicious",
+      "url": "https://www.youtube.com/channel/UCZ1TAoYQ47tRgM9OlYS4Udw",
+      "subscribers": 212000,
+      "totalViews": 247461253,
+      "matchedQueries": [
+        "luxury food shorts",
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "UElkbCq1pw8"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for burger presentation review",
+        "sampleTitles": [
+          "Cheesiest Veg Burger in Delhi😍 #shorts #trending #burger #cheese"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCpSDs-2cJ56a-amFiqr4umA",
+      "title": "Village 90'sCooking",
+      "url": "https://www.youtube.com/channel/UCpSDs-2cJ56a-amFiqr4umA",
+      "subscribers": 197000,
+      "totalViews": 118614847,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "oG-N50vviV0"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "stylized village cooking reference",
+        "sampleTitles": [
+          "Rainy Day Village Cooking: Making Jackfruit Curry And Steam Rice 🌧️🍛 [Ghibli Animation ] #shorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCJZbWeGkVlHT7K-4ZlruqwQ",
+      "title": "Gut AI Art",
+      "url": "https://www.youtube.com/channel/UCJZbWeGkVlHT7K-4ZlruqwQ",
+      "subscribers": 166000,
+      "totalViews": 568854589,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "VvEo5k8OYy8"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison; constipation animation sample",
+        "sampleTitles": [
+          "Illustration of Constipation Animation | Gut AI Art | 07"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCFQUKKyRvOfxx626IZiJXiw",
+      "title": "BeHealthy",
+      "url": "https://www.youtube.com/channel/UCFQUKKyRvOfxx626IZiJXiw",
+      "subscribers": 157000,
+      "totalViews": 130708886,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "V0ALvVPHz-8"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison",
+        "reason": "Matched sample presents artery health claims.",
+        "basis": "Matched sample title in video-candidates.json; full visual review pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCkul5eYwNYWNk3jYSoENhhQ",
+      "title": "Hemasagar Ai",
+      "url": "https://www.youtube.com/channel/UCkul5eYwNYWNk3jYSoENhhQ",
+      "subscribers": 155000,
+      "totalViews": 71416292,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "4blcDtbC4FU",
+        "7r3KwxfdfLw",
+        "vcfwRayOTME"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI cooking reference; visual realism pending",
+        "sampleTitles": [
+          "🍐 Cozy Village Bottle Gourd Masala Curry Cooking | Lauki Curry Cooking In Monsoon ⛈️ #shorts",
+          "🐓 Cozy Village Chicken Noodles Cooking | Traditional Chicken Noodles Cooking In Monsoon ⛈️ #shorts",
+          "🍛 Cozy Village Morning Special Idli Sambar Cooking | Idli Sambar Cooking In Monsoon ⛈️ #shorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC9kXLQWgnmeb2vH4Vp9UPmw",
+      "title": "Melty ASMR",
+      "url": "https://www.youtube.com/channel/UC9kXLQWgnmeb2vH4Vp9UPmw",
+      "subscribers": 140000,
+      "totalViews": 143107860,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "PBhWlr3nMBY"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "fruit character reference; separate from natural food realism",
+        "sampleTitles": [
+          "Cute or Creepy? AI Fruit Babies Eating Real Fruit🍓👶| The Ultimate Oddly Satisfying AI ASMR"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCfLkrtVxUgZoXAsYkLwPUmA",
+      "title": "Łukasz Michalsky",
+      "url": "https://www.youtube.com/channel/UCfLkrtVxUgZoXAsYkLwPUmA",
+      "subscribers": 136000,
+      "totalViews": 143195028,
+      "matchedQueries": [
+        "luxury food shorts",
+        "expensive food shorts"
+      ],
+      "sampleVideoIds": [
+        "-DuWGX8xbmQ"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for luxury steak presentation review",
+        "sampleTitles": [
+          "THE MOST EXPENSIVE STEAK WRAPPED IN GOLD !!! #nusret #luxury #gym #shorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCfvkif7aQlY8WGZRMEjLkuQ",
+      "title": "Eatwithdeepanshu",
+      "url": "https://www.youtube.com/channel/UCfvkif7aQlY8WGZRMEjLkuQ",
+      "subscribers": 131000,
+      "totalViews": 154762844,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "oeCIcV_QhHU"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "food platter reference",
+        "sampleTitles": [
+          "Italian Platter ₹249 | #burger #pasta #nachos #foodshorts #foodvlog #shortsfeed"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCZ1nMoLuRdatSbjyy08J6wg",
+      "title": "Daiyu",
+      "url": "https://www.youtube.com/channel/UCZ1nMoLuRdatSbjyy08J6wg",
+      "subscribers": 126000,
+      "totalViews": 205587942,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "Apm_ix7ixII"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "cooking compilation reference; provenance review needed",
+        "sampleTitles": [
+          "Everyone is a gourmet Best Show Food Recipe Video Collection Cooking Wild Cooking #shorts #YT759"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCKHCQVZQ42vDh-U1OvYtHGg",
+      "title": "JoJo ai Visual Zone",
+      "url": "https://www.youtube.com/channel/UCKHCQVZQ42vDh-U1OvYtHGg",
+      "subscribers": 95600,
+      "totalViews": 111726763,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "A8qxHaDxmBI"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "fruit character reference; separate from natural food realism",
+        "sampleTitles": [
+          "Nice or Cute? AI fruit Babies & Big Fruit 👶🍊🍓🥑 | The Ultimate Oddly Satisfying AI ASMR #viralvideo"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCC4eG1EQcx4a8LX7v51-g7g",
+      "title": "Yummy World Story",
+      "url": "https://www.youtube.com/channel/UCC4eG1EQcx4a8LX7v51-g7g",
+      "subscribers": 94800,
+      "totalViews": 85758090,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "6BEsyFoVuBk",
+        "oImOfHBa-QQ",
+        "E7sPtL-kCak"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "food animation reference; style pending visual review",
+        "sampleTitles": [
+          "김밥 🍙 Gimbap | Korean Food #foodanimation #koreanfood #shorts",
+          "냉삼 Frozen Pork Belly | Korean BBQ #foodanimation #koreanfood #shorts",
+          "잡채 🍜 Japchae | Korean Glass Noodles #foodanimation #koreanfood #shorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCzo5QEWE1-6bDZjio2kt1NA",
+      "title": "Miniatures videos ",
+      "url": "https://www.youtube.com/channel/UCzo5QEWE1-6bDZjio2kt1NA",
+      "subscribers": 60000,
+      "totalViews": 64324793,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "o-_qtqQKY0w"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "stylized miniature cooking reference",
+        "sampleTitles": [
+          "Tiny ladies make giant Samosa #miniaturecooking #miniatureworld #ai #aiart #shortsfeed #shorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCfmzIGd1FJm5N-JiOJWUlzQ",
+      "title": "Adxy GAMING",
+      "url": "https://www.youtube.com/channel/UCfmzIGd1FJm5N-JiOJWUlzQ",
+      "subscribers": 53900,
+      "totalViews": 45722536,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "NZqg5QbH-I8"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison",
+        "reason": "Matched sample concerns game characters and AI animation.",
+        "basis": "Matched sample title in video-candidates.json; full visual review pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UClPfXMBI2JnDED6hWfW0v7w",
+      "title": "only taste zone",
+      "url": "https://www.youtube.com/channel/UClPfXMBI2JnDED6hWfW0v7w",
+      "subscribers": 53600,
+      "totalViews": 23048042,
+      "matchedQueries": [
+        "luxury food shorts"
+      ],
+      "sampleVideoIds": [
+        "B2nZK8SGsVM"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating sounds reference",
+        "sampleTitles": [
+          "Yammy Gourmet Platter 👧😄 #shorts #food #mukbang #gourmet #eatingsounds #asmr #spicy #eating #yt"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCw609cl9lm47TmxpLWqfJ4Q",
+      "title": "Flow Ai",
+      "url": "https://www.youtube.com/channel/UCw609cl9lm47TmxpLWqfJ4Q",
+      "subscribers": 52300,
+      "totalViews": 3291698,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "h6DB0e96GI0"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI technique tutorial reference",
+        "sampleTitles": [
+          "Create Viral Miniature Cooking Videos Using AI (Step-by-Step)"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC0a5aypcjPrG9kxmqfglBZg",
+      "title": "Void Story AI",
+      "url": "https://www.youtube.com/channel/UC0a5aypcjPrG9kxmqfglBZg",
+      "subscribers": 49900,
+      "totalViews": 242675398,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "1Tj2Xkm7kQo"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI food entertainment reference",
+        "sampleTitles": [
+          "DELHI KE SABSE BADE CHOLE BHATURE🤯😱 #ai #ytshorts #shots #food #funny"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCFAAhz2Icbj5jCM1tbdROtw",
+      "title": "UNCANNY ASMR AI",
+      "url": "https://www.youtube.com/channel/UCFAAhz2Icbj5jCM1tbdROtw",
+      "subscribers": 34500,
+      "totalViews": 62521185,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "lSr5NSmnnaM"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "talking food reference; separate from natural food realism",
+        "sampleTitles": [
+          "When Your Food Talks Back PT2 …| ASMR AI  #asmr"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCd_Ao41oNyXghZit7DhnJAg",
+      "title": "Mohit shukla Agriculture [MSA]",
+      "url": "https://www.youtube.com/channel/UCd_Ao41oNyXghZit7DhnJAg",
+      "subscribers": 29200,
+      "totalViews": 54808622,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "Gqduf6t4x3g"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI food entertainment reference; topic detail pending",
+        "sampleTitles": [
+          "OMG 😳 #samosa #funny ##amazing #ai #aivideo #shorts #omg #cutebaby #cute #love"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UChSbMYBLRD8k7fw0iB8wYNw",
+      "title": "Angela Cut ASMR",
+      "url": "https://www.youtube.com/channel/UChSbMYBLRD8k7fw0iB8wYNw",
+      "subscribers": 27300,
+      "totalViews": 27908581,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "dRSoChvxQ8g"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "glass fruit effects reference; separate from edible food realism",
+        "sampleTitles": [
+          "Cutting Glass Fruits Strawberry 🍓 ASMR #ai​ #aiart​ #asmrsounds​ #asmr​ #aiasmr​ #satisfyingvideo"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCWtTzmYQDbLxBX16lZO3Xww",
+      "title": "Traditional Village Life AI",
+      "url": "https://www.youtube.com/channel/UCWtTzmYQDbLxBX16lZO3Xww",
+      "subscribers": 22700,
+      "totalViews": 8688857,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "gjdpHIfuvOo"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "stylized village cooking reference",
+        "sampleTitles": [
+          "Ghibli style me idli sambhar 🍛 | #villagelife #ai #cartoon #cooking #idli #shorts #sambhar #asmr"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCrHz3ljKAQO0O4JNSyx085A",
+      "title": "AI Wali ",
+      "url": "https://www.youtube.com/channel/UCrHz3ljKAQO0O4JNSyx085A",
+      "subscribers": 22500,
+      "totalViews": 9470125,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "WiFhGlMqtec"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI food comedy reference",
+        "sampleTitles": [
+          "😂 Kadhi Ka Dil Kachori Par Aaya! Chawal Reh Gaya Akela | Funny AI Video | Part 1"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCGYmzBfxX79XgFQDC_DNojg",
+      "title": "Cloud Petals AI",
+      "url": "https://www.youtube.com/channel/UCGYmzBfxX79XgFQDC_DNojg",
+      "subscribers": 22000,
+      "totalViews": 10328824,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "ymYSFSm4F30"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI cooking reference; visual realism pending",
+        "sampleTitles": [
+          "🍄 1990s Rural Life | Homemade Mushroom Curry & Fresh Roti 🌿🔥 | #shorts #ai"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCUIky2Kjfb3sMpKdKajKQag",
+      "title": "Cozy Ghibli Home ",
+      "url": "https://www.youtube.com/channel/UCUIky2Kjfb3sMpKdKajKQag",
+      "subscribers": 21400,
+      "totalViews": 11490843,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "Ey8uuTcCitc"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "stylized village cooking reference",
+        "sampleTitles": [
+          "Bhabhi Cooked Kadhai Paneer & Puri for the Whole Family 🥘 | Ghibli Style AI Story 💚"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC9evnOw9kwluEIdU5cpqZiw",
+      "title": "Open Video - AI Video Generator",
+      "url": "https://www.youtube.com/channel/UC9evnOw9kwluEIdU5cpqZiw",
+      "subscribers": 17700,
+      "totalViews": 37071529,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "fFt9cZpf6fU"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "technique reference only",
+        "reason": "Matched sample concerns AI food video generation. Creator comparison requires further review.",
+        "basis": "Matched sample title in video-candidates.json; full visual review pending",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCbHNboMp9enGYZaxVffgbzQ",
+      "title": "Midlife",
+      "url": "https://www.youtube.com/channel/UCbHNboMp9enGYZaxVffgbzQ",
+      "subscribers": 13200,
+      "totalViews": 14707652,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "alXs3p0rCZk"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "fruit character reference; separate from natural food realism",
+        "sampleTitles": [
+          "ORANGE Baby #ai #comedy #baby #shorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC9ZIm8aBg6pewdu3DjDNlFw",
+      "title": "Mystic Whiskers ASMR ",
+      "url": "https://www.youtube.com/channel/UC9ZIm8aBg6pewdu3DjDNlFw",
+      "subscribers": 11500,
+      "totalViews": 3192349,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "q40PSmvTQA4"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI compilation reference; provenance review needed",
+        "sampleTitles": [
+          "Ranking Sora 2's Craziest Viral videos #ai #animation #shorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCPJksQ4YEVABuWTMKCxCPPA",
+      "title": "objectuniverse",
+      "url": "https://www.youtube.com/channel/UCPJksQ4YEVABuWTMKCxCPPA",
+      "subscribers": 10500,
+      "totalViews": 5419708,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "-TKslrccxo4"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI food entertainment reference",
+        "sampleTitles": [
+          "Is short video ko pani puri lover ko share kare  #ai #entertainment #aivideo #panipuri"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC8TsLqHBP9fo_gZRh7wqcRw",
+      "title": "Dreamy Village Moments",
+      "url": "https://www.youtube.com/channel/UC8TsLqHBP9fo_gZRh7wqcRw",
+      "subscribers": 8230,
+      "totalViews": 5417460,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "NOTg3j89Di0"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "stylized village cooking reference",
+        "sampleTitles": [
+          "Champaran Handi Chicken Recipe | Chicken Curry Recipe | Bihari village cooking #shorts #ghiblistyle"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCsUfi8L_bJ5EAHPqWvkcAxg",
+      "title": "Ultimate Oddly Satisfying",
+      "url": "https://www.youtube.com/channel/UCsUfi8L_bJ5EAHPqWvkcAxg",
+      "subscribers": 4950,
+      "totalViews": 3125024,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "i4u1DfPex48"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "fruit character reference; separate from natural food realism",
+        "sampleTitles": [
+          "Cute Fruit Babies Eating Real Fruit 🍓🍍 | Oddly Satisfying AI ASMR | PART 3"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCLm8WC-ydfhliI8MY8GrH3g",
+      "title": "FablePop Studio",
+      "url": "https://www.youtube.com/channel/UCLm8WC-ydfhliI8MY8GrH3g",
+      "subscribers": 4320,
+      "totalViews": 4656056,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "o4OPjsJqNeI"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison; baby dance sample",
+        "sampleTitles": [
+          "Cute Baby Dance & Funny Talk 😂❤️ | 3D AI Animation"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UC42H6g1ve5drFk3gA2uV9Yw",
+      "title": "Rainbow Star AI",
+      "url": "https://www.youtube.com/channel/UC42H6g1ve5drFk3gA2uV9Yw",
+      "subscribers": 3730,
+      "totalViews": 7697279,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "dujwnOyk2vo"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI food comedy reference",
+        "sampleTitles": [
+          "🥔 Potatoes Went to War… and Became Aloo Pakodas! 😂🔥 | Funny AI Cooking #shorts #viral #trending"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    },
+    {
+      "channelId": "UCfJd-Zg6Feqp0d3uNIhAGTA",
+      "title": "SatisfAI",
+      "url": "https://www.youtube.com/channel/UCfJd-Zg6Feqp0d3uNIhAGTA",
+      "subscribers": 3710,
+      "totalViews": 5334241,
+      "matchedQueries": [
+        "AI food animation shorts"
+      ],
+      "sampleVideoIds": [
+        "AzVsQGQ2JLw"
+      ],
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for realistic AI food claim verification",
+        "sampleTitles": [
+          "Lava Biscuit – Real or AI? 😲 | Hyper-Realistic Food Video Challenge"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
+    }
+  ]
+}

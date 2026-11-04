@@ -1,0 +1,19 @@
+{
+  "reviewedAt": "2026-11-02T14:31:45.850Z",
+  "draftDigest": "8e0e84483f24ec306c5fd8b194c39fc153773b0e4d2e45d61caf9da3ccc9dc48",
+  "factsReviewed": true,
+  "paidGenerationApproved": false,
+  "sources": [
+    {
+      "url": "https://www.parmigianoreggiano.com/faq",
+      "title": "Parmigiano Reggiano Consortium FAQ",
+      "checkedAt": "2026-11-02",
+      "claims": [
+        "The visible white crystals described in the FAQ are tyrosine, an amino acid.",
+        "Tyrosine is released as proteins break down during maturation.",
+        "The crystals become larger and more numerous with longer maturation.",
+        "The minimum maturation is 12 months."
+      ]
+    }
+  ]
+}
