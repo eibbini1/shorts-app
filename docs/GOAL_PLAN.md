@@ -251,3 +251,11 @@ Sources checked November 4 2026
 The current official LTX Desktop requirements place 16 GB Macs below its local
 generation floor. Its installation alone would not prove a local route for this
 Mac. The separate MLX candidate needs its own runtime and quality verification.
+
+## Mac handoff checkpoint
+
+docs/MAC_HANDOFF.md contains clone instructions and the continuation prompt for
+the user's M1 Mac with 16 GB unified memory. Before this handoff, the current
+Windows code passed build, lint, all 94 tests in 20 files, and the production
+audit with zero reported vulnerabilities. Credentials and media remain ignored.
+Real image to video generation on the Mac remains unverified.
