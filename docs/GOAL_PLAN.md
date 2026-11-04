@@ -269,7 +269,7 @@ restart.
 All 122 search-derived candidates now have a documented matched-title screen.
 The screen distinguishes food preparation, price comparisons, eating content,
 stylized animation, fantasy effects, tutorials and unrelated samples. This is a
-completed metadata triage pass, not 122 completed visual reviews. Five sampled
+completed metadata triage pass, not 122 completed visual reviews. Eight sampled
 visual reviews are recorded separately. The requested best 100 comparison and
 retention-based validation remain unfinished.
 
@@ -283,3 +283,9 @@ a separate consent step after the service is enabled; this has not been tested.
 The existing Data API connection remains usable for metadata snapshots.
 
 Reference https://developers.google.com/youtube/analytics/reference/reports/query
+
+Research integrity check on November 4 2026 confirmed 122 unique candidate
+channels, 122 documented metadata screens, 188 unique candidate videos and
+eight unique sampled visual reviews. Video channel references and review note
+paths passed consistency checks. These counts do not establish a completed
+best 100 ranking or an audience performance conclusion.
