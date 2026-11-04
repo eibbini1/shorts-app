@@ -96,3 +96,16 @@ After the generation runtime is installed, a first subject-motion test is
 
 This supplies an image immediately after clone. Actual output quality remains
 unverified until the model runs and the whole clip is reviewed.
+
+## Free narration for the Mac preview
+
+The app's mock narration provider creates silent test audio. Use audible local
+speech when reviewing the finished acceptance video. macOS includes the say
+command. After creating the output directory, an example is
+
+    say -o storage/motion/narration.aiff "One garage. Four dream cars. Which one gets your key?"
+    ffmpeg -i storage/motion/narration.aiff -ar 48000 storage/motion/narration.wav
+
+The existing render-demo command accepts a local audio file and matching text.
+Check the local speech timing, pronunciation and caption alignment. The say
+commands have not been run from this Windows environment.
