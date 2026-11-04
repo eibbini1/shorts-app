@@ -132,7 +132,11 @@ try {
     task = cron.schedule(expression, () => { if (stopping || running) return; running = cycle().catch(error => { console.error(error); process.exitCode = 1; }).finally(() => { running = undefined; }); return running; }, { timezone: config.timezone ?? 'Asia/Amman', noOverlap: true });
     console.log('Watching episodes on ' + expression + ' (' + (config.timezone ?? 'Asia/Amman') + ')');
   }
-  running = cycle().finally(() => { running = undefined; });
+  running = cycle().catch(error => {
+    if (!watch) throw error;
+    console.error(error);
+    process.exitCode = 1;
+  }).finally(() => { running = undefined; });
   await running;
   if (task) {
     while (!stopping) await new Promise(resolve => setTimeout(resolve, 1000));

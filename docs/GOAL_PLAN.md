@@ -24,8 +24,8 @@ Support Shorts and long videos and allow subjects beyond luxury food.
 - Preserve the existing branch and uncommitted work.
 - Use D drive for the project to save C drive space.
 - Push verified work and this plan to the existing GitHub repository.
-- The user has a Mac available for generation. Its chip, unified memory and
-  access method are pending.
+- The user has an Apple M1 MacBook Pro with 16 GB unified memory.
+  macOS version and access to that machine remain pending.
 
 ## Verified implementation
 
@@ -289,3 +289,14 @@ channels, 122 documented metadata screens, 188 unique candidate videos and
 eight unique sampled visual reviews. Video channel references and review note
 paths passed consistency checks. These counts do not establish a completed
 best 100 ranking or an audience performance conclusion.
+
+## Worker startup recovery
+
+The watcher now catches an initial cycle failure and remains available for the
+next scheduled retry. One-time runs still fail on the same error. A real-process
+regression test starts with a missing episodes directory, creates it after the
+first discovery error, and confirms discovery is retried without restarting the
+worker. Existing worker exclusion remains covered.
+
+Verification for this recovery change: build and lint passed, all 95 tests in
+20 files passed, and npm audit --omit=dev reported zero vulnerabilities.
