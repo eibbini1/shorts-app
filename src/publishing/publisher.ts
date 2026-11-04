@@ -66,6 +66,7 @@ export async function publishPack(api: youtube_v3.Youtube, packFile: string, roo
     if (!binding) await atomicJson(bindingFile, { id: channel.id, title: channel.snippet?.title });
     if (record && record.channelId !== channel.id) throw new Error('Upload belongs to a different YouTube channel');
     const persist = async () => { record!.updatedAt = new Date().toISOString(); journal[key] = record!; await atomicJson(path.join(directory, 'uploads.json'), journal); };
+    if (record && record.videoDigest !== pack.artifactDigests[pack.video]) throw new PublishingReviewRequiredError('Video changed after upload. Review the existing private upload before replacing it.');
     if (record?.videoId && record.thumbnailDone && record.captionsDone) {
       // An earlier update may have succeeded before the status read caught up.
       const existingStatus = (await api.videos.list({ part: ['status'], id: [record.videoId] })).data.items?.[0]?.status;
@@ -75,7 +76,6 @@ export async function publishPack(api: youtube_v3.Youtube, packFile: string, roo
       }
       if (existingStatus?.privacyStatus !== 'private') throw new Error('Expected an existing private upload; check its status in YouTube Studio before retrying.');
     }
-    if (record && record.videoDigest !== pack.artifactDigests[pack.video]) throw new PublishingReviewRequiredError('Video changed after upload. Review the existing private upload before replacing it.');
 
     if (!record) {
       const at = options.at ?? nextPublishSlot(new Date(), Object.values(journal).map(r => r.publishAt), options.hour, options.utcOffsetHours);

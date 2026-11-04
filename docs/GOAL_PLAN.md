@@ -300,3 +300,11 @@ worker. Existing worker exclusion remains covered.
 
 Verification for this recovery change: build and lint passed, all 95 tests in
 20 files passed, and npm audit --omit=dev reported zero vulnerabilities.
+
+## Upload recovery version check
+
+A resumed uploaded record now checks the local video digest before recovering
+a confirmed remote schedule. A changed render cannot be marked scheduled by
+that shortcut. The regression test confirms a review error, an unchanged upload
+journal and no additional insert, schedule update or remote status request.
+All seven publishing tests passed. No live uploads were changed by this test.
