@@ -204,3 +204,9 @@ car channel. That record was excluded and replaced with BayashiTV_, whose
 channel title and recent food uploads were checked. The review queue excludes
 the incorrect channel. Always verify channel identity from recent content before
 counting it toward the requested food creator study.
+
+Video preflight now checks positive duration and decodes a video frame before
+the automation pipeline starts narration work. A real fries clip passed, and a
+nonempty JSON file supplied as video was rejected. Relevant preflight and worker
+tests, build and lint passed. Full-file corruption beyond the first frame still
+requires render verification.

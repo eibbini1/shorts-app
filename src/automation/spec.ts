@@ -3,6 +3,7 @@ import path from 'node:path';
 import { createReadStream } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { voiceCachePaths } from '../media/voice/VoiceProvider.js';
+import { getMediaDuration, runFfmpeg } from '../media/shared/ffmpegExec.js';
 import type { StillsSpec } from '../media/assemble/types.js';
 
 export async function loadSpec(file: string, root = process.cwd()): Promise<StillsSpec & { width?: number; height?: number }> {
@@ -21,6 +22,10 @@ export async function loadSpec(file: string, root = process.cwd()): Promise<Stil
       if (typeof scene.video !== 'string' || !scene.video.trim()) throw new Error('Scene video requires a local path');
       const video = await stat(path.resolve(root, scene.video));
       if (!video.isFile() || !video.size) throw new Error('Empty scene video: ' + scene.video);
+      const videoPath = path.resolve(root, scene.video);
+      const duration = await getMediaDuration(videoPath);
+      if (!Number.isFinite(duration) || duration <= 0) throw new Error('Scene video needs a positive duration: ' + scene.video);
+      await runFfmpeg(['-i', videoPath, '-map', '0:v:0', '-frames:v', '1', '-f', 'null', '-']);
     }
     const image = await stat(path.resolve(root, scene.image));
     if (!image.isFile() || !image.size) throw new Error('Empty scene image: ' + scene.image);
