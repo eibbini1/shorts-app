@@ -86,3 +86,13 @@ The Mac shell scripts have passed shell syntax checks. They have not run on the
 Mac yet. Model output quality and Seedance equivalence are unverified.
 Research currently includes a candidate pool, metadata screening and sampled
 visual reviews. It is not a completed study of the best 100 channels.
+
+## Bundled source image for the first smoke test
+
+assets/demo/ferrari-source.jpg is included with attribution in assets/demo.
+After the generation runtime is installed, a first subject-motion test is
+
+    sh scripts/test-mac-motion.sh assets/demo/ferrari-source.jpg "The red sports car rolls forward slowly a short distance. The wheels rotate naturally. Keep the same body shape, paint, background and lighting. The camera stays still." storage/motion/car-test.mp4
+
+This supplies an image immediately after clone. Actual output quality remains
+unverified until the model runs and the whole clip is reviewed.
