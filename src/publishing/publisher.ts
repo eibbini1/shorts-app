@@ -6,6 +6,13 @@ import { verifyPack } from '../automation/pack.js';
 import { atomicJson, inputDigest, loadSpec } from '../automation/spec.js';
 import { nextPublishSlot } from './schedule.js';
 
+export class PublishingReviewRequiredError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'PublishingReviewRequiredError';
+  }
+}
+
 export interface UploadRecord {
   phase: 'uploading' | 'uploaded' | 'scheduled' | 'uncertain';
   videoId?: string;
@@ -42,7 +49,7 @@ export async function publishPack(api: youtube_v3.Youtube, packFile: string, roo
     const key = path.relative(root, specFile).replace(/\\/g, '/');
     let record = journal[key];
     if (record?.phase === 'scheduled') {
-      if (record.videoDigest !== pack.artifactDigests[pack.video]) throw new Error('Local video differs from the existing scheduled upload. Review the uploaded version before publishing changes.');
+      if (record.videoDigest !== pack.artifactDigests[pack.video]) throw new PublishingReviewRequiredError('Local video differs from the existing scheduled upload. Review the uploaded version before publishing changes.');
       return record;
     }
     if (record?.phase === 'uncertain' || record?.phase === 'uploading') throw new Error('A prior upload result is uncertain. Check YouTube Studio and reconcile uploads.json before retrying; refusing a duplicate upload.');
@@ -68,7 +75,7 @@ export async function publishPack(api: youtube_v3.Youtube, packFile: string, roo
       }
       if (existingStatus?.privacyStatus !== 'private') throw new Error('Expected an existing private upload; check its status in YouTube Studio before retrying.');
     }
-    if (record && record.videoDigest !== pack.artifactDigests[pack.video]) throw new Error('Video changed after upload. Review the existing private upload before replacing it.');
+    if (record && record.videoDigest !== pack.artifactDigests[pack.video]) throw new PublishingReviewRequiredError('Video changed after upload. Review the existing private upload before replacing it.');
 
     if (!record) {
       const at = options.at ?? nextPublishSlot(new Date(), Object.values(journal).map(r => r.publishAt), options.hour, options.utcOffsetHours);

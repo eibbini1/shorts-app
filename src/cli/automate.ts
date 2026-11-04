@@ -1,5 +1,5 @@
 import { generatePendingDrafts } from '../drafting/drafts.js';
-import { publishPack, readUploadJournal } from '../publishing/publisher.js';
+import { publishPack, readUploadJournal, PublishingReviewRequiredError } from '../publishing/publisher.js';
 import { nextPublishSlot } from '../publishing/schedule.js';
 import { verifyPack } from '../automation/pack.js';
 import 'dotenv/config';
@@ -111,7 +111,7 @@ async function cycle(): Promise<void> {
               const record = await publishPack(connection.api,path.resolve(root,result.spec.replace(/\.assemble\.json$/,'.pack.json')),root,config.publish);
               result.publishing=record.phase;result.videoId=record.videoId;result.publishAt=record.publishAt;
               console.log('SCHEDULED https://youtu.be/'+record.videoId+' at '+record.publishAt);
-            } catch (error) { result.publishing='failed';result.error=error instanceof Error?error.message:String(error);process.exitCode=1;console.error(result.error); }
+            } catch (error) { result.publishing=error instanceof PublishingReviewRequiredError?'needs-review':'failed';result.error=error instanceof Error?error.message:String(error);process.exitCode=1;console.error(result.error); }
           }
         } finally { await saveCredentials(root,connection.oauth.credentials); }
       } catch (error) {

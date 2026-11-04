@@ -259,3 +259,9 @@ the user's M1 Mac with 16 GB unified memory. Before this handoff, the current
 Windows code passed build, lint, all 94 tests in 20 files, and the production
 audit with zero reported vulnerabilities. Credentials and media remain ignored.
 Real image to video generation on the Mac remains unverified.
+
+Publishing mismatch reporting now uses a distinct needs-review status in newly
+started workers. The review gate still requires reconciliation of local and
+uploaded versions. Publishing and worker tests, build and lint passed.
+An already running worker loads this status change on its next controlled
+restart.

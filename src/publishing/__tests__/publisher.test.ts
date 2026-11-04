@@ -3,7 +3,7 @@ import { mkdtemp,mkdir,writeFile,rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import type { youtube_v3 } from 'googleapis';
-import { publishPack,readUploadJournal } from '../publisher.js';
+import { publishPack,readUploadJournal,PublishingReviewRequiredError } from '../publisher.js';
 import { nextPublishSlot } from '../schedule.js';
 vi.mock('node:fs',async importOriginal => {
   const original=await importOriginal<typeof import('node:fs')>();
@@ -32,7 +32,7 @@ describe('scheduled uploads',()=>{
       const journal = await readUploadJournal(root);
       journal['episodes/demo.assemble.json']!.videoDigest = 'previous-video';
       await writeFile(path.join(root, 'storage/automation/uploads.json'), JSON.stringify(journal));
-      await expect(publishPack(api as unknown as youtube_v3.Youtube, file, root)).rejects.toThrow('Local video differs');
+      await expect(publishPack(api as unknown as youtube_v3.Youtube, file, root)).rejects.toBeInstanceOf(PublishingReviewRequiredError);
       expect(api.videos.insert).toHaveBeenCalledTimes(1);
     } finally {
       await rm(root, { recursive: true, force: true });
