@@ -1616,7 +1616,15 @@
       "sampleVideoIds": [
         "9IlG2MUK6ss"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for seafood preparation review",
+        "sampleTitles": [
+          "Grilled seafood🍱 #gourmetcooking #seafoodlovers #recipe #seafood #grilledseafood"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UC3wmheybwSk_GMMapnPGl0Q",
@@ -1650,7 +1658,15 @@
       "sampleVideoIds": [
         "4cIuOYWN_QM"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "food price challenge reference",
+        "sampleTitles": [
+          "Cheap Vs Expensive Pizza 🍕😭!! #foodchallenge #foodie"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCh2H1SnNr2jIfZUDt1SgIqw",
@@ -1664,7 +1680,15 @@
       "sampleVideoIds": [
         "tKS5qqRkn2U"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating challenge reference",
+        "sampleTitles": [
+          "Eating Emoticons In Order😵🦟👨‍🎨 #shorts #seungbini"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCn-0wGMqV280lmti1mSaOCQ",
@@ -1678,7 +1702,15 @@
       "sampleVideoIds": [
         "RbRYV1H8og0"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating sounds reference",
+        "sampleTitles": [
+          "(Spicy Food Eating) - Fresh Tofu with Chillies - mukbang ASMR | Sisters Eating #Shorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCt6HU1WJIMb5kZf1Of63H7w",
@@ -1692,7 +1724,15 @@
       "sampleVideoIds": [
         "OlXPV9t3Xs0"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating sounds reference; attribution check needed",
+        "sampleTitles": [
+          "Asmr emojifood | @Sunny_EATING_ |sub💝 #youtube #koreanfood #반바지 #shorts #foodvideos #ytshorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UC3LiwRzbujN4lhkcCWDc9Zg",
@@ -1706,7 +1746,15 @@
       "sampleVideoIds": [
         "a4tHx-tr5_g"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "stylized village cooking reference",
+        "sampleTitles": [
+          "Fresh Paneer Butter Masala & Naan on a Rainy Day 🌧️🍛 | Village Cooking #ghiblistyle #asmr #shorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UC3cr9447_7yd2XMyG-w56Uw",
@@ -1721,7 +1769,15 @@
       "sampleVideoIds": [
         "whmKhrX3a0k"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "luxury dining reference",
+        "sampleTitles": [
+          "10000rs dinner😅🙄 at ITC grand chola🙌"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCNc65f9akQs7hOo3bXrEaKA",
@@ -1735,7 +1791,15 @@
       "sampleVideoIds": [
         "jw3pW1yfKRA"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating sounds reference",
+        "sampleTitles": [
+          "#asmr #mukbang #eating #noodles #two #flavors #spiccy #yummy"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCLly3t24od-hzhISSCHmxFw",
@@ -1749,7 +1813,15 @@
       "sampleVideoIds": [
         "iGxzqeT94FU"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for bento preparation review",
+        "sampleTitles": [
+          "ASMR🎧Let's Make My Bento🍜🥟#asmr #lunchbox #ramen"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCyOLNOsfv7mc0-C_UZl0ukA",
@@ -1763,7 +1835,15 @@
       "sampleVideoIds": [
         "5drs2kAm_kA"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "stylized village cooking reference",
+        "sampleTitles": [
+          "Crispy Pumpkin Flower Fry |Peaceful Village Life 🌿 #Ghibli #CozyCooking #shorts #shortsfeed"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCATa9lVnmTTfxxe_5eL7Ddw",
@@ -1777,7 +1857,15 @@
       "sampleVideoIds": [
         "iofz7iluQ2E"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "luxury food tour reference",
+        "sampleTitles": [
+          "Ultra Rich Billionaire Shaadi ka Food Tour 🤤🔥"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCh2J0JpH8IBilcFRl3YBGeg",
@@ -1791,7 +1879,15 @@
       "sampleVideoIds": [
         "f7SF7tWQUuU"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison; cat transformation sample",
+        "sampleTitles": [
+          "The Cat's Transformation，The Struggle of a Fat Cat #ai #cartoon#cat"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCgeNzYXS8ZUcS_zA0-XrD4w",
@@ -1806,7 +1902,16 @@
         "1W4NLuk7h0M",
         "EunQCvotBk8"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI story reference; realism and food relevance pending",
+        "sampleTitles": [
+          "Saas Ne Diye Aansu Lekin Bahu Ne Banaya Sabse Sandwich 🥺🥪#viral#shorts #explore #trending #boost",
+          "Saas Ne Daanta 😱 Bahu Ne Bana Diye Crispy #shorts #explore #trend #boost"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UC_plPQxPAIvx1WiwRY2j46Q",
@@ -1821,7 +1926,16 @@
         "layTpSyS_oE",
         "B7nKybWNT6s"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "adjacent AI comedy reference",
+        "sampleTitles": [
+          "പാല് കുടിക്കി  മക്കളെ | Jayaram Funny Malayalam Dialogue | #animation #ai #malayalamfunny",
+          "എന്നെപ്പോലെ ജിമ്മൻ ആവാം |Ai Malayalam Animation Song | K7 Parody Song |#aianimation #ai #k7maman #k7"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCVfyR5ktZfxU0F56cXve28Q",
@@ -1835,7 +1949,15 @@
       "sampleVideoIds": [
         "hc6vRgVbXns"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating challenge reference",
+        "sampleTitles": [
+          "Viral Emoji Eating Challenge ASMR #shorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCe_UB2RpExmXEM8kc1Y6Y0Q",
@@ -1849,7 +1971,15 @@
       "sampleVideoIds": [
         "DdXaM8euohE"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "fantasy food world reference",
+        "sampleTitles": [
+          "Walking Inside Gulab Jamun World 🍯⚪ | AI Cinematic Food World"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCQerhZP4bMT4lCH17pSNfZg",
@@ -1886,7 +2016,18 @@
         "41ZOuVZZwvk",
         "5ErF72RIBeE"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "stylized animal story reference",
+        "sampleTitles": [
+          "Orange cat cooking pig friend funny cartoon cute ai animation video",
+          "Eating feeding food video cartoon story shorts ai animation asmr",
+          "Eating feeding food video cartoon story shorts ai animation asmr",
+          "Orange cat cooking pig Funny cartoon animal video story cute ai animation pet"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCzrHLdRWBCQkpUmM610XEOw",
@@ -1900,7 +2041,15 @@
       "sampleVideoIds": [
         "yj2n8F8rB6E"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "stylized miniature cooking reference; sampled visual review recorded",
+        "sampleTitles": [
+          "Tiny women making Punjabi style Gobhi Pratha #animation #ai"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCg5_vhawKt7ArxiIU3r3sPw",
@@ -1935,7 +2084,15 @@
       "sampleVideoIds": [
         "UElkbCq1pw8"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for burger presentation review",
+        "sampleTitles": [
+          "Cheesiest Veg Burger in Delhi😍 #shorts #trending #burger #cheese"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCpSDs-2cJ56a-amFiqr4umA",
@@ -1949,7 +2106,15 @@
       "sampleVideoIds": [
         "oG-N50vviV0"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "stylized village cooking reference",
+        "sampleTitles": [
+          "Rainy Day Village Cooking: Making Jackfruit Curry And Steam Rice 🌧️🍛 [Ghibli Animation ] #shorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCJZbWeGkVlHT7K-4ZlruqwQ",
@@ -1963,7 +2128,15 @@
       "sampleVideoIds": [
         "VvEo5k8OYy8"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison; constipation animation sample",
+        "sampleTitles": [
+          "Illustration of Constipation Animation | Gut AI Art | 07"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCFQUKKyRvOfxx626IZiJXiw",
@@ -1999,7 +2172,17 @@
         "7r3KwxfdfLw",
         "vcfwRayOTME"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI cooking reference; visual realism pending",
+        "sampleTitles": [
+          "🍐 Cozy Village Bottle Gourd Masala Curry Cooking | Lauki Curry Cooking In Monsoon ⛈️ #shorts",
+          "🐓 Cozy Village Chicken Noodles Cooking | Traditional Chicken Noodles Cooking In Monsoon ⛈️ #shorts",
+          "🍛 Cozy Village Morning Special Idli Sambar Cooking | Idli Sambar Cooking In Monsoon ⛈️ #shorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UC9kXLQWgnmeb2vH4Vp9UPmw",
@@ -2013,7 +2196,15 @@
       "sampleVideoIds": [
         "PBhWlr3nMBY"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "fruit character reference; separate from natural food realism",
+        "sampleTitles": [
+          "Cute or Creepy? AI Fruit Babies Eating Real Fruit🍓👶| The Ultimate Oddly Satisfying AI ASMR"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCfLkrtVxUgZoXAsYkLwPUmA",
@@ -2028,7 +2219,15 @@
       "sampleVideoIds": [
         "-DuWGX8xbmQ"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for luxury steak presentation review",
+        "sampleTitles": [
+          "THE MOST EXPENSIVE STEAK WRAPPED IN GOLD !!! #nusret #luxury #gym #shorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCfvkif7aQlY8WGZRMEjLkuQ",
@@ -2042,7 +2241,15 @@
       "sampleVideoIds": [
         "oeCIcV_QhHU"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "food platter reference",
+        "sampleTitles": [
+          "Italian Platter ₹249 | #burger #pasta #nachos #foodshorts #foodvlog #shortsfeed"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCZ1nMoLuRdatSbjyy08J6wg",
@@ -2056,7 +2263,15 @@
       "sampleVideoIds": [
         "Apm_ix7ixII"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "cooking compilation reference; provenance review needed",
+        "sampleTitles": [
+          "Everyone is a gourmet Best Show Food Recipe Video Collection Cooking Wild Cooking #shorts #YT759"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCKHCQVZQ42vDh-U1OvYtHGg",
@@ -2070,7 +2285,15 @@
       "sampleVideoIds": [
         "A8qxHaDxmBI"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "fruit character reference; separate from natural food realism",
+        "sampleTitles": [
+          "Nice or Cute? AI fruit Babies & Big Fruit 👶🍊🍓🥑 | The Ultimate Oddly Satisfying AI ASMR #viralvideo"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCC4eG1EQcx4a8LX7v51-g7g",
@@ -2086,7 +2309,17 @@
         "oImOfHBa-QQ",
         "E7sPtL-kCak"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "food animation reference; style pending visual review",
+        "sampleTitles": [
+          "김밥 🍙 Gimbap | Korean Food #foodanimation #koreanfood #shorts",
+          "냉삼 Frozen Pork Belly | Korean BBQ #foodanimation #koreanfood #shorts",
+          "잡채 🍜 Japchae | Korean Glass Noodles #foodanimation #koreanfood #shorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCzo5QEWE1-6bDZjio2kt1NA",
@@ -2100,7 +2333,15 @@
       "sampleVideoIds": [
         "o-_qtqQKY0w"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "stylized miniature cooking reference",
+        "sampleTitles": [
+          "Tiny ladies make giant Samosa #miniaturecooking #miniatureworld #ai #aiart #shortsfeed #shorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCfmzIGd1FJm5N-JiOJWUlzQ",
@@ -2134,7 +2375,15 @@
       "sampleVideoIds": [
         "B2nZK8SGsVM"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "eating sounds reference",
+        "sampleTitles": [
+          "Yammy Gourmet Platter 👧😄 #shorts #food #mukbang #gourmet #eatingsounds #asmr #spicy #eating #yt"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCw609cl9lm47TmxpLWqfJ4Q",
@@ -2148,7 +2397,15 @@
       "sampleVideoIds": [
         "h6DB0e96GI0"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI technique tutorial reference",
+        "sampleTitles": [
+          "Create Viral Miniature Cooking Videos Using AI (Step-by-Step)"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UC0a5aypcjPrG9kxmqfglBZg",
@@ -2162,7 +2419,15 @@
       "sampleVideoIds": [
         "1Tj2Xkm7kQo"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI food entertainment reference",
+        "sampleTitles": [
+          "DELHI KE SABSE BADE CHOLE BHATURE🤯😱 #ai #ytshorts #shots #food #funny"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCFAAhz2Icbj5jCM1tbdROtw",
@@ -2176,7 +2441,15 @@
       "sampleVideoIds": [
         "lSr5NSmnnaM"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "talking food reference; separate from natural food realism",
+        "sampleTitles": [
+          "When Your Food Talks Back PT2 …| ASMR AI  #asmr"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCd_Ao41oNyXghZit7DhnJAg",
@@ -2190,7 +2463,15 @@
       "sampleVideoIds": [
         "Gqduf6t4x3g"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI food entertainment reference; topic detail pending",
+        "sampleTitles": [
+          "OMG 😳 #samosa #funny ##amazing #ai #aivideo #shorts #omg #cutebaby #cute #love"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UChSbMYBLRD8k7fw0iB8wYNw",
@@ -2204,7 +2485,15 @@
       "sampleVideoIds": [
         "dRSoChvxQ8g"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "glass fruit effects reference; separate from edible food realism",
+        "sampleTitles": [
+          "Cutting Glass Fruits Strawberry 🍓 ASMR #ai​ #aiart​ #asmrsounds​ #asmr​ #aiasmr​ #satisfyingvideo"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCWtTzmYQDbLxBX16lZO3Xww",
@@ -2218,7 +2507,15 @@
       "sampleVideoIds": [
         "gjdpHIfuvOo"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "stylized village cooking reference",
+        "sampleTitles": [
+          "Ghibli style me idli sambhar 🍛 | #villagelife #ai #cartoon #cooking #idli #shorts #sambhar #asmr"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCrHz3ljKAQO0O4JNSyx085A",
@@ -2232,7 +2529,15 @@
       "sampleVideoIds": [
         "WiFhGlMqtec"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI food comedy reference",
+        "sampleTitles": [
+          "😂 Kadhi Ka Dil Kachori Par Aaya! Chawal Reh Gaya Akela | Funny AI Video | Part 1"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCGYmzBfxX79XgFQDC_DNojg",
@@ -2246,7 +2551,15 @@
       "sampleVideoIds": [
         "ymYSFSm4F30"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI cooking reference; visual realism pending",
+        "sampleTitles": [
+          "🍄 1990s Rural Life | Homemade Mushroom Curry & Fresh Roti 🌿🔥 | #shorts #ai"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCUIky2Kjfb3sMpKdKajKQag",
@@ -2260,7 +2573,15 @@
       "sampleVideoIds": [
         "Ey8uuTcCitc"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "stylized village cooking reference",
+        "sampleTitles": [
+          "Bhabhi Cooked Kadhai Paneer & Puri for the Whole Family 🥘 | Ghibli Style AI Story 💚"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UC9evnOw9kwluEIdU5cpqZiw",
@@ -2294,7 +2615,15 @@
       "sampleVideoIds": [
         "alXs3p0rCZk"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "fruit character reference; separate from natural food realism",
+        "sampleTitles": [
+          "ORANGE Baby #ai #comedy #baby #shorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UC9ZIm8aBg6pewdu3DjDNlFw",
@@ -2308,7 +2637,15 @@
       "sampleVideoIds": [
         "q40PSmvTQA4"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI compilation reference; provenance review needed",
+        "sampleTitles": [
+          "Ranking Sora 2's Craziest Viral videos #ai #animation #shorts"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCPJksQ4YEVABuWTMKCxCPPA",
@@ -2322,7 +2659,15 @@
       "sampleVideoIds": [
         "-TKslrccxo4"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI food entertainment reference",
+        "sampleTitles": [
+          "Is short video ko pani puri lover ko share kare  #ai #entertainment #aivideo #panipuri"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UC8TsLqHBP9fo_gZRh7wqcRw",
@@ -2336,7 +2681,15 @@
       "sampleVideoIds": [
         "NOTg3j89Di0"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "stylized village cooking reference",
+        "sampleTitles": [
+          "Champaran Handi Chicken Recipe | Chicken Curry Recipe | Bihari village cooking #shorts #ghiblistyle"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCsUfi8L_bJ5EAHPqWvkcAxg",
@@ -2350,7 +2703,15 @@
       "sampleVideoIds": [
         "i4u1DfPex48"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "fruit character reference; separate from natural food realism",
+        "sampleTitles": [
+          "Cute Fruit Babies Eating Real Fruit 🍓🍍 | Oddly Satisfying AI ASMR | PART 3"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCLm8WC-ydfhliI8MY8GrH3g",
@@ -2364,7 +2725,15 @@
       "sampleVideoIds": [
         "o4OPjsJqNeI"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "exclude from core comparison; baby dance sample",
+        "sampleTitles": [
+          "Cute Baby Dance & Funny Talk 😂❤️ | 3D AI Animation"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UC42H6g1ve5drFk3gA2uV9Yw",
@@ -2378,7 +2747,15 @@
       "sampleVideoIds": [
         "dujwnOyk2vo"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "AI food comedy reference",
+        "sampleTitles": [
+          "🥔 Potatoes Went to War… and Became Aloo Pakodas! 😂🔥 | Funny AI Cooking #shorts #viral #trending"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     },
     {
       "channelId": "UCfJd-Zg6Feqp0d3uNIhAGTA",
@@ -2392,7 +2769,15 @@
       "sampleVideoIds": [
         "AzVsQGQ2JLw"
       ],
-      "reviewStatus": "candidate; relevance and visual review pending"
+      "reviewStatus": "candidate; relevance and visual review pending",
+      "metadataScreen": {
+        "decision": "retain for realistic AI food claim verification",
+        "sampleTitles": [
+          "Lava Biscuit – Real or AI? 😲 | Hyper-Realistic Food Video Challenge"
+        ],
+        "basis": "Exact matched titles; realism and performance are not established by this metadata screen",
+        "checkedAt": "2026-11-04"
+      }
     }
   ]
 }

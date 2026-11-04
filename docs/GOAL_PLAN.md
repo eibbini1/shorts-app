@@ -265,3 +265,10 @@ started workers. The review gate still requires reconciliation of local and
 uploaded versions. Publishing and worker tests, build and lint passed.
 An already running worker loads this status change on its next controlled
 restart.
+
+All 122 search-derived candidates now have a documented matched-title screen.
+The screen distinguishes food preparation, price comparisons, eating content,
+stylized animation, fantasy effects, tutorials and unrelated samples. This is a
+completed metadata triage pass, not 122 completed visual reviews. Five sampled
+visual reviews are recorded separately. The requested best 100 comparison and
+retention-based validation remain unfinished.
