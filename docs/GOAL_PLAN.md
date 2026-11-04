@@ -179,3 +179,13 @@ BB videos, including 23 public videos at capture time. It is ignored by Git.
 These Data API statistics do not include retention or stayed to watch.
 A channel performance conclusion still requires those metrics and equal age
 comparison windows. The separate requested competitor research remains open.
+
+The supplied October 6 to November 3 2026 analytics ZIP was inspected and copied
+to ignored storage/analytics/export-2026-11-03. It contains Table data.csv,
+Chart data.csv and Totals.csv. The table has views, watch time, subscribers,
+thumbnail impressions and thumbnail CTR. It lacks stayed to watch, engaged views
+and retention curves. Do not treat watch time divided by all Shorts views as
+YouTube's reported average view duration or average percentage viewed.
+Golden Fries has only eight views in this reporting window, so this export alone
+cannot establish its creative quality or compare it fairly to newly published
+videos. It is a period export, not a lifetime performance record.
