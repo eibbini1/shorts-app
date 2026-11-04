@@ -54,3 +54,22 @@ small amount of sauce is a bounded initial test. Inspect contact, liquid motion
 and the wheel geometry before adding larger flames or complex movements.
 
 This observation does not identify the cause of the video's view count.
+
+## Third sampled review
+
+Tiny Masala magic, Tiny women making Punjabi style Gobhi Pratha.
+https://www.youtube.com/watch?v=yj2n8F8rB6E
+
+The opening sampled frame shows two miniature stylized characters on a cart
+carrying an oversized cauliflower. A later sampled frame around 24 seconds shows
+the characters handling dough in a bowl. The scale and character design are
+deliberately fantastical. This is an AI animation reference rather than a
+photorealistic food benchmark.
+
+For BB, use it only to consider action sequencing from ingredient to preparation.
+Keep the required quality benchmark separate: natural food texture, stable
+geometry and plausible movement in the user's Seedance reference. A successful
+stylized clip does not establish that the same look fits BB.
+
+Only sampled frames were visually reviewed. No retention data or generation
+settings are available from this observation.
