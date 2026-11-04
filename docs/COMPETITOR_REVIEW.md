@@ -99,3 +99,19 @@ For both clips, the observations concern visible frames. They do not measure
 cut frequency, audio quality or the causal contribution of movement to views.
 An experiment can compare a finished-food first shot with an action first shot,
 while keeping the same question, total duration and payoff.
+
+## Sixth sampled review
+
+SatisfAI, Lava Biscuit Real or AI.
+https://www.youtube.com/watch?v=AzVsQGQ2JLw
+
+The opening sampled frame places a dark cracked biscuit beneath a hand. Text
+asks the viewer to guess whether it is real or AI. Around six seconds, an orange
+stretching interior connects the bitten biscuit to the mouth. The framing is
+photographic, while the lava-like material is deliberately fantastical.
+
+This provides a short visible transformation to study. For BB's realistic food
+target, test an ordinary edible filling with plausible viscosity and texture.
+Keep the real or AI framing separate from claims about a real restaurant dish.
+The sampled view does not establish the actual generation model or whether a
+local model can reproduce the shot.

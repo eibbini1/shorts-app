@@ -46,6 +46,15 @@
       "url": "https://www.youtube.com/watch?v=VOxYd1xOXB0",
       "style": "filmed human led cooking",
       "notes": "docs/COMPETITOR_REVIEW.md"
+    },
+    {
+      "videoId": "AzVsQGQ2JLw",
+      "channel": "SatisfAI",
+      "url": "https://www.youtube.com/watch?v=AzVsQGQ2JLw",
+      "coverage": "Opening and around six seconds",
+      "purpose": "Photographic framing with a short filling transformation",
+      "style": "fantastical lava-like food effect; model unverified",
+      "notes": "docs/COMPETITOR_REVIEW.md"
     }
   ]
 }
