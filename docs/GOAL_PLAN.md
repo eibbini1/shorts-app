@@ -198,3 +198,9 @@ storage/analytics/competitor-pilot.json. This is a purposive pilot of 160 upload
 not the requested 100 channel study. The clips still require visual review,
 Shorts classification and equal age normalization before creative conclusions.
 Public view counts do not expose retention or causal effects.
+
+Pilot identity correction: the exact handle BayashiTV resolved to an unrelated
+car channel. That record was excluded and replaced with BayashiTV_, whose
+channel title and recent food uploads were checked. The review queue excludes
+the incorrect channel. Always verify channel identity from recent content before
+counting it toward the requested food creator study.
