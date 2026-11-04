@@ -42,15 +42,31 @@ function run(cmd: string, args: string[]): Promise<void> {
  * Text -> narration audio + word timings. Results are cached by content hash so
  * re-running an episode never re-spends ElevenLabs credits.
  */
-export async function synthesize(text: string, outDir: string, opts: VoiceOptions): Promise<VoiceResult> {
-  await mkdir(outDir, { recursive: true });
+export function voiceCachePaths(text: string, outDir: string, opts: VoiceOptions) {
   const key = createHash('sha1').update(JSON.stringify([text, opts])).digest('hex').slice(0, 12);
-  const audioFile = path.join(outDir, `${key}.mp3`);
-  const metaFile = path.join(outDir, `${key}.json`);
-  if (existsSync(audioFile) && existsSync(metaFile)) {
+  return { audioFile: path.join(outDir, key + '.mp3'), metaFile: path.join(outDir, key + '.json') };
+}
+
+export async function readCachedVoice(text: string, outDir: string, opts: VoiceOptions): Promise<VoiceResult | null> {
+  const { audioFile, metaFile } = voiceCachePaths(text, outDir, opts);
+  if (!existsSync(audioFile)) return null;
+  try {
     const m = JSON.parse(await readFile(metaFile, 'utf8')) as VoiceResult;
+    if (!Number.isFinite(m.durationSec) || m.durationSec <= 0 || !Array.isArray(m.words) || !m.words.length ||
+        m.words.some(w => typeof w.word !== 'string' || !Number.isFinite(w.start) || !Number.isFinite(w.end) || w.start < 0 || w.end < w.start)) return null;
     return { ...m, audioFile };
+  } catch (error) {
+    if (error instanceof SyntaxError || (error as NodeJS.ErrnoException).code === 'ENOENT') return null;
+    throw error;
   }
+}
+
+export async function synthesize(text: string, outDir: string, opts: VoiceOptions, cacheOnly = false): Promise<VoiceResult> {
+  const cached = await readCachedVoice(text, outDir, opts);
+  if (cached) return cached;
+  if (cacheOnly || (opts.provider === 'elevenlabs' && process.env.VOICE_CACHE_ONLY === '1')) throw new Error('No valid cached narration for this exact text and voice settings; generate narration explicitly first.');
+  await mkdir(outDir, { recursive: true });
+  const { audioFile, metaFile } = voiceCachePaths(text, outDir, opts);
   let words: WordTiming[];
   if (opts.provider === 'elevenlabs') {
     const apiKey = process.env.ELEVENLABS_API_KEY;

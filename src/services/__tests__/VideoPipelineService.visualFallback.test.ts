@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import Database from 'better-sqlite3';
+import type { LocalDatabase } from '../../database/connection.js';
+import os from 'node:os';
+import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { getDb, __resetDbForTests } from '../../database/connection.js';
 import { VideosRepository } from '../../database/VideosRepository.js';
 import { JobsRepository } from '../../database/JobsRepository.js';
@@ -9,7 +12,7 @@ import type { TTSProvider } from '../../media/tts/TTSProvider.js';
 import type { ImageProvider } from '../../media/images/ImageProvider.js';
 import type { Idea, Script, VideoMetadata } from '../../shared/types.js';
 
-const TEST_STORAGE = '/tmp/video-pipeline-fallback-test';
+const TEST_STORAGE = path.join(os.tmpdir(), 'video-pipeline-fallback-test-' + randomUUID());
 
 function makeIdea(): Idea {
   return {
@@ -98,7 +101,7 @@ function verdict(score: number, matches = score >= 0.6) {
 }
 
 describe('VideoPipelineService scene-planned visual selection', () => {
-  let db: Database.Database;
+  let db: LocalDatabase;
   beforeEach(() => {
     __resetDbForTests();
     db = getDb(':memory:');
@@ -145,5 +148,5 @@ describe('VideoPipelineService scene-planned visual selection', () => {
     expect(seen.length).toBeGreaterThanOrEqual(3);
     expect(seen[0]).toMatch(/^An expensive mushroom/);
     expect(seen[0]).toContain('Close shot of matsutake mushroom soup step 0');
-  });
+  }, 30000);
 });

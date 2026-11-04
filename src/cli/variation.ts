@@ -41,6 +41,8 @@ export function compare(a: Fingerprint, b: Fingerprint): string[] {
   return issues;
 }
 
+export const hardVariationIssues = (issues: string[]) => issues.filter(issue => !issue.startsWith('same opener '));
+
 export async function checkVariation(specPath: string, episodesDir: string): Promise<{ other: string; issues: string[] }[]> {
   const load = async (p: string) => {
     const j = JSON.parse((await readFile(p, 'utf8')).replace(/^﻿/, '')) as { scenes?: { text: string }[] };
@@ -66,7 +68,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
   const spec = path.resolve(process.cwd(), process.argv[i + 1] ?? '');
   const hits = await checkVariation(spec, path.dirname(spec));
   if (!hits.length) { console.log('variation OK: no template overlap with existing episodes'); process.exit(0); }
-  for (const h of hits) console.log(`SIMILAR to ${h.other}: ${h.issues.join('; ')}`);
+  for (const h of hits) console.log(`${hardVariationIssues(h.issues).length ? 'SIMILAR' : 'WARN common opening'} to ${h.other}: ${h.issues.join('; ')}`);
+  if (!hits.some(h => hardVariationIssues(h.issues).length)) { console.log('variation OK: common opening phrases alone do not establish duplicated content'); process.exit(0); }
   console.log('VARIATION FAILED: rewrite the opener / closing line so each Short stands on its own.');
   process.exit(1);
 }

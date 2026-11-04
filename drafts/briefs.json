@@ -1,0 +1,108 @@
+[
+  {
+    "id": "parmigiano-crystals-ep1",
+    "title": "Those cheese crystals are not salt",
+    "hookText": "NOT SALT?",
+    "kicker": "LOOK CLOSER",
+    "sources": [
+      {
+        "url": "https://www.parmigianoreggiano.com/faq",
+        "title": "Parmigiano Reggiano Consortium FAQ",
+        "checkedAt": "2026-11-02",
+        "claims": [
+          "The visible white crystals described in the FAQ are tyrosine, an amino acid.",
+          "Tyrosine is released as proteins break down during maturation.",
+          "The crystals become larger and more numerous with longer maturation.",
+          "The minimum maturation is 12 months."
+        ]
+      }
+    ],
+    "lines": [
+      "Those white crystals in Parmigiano Reggiano are not salt.",
+      "The cheese consortium identifies them as tyrosine, an amino acid.",
+      "As the cheese matures, enzymes break down milk proteins and release amino acids.",
+      "Tyrosine can gather into the little crystals you see inside the cheese.",
+      "Longer maturation brings more of them, and larger ones. Even the minimum ageing takes twelve months.",
+      "Now look at your next wedge. Do the crystals make it more tempting, or less?"
+    ],
+    "visuals": [
+      "Macro of white crystals inside a broken Parmigiano Reggiano wedge",
+      "Macro of the same real cheese texture with crystals in focus",
+      "Rows of whole cheese wheels ageing on wooden shelves",
+      "Broken wedge with naturally visible white crystals",
+      "Close view of a dated rind and an ageing room, no fabricated labels",
+      "Appetizing cheese wedge on a dark ceramic plate"
+    ]
+  },
+  {
+    "id": "chocolate-auction-2012-ep1",
+    "title": "A chocolate egg sold for seven thousand pounds",
+    "hookText": "£7,000 CHOCOLATE",
+    "kicker": "AN AUCTION STORY",
+    "sources": [
+      {
+        "url": "https://www.guinnessworldrecords.com/news/2012/3/worlds-most-expensive-chocolate-egg-sells-for-7000-in-london",
+        "title": "Guinness World Records report, 21 March 2012",
+        "checkedAt": "2026-11-02",
+        "claims": [
+          "A 50 kilogram chocolate egg sold for £7,000 at a London charity auction in March 2012.",
+          "It was designed by William Curley.",
+          "Seven chocolatiers worked for three days.",
+          "Fillings included muscovado caramel, Japanese black vinegar, rosemary and olive oil.",
+          "The report described a non-jewelled chocolate egg record in 2012, not a current record."
+        ]
+      }
+    ],
+    "lines": [
+      "Seven thousand pounds for chocolate. This happened at a London charity auction in twenty twelve.",
+      "The egg weighed fifty kilos and was designed by chocolatier William Curley.",
+      "Seven chocolatiers spent three days making it.",
+      "Inside were fillings including caramel, Japanese black vinegar, rosemary and olive oil.",
+      "Guinness reported the non-jewelled chocolate egg record then. This is a historical auction story.",
+      "Would you break it open, or keep it untouched? Pick your side."
+    ],
+    "visuals": [
+      "Illustrative giant handcrafted chocolate egg in a dark luxury studio",
+      "Wide illustrative chocolate egg beside ordinary-sized chocolate pieces, avoid implied exact scale",
+      "Hands of an artisan chocolatier shaping chocolate",
+      "Macro chocolate cutaway with caramel and small rosemary and olive oil props",
+      "Illustrative chocolate egg on a pedestal, no fake auction document",
+      "Chocolate shell partially cracked to reveal a rich filling"
+    ]
+  },
+  {
+    "id": "san-gimignano-saffron-ep1",
+    "title": "This saffron helped build a skyline",
+    "hookText": "A SPICE BUILT TOWERS?",
+    "kicker": "TUSCANY FOOD STORY",
+    "sources": [
+      {
+        "url": "https://www.visittuscany.com/en/flavors/pdo-san-gimignano-saffron/",
+        "title": "Visit Tuscany official tourism: PDO San Gimignano saffron",
+        "checkedAt": "2026-11-02",
+        "claims": [
+          "Saffron trade profits helped some families finance San Gimignano towers.",
+          "Trade is documented from the thirteenth century.",
+          "The PDO production area is the territory of San Gimignano.",
+          "Flower picking, separating stigmas and drying still involve manual work."
+        ]
+      }
+    ],
+    "lines": [
+      "A spice helped pay for the towers of an Italian town.",
+      "In San Gimignano, saffron trade is documented from the thirteenth century.",
+      "Tuscany tourism says some families put their saffron profits into the town's famous towers.",
+      "Today, this protected saffron comes from the territory of San Gimignano.",
+      "Flowers are picked in the early morning, with delicate work still done by hand.",
+      "A skyline with a food story behind it. Would you rather explore the towers, or taste the saffron?"
+    ],
+    "visuals": [
+      "Authentic-looking view of San Gimignano medieval towers at warm sunrise",
+      "Saffron filaments on a dark plate with medieval town softly visible behind",
+      "Illustrative saffron filaments in foreground and stone towers in background, no fabricated historical scene",
+      "Crocus field in the San Gimignano countryside",
+      "Close view of hands carefully separating red saffron stigmas from purple flowers",
+      "Saffron risotto in foreground with town scenery out of focus"
+    ]
+  }
+]

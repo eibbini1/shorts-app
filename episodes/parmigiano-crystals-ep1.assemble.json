@@ -1,0 +1,56 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/parmigiano-crystals-ep1/parmigiano-crystals-ep1-final.mp4",
+  "fps": 24,
+  "voice": {
+    "provider": "elevenlabs",
+    "speed": 1,
+    "stability": 0.45,
+    "style": 0.5
+  },
+  "brand": {
+    "name": "Billionaire Bites",
+    "sub": "Taste the extraordinary"
+  },
+  "music": "ambient",
+  "tightOpen": true,
+  "hookText": "NOT SALT?",
+  "kicker": "LOOK CLOSER",
+  "scenes": [
+    {
+      "text": "Those white crystals in Parmigiano Reggiano are not salt.",
+      "image": "storage/episodes/parmigiano-crystals-ep1/stills/scene1.jpg",
+      "motion": "in"
+    },
+    {
+      "text": "The cheese consortium identifies them as tyrosine, an amino acid.",
+      "image": "storage/episodes/parmigiano-crystals-ep1/stills/scene2.jpg",
+      "motion": "right",
+      "transition": "whip"
+    },
+    {
+      "text": "As the cheese matures, enzymes break down milk proteins and release amino acids.",
+      "image": "storage/episodes/parmigiano-crystals-ep1/stills/scene3.jpg",
+      "motion": "left",
+      "transition": "flash"
+    },
+    {
+      "text": "Tyrosine can gather into the little crystals you see inside the cheese.",
+      "image": "storage/episodes/parmigiano-crystals-ep1/stills/scene4.jpg",
+      "motion": "out",
+      "transition": "cut"
+    },
+    {
+      "text": "Longer maturation brings more of them, and larger ones. Even the minimum ageing takes twelve months.",
+      "image": "storage/episodes/parmigiano-crystals-ep1/stills/scene5.jpg",
+      "motion": "in",
+      "transition": "gold"
+    },
+    {
+      "text": "Now look at your next wedge. Do the crystals make it more tempting, or less?",
+      "image": "storage/episodes/parmigiano-crystals-ep1/stills/scene6.jpg",
+      "motion": "right",
+      "transition": "fade"
+    }
+  ]
+}

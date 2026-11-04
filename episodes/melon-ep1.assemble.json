@@ -1,0 +1,9 @@
+{"kind":"stills","output":"storage/episodes/melon-ep1/melon-ep1-final.mp4","fps":24,"voice":{"provider":"elevenlabs","speed":1,"stability":0.45,"style":0.5},"kicker":"WOULD YOU PAY?","brand":{"name":"Billionaire Bites","sub":"Taste the extraordinary"},"music":"ambient","tightOpen":true,"hookText":"Two melons",
+"scenes":[
+{"image":"storage/episodes/melon-ep1/stills/scene1.jpg","text":"Two melons. Five point eight million yen.","motion":"out"},
+{"image":"storage/episodes/melon-ep1/stills/scene2.jpg","text":"They're Yubari King melons, grown in heated greenhouses in Hokkaido, Japan.","motion":"left","transition":"punch"},
+{"image":"storage/episodes/melon-ep1/stills/scene3.jpg","text":"Each one rests on its own little mat, so it grows perfectly round.","motion":"in","transition":"fade"},
+{"image":"storage/episodes/melon-ep1/stills/scene4.jpg","text":"Farmers even control the sunlight. Too much and the netting won't form. Too little and the sugar never develops.","motion":"right","transition":"fade"},
+{"image":"storage/episodes/melon-ep1/stills/scene5.jpg","text":"Every melon is checked by hand. Weight, shape, sugar, color. Fail, and it loses the name.","motion":"out","transition":"gold"},
+{"image":"storage/episodes/melon-ep1/stills/scene6.jpg","text":"An everyday one costs four to five thousand yen. The first pair of the season sold for five point eight million. Would you pay it for fruit? Yes or no.","motion":"in","transition":"flash"}
+]}

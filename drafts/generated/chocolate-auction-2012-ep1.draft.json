@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "id": "chocolate-auction-2012-ep1",
+  "title": "A chocolate egg sold for seven thousand pounds",
+  "status": "review-required",
+  "createdAt": "2026-11-02T14:17:56.125Z",
+  "sources": [
+    {
+      "url": "https://www.guinnessworldrecords.com/news/2012/3/worlds-most-expensive-chocolate-egg-sells-for-7000-in-london",
+      "title": "Guinness World Records report, 21 March 2012",
+      "checkedAt": "2026-11-02",
+      "claims": [
+        "A 50 kilogram chocolate egg sold for £7,000 at a London charity auction in March 2012.",
+        "It was designed by William Curley.",
+        "Seven chocolatiers worked for three days.",
+        "Fillings included muscovado caramel, Japanese black vinegar, rosemary and olive oil.",
+        "The report described a non-jewelled chocolate egg record in 2012, not a current record."
+      ]
+    }
+  ],
+  "narrationCharacters": 463,
+  "estimatedNarrationSeconds": 28,
+  "hookScore": 48,
+  "visualPrompts": [
+    "9:16 vertical, photoreal luxury food photography, dark cinematic lighting, warm gold accents, crisp food texture. Illustrative giant handcrafted chocolate egg in a dark luxury studio. No text, no watermark. AI illustration; do not imply documentary evidence.",
+    "9:16 vertical, photoreal luxury food photography, dark cinematic lighting, warm gold accents, crisp food texture. Wide illustrative chocolate egg beside ordinary-sized chocolate pieces, avoid implied exact scale. No text, no watermark. AI illustration; do not imply documentary evidence.",
+    "9:16 vertical, photoreal luxury food photography, dark cinematic lighting, warm gold accents, crisp food texture. Hands of an artisan chocolatier shaping chocolate. No text, no watermark. AI illustration; do not imply documentary evidence.",
+    "9:16 vertical, photoreal luxury food photography, dark cinematic lighting, warm gold accents, crisp food texture. Macro chocolate cutaway with caramel and small rosemary and olive oil props. No text, no watermark. AI illustration; do not imply documentary evidence.",
+    "9:16 vertical, photoreal luxury food photography, dark cinematic lighting, warm gold accents, crisp food texture. Illustrative chocolate egg on a pedestal, no fake auction document. No text, no watermark. AI illustration; do not imply documentary evidence.",
+    "9:16 vertical, photoreal luxury food photography, dark cinematic lighting, warm gold accents, crisp food texture. Chocolate shell partially cracked to reveal a rich filling. No text, no watermark. AI illustration; do not imply documentary evidence."
+  ],
+  "proposedSpec": {
+    "kind": "stills",
+    "output": "storage/episodes/chocolate-auction-2012-ep1/chocolate-auction-2012-ep1-final.mp4",
+    "fps": 24,
+    "voice": {
+      "provider": "elevenlabs",
+      "speed": 1,
+      "stability": 0.45,
+      "style": 0.5
+    },
+    "brand": {
+      "name": "Billionaire Bites",
+      "sub": "Taste the extraordinary"
+    },
+    "music": "ambient",
+    "tightOpen": true,
+    "hookText": "£7,000 CHOCOLATE",
+    "kicker": "AN AUCTION STORY",
+    "scenes": [
+      {
+        "text": "Seven thousand pounds for chocolate. This happened at a London charity auction in twenty twelve.",
+        "image": "storage/episodes/chocolate-auction-2012-ep1/stills/scene1.jpg",
+        "motion": "in"
+      },
+      {
+        "text": "The egg weighed fifty kilos and was designed by chocolatier William Curley.",
+        "image": "storage/episodes/chocolate-auction-2012-ep1/stills/scene2.jpg",
+        "motion": "right",
+        "transition": "whip"
+      },
+      {
+        "text": "Seven chocolatiers spent three days making it.",
+        "image": "storage/episodes/chocolate-auction-2012-ep1/stills/scene3.jpg",
+        "motion": "left",
+        "transition": "flash"
+      },
+      {
+        "text": "Inside were fillings including caramel, Japanese black vinegar, rosemary and olive oil.",
+        "image": "storage/episodes/chocolate-auction-2012-ep1/stills/scene4.jpg",
+        "motion": "out",
+        "transition": "cut"
+      },
+      {
+        "text": "Guinness reported the non-jewelled chocolate egg record then. This is a historical auction story.",
+        "image": "storage/episodes/chocolate-auction-2012-ep1/stills/scene5.jpg",
+        "motion": "in",
+        "transition": "gold"
+      },
+      {
+        "text": "Would you break it open, or keep it untouched? Pick your side.",
+        "image": "storage/episodes/chocolate-auction-2012-ep1/stills/scene6.jpg",
+        "motion": "right",
+        "transition": "fade"
+      }
+    ]
+  },
+  "variationWarnings": [],
+  "reviewChecklist": [
+    "Review the narration and factual claims against the linked primary sources.",
+    "Confirm historical dates and avoid presenting an old record as current.",
+    "Review image prompts and keep AI visual disclosure.",
+    "Supply or explicitly approve generating the scene images.",
+    "Approve narration spending separately before using a paid voice provider."
+  ]
+}

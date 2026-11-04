@@ -1,3 +1,4 @@
+import { atomicJson } from '../automation/spec.js';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 
@@ -12,7 +13,12 @@ const arg = (n: string, d?: string) => {
   return i >= 0 ? (process.argv[i + 1] ?? d) : d;
 };
 const video = path.resolve(process.cwd(), arg('video', '')!);
-const run = (bin: string, args: string[]) => spawnSync(bin, args, { encoding: 'utf8', maxBuffer: 1 << 28 });
+const run = (bin: string, args: string[]) => {
+  const result = spawnSync(bin, args, { encoding: 'utf8', maxBuffer: 1 << 28 });
+  if (result.error) throw result.error;
+  if (result.status !== 0) throw new Error(bin + ' analysis failed: ' + result.stderr.slice(-1200));
+  return result;
+};
 
 const pr = run('ffprobe', ['-v', 'error', '-show_entries', 'stream=codec_type,width,height,r_frame_rate,sample_rate:format=duration', '-of', 'json', video]);
 if (pr.status !== 0) { console.error('ffprobe failed: ' + pr.stderr); process.exit(1); }
@@ -72,4 +78,5 @@ for (const r of results) {
   console.log(`${tag}  ${r.name.padEnd(14)} ${r.note}`);
 }
 console.log(fail ? `QA FAILED (${fail})` : 'QA PASSED');
+if (arg('report')) await atomicJson(path.resolve(arg('report')!), { video, checkedAt: new Date().toISOString(), passed: fail === 0, results });
 process.exit(fail ? 1 : 0);

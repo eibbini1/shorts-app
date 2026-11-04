@@ -1,0 +1,23 @@
+{
+  "specs": [
+    "episodes/tuna-ep1.assemble.json",
+    "episodes/melon-ep1.assemble.json",
+    "episodes/coffee-ep1.assemble.json",
+    "episodes/cupcake-ep1.assemble.json",
+    "episodes/ortolan-ep1.assemble.json"
+  ],
+  "cron": "*/15 * * * *",
+  "timezone": "Asia/Amman",
+  "allowVoiceSpend": false,
+  "publish": {
+    "enabled": true,
+    "hour": 20,
+    "utcOffsetHours": 3,
+    "expectedChannelId": "UCfZ7tQ-hjo5OxRhZmFr775A"
+  },
+  "drafts": {
+    "enabled": true,
+    "briefs": "drafts/briefs.json",
+    "referenceSpec": "episodes/tuna-ep1.assemble.json"
+  }
+}

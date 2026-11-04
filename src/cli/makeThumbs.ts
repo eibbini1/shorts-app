@@ -40,11 +40,11 @@ const wrap = (t: string, n: number) => {
   if (line) out.push(line);
   return out.slice(0, 3).join('\n');
 };
-const font = 'C\\:/Windows/Fonts/impact.ttf';
+const font = path.resolve(root, process.env.THUMB_FONT ?? 'assets/fonts/Poppins-Bold.ttf').replace(/\\/g, '/').replace(/:/g, '\\:');
 const variants: { id: string; image: string; main: string; small: string; color: string }[] = [
   { id: 'A', image: first.image, main: wrap(headline, landscape ? 14 : 11), small: sub, color: '0xF2C14E' },
-  { id: 'B', image: luxe.image, main: wrap(priceMatch ? 'WORTH IT?' : 'REAL GOLD', 12), small: priceMatch ? priceMatch[0].toUpperCase() : 'EDIBLE', color: 'white' },
-  { id: 'C', image: last.image, main: wrap('WOULD YOU PAY?', landscape ? 14 : 8), small: sub, color: '0xF2C14E' },
+  { id: 'B', image: luxe.image, main: wrap(priceMatch ? 'WORTH IT?' : spec.hookText ?? spec.kicker ?? 'LOOK CLOSER', 12), small: priceMatch ? priceMatch[0].toUpperCase() : spec.brand.name.toUpperCase(), color: 'white' },
+  { id: 'C', image: last.image, main: wrap(/illegal|banned|forbidden/i.test(spec.scenes.map(s => s.text).join(' ')) ? 'WOULD YOU TRY?' : 'WOULD YOU PAY?', landscape ? 14 : 8), small: sub, color: '0xF2C14E' },
 ];
 let ok = 0;
 for (const v of variants) {

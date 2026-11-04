@@ -15,7 +15,7 @@ import type { StillsSpec } from './types.js';
  */
 type Motion = 'in' | 'out' | 'left' | 'right' | 'hook' | 'reveal' | 'side' | 'tiltdown' | 'tiltup' | 'diag';
 type Transition = 'fade' | 'flash' | 'gold' | 'cut';
-type LongScene = { image: string; text: string; motion?: Motion; transition?: Transition };
+type LongScene = { image: string; video?: string; text: string; motion?: Motion; transition?: Transition };
 type LongSpec = Omit<StillsSpec, 'scenes'> & { width?: number; height?: number; scenes: LongScene[] };
 
 const LEAD = 0.18;
@@ -76,9 +76,9 @@ export async function assembleStillsLong(specPath: string, repoRoot: string): Pr
     const f = path.join(tmp, `s${i}.mp4`);
     await runFfmpeg([
       '-threads', '2', '-filter_threads', '1', '-filter_complex_threads', '1',
-      '-i', abs(sc.image), '-i', v.audioFile,
+      ...(sc.video ? ['-stream_loop', '-1', '-i', abs(sc.video)] : ['-i', abs(sc.image)]), '-i', v.audioFile,
       '-filter_complex',
-      `[0:v]scale=${SW}:${SH}:force_original_aspect_ratio=increase,crop=${SW}:${SH},zoompan=z='${cam.z}':x='${cam.x}':y='${cam.y}':d=${F}:s=${W}x${H}:fps=${fps},` +
+      (sc.video ? `[0:v]fps=${fps},scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1,` : `[0:v]scale=${SW}:${SH}:force_original_aspect_ratio=increase,crop=${SW}:${SH},zoompan=z='${cam.z}':x='${cam.x}':y='${cam.y}':d=${F}:s=${W}x${H}:fps=${fps},`) +
         `eq=contrast=1.07:saturation=1.1:gamma=0.97,vignette=PI/4.5,noise=alls=4:allf=t,${fadeIn},${outCol ? fadeOut : 'null'},format=yuv420p[v];` +
         `[1:a]aresample=48000,aformat=channel_layouts=stereo,adelay=${Math.round(LEAD * 1000)}:all=1,apad=whole_dur=${dur.toFixed(3)}[a]`,
       '-map', '[v]', '-map', '[a]', '-t', dur.toFixed(3),

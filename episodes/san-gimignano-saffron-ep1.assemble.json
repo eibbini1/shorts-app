@@ -1,0 +1,56 @@
+{
+  "kind": "stills",
+  "output": "storage/episodes/san-gimignano-saffron-ep1/san-gimignano-saffron-ep1-final.mp4",
+  "fps": 24,
+  "voice": {
+    "provider": "elevenlabs",
+    "speed": 1,
+    "stability": 0.45,
+    "style": 0.5
+  },
+  "brand": {
+    "name": "Billionaire Bites",
+    "sub": "Taste the extraordinary"
+  },
+  "music": "ambient",
+  "tightOpen": true,
+  "hookText": "A SPICE BUILT TOWERS?",
+  "kicker": "TUSCANY FOOD STORY",
+  "scenes": [
+    {
+      "text": "A spice helped pay for the towers of an Italian town.",
+      "image": "storage/episodes/san-gimignano-saffron-ep1/stills/scene1.jpg",
+      "motion": "in"
+    },
+    {
+      "text": "In San Gimignano, saffron trade is documented from the thirteenth century.",
+      "image": "storage/episodes/san-gimignano-saffron-ep1/stills/scene2.jpg",
+      "motion": "right",
+      "transition": "whip"
+    },
+    {
+      "text": "Tuscany tourism says some families put their saffron profits into the town's famous towers.",
+      "image": "storage/episodes/san-gimignano-saffron-ep1/stills/scene3.jpg",
+      "motion": "left",
+      "transition": "flash"
+    },
+    {
+      "text": "Today, this protected saffron comes from the territory of San Gimignano.",
+      "image": "storage/episodes/san-gimignano-saffron-ep1/stills/scene4.jpg",
+      "motion": "out",
+      "transition": "cut"
+    },
+    {
+      "text": "Flowers are picked in the early morning, with delicate work still done by hand.",
+      "image": "storage/episodes/san-gimignano-saffron-ep1/stills/scene5.jpg",
+      "motion": "in",
+      "transition": "gold"
+    },
+    {
+      "text": "A skyline with a food story behind it. Would you rather explore the towers, or taste the saffron?",
+      "image": "storage/episodes/san-gimignano-saffron-ep1/stills/scene6.jpg",
+      "motion": "right",
+      "transition": "fade"
+    }
+  ]
+}

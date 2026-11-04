@@ -1,3 +1,6 @@
+import os from 'node:os';
+import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { describe, it, expect, afterEach } from 'vitest';
 import { rm, readFile } from 'node:fs/promises';
 import { SubtitleBuilder } from '../SubtitleBuilder.js';
@@ -15,7 +18,7 @@ const script: Script = {
   visualKeywords: [],
 };
 
-const TEST_OUT = '/tmp/subtitle-builder-test.srt';
+const TEST_OUT = path.join(os.tmpdir(), 'subtitle-builder-test.srt-' + randomUUID());
 
 describe('SubtitleBuilder', () => {
   afterEach(async () => {
@@ -66,7 +69,7 @@ describe('SubtitleBuilder', () => {
   });
 });
 
-const TEST_ASS_OUT = '/tmp/subtitle-builder-test.ass';
+const TEST_ASS_OUT = path.join(os.tmpdir(), 'subtitle-builder-test.ass-' + randomUUID());
 
 const audioWithWordTimings: AudioAsset = {
   path: '/tmp/fake-narration.mp3',

@@ -8,6 +8,15 @@ const CUR: Record<string, string> = { dollars: '$', dollar: '$', pounds: '£', p
 
 /** "one hundred fifty nine pounds" -> "£159", "a thousand dollars" -> "$1,000", "five courses" -> "5 courses". */
 export function spokenToDigits(text: string): string {
+  // Resolve decimal scales before the integer parser can split the amount.
+  const digit = '(?:zero|one|two|three|four|five|six|seven|eight|nine)';
+  const decimal = new RegExp('\\b(' + digit + ') point (' + digit + '(?: ' + digit + ')*) (thousand|million|billion)(?: (dollars?|euros?|yen|dirhams?))?\\b', 'gi');
+  text = text.replace(decimal, (_match, whole: string, fraction: string, scale: string, currency?: string) => {
+    const value = Number(String(UNITS[whole.toLowerCase()]) + '.' + fraction.toLowerCase().split(' ').map(w => UNITS[w]).join('')) * MULT[scale.toLowerCase()]!;
+    const amount = value.toLocaleString('en-US', { maximumFractionDigits: 6 });
+    const symbol = currency ? CUR[currency.toLowerCase()] : undefined;
+    return symbol ? symbol + amount : amount + (currency ? ' ' + currency : '');
+  });
   const words = text.split(/(\s+)/);
   const out: string[] = [];
   let i = 0;
@@ -117,4 +126,13 @@ export function scoreHook(texts: string[]): HookResult {
   b.loop = /\b(again|next time|more)\b/i.test(last) ? 5 : 0;
   const score = Math.max(0, Math.min(100, Object.values(b).reduce((s, n) => s + n, 0)));
   return { score, fixes, breakdown: b };
+}
+
+/** Keep generated titles readable instead of cutting a word in half. */
+export function shortTitle(title: string, max = 70): string {
+  const clean = title.replace(/\s+/g, ' ').trim();
+  if (clean.length <= max) return clean;
+  const slice = clean.slice(0, max - 1);
+  const end = slice.lastIndexOf(' ');
+  return (end > max / 2 ? slice.slice(0, end) : slice) + '…';
 }

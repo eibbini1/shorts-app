@@ -1,0 +1,9 @@
+{"kind":"stills","output":"storage/episodes/tuna-ep1/tuna-ep1-final.mp4","fps":24,"voice":{"provider":"elevenlabs","speed":1,"stability":0.45,"style":0.5},"kicker":"WOULD YOU PAY?","brand":{"name":"Billionaire Bites","sub":"Taste the extraordinary"},"music":"ambient","tightOpen":true,"hookText":"$3.2 million fish",
+"scenes":[
+{"image":"storage/episodes/tuna-ep1/stills/scene1.jpg","text":"This one fish sold for three point two million dollars.","motion":"in"},
+{"image":"storage/episodes/tuna-ep1/stills/scene2.jpg","text":"It's a bluefin tuna, five hundred thirty-five pounds, auctioned before dawn at Tokyo's Toyosu fish market.","motion":"right","transition":"whip"},
+{"image":"storage/episodes/tuna-ep1/stills/scene3.jpg","text":"The date: January fifth, twenty twenty-six. A new record.","motion":"left","transition":"flash"},
+{"image":"storage/episodes/tuna-ep1/stills/scene4.jpg","text":"The winner was the sushi chain boss who set the last record in twenty nineteen.","motion":"out","transition":"cut"},
+{"image":"storage/episodes/tuna-ep1/stills/scene5.jpg","text":"He paid five hundred ten million yen. That's about three point two million dollars.","motion":"in","transition":"gold"},
+{"image":"storage/episodes/tuna-ep1/stills/scene6.jpg","text":"One fish, worth more than a mansion. Would you pay it? Comment yes or no.","motion":"out","transition":"fade"}
+]}

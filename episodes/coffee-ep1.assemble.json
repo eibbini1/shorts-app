@@ -1,0 +1,8 @@
+{"kind":"stills","output":"storage/episodes/coffee-ep1/coffee-ep1-final.mp4","fps":24,"voice":{"provider":"elevenlabs","speed":1,"stability":0.45,"style":0.5},"kicker":"PICK ONE","brand":{"name":"Billionaire Bites","sub":"Taste the extraordinary"},"music":"ambient","tightOpen":true,"hookText":"Elephant coffee",
+"scenes":[
+{"image":"storage/episodes/coffee-ep1/stills/scene1.jpg","text":"Would you pay twenty five hundred dollars for a kilo of coffee that passed through an elephant?","motion":"in"},
+{"image":"storage/episodes/coffee-ep1/stills/scene2.jpg","text":"It's called Black Ivory, made in Thailand from coffee cherries that elephants eat.","motion":"in","transition":"flash"},
+{"image":"storage/episodes/coffee-ep1/stills/scene3.jpg","text":"It takes about thirty five kilos of cherries to make one kilo of beans.","motion":"left","transition":"whip"},
+{"image":"storage/episodes/coffee-ep1/stills/scene4.jpg","text":"It's listed at twenty five hundred a kilo, nearly double civet coffee, kopi luwak, at thirteen hundred.","motion":"in","transition":"gold"},
+{"image":"storage/episodes/coffee-ep1/stills/scene5.jpg","text":"Pick one: elephant coffee, or your regular cup? Comment below.","motion":"out","transition":"fade"}
+]}
