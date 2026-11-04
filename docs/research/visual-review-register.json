@@ -28,6 +28,24 @@
       "purpose": "Ingredient to preparation sequence",
       "style": "stylized miniature AI animation; separate from realistic target",
       "notes": "docs/COMPETITOR_REVIEW.md"
+    },
+    {
+      "videoId": "Wo0smJajSuM",
+      "channel": "Notorious Foodie",
+      "coverage": "Opening, around 15 seconds and around 40 seconds; ending not assessed",
+      "purpose": "Frying and mixing with close food framing",
+      "url": "https://www.youtube.com/watch?v=Wo0smJajSuM",
+      "style": "filmed human led cooking",
+      "notes": "docs/COMPETITOR_REVIEW.md"
+    },
+    {
+      "videoId": "VOxYd1xOXB0",
+      "channel": "SauccEats",
+      "coverage": "Opening and around 25 seconds; ending not assessed",
+      "purpose": "Finished-food preview followed by preparation",
+      "url": "https://www.youtube.com/watch?v=VOxYd1xOXB0",
+      "style": "filmed human led cooking",
+      "notes": "docs/COMPETITOR_REVIEW.md"
     }
   ]
 }

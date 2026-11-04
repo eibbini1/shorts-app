@@ -73,3 +73,29 @@ stylized clip does not establish that the same look fits BB.
 
 Only sampled frames were visually reviewed. No retention data or generation
 settings are available from this observation.
+
+## Fourth sampled review
+
+Notorious Foodie, Full English Breakfast.
+https://www.youtube.com/watch?v=Wo0smJajSuM
+
+The opening sampled frame shows an ingredient package placed on a patterned
+worktop. Around 15 seconds, the frame tightly shows bacon and sausages frying.
+Around 40 seconds, a utensil mixes ingredients in a bowl. This reference supports
+testing a sequence of visible preparation actions with close food framing.
+The final dish was not captured during the sampled review.
+
+## Fifth sampled review
+
+SauccEats, Fine dining on a budget.
+https://www.youtube.com/watch?v=VOxYd1xOXB0
+
+The opening sampled frame presents a cut-open finished item close to the lens.
+Around 25 seconds, liquid is dispensed into a pan. The finished-food preview
+provides one possible first shot for BB before the preparation sequence.
+The ending was not captured during the sampled review.
+
+For both clips, the observations concern visible frames. They do not measure
+cut frequency, audio quality or the causal contribution of movement to views.
+An experiment can compare a finished-food first shot with an action first shot,
+while keeping the same question, total duration and payoff.
