@@ -210,3 +210,10 @@ the automation pipeline starts narration work. A real fries clip passed, and a
 nonempty JSON file supplied as video was rejected. Relevant preflight and worker
 tests, build and lint passed. Full-file corruption beyond the first frame still
 requires render verification.
+
+Competitor discovery expanded to 122 distinct candidate channels from 200 video
+search results across luxury food, expensive food, AI food animation and food
+ASMR. Public candidate IDs, query provenance, sampled video IDs and metric
+snapshots are versioned in docs/research/channel-candidates.json. Candidates are
+sorted by visible subscriber count for triage. This does not establish a top
+100 ranking. Relevance, format, identity and visual review remain required.
