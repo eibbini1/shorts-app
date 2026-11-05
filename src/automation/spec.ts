@@ -21,6 +21,9 @@ export async function loadSpec(file: string, root = process.cwd()): Promise<Stil
     }
     if (scene.transition && !['fade', 'flash', 'gold', 'cut', 'punch', 'whip'].includes(scene.transition)) throw new Error('Invalid scene transition');
     if (scene.motion && !['in', 'out', 'left', 'right', ...((spec.width ?? 0) > (spec.height ?? 1) ? ['hook', 'reveal', 'side', 'tiltdown', 'tiltup', 'diag'] : [])].includes(scene.motion)) throw new Error('Invalid scene motion');
+    if (scene.sourceAudioGain !== undefined && (!Number.isFinite(scene.sourceAudioGain) || scene.sourceAudioGain < 0 || scene.sourceAudioGain > 1 || !scene.video || (spec.width ?? 0) > (spec.height ?? 1))) {
+      throw new Error('Scene ' + (i + 1) + ': sourceAudioGain requires portrait video and a gain from 0 to 1');
+    }
     if (scene.video !== undefined) {
       if (typeof scene.video !== 'string' || !scene.video.trim()) throw new Error('Scene video requires a local path');
       const video = await stat(path.resolve(root, scene.video));
@@ -29,6 +32,7 @@ export async function loadSpec(file: string, root = process.cwd()): Promise<Stil
       const duration = await getMediaDuration(videoPath);
       if (!Number.isFinite(duration) || duration <= 0) throw new Error('Scene video needs a positive duration: ' + scene.video);
       await runFfmpeg(['-i', videoPath, '-map', '0:v:0', '-frames:v', '1', '-f', 'null', '-']);
+      if (scene.sourceAudioGain > 0) await runFfmpeg(['-i', videoPath, '-map', '0:a:0', '-t', '0.1', '-f', 'null', '-']);
     }
     const image = await stat(path.resolve(root, scene.image));
     if (!image.isFile() || !image.size) throw new Error('Empty scene image: ' + scene.image);

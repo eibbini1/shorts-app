@@ -63,6 +63,8 @@ export interface StillsScene {
   video?: string;
   /** Optional grade for this shot; defaults to the existing cinema look. */
   colorGrade?: SceneColorGrade;
+  /** Mix the clip's first audio track at this gain (0–1); omitted means muted. */
+  sourceAudioGain?: number;
   /** Narration for this scene (voiced + captioned word by word). */
   text: string;
   motion?: 'in' | 'out' | 'left' | 'right';

@@ -54,6 +54,13 @@ export async function assembleStills(specPath: string, repoRoot: string): Promis
   const tmp = scratchRoot
     ? path.join(path.resolve(scratchRoot), createHash('sha256').update(out).digest('hex'))
     : path.join(path.dirname(out), '_assemble');
+  for (const scene of spec.scenes) {
+    const gain = scene.sourceAudioGain;
+    if (gain !== undefined && (!Number.isFinite(gain) || gain < 0 || gain > 1 || !scene.video)) {
+      throw new Error('sourceAudioGain requires video and a gain from 0 to 1');
+    }
+    if (gain && scene.video) await runFfmpeg(['-i', abs(scene.video), '-map', '0:a:0', '-t', '0.1', '-f', 'null', '-']);
+  }
   await mkdir(tmp, { recursive: true });
   ensureLuxuryFont(repoRoot);
 
@@ -63,6 +70,7 @@ export async function assembleStills(specPath: string, repoRoot: string): Promis
   let cursor = 0;
   for (let i = 0; i < spec.scenes.length; i++) {
     const sc = spec.scenes[i]!;
+    const sourceGain = sc.sourceAudioGain ?? 0;
     const grades = {
       cinema: 'eq=contrast=1.07:saturation=1.1:gamma=0.97,vignette=PI/4.5,noise=alls=4:allf=t,',
       natural: '',
@@ -105,7 +113,8 @@ export async function assembleStills(specPath: string, repoRoot: string): Promis
       (sc.video ? `[0:v]fps=${fps},scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1,` : `[0:v]scale=1152:2048:force_original_aspect_ratio=increase,crop=1152:2048,zoompan=z='${z}':x='${x}':y='${y}':d=${frames}:s=${W}x${H}:fps=${fps},`) +
         `${grades[grade]}${inFx}${outFx}format=yuv420p${opening ? '[scene]' : '[v]'};` +
         (opening ? `[2:v]scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1[opening];[scene][opening]overlay=enable='lt(t,${opening.seconds})'[v];` : '') +
-        `[1:a]${trim > 0 ? `atrim=start=${trim.toFixed(3)},asetpts=PTS-STARTPTS,` : ''}aresample=48000,aformat=channel_layouts=stereo,adelay=${Math.max(1, Math.round(lead * 1000))}:all=1,apad=whole_dur=${dur.toFixed(3)}[a]`,
+        `[1:a]${trim > 0 ? `atrim=start=${trim.toFixed(3)},asetpts=PTS-STARTPTS,` : ''}aresample=48000,aformat=channel_layouts=stereo,adelay=${Math.max(1, Math.round(lead * 1000))}:all=1,apad=whole_dur=${dur.toFixed(3)}${sourceGain ? '[voice];' : '[a]'}` +
+        (sourceGain ? `[0:a:0]aresample=48000,aformat=channel_layouts=stereo,volume=${sourceGain}[location];[voice][location]amix=inputs=2:duration=first:normalize=0[a]` : ''),
       '-map', '[v]', '-map', '[a]', '-t', dur.toFixed(3),
       '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '17', '-r', String(fps), '-c:a', 'aac', '-ar', '48000', '-b:a', '192k', f,
     ]);
