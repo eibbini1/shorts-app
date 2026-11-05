@@ -25,3 +25,14 @@ After forcibly stopping a worker, check its PID before removing storage\automati
 ## Put portrait render intermediates on another drive
 
 Set `SHORTS_RENDER_SCRATCH=D:/Codex-Shorts-render-scratch` in the app's local `.env` and restart the scheduled task when idle. Each output gets its own scratch folder. The app still writes final videos, packs, and worker logs to their configured locations, so keep free space on those drives too. Scratch intermediates remain on disk after rendering.
+
+## Restart after code changes
+
+The watcher loads its modules at startup. After updating the app, wait for
+the active render and publishing cycle to finish before restarting the
+scheduled task. If a fresh verify-live-run accepts the packs but the old
+watcher reports stale inputs, compare the watcher start time to the update
+and verify that no pipeline is active. Restart the task once, confirm a new
+live process, then check the new latest-run.json. Keep uploads.json intact.
+A current pack with publishing needs-review is a version mismatch with an
+existing upload; rebuilding or restarting does not reconcile that mismatch.

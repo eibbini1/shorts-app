@@ -346,3 +346,10 @@ scaled titles and captions. The default stays 720x1280. An isolated render
 with a hook, moving footage, hold, Food grade, and source audio passed decode
 and dimension verification; build and lint passed. See the agent quick start
 in AUTOMATION.md for all settings, defaults, and the safe testing workflow.
+
+On November 5 at 08:19 UTC, verify-live-run accepted all five rebuilt BB
+packs. The older watcher still reported stale inputs. After its cycle
+finished, a controlled restart loaded the current code. The first new cycle
+reported all five packs current and all five uploads needs-review because
+the render digests differ from the already uploaded versions. No duplicate
+upload or schedule change was made by that cycle.
