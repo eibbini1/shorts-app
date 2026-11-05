@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { runFfmpeg, getMediaDuration } from '../shared/ffmpegExec.js';
 import { logger } from '../../shared/logger.js';
-import { synthesize } from '../voice/VoiceProvider.js';
+import { sceneVoice } from '../voice/VoiceProvider.js';
 import { renderOverlay, type OverlayItem } from './overlayRenderer.js';
 import { makeCaption, makeWordmark, ensureLuxuryFont } from './luxuryText.js';
 import { writeAmbientBed, writeSfxWav, type SfxCue } from './sfx.js';
@@ -94,7 +94,7 @@ export async function assembleStills(specPath: string, repoRoot: string): Promis
     if (push !== undefined && (!push || ![push.x, push.y].every(value => Number.isFinite(value) && value >= 0 && value <= 1) || !Number.isFinite(push.holdSec) || push.holdSec < 0)) {
       throw new Error('pushIn requires normalized x/y coordinates and a nonnegative holdSec');
     }
-    const v0 = await synthesize(sc.text, voiceDir, spec.voice);
+    const v0 = await sceneVoice(sc, repoRoot, voiceDir, spec.voice);
     const last = i === spec.scenes.length - 1;
     // Tight open: cut dead air before the first spoken word so sound + text land at ~0.0 s
     const tight = !!spec.tightOpen && i === 0;

@@ -2,7 +2,7 @@ import { readFile, stat, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { createReadStream } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { voiceCachePaths } from '../media/voice/VoiceProvider.js';
+import { sceneVoice, voiceCachePaths } from '../media/voice/VoiceProvider.js';
 import { getMediaDuration, runFfmpeg } from '../media/shared/ffmpegExec.js';
 import type { StillsSpec } from '../media/assemble/types.js';
 
@@ -40,6 +40,10 @@ export async function loadSpec(file: string, root = process.cwd()): Promise<Stil
       await runFfmpeg(['-i', videoPath, '-map', '0:v:0', '-frames:v', '1', '-f', 'null', '-']);
       if (scene.sourceAudioGain > 0) await runFfmpeg(['-i', videoPath, '-map', '0:a:0', '-t', '0.1', '-f', 'null', '-']);
     }
+    if (scene.narration !== undefined) {
+      const narration = await sceneVoice(scene, root, '', spec.voice, true);
+      await runFfmpeg(['-i', narration.audioFile, '-map', '0:a:0', '-t', '0.1', '-f', 'null', '-']);
+    }
     const image = await stat(path.resolve(root, scene.image));
     if (!image.isFile() || !image.size) throw new Error('Empty scene image: ' + scene.image);
   }
@@ -74,9 +78,15 @@ export async function inputDigest(file: string, spec: StillsSpec, root = process
   await sourceTree(path.join(root, 'src'));
   hash.update(process.env.ELEVENLABS_VOICE_ID ?? 'default');
   const voiceDir = path.join(path.dirname(path.resolve(root, spec.output)), '_voice');
-  for (const scene of spec.scenes) for (const file of Object.values(voiceCachePaths(scene.text, voiceDir, spec.voice))) {
+  for (const scene of spec.scenes) {
+    if (scene.narration) {
+      hash.update(await fileDigest(path.resolve(root, scene.narration.file)));
+      continue;
+    }
+    for (const file of Object.values(voiceCachePaths(scene.text, voiceDir, spec.voice))) {
     try { hash.update(await readFile(file)); }
     catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; hash.update('missing:' + file); }
+  }
   }
   hash.update(await readFile(path.join(root, 'assets', 'fonts', 'Lora-Variable.ttf')));
   return hash.digest('hex');

@@ -5,6 +5,34 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { getMediaDuration } from '../shared/ffmpegExec.js';
 
+export interface LocalNarration { file: string; words: WordTiming[] }
+
+export async function sceneVoice(
+  scene: { text: string; narration?: LocalNarration }, root: string, outDir: string,
+  opts: VoiceOptions, cacheOnly = false,
+): Promise<VoiceResult> {
+  if (scene.narration === undefined) return synthesize(scene.text, outDir, opts, cacheOnly);
+  const input = scene.narration;
+  if (!input || typeof input.file !== 'string' || !input.file.trim() || !Array.isArray(input.words) || !input.words.length) {
+    throw new Error('Local narration requires a file and nonempty word timings');
+  }
+  const audioFile = path.resolve(root, input.file);
+  const durationSec = await getMediaDuration(audioFile);
+  if (!Number.isFinite(durationSec) || durationSec <= 0) throw new Error('Local narration must have positive duration');
+  let previous = 0;
+  for (const word of input.words) {
+    if (!word || typeof word.word !== 'string' || !word.word.trim() || !Number.isFinite(word.start) ||
+        !Number.isFinite(word.end) || word.start < previous || word.end <= word.start || word.end > durationSec + 0.02) {
+      throw new Error('Local narration word timings must be ordered and within the audio duration');
+    }
+    previous = word.end;
+  }
+  if (input.words.map(word => word.word.trim()).join(' ') !== scene.text.trim().replace(/\s+/g, ' ')) {
+    throw new Error('Local narration words must match the scene text');
+  }
+  return { audioFile, durationSec, words: input.words };
+}
+
 export interface WordTiming { word: string; start: number; end: number }
 export interface VoiceResult { audioFile: string; durationSec: number; words: WordTiming[] }
 export interface VoiceOptions { provider: 'elevenlabs' | 'mock'; voiceId?: string; modelId?: string; speed?: number; stability?: number; style?: number }

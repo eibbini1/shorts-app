@@ -295,3 +295,13 @@ shorten or extend the script and re-render. Never use mock narration to
 judge the final spoken pacing. For full-width videos, use the same beats
 but plan a longer structure with sections and verify actual section times
 after rendering.
+
+### Use a recorded voice file
+
+A scene may supply `"narration": {"file": "path/to/take.wav", "words": [...]}`.
+Each item in words is an object such as `{"word":"Hello","start":0.10,"end":0.42}`.
+Use seconds relative to the start of the WAV, ordered and without overlaps.
+Words joined with spaces must match scene.text, including punctuation.
+The pipeline validates the recording and uses it for captions and subtitles.
+That scene makes no paid narration request; other scenes keep their usual
+provider and spending checks. This is not a Brian voice clone.

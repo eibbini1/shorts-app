@@ -59,7 +59,7 @@ if (!process.argv.includes('--skip-variation')) sh('variation guard', 'src/cli/v
 // Exact text and voice settings must match the provider cache key.
 const missing = [];
 for (const scene of spec.scenes) {
-  if (spec.voice.provider === 'elevenlabs' && !await readCachedVoice(scene.text, voiceDir, spec.voice)) missing.push(scene);
+  if (!scene.narration && spec.voice.provider === 'elevenlabs' && !await readCachedVoice(scene.text, voiceDir, spec.voice)) missing.push(scene);
 }
 const chars = missing.reduce((n, s) => n + s.text.length, 0);
 console.log(`voice cache: ${spec.scenes.length - missing.length}/${spec.scenes.length} scene line(s) cached; ${missing.length} would cost ${chars} ElevenLabs characters`);
