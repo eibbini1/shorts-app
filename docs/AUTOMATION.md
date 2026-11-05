@@ -260,3 +260,8 @@ For a read-only hook audit, run `npm run channel-snapshot` then
 hook rows to uploaded IDs and snapshot visibility, and flags stale or
 ambiguous local hook rows. It does not verify the narration of an older
 remote cut or fill in missing audience metrics.
+
+To review comments without posting, refresh the channel snapshot and run
+`node --import tsx scripts/bb-comment-review.mjs`. This verifies the connected
+channel and shows viewer threads with zero replies from a limited set of
+recent public uploads with comments. Channel-authored prompts are excluded.
