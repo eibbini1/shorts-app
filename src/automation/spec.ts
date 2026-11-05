@@ -47,7 +47,7 @@ export async function inputDigest(file: string, spec: StillsSpec, root = process
   }
   if (spec.music && spec.music !== 'ambient') hash.update(await readFile(path.resolve(root, spec.music)));
   // Renderer/tool changes and replaced cache audio also invalidate completed packs.
-  const scheduler = path.join(root, 'src', 'cli', 'automate.ts');
+  const operationalClis = new Set(['automate.ts', 'ytUpload.ts', 'channelSnapshot.ts'].map(name => path.join(root, 'src', 'cli', name)));
   const publishing = path.join(root, 'src', 'publishing');
   async function sourceTree(dir: string): Promise<void> {
     for (const entry of (await readdir(dir, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name))) {
@@ -55,7 +55,7 @@ export async function inputDigest(file: string, spec: StillsSpec, root = process
       const file = path.join(dir, entry.name);
       if (file === publishing) continue;
       if (entry.isDirectory()) await sourceTree(file);
-      else if (file !== scheduler && file.endsWith('.ts')) hash.update(path.relative(root, file)).update(await readFile(file));
+      else if (!operationalClis.has(file) && file.endsWith('.ts')) hash.update(path.relative(root, file)).update(await readFile(file));
     }
   }
   await sourceTree(path.join(root, 'src'));
