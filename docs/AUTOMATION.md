@@ -265,3 +265,7 @@ To review comments without posting, refresh the channel snapshot and run
 `node --import tsx scripts/bb-comment-review.mjs`. This verifies the connected
 channel and shows viewer threads with zero replies from a limited set of
 recent public uploads with comments. Channel-authored prompts are excluded.
+
+Add `--video VIDEO_ID` to check a specific public BB upload even if the
+snapshot lists zero comments. The command confirms ownership and visibility
+against YouTube before fetching its threads.
