@@ -353,3 +353,24 @@ finished, a controlled restart loaded the current code. The first new cycle
 reported all five packs current and all five uploads needs-review because
 the render digests differ from the already uploaded versions. No duplicate
 upload or schedule change was made by that cycle.
+
+## Creation engines before the editor
+
+The renderer assembles supplied motion. The moving Chocolate Textures review
+cut used three Mixkit Free License clips and offline Kokoro af_heart. It
+rendered at 720x1280, about 30 seconds, and passed technical and motion QA.
+It is a different story from the gold-shell concept and has not been uploaded.
+Caption timings were estimated from the recorded takes and need listening
+review for word-level accuracy. Assets and private renders remain local.
+
+1. Generate matched reference images from a shot brief. Store the prompt,
+   model, input hashes and approved images. Check subject and lighting
+   continuity across the opening and reveal.
+2. Validate a real local image-to-video run on the M1. Start with the
+   chocolate spoon contact, fracture, and falling shard in one locked shot.
+   If it passes, generate the spoon-lift reveal. Run the existing smoke test
+   and inspect the full clip and frame strip.
+3. Integrate only after validating output: one job per shot, persisted inputs,
+   results and approval; reuse accepted takes and regenerate only the failed
+   shot. Feed accepted footage into the existing editor. Keep paid generation
+   behind approval and verify final motion, sound and caption sync before release.
