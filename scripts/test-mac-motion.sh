@@ -25,10 +25,10 @@ command -v "$runtime" >/dev/null 2>&1 || {
   printf '%s\n' 'Install the reviewed ltx-2-mlx runtime or set LTX_MLX_BIN to its executable.'
   exit 1
 }
-command -v ffprobe >/dev/null 2>&1 || {
-  printf '%s\n' 'Install FFmpeg before running the test.'
+if ! command -v ffprobe >/dev/null 2>&1 || ! command -v ffmpeg >/dev/null 2>&1; then
+  printf '%s\n' 'Install FFmpeg and ffprobe before running the test.'
   exit 1
-}
+fi
 mkdir -p "$(dirname "$output")"
 {
   printf "Requested UTC: %s\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -38,5 +38,11 @@ mkdir -p "$(dirname "$output")"
 } > "$output.recipe.txt"
 "$runtime" generate --model dgrauet/ltx-2.3-mlx-q4   --distilled --low-ram --seed 42 --image "$image" --prompt "$prompt"   -H 640 -W 384 -f 49 --frame-rate 24 -o "$output"
 ffprobe -v error -show_entries stream=codec_name,width,height   -show_entries format=duration -of json "$output"
-printf '%s\n' 'Generation command completed; visual review pending.' >> "$output.recipe.txt"
+dimensions=$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0:s=x "$output")
+if [ "$dimensions" != '384x640' ]; then
+  printf '%s\n' 'Unexpected motion-test dimensions; inspect the output and runtime settings.'
+  exit 1
+fi
+ffmpeg -v error -xerror -i "$output" -map 0:v:0 -f null -
+printf '%s\n' 'Generation completed and decoded at the expected dimensions; visual review pending.' >> "$output.recipe.txt"
 printf '%s\n' 'Review all frames for subject identity, geometry, contact and natural motion.'
