@@ -308,3 +308,8 @@ a confirmed remote schedule. A changed render cannot be marked scheduled by
 that shortcut. The regression test confirms a review error, an unchanged upload
 journal and no additional insert, schedule update or remote status request.
 All seven publishing tests passed. No live uploads were changed by this test.
+
+On November 5, the Windows scheduled task and its Node process were verified live.
+The 07:15 UTC cycle verified all five local packs as current and reported five
+publishing version mismatches for review. This confirms the guard ran in the
+installed worker; it does not confirm the current state of the remote schedules.
