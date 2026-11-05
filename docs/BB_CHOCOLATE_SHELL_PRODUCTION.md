@@ -43,3 +43,26 @@ Reject takes where the spoon bends or passes through the shell, a crack
 appears before contact, or the shard floats. Review the full clip on the Mac.
 Use the separate reveal reference for a second shot only after the opening
 passes. These stills and the existing timing preview do not validate motion.
+
+## 30-second version
+
+This supersedes the 14-second storyboard for the requested longer cut.
+
+- 0–1 s: Tight view of the spoon making contact. A tiny crack catches the
+  light. The gold is visible; the center stays hidden. Lead with the real tap.
+- 1–6 s: "The gold is a distraction. Look where it cracks. What do you think
+  is hiding inside?" Caption WHAT'S UNDER THE GOLD? away from the food.
+- 6–13 s: Cut on the spoon pressing again. Show the brittle shell bend and
+  a shard drop. "Listen for the snap. The shell is dark chocolate, and the
+  filling is where the surprise is."
+- 13–21 s: Clean snap into a macro reveal. "Under that first shard: pistachio
+  cream, with a streak of bright raspberry running through it."
+- 21–30 s: A slow spoon lift shows all three textures. "Now look at the spoon:
+  crisp shell, silky pistachio, sharp raspberry. Which would you want more of?"
+  Finish on a tight visual match to the opening spoon, without an end card.
+
+Mix: real tap, crack, and plate scrape, with narration dominant. Start without
+music. If a track is available to BB in YouTube's Shorts sound picker, review
+the permitted use and try a low-level bed that drops away at contact. The
+current local 30-second preview uses two AI reference images and original
+synthetic scratch effects; it is not the moving release cut.
