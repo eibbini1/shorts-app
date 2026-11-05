@@ -24,6 +24,9 @@ export async function loadSpec(file: string, root = process.cwd()): Promise<Stil
     if (scene.sourceAudioGain !== undefined && (!Number.isFinite(scene.sourceAudioGain) || scene.sourceAudioGain < 0 || scene.sourceAudioGain > 1 || !scene.video || (spec.width ?? 0) > (spec.height ?? 1))) {
       throw new Error('Scene ' + (i + 1) + ': sourceAudioGain requires portrait video and a gain from 0 to 1');
     }
+    if (scene.videoFill !== undefined && (!['loop', 'hold'].includes(scene.videoFill) || !scene.video || (spec.width ?? 0) > (spec.height ?? 1))) {
+      throw new Error('Scene ' + (i + 1) + ': videoFill requires portrait video and must be loop or hold');
+    }
     if (scene.video !== undefined) {
       if (typeof scene.video !== 'string' || !scene.video.trim()) throw new Error('Scene video requires a local path');
       const video = await stat(path.resolve(root, scene.video));

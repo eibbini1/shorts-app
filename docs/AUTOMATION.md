@@ -117,3 +117,7 @@ Portrait scenes may set `"colorGrade": "food"` for mild contrast and color
 without grain or a vignette, or `"colorGrade": "natural"` to keep the shot's
 source look. Omit the field or use `"cinema"` for the existing grade.
 These controls grade supplied stills and footage; they do not generate motion.
+
+For a portrait action that should happen once, set `"videoFill": "hold"`.
+The clip plays once and the last frame holds to cover the rest of the scene.
+Its source sound does not repeat. Omit the field for the existing loop mode.

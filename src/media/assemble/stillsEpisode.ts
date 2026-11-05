@@ -55,6 +55,9 @@ export async function assembleStills(specPath: string, repoRoot: string): Promis
     ? path.join(path.resolve(scratchRoot), createHash('sha256').update(out).digest('hex'))
     : path.join(path.dirname(out), '_assemble');
   for (const scene of spec.scenes) {
+    if (scene.videoFill !== undefined && (!['loop', 'hold'].includes(scene.videoFill) || !scene.video)) {
+      throw new Error('videoFill requires video and must be loop or hold');
+    }
     const gain = scene.sourceAudioGain;
     if (gain !== undefined && (!Number.isFinite(gain) || gain < 0 || gain > 1 || !scene.video)) {
       throw new Error('sourceAudioGain requires video and a gain from 0 to 1');
@@ -107,10 +110,10 @@ export async function assembleStills(specPath: string, repoRoot: string): Promis
     const outFx = last ? `fade=t=out:st=${(dur - 0.28).toFixed(2)}:d=0.28,` : transitionOut(spec.scenes[i + 1]!.transition, dur);
     await runFfmpeg([
       '-threads', '2', '-filter_threads', '1', '-filter_complex_threads', '1',
-      ...(sc.video ? ['-stream_loop', '-1', '-i', abs(sc.video)] : ['-loop', '1', '-framerate', String(fps), '-t', dur.toFixed(3), '-i', abs(sc.image)]), '-i', v0.audioFile,
+      ...(sc.video ? [...(sc.videoFill === 'hold' ? [] : ['-stream_loop', '-1']), '-i', abs(sc.video)] : ['-loop', '1', '-framerate', String(fps), '-t', dur.toFixed(3), '-i', abs(sc.image)]), '-i', v0.audioFile,
       ...(opening ? ['-loop', '1', '-framerate', String(fps), '-i', abs(opening.image)] : []),
       '-filter_complex',
-      (sc.video ? `[0:v]fps=${fps},scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1,` : `[0:v]scale=1152:2048:force_original_aspect_ratio=increase,crop=1152:2048,zoompan=z='${z}':x='${x}':y='${y}':d=${frames}:s=${W}x${H}:fps=${fps},`) +
+      (sc.video ? `[0:v]fps=${fps},scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1,${sc.videoFill === 'hold' ? 'tpad=stop_mode=clone:stop=-1,' : ''}` : `[0:v]scale=1152:2048:force_original_aspect_ratio=increase,crop=1152:2048,zoompan=z='${z}':x='${x}':y='${y}':d=${frames}:s=${W}x${H}:fps=${fps},`) +
         `${grades[grade]}${inFx}${outFx}format=yuv420p${opening ? '[scene]' : '[v]'};` +
         (opening ? `[2:v]scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1[opening];[scene][opening]overlay=enable='lt(t,${opening.seconds})'[v];` : '') +
         `[1:a]${trim > 0 ? `atrim=start=${trim.toFixed(3)},asetpts=PTS-STARTPTS,` : ''}aresample=48000,aformat=channel_layouts=stereo,adelay=${Math.max(1, Math.round(lead * 1000))}:all=1,apad=whole_dur=${dur.toFixed(3)}${sourceGain ? '[voice];' : '[a]'}` +

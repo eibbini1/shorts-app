@@ -65,6 +65,8 @@ export interface StillsScene {
   colorGrade?: SceneColorGrade;
   /** Mix the clip's first audio track at this gain (0–1); omitted means muted. */
   sourceAudioGain?: number;
+  /** Hold the final frame when footage is shorter than the scene. Default: loop. */
+  videoFill?: 'loop' | 'hold';
   /** Narration for this scene (voiced + captioned word by word). */
   text: string;
   motion?: 'in' | 'out' | 'left' | 'right';
