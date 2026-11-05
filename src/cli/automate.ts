@@ -36,13 +36,12 @@ let running: Promise<void> | undefined;
 for (const signal of ['SIGINT', 'SIGTERM'] as const) process.on(signal, () => { stopping = true; task?.stop(); });
 let task: ReturnType<typeof cron.schedule> | undefined;
 
-async function isCurrent(packFile: string, digest: string): Promise<boolean> {
+async function currentPack(packFile: string, digest: string) {
   try {
-    await verifyPack(packFile, root, digest);
-    return true;
+    return await verifyPack(packFile, root, digest);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'EACCES' || (error as NodeJS.ErrnoException).code === 'EPERM') throw error;
-    return false;
+    return undefined;
   }
 }
 
@@ -66,7 +65,7 @@ async function cycle(): Promise<void> {
   const specs = config.specs ?? (await readdir(path.resolve(root, config.episodesDir ?? 'episodes'))).filter(f => f.endsWith('.assemble.json')).sort().map(f => path.join(config.episodesDir ?? 'episodes', f));
   if (!specs.length) throw new Error('No episode specs configured');
   const outputs = new Map<string, string>();
-  const results: { spec: string; status: string; error?: string; publishing?: string; videoId?: string; publishAt?: string }[] = [];
+  const results: { spec: string; status: string; error?: string; publishing?: string; videoId?: string; publishAt?: string; videoDigest?: string }[] = [];
   for (const relative of specs) {
     if (stopping) break;
     try {
@@ -76,8 +75,9 @@ async function cycle(): Promise<void> {
       if (outputs.has(key)) throw new Error('Output collides with ' + outputs.get(key));
       outputs.set(key, relative);
       const digest = await inputDigest(file, spec, root);
-      if (await isCurrent(file.replace(/\.assemble\.json$/, '.pack.json'), digest)) {
-        console.log('CURRENT ' + relative); results.push({ spec: relative, status: 'current' }); continue;
+      const pack = await currentPack(file.replace(/\.assemble\.json$/, '.pack.json'), digest);
+      if (pack) {
+        console.log('CURRENT ' + relative); results.push({ spec: relative, status: 'current', ...(dryRun ? { videoDigest: pack.artifactDigests[pack.video] } : {}) }); continue;
       }
       if (dryRun) {
         console.log('WOULD BUILD ' + relative); results.push({ spec: relative, status: 'planned' }); continue;
@@ -99,13 +99,15 @@ async function cycle(): Promise<void> {
         const existing = journal[result.spec.replace(/\\/g,'/')];
         const at = existing?.publishAt ?? nextPublishSlot(new Date(),reserved,config.publish.hour,config.publish.utcOffsetHours);
         reserved.push(at);result.publishing=existing?.phase ?? 'planned';result.publishAt=at;
-        if (existing && ['uploaded', 'scheduled'].includes(existing.phase) && result.status === 'current') {
-          const pack = await verifyPack(path.resolve(root, result.spec.replace(/\.assemble\.json$/, '.pack.json')), root);
-          if (existing.videoDigest !== pack.artifactDigests[pack.video]) {
-            result.publishing = 'needs-review';
-            console.log('NEEDS REVIEW ' + result.spec + ': local video differs from the existing upload');
-            continue;
-          }
+        if (existing?.phase === 'uploading' || existing?.phase === 'uncertain') {
+          result.publishing = 'needs-review';
+          console.log('NEEDS REVIEW ' + result.spec + ': prior upload outcome is uncertain');
+          continue;
+        }
+        if (existing && result.videoDigest && existing.videoDigest !== result.videoDigest) {
+          result.publishing = 'needs-review';
+          console.log('NEEDS REVIEW ' + result.spec + ': local video differs from the existing upload');
+          continue;
         }
         console.log((existing ? 'EXISTING ' + existing.phase + ' ' : 'WOULD SCHEDULE ') + result.spec + ' at ' + at);
       }
