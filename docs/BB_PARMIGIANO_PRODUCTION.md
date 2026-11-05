@@ -12,18 +12,27 @@ reference; do not queue the recut.
 
 ## 15-second edit
 
-- 0–3 s: Crack a wedge close to the lens. "See those white flecks? They aren't
-  grains of salt." Cut on the crack; use the actual sound if available.
-- 3–7 s: Show the broken face and bring the flecks into focus. "In Parmigiano
-  Reggiano, those are crystals of tyrosine."
-- 7–12 s: Cut to another angle as a fragment breaks off. "They form as milk
-  proteins break down while the cheese ages."
-- 12–15 s: Hold the broken edge for texture. "That crunch is a clue to how it aged."
+- 0–3 s: Crack a wedge close to the lens. "These white flecks aren't salt.
+  So what makes them crunch?" Let the actual crack lead the narration.
+- 3–7 s: Tilt the broken edge toward the light. "Here's the clue: they form
+  inside the cheese as it ages." Keep the flecks visible without naming them.
+- 7–11 s: Show a second piece breaking off. "As milk proteins break down,
+  one amino acid starts to crystallize." Hold the answer for the next cut.
+- 11–15 s: Cut to the sharpest view of the flecks. "Those crunchy flecks?
+  Tyrosine crystals." Highlight TYROSINE on the spoken word and hold the
+  texture shot long enough to see it. No end card before the payoff.
+
+Review gate: the first shot must establish the exact question without sound.
+The middle must add a clue rather than restate the question. The final shot
+must answer the question aloud and visually. Review with the title and
+description, which should not spoil the name before the viewer plays the Short.
+The earlier scratch narration and timing demo are references; record the revised
+lines and regenerate captions against the final audio.
 
 Title: The Crunch Inside Parmigiano Reggiano Isn't Salt
 
-Description: Those tiny white flecks in Parmigiano Reggiano are tyrosine
-crystals. They form as the cheese matures and can add a little crunch.
+Description: What gives aged Parmigiano Reggiano its tiny crunchy flecks?
+Watch the broken edge for the clue.
 Source: Parmigiano Reggiano Consortium FAQ. Add an AI illustration note if
 generated visuals are used, and set the applicable Studio disclosure.
 
