@@ -254,3 +254,9 @@ then run `npm ci`. Leave the existing automation queue alone for a new test.
    Check the confirmed video ID and time in Studio. Keep the upload journal.
 6. After publication, capture the audience metrics described above and
    review comments. Use those results when selecting the next hook.
+
+For a read-only hook audit, run `npm run channel-snapshot` then
+`node scripts/bb-hook-audit.mjs` from the repository root. This joins local
+hook rows to uploaded IDs and snapshot visibility, and flags stale or
+ambiguous local hook rows. It does not verify the narration of an older
+remote cut or fill in missing audience metrics.
