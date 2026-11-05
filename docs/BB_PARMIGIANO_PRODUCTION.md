@@ -48,3 +48,30 @@ before adding it to the queue.
 Sources:
 - https://www.parmigianoreggiano.com/faq
 - https://www.parmigianoreggiano.com/product-guide-sensory-analysis
+
+## Release edit handoff
+
+The private 14-second master passed local QA at 720x1280, 30 fps, -15.9 LUFS
+and -1.7 dBTP. It uses reference assets and must stay out of the upload queue.
+
+- Replace both reference assets with the same wedge filmed vertically in one
+  session. Record one continuous take: hold the intact wedge, crack it, then
+  tilt its broken face into soft side light. Record a second tight take of the
+  same broken face. Keep the crumbs and real crack audio.
+- Cut on the crack, show a quick fleck teaser, give the aging clue, then hold
+  the clean macro for the answer. In the preview, the separately recorded
+  answer and graphic begin at 12.3 s. Recheck against the final timeline;
+  leave at least a beat after the answer for viewers to see the crystals.
+- Before scheduling, play the actual export muted and with sound. Confirm
+  that the same wedge is recognizable, the real crack is synchronized,
+  captions match the speech, and the answer appears once.
+
+## Measure after publication
+
+Record the video ID, actual public time, reveal time, and reporting window.
+At 24 h and 72 h, capture Stayed to watch, engaged views, average percentage
+viewed, subscribers gained, and the audience-retention percentage at the
+reveal if Studio has enough data. Compute subscribers per 1,000 engaged
+views only when engaged views are positive. Compare with BB Shorts at the
+same age and a similar Shorts Feed traffic mix. Mark unavailable metrics
+missing; never backfill from lifetime totals or use total views as a substitute.
