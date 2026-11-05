@@ -99,6 +99,14 @@ async function cycle(): Promise<void> {
         const existing = journal[result.spec.replace(/\\/g,'/')];
         const at = existing?.publishAt ?? nextPublishSlot(new Date(),reserved,config.publish.hour,config.publish.utcOffsetHours);
         reserved.push(at);result.publishing=existing?.phase ?? 'planned';result.publishAt=at;
+        if (existing && ['uploaded', 'scheduled'].includes(existing.phase) && result.status === 'current') {
+          const pack = await verifyPack(path.resolve(root, result.spec.replace(/\.assemble\.json$/, '.pack.json')), root);
+          if (existing.videoDigest !== pack.artifactDigests[pack.video]) {
+            result.publishing = 'needs-review';
+            console.log('NEEDS REVIEW ' + result.spec + ': local video differs from the existing upload');
+            continue;
+          }
+        }
         console.log((existing ? 'EXISTING ' + existing.phase + ' ' : 'WOULD SCHEDULE ') + result.spec + ' at ' + at);
       }
     } else if (ready.length) {
