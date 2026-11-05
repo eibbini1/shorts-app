@@ -63,6 +63,13 @@ export async function assembleStills(specPath: string, repoRoot: string): Promis
   let cursor = 0;
   for (let i = 0; i < spec.scenes.length; i++) {
     const sc = spec.scenes[i]!;
+    const grades = {
+      cinema: 'eq=contrast=1.07:saturation=1.1:gamma=0.97,vignette=PI/4.5,noise=alls=4:allf=t,',
+      natural: '',
+      food: 'eq=contrast=1.04:saturation=1.06:gamma=1.03,',
+    } as const;
+    const grade = sc.colorGrade ?? 'cinema';
+    if (!Object.hasOwn(grades, grade)) throw new Error('Unsupported scene colorGrade: ' + grade);
     const opening = sc.openingStill;
     if (opening !== undefined && (!opening || typeof opening.image !== 'string' || !opening.image.trim() || !Number.isFinite(opening.seconds) || opening.seconds <= 0)) {
       throw new Error('openingStill requires an image and positive seconds');
@@ -96,7 +103,7 @@ export async function assembleStills(specPath: string, repoRoot: string): Promis
       ...(opening ? ['-loop', '1', '-framerate', String(fps), '-i', abs(opening.image)] : []),
       '-filter_complex',
       (sc.video ? `[0:v]fps=${fps},scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1,` : `[0:v]scale=1152:2048:force_original_aspect_ratio=increase,crop=1152:2048,zoompan=z='${z}':x='${x}':y='${y}':d=${frames}:s=${W}x${H}:fps=${fps},`) +
-        `eq=contrast=1.07:saturation=1.1:gamma=0.97,vignette=PI/4.5,noise=alls=4:allf=t,${inFx}${outFx}format=yuv420p${opening ? '[scene]' : '[v]'};` +
+        `${grades[grade]}${inFx}${outFx}format=yuv420p${opening ? '[scene]' : '[v]'};` +
         (opening ? `[2:v]scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1[opening];[scene][opening]overlay=enable='lt(t,${opening.seconds})'[v];` : '') +
         `[1:a]${trim > 0 ? `atrim=start=${trim.toFixed(3)},asetpts=PTS-STARTPTS,` : ''}aresample=48000,aformat=channel_layouts=stereo,adelay=${Math.max(1, Math.round(lead * 1000))}:all=1,apad=whole_dur=${dur.toFixed(3)}[a]`,
       '-map', '[v]', '-map', '[a]', '-t', dur.toFixed(3),

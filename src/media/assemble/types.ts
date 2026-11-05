@@ -54,11 +54,15 @@ export interface AssembleSpec {
   musicVolume?: number;
 }
 
+export type SceneColorGrade = 'cinema' | 'natural' | 'food';
+
 export interface StillsScene {
   /** Still image (e.g. from Flow/Nano Banana). Relative to the repo root or absolute. */
   image: string;
   /** Optional local footage for the portrait scene. */
   video?: string;
+  /** Optional grade for this shot; defaults to the existing cinema look. */
+  colorGrade?: SceneColorGrade;
   /** Narration for this scene (voiced + captioned word by word). */
   text: string;
   motion?: 'in' | 'out' | 'left' | 'right';

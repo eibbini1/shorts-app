@@ -112,3 +112,8 @@ metadata and public counters. It checks the expected channel ID, traverses the
 uploads playlist, batches video requests and saves an archived snapshot plus
 storage/analytics/bb-latest.json. These local files remain ignored by Git.
 The command does not provide retention curves or stayed to watch.
+
+Portrait scenes may set `"colorGrade": "food"` for mild contrast and color
+without grain or a vignette, or `"colorGrade": "natural"` to keep the shot's
+source look. Omit the field or use `"cinema"` for the existing grade.
+These controls grade supplied stills and footage; they do not generate motion.
