@@ -16,6 +16,9 @@ export async function loadSpec(file: string, root = process.cwd()): Promise<Stil
   if (spec.fps !== undefined && (!Number.isFinite(spec.fps) || spec.fps < 23 || spec.fps > 60)) throw new Error('fps must be between 23 and 60');
   for (const [i, scene] of spec.scenes.entries()) {
     if (typeof scene.text !== 'string' || !scene.text.trim() || typeof scene.image !== 'string' || !scene.image.trim()) throw new Error('Scene ' + (i + 1) + ' needs narration and an image');
+    if (scene.colorGrade !== undefined && (!['cinema', 'natural', 'food'].includes(scene.colorGrade) || (spec.width ?? 0) > (spec.height ?? 1))) {
+      throw new Error('Scene ' + (i + 1) + ': colorGrade must be cinema, natural, or food and is supported for portrait only');
+    }
     if (scene.transition && !['fade', 'flash', 'gold', 'cut', 'punch', 'whip'].includes(scene.transition)) throw new Error('Invalid scene transition');
     if (scene.motion && !['in', 'out', 'left', 'right', ...((spec.width ?? 0) > (spec.height ?? 1) ? ['hook', 'reveal', 'side', 'tiltdown', 'tiltup', 'diag'] : [])].includes(scene.motion)) throw new Error('Invalid scene motion');
     if (scene.video !== undefined) {

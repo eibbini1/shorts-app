@@ -27,6 +27,14 @@ describe('automation preflight and resumption', () => {
       await writeFile(path.join(f.root, 'scene.jpg'), 'image');
       await writeFile(f.file, JSON.stringify({ ...f.spec, scenes: [{ image: 'scene.jpg', text: 'Hook.', transition: 'unknown' }] }));
       await expect(loadSpec(f.file, f.root)).rejects.toThrow('Invalid scene transition');
+      const graded = { ...f.spec, scenes: [{ ...f.spec.scenes[0], colorGrade: 'food' }] };
+      await writeFile(f.file, JSON.stringify(graded));
+      expect((await loadSpec(f.file, f.root)).scenes[0]?.colorGrade).toBe('food');
+      await writeFile(f.file, JSON.stringify({ ...graded, width: 1920, height: 1080 }));
+      await expect(loadSpec(f.file, f.root)).rejects.toThrow('supported for portrait only');
+      await writeFile(f.file, JSON.stringify({ ...graded, scenes: [{ ...graded.scenes[0], colorGrade: 'foood' }] }));
+      await expect(loadSpec(f.file, f.root)).rejects.toThrow('colorGrade must be');
+
     } finally { await rm(f.root, { recursive: true, force: true }); }
   });
   it('invalidates packs for changed inputs or renderer code', async () => {
