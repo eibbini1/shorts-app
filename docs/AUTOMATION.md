@@ -269,3 +269,29 @@ recent public uploads with comments. Channel-authored prompts are excluded.
 Add `--video VIDEO_ID` to check a specific public BB upload even if the
 snapshot lists zero comments. The command confirms ownership and visibility
 against YouTube before fetching its threads.
+
+### Write a scenario and control its length
+
+Write the scenario as a list of beats first. For each beat, note the target
+time, what the viewer sees, the exact spoken line, and which sound should
+lead. Translate each beat into one item in the JSON scenes array, in order.
+Put the spoken line in text, your source path in image and optionally video,
+and the cut style in transition. Save as UTF-8 JSON with double quotes and
+no trailing commas.
+
+Example 14–16-second planning target:
+- 0–3 s: Show a spoon tapping a chocolate shell. "What's hiding under the gold?"
+- 3–9 s: Show the shell starting to split. Let the real snap come through.
+- 9–14 s: Reveal the green and red filling. "Pistachio cream. Raspberry underneath."
+- Use any remaining beat to hold the close-up and let viewers see the answer.
+
+These are planning times, not a JSON duration field. The stills renderers
+calculate each scene from its narration plus lead and tail padding, including
+a longer final tail. The video path does not set the scene duration. The
+portrait renderer can loop or hold short source footage to fit; long clips
+are cut at the end of their scene. Render a preview, measure it with
+`ffprobe -v error -show_entries format=duration -of csv=p=0 PATH`, then
+shorten or extend the script and re-render. Never use mock narration to
+judge the final spoken pacing. For full-width videos, use the same beats
+but plan a longer structure with sections and verify actual section times
+after rendering.
