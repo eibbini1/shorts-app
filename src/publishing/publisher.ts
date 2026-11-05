@@ -48,6 +48,11 @@ export async function publishPack(api: youtube_v3.Youtube, packFile: string, roo
     const journal = await readUploadJournal(root);
     const key = path.relative(root, specFile).replace(/\\/g, '/');
     let record = journal[key];
+    const duplicate = Object.entries(journal).find(([otherKey, other]) =>
+      otherKey !== key && other.videoDigest === pack.artifactDigests[pack.video]);
+    if (duplicate) {
+      throw new PublishingReviewRequiredError('Identical video already recorded for ' + duplicate[0] + '. Review the existing upload before publishing.');
+    }
     if (record?.phase === 'scheduled') {
       if (record.videoDigest !== pack.artifactDigests[pack.video]) throw new PublishingReviewRequiredError('Local video differs from the existing scheduled upload. Review the uploaded version before publishing changes.');
       return record;
