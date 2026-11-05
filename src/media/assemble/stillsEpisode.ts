@@ -163,10 +163,10 @@ export async function assembleStills(specPath: string, repoRoot: string): Promis
     if (si > 0 && spec.scenes[si]!.transition !== 'cut') cues.push({ t: sc.start - 0.12, kind: 'whoosh', gain: 0.22 });
   });
   const titleStart = spec.scenes[0]?.openingStill?.seconds ?? 0;
-  if (spec.hookText && titleStart < 2.4) items.push({ start: titleStart, end: 2.4, bmp: makeWordmark(spec.hookText.toUpperCase(), px(54)), cx: W / 2, cy: px(250), shake: false, static: true, fadeIn: 0.001, fadeOut: 0.3 });
-  if (spec.kicker && !spec.hookText && titleStart < 4.2) items.push({ start: Math.max(0.3, titleStart), end: 4.2, bmp: makeWordmark(spec.kicker.toUpperCase(), px(25)), cx: W / 2, cy: px(175), shake: false, static: true, fadeIn: 0.6, fadeOut: 0.6 });
+  if (spec.hookText && titleStart < 2.4) items.push({ start: titleStart, end: 2.4, bmp: makeWordmark(spec.hookText.toUpperCase(), px(54), undefined, px(700)), cx: W / 2, cy: px(250), shake: false, static: true, fadeIn: 0.001, fadeOut: 0.3 });
+  if (spec.kicker && !spec.hookText && titleStart < 4.2) items.push({ start: Math.max(0.3, titleStart), end: 4.2, bmp: makeWordmark(spec.kicker.toUpperCase(), px(25), undefined, px(700)), cx: W / 2, cy: px(175), shake: false, static: true, fadeIn: 0.6, fadeOut: 0.6 });
   const lastSc = timeline[timeline.length - 1]!;
-  items.push({ start: lastSc.start + lastSc.lead + lastSc.audioDur + 0.35, end: totalSec - 0.05, bmp: makeWordmark(spec.brand.name.toUpperCase(), px(40), spec.brand.sub), cx: W / 2, cy: px(300), shake: false, static: true, fadeIn: 0.9, fadeOut: 0.3 });
+  items.push({ start: lastSc.start + lastSc.lead + lastSc.audioDur + 0.35, end: totalSec - 0.05, bmp: makeWordmark(spec.brand.name.toUpperCase(), px(40), spec.brand.sub, px(700)), cx: W / 2, cy: px(300), shake: false, static: true, fadeIn: 0.9, fadeOut: 0.3 });
 
   const overlay = path.join(tmp, 'overlay.mov');
   await renderOverlay({ items, width: W, height: H, fps, totalSec, outFile: overlay });

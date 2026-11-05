@@ -191,3 +191,66 @@ The preceding full suite passed 97 tests at 06a5f4f. No upload was made.
 For priorities and unfinished work, see GOAL_PLAN.md. For the M1 setup see
 MAC_HANDOFF.md and BB_CHOCOLATE_SHELL_PRODUCTION.md. The chocolate opening and
 reveal stills are bundled; generated subject motion remains unverified.
+
+## Run the app yourself, from idea to upload
+
+Open a terminal in the repository root. On Windows: `Set-Location D:\shorts-app`.
+On a Mac, open the cloned folder. Install Node 22.16+ and FFmpeg with ffprobe,
+then run `npm ci`. Leave the existing automation queue alone for a new test.
+
+1. Pick a new idea. Check your channel for overlap, write the hook and its
+   payoff, verify any facts, and gather original or cleared images and clips.
+   Optionally run `npm run draft-shorts` to prepare the configured briefs.
+   The app does not generate source images or moving footage on its own.
+2. Save a new spec as `episodes/my-new-video.assemble.json`. Copy a matching
+   example if available, but choose new filenames, text, media and output.
+   This is a minimal portrait test spec (supply the referenced files first):
+
+       {
+         "kind": "stills",
+         "portraitHeight": 1920,
+         "output": "storage/episodes/my-new-video/final.mp4",
+         "fps": 30,
+         "brand": { "name": "Billionaire Bites" },
+         "voice": { "provider": "mock" },
+         "tightOpen": true,
+         "hookText": "WHAT IS INSIDE?",
+         "scenes": [
+           {
+             "image": "storage/episodes/my-new-video/opening.jpg",
+             "video": "storage/episodes/my-new-video/opening.mp4",
+             "text": "What is hiding inside this shell?",
+             "transition": "cut",
+             "videoFill": "hold",
+             "colorGrade": "food",
+             "sourceAudioGain": 0.35
+           }
+         ]
+       }
+
+   Add more scenes to deliver the answer. Remove video-specific fields if you
+   only have a still, and omit sourceAudioGain if the video has no audio.
+   For full-width 16:9, remove portraitHeight, set `"width": 1920` and
+   `"height": 1080`, use landscape media, and omit videoFill, colorGrade and
+   sourceAudioGain. The landscape renderer supports cut, fade, flash and gold.
+3. Render a local layout test with
+   `npm run assemble-abdul -- --spec episodes/my-new-video.assemble.json`.
+   Mock narration is silent; it is for layout only. Before release, use the
+   configured narration provider and cached voice. If you explicitly approve
+   paying for new narration, use the pipeline with `--allow-voice-spend`.
+   No paid generation should be started merely to test the layout.
+4. For the final pack, run
+   `npm run pipeline -- --spec episodes/my-new-video.assemble.json`.
+   This renders, checks QA, creates metadata, thumbnails and captions, and
+   records the hook. It does not upload. Review the full MP4 and resulting
+   pack: image and voice, title, description, credits, captions and disclosure.
+   You can recheck a video with `npm run qa-check -- --video PATH --expect portrait`
+   or `--expect landscape` for full-width. Replace PATH with the actual MP4.
+5. To schedule only this pack, follow YOUTUBE_SETUP.md if OAuth is not
+   connected. Verify publish.expectedChannelId in automation.json, then run
+   `npm run yt-upload -- --pack episodes/my-new-video.pack.json`.
+   The command schedules a verified pack; it is not a preview. For an optional
+   explicit slot, pass `--at ISO_TIMESTAMP` at least one hour ahead.
+   Check the confirmed video ID and time in Studio. Keep the upload journal.
+6. After publication, capture the audience metrics described above and
+   review comments. Use those results when selecting the next hook.
