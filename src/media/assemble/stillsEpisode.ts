@@ -36,8 +36,6 @@ export function transitionOut(t: SceneTransition = 'fade', dur: number): string 
   }
 }
 
-const W = 720;
-const H = 1280;
 const LEAD = 0.18;
 const TAIL = 0.5;
 const END_TAIL = 3.2;
@@ -47,6 +45,13 @@ const PUNCT_BREAK = /[.,!?;:—–-]$/;
 /** Luxury/documentary Short: stills with slow camera moves, ElevenLabs narration, word-by-word gold captions, ambient bed. */
 export async function assembleStills(specPath: string, repoRoot: string): Promise<string> {
   const spec = JSON.parse((await readFile(specPath, 'utf8')).replace(/^﻿/, '')) as StillsSpec;
+  const H = spec.portraitHeight ?? 1280;
+  if (H !== 1280 && H !== 1920) throw new Error('portraitHeight must be 1280 or 1920');
+  const unit = H / 1280;
+  const px = (n: number) => Math.round(n * unit);
+  const W = px(720);
+  const zoomW = px(1152);
+  const zoomH = px(2048);
   const fps = spec.fps ?? 24;
   const abs = (p: string) => (path.isAbsolute(p) ? p : path.join(repoRoot, p));
   const out = abs(spec.output);
@@ -113,7 +118,7 @@ export async function assembleStills(specPath: string, repoRoot: string): Promis
       ...(sc.video ? [...(sc.videoFill === 'hold' ? [] : ['-stream_loop', '-1']), '-i', abs(sc.video)] : ['-loop', '1', '-framerate', String(fps), '-t', dur.toFixed(3), '-i', abs(sc.image)]), '-i', v0.audioFile,
       ...(opening ? ['-loop', '1', '-framerate', String(fps), '-i', abs(opening.image)] : []),
       '-filter_complex',
-      (sc.video ? `[0:v]fps=${fps},scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1,${sc.videoFill === 'hold' ? 'tpad=stop_mode=clone:stop=-1,' : ''}` : `[0:v]scale=1152:2048:force_original_aspect_ratio=increase,crop=1152:2048,zoompan=z='${z}':x='${x}':y='${y}':d=${frames}:s=${W}x${H}:fps=${fps},`) +
+      (sc.video ? `[0:v]fps=${fps},scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1,${sc.videoFill === 'hold' ? 'tpad=stop_mode=clone:stop=-1,' : ''}` : `[0:v]scale=${zoomW}:${zoomH}:force_original_aspect_ratio=increase,crop=${zoomW}:${zoomH},zoompan=z='${z}':x='${x}':y='${y}':d=${frames}:s=${W}x${H}:fps=${fps},`) +
         `${grades[grade]}${inFx}${outFx}format=yuv420p${opening ? '[scene]' : '[v]'};` +
         (opening ? `[2:v]scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1[opening];[scene][opening]overlay=enable='lt(t,${opening.seconds})'[v];` : '') +
         `[1:a]${trim > 0 ? `atrim=start=${trim.toFixed(3)},asetpts=PTS-STARTPTS,` : ''}aresample=48000,aformat=channel_layouts=stereo,adelay=${Math.max(1, Math.round(lead * 1000))}:all=1,apad=whole_dur=${dur.toFixed(3)}${sourceGain ? '[voice];' : '[a]'}` +
@@ -152,16 +157,16 @@ export async function assembleStills(specPath: string, repoRoot: string): Promis
         const following = ws[wi + 1];
         const end = Math.min(Math.max(start + 0.12, nextStart), following ? sc.start + sc.lead + following.start : sc.start + sc.dur);
         if (end <= start) return;
-        items.push({ start, end, bmp: makeCaption(texts, k), cx: W / 2, cy: 905, shake: false, static: true, fadeIn: k === 0 ? 0.1 : 0.001, fadeOut: k === grp.length - 1 ? 0.12 : 0.001 });
+        items.push({ start, end, bmp: makeCaption(texts, k, px(62), px(640)), cx: W / 2, cy: px(905), shake: false, static: true, fadeIn: k === 0 ? 0.1 : 0.001, fadeOut: k === grp.length - 1 ? 0.12 : 0.001 });
       });
     });
     if (si > 0 && spec.scenes[si]!.transition !== 'cut') cues.push({ t: sc.start - 0.12, kind: 'whoosh', gain: 0.22 });
   });
   const titleStart = spec.scenes[0]?.openingStill?.seconds ?? 0;
-  if (spec.hookText && titleStart < 2.4) items.push({ start: titleStart, end: 2.4, bmp: makeWordmark(spec.hookText.toUpperCase(), 54), cx: W / 2, cy: 250, shake: false, static: true, fadeIn: 0.001, fadeOut: 0.3 });
-  if (spec.kicker && !spec.hookText && titleStart < 4.2) items.push({ start: Math.max(0.3, titleStart), end: 4.2, bmp: makeWordmark(spec.kicker.toUpperCase(), 25), cx: W / 2, cy: 175, shake: false, static: true, fadeIn: 0.6, fadeOut: 0.6 });
+  if (spec.hookText && titleStart < 2.4) items.push({ start: titleStart, end: 2.4, bmp: makeWordmark(spec.hookText.toUpperCase(), px(54)), cx: W / 2, cy: px(250), shake: false, static: true, fadeIn: 0.001, fadeOut: 0.3 });
+  if (spec.kicker && !spec.hookText && titleStart < 4.2) items.push({ start: Math.max(0.3, titleStart), end: 4.2, bmp: makeWordmark(spec.kicker.toUpperCase(), px(25)), cx: W / 2, cy: px(175), shake: false, static: true, fadeIn: 0.6, fadeOut: 0.6 });
   const lastSc = timeline[timeline.length - 1]!;
-  items.push({ start: lastSc.start + lastSc.lead + lastSc.audioDur + 0.35, end: totalSec - 0.05, bmp: makeWordmark(spec.brand.name.toUpperCase(), 40, spec.brand.sub), cx: W / 2, cy: 300, shake: false, static: true, fadeIn: 0.9, fadeOut: 0.3 });
+  items.push({ start: lastSc.start + lastSc.lead + lastSc.audioDur + 0.35, end: totalSec - 0.05, bmp: makeWordmark(spec.brand.name.toUpperCase(), px(40), spec.brand.sub), cx: W / 2, cy: px(300), shake: false, static: true, fadeIn: 0.9, fadeOut: 0.3 });
 
   const overlay = path.join(tmp, 'overlay.mov');
   await renderOverlay({ items, width: W, height: H, fps, totalSec, outFile: overlay });

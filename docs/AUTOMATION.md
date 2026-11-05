@@ -157,3 +157,37 @@ of audience response.
    using Stayed to watch, engaged views, retention at the reveal, and
    subscribers gained per 1,000 engaged views when available. Log the hook
    and what changed. Choose one clear change for the next test.
+
+## Agent quick start: portrait production settings
+
+Keep the default queue untouched while testing. Use a separate episode spec
+and output path, run assemble-abdul locally, then run qa-check. Only move an
+episode into the production queue after source, originality, hook payoff,
+audio, captions, and publish-pack review. Do not commit credentials, private
+analytics, local scratch renders, or unrelated untracked work.
+
+- Episode: `"portraitHeight": 1920` renders 1080x1920 from the scene media and
+  scales the app's hook and captions for the output. Default: 720x1280.
+  Choose sharp original footage; export resolution does not recover detail.
+- Episode: `"tightOpen": true` trims leading narration silence, with optional
+  `"hookText"` for the first frames. Use an opening action and a question that
+  the final shot answers; do not give away the payoff in the description.
+- Scene: `"video"` points to moving footage; `"image"` remains required.
+  `"videoFill": "hold"` plays the action once, then holds the final frame.
+  Default: loop. Use source footage long enough for the desired movement.
+- Scene: `"colorGrade": "food"` uses a mild grade without vignette or grain.
+  `"natural"` skips the grade; `"cinema"` is the existing default.
+- Scene: `"sourceAudioGain": 0.35` blends the original clip's audio with the
+  narration. Default: muted. A positive gain requires an audio track.
+- Portrait transitions: cut, punch, whip, fade, flash, gold. Prefer cutting
+  on food action. Rack focus, a real fracture, and a slow spoon lift are
+  shooting or generation directions, not transition presets.
+
+Verification: the 1080x1920 portrait test rendered the hook overlay, Food
+grade, and a short moving clip with hold and source audio. FFprobe reported
+1080x1920 and the export decoded successfully. Build and lint passed.
+The preceding full suite passed 97 tests at 06a5f4f. No upload was made.
+
+For priorities and unfinished work, see GOAL_PLAN.md. For the M1 setup see
+MAC_HANDOFF.md and BB_CHOCOLATE_SHELL_PRODUCTION.md. The chocolate opening and
+reveal stills are bundled; generated subject motion remains unverified.

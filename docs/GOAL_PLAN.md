@@ -340,3 +340,9 @@ References:
 - https://www.remotion.dev/docs/motion-blur/
 - https://mediabunny.dev/guide/converting-media-files
 - https://support.google.com/youtube/answer/1722171
+
+The portrait renderer now supports optional native 1080x1920 output, with
+scaled titles and captions. The default stays 720x1280. An isolated render
+with a hook, moving footage, hold, Food grade, and source audio passed decode
+and dimension verification; build and lint passed. See the agent quick start
+in AUTOMATION.md for all settings, defaults, and the safe testing workflow.

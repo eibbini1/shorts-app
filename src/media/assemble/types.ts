@@ -83,6 +83,8 @@ export type SceneTransition = 'fade' | 'flash' | 'gold' | 'cut' | 'punch' | 'whi
 /** Luxury / documentary mode: stills + cinematic camera moves + ElevenLabs narration + gold captions. */
 export interface StillsSpec {
   kind: 'stills';
+  /** Native portrait export height. Defaults to 1280. */
+  portraitHeight?: 1280 | 1920;
   output: string;
   fps?: number;
   voice: { provider: 'elevenlabs' | 'mock'; voiceId?: string; speed?: number; stability?: number; style?: number };
