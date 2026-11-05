@@ -17,7 +17,7 @@ if [ ! -f "$image" ]; then
   printf '%s\n' 'Source image does not exist.'
   exit 1
 fi
-if [ -e "$output" ] || [ -e "$output.recipe.txt" ]; then
+if [ -e "$output" ] || [ -e "$output.recipe.txt" ] || [ -e "$output.review.png" ]; then
   printf '%s\n' 'Choose a new output path to preserve the existing clip.'
   exit 1
 fi
@@ -50,5 +50,6 @@ if [ "$frames" != '49' ] || [ "$rate" != '24/1' ]; then
   printf 'Expected 49 frames at 24 fps; got %s frames at %s.\n' "$frames" "$rate"
   exit 1
 fi
+ffmpeg -v error -xerror -i "$output" -map 0:v:0 -vf "select='not(mod(n,6))',scale=192:320,tile=3x3" -frames:v 1 -n "$output.review.png"
 printf '%s\n' 'Generation completed and decoded at the expected dimensions; visual review pending.' >> "$output.recipe.txt"
 printf '%s\n' 'Review all frames for subject identity, geometry, contact and natural motion.'
