@@ -13,6 +13,15 @@ const records = Object.entries(journal).map(([specPath, upload]) => {
   const matching = rows.filter(row => row.short === output);
   const hook = matching.length === 1 ? matching[0] : null;
   const video = videos.get(upload.videoId);
+  const packPath = specPath.replace(/\.assemble\.json$/, '.pack.json');
+  let localDigest;
+  try {
+    const pack = read(packPath);
+    localDigest = pack.artifactDigests?.[pack.video];
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+  }
+
   return {
     spec: specPath,
     localHook: hook?.first_line ?? null,
@@ -20,6 +29,8 @@ const records = Object.entries(journal).map(([specPath, upload]) => {
     localHookRows: matching.length,
     tags: hook?.tags ?? [],
     videoId: upload.videoId ?? null,
+    recordedPackMatchesUploadedDigest: localDigest && upload.videoDigest
+      ? localDigest === upload.videoDigest : null,
     visibility: video?.status?.privacyStatus ?? null,
     scheduledAt: video?.status?.publishAt ?? null,
   };
