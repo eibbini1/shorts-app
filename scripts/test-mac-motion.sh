@@ -44,5 +44,11 @@ if [ "$dimensions" != '384x640' ]; then
   exit 1
 fi
 ffmpeg -v error -xerror -i "$output" -map 0:v:0 -f null -
+frames=$(ffprobe -v error -count_frames -select_streams v:0 -show_entries stream=nb_read_frames -of csv=p=0 "$output")
+rate=$(ffprobe -v error -select_streams v:0 -show_entries stream=avg_frame_rate -of csv=p=0 "$output")
+if [ "$frames" != '49' ] || [ "$rate" != '24/1' ]; then
+  printf 'Expected 49 frames at 24 fps; got %s frames at %s.\n' "$frames" "$rate"
+  exit 1
+fi
 printf '%s\n' 'Generation completed and decoded at the expected dimensions; visual review pending.' >> "$output.recipe.txt"
 printf '%s\n' 'Review all frames for subject identity, geometry, contact and natural motion.'
