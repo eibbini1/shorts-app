@@ -17,6 +17,7 @@ export async function loadSpec(file: string, root = process.cwd()): Promise<Stil
   if (spec.portraitHeight !== undefined && (![1280, 1920].includes(spec.portraitHeight) || (spec.width ?? 0) > (spec.height ?? 1))) {
     throw new Error('portraitHeight must be 1280 or 1920 and requires portrait output');
   }
+  if (spec.requireMotion !== undefined && typeof spec.requireMotion !== 'boolean') throw new Error('requireMotion must be boolean');
   for (const [i, scene] of spec.scenes.entries()) {
     if (typeof scene.text !== 'string' || !scene.text.trim() || typeof scene.image !== 'string' || !scene.image.trim()) throw new Error('Scene ' + (i + 1) + ' needs narration and an image');
     if (scene.colorGrade !== undefined && (!['cinema', 'natural', 'food'].includes(scene.colorGrade) || (spec.width ?? 0) > (spec.height ?? 1))) {

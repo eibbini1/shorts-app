@@ -305,3 +305,12 @@ Words joined with spaces must match scene.text, including punctuation.
 The pipeline validates the recording and uses it for captions and subtitles.
 That scene makes no paid narration request; other scenes keep their usual
 provider and spending checks. This is not a Brian voice clone.
+
+### Motion review for footage-led Shorts
+
+Set `"requireMotion": true` in the episode spec or pass `--require-motion`
+to qa-check. This rejects detected static stretches of 2.5 seconds or more.
+It does not prove that motion comes from the food; a moving caption or a pan
+can fool the detector. For BB action Shorts, also review actual contact,
+motion and food texture, original sound, final voice, and caption placement
+before approving the cut. Do not publish the chocolate still-image preview.

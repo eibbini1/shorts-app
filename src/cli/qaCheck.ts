@@ -54,6 +54,13 @@ if (loud) {
   add('loudness', Math.abs(i + 14) <= 2.5, `${i.toFixed(1)} LUFS (target -14)`);
   add('true peak', tp <= -0.9, `${tp.toFixed(1)} dBTP (max -1)`);
 } else add('loudness', false, 'could not measure');
+if (process.argv.includes('--require-motion')) {
+  const motion = run('ffmpeg', ['-hide_banner', '-nostats', '-i', video, '-vf', 'freezedetect=n=-50dB:d=2.5', '-an', '-f', 'null', '-']);
+  const freezes = [...motion.stderr.matchAll(/freeze_start:\s*([\d.]+)/g)].map(match => Number(match[1]));
+  add('motion', freezes.length === 0, freezes.length
+    ? 'static stretches begin at ' + freezes.map(t => t.toFixed(1) + 's').join(', ')
+    : 'no detected static stretch of 2.5 s or longer');
+}
 add('black frames', blacks.length === 0, blacks.length ? blacks.map((b) => `${b[0]}-${b[1]}s`).join(', ') : 'none');
 add('silences > 2 s', silences.length === 0, silences.length ? silences.map((s) => s.toFixed(1) + 's').join(', ') : 'none');
 

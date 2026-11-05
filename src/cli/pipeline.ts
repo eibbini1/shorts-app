@@ -72,7 +72,7 @@ if (!process.argv.includes('--skip-render') && !resumeRender) {
   fingerprint = await inputDigest(specPath, spec, root);
   await atomicJson(receiptFile, { inputDigest: fingerprint, videoDigest: await fileDigest(out) });
 }
-sh('QA gate', 'src/cli/qaCheck.ts', ['--video', spec.output, '--expect', landscape ? 'landscape' : 'portrait', '--report', base + '.qa.json']);
+sh('QA gate', 'src/cli/qaCheck.ts', ['--video', spec.output, '--expect', landscape ? 'landscape' : 'portrait', '--report', base + '.qa.json', ...(spec.requireMotion ? ['--require-motion'] : [])]);
 sh('metadata', 'src/cli/metaGen.ts', ['--spec', specRel, ...(arg('bridge') ? ['--bridge', arg('bridge')!] : [])]);
 sh('thumbnails', 'src/cli/makeThumbs.ts', ['--spec', specRel]);
 sh('subtitles', 'src/cli/exportSubs.ts', ['--spec', specRel]);

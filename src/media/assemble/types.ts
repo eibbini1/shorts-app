@@ -86,6 +86,8 @@ export interface StillsSpec {
   kind: 'stills';
   /** Native portrait export height. Defaults to 1280. */
   portraitHeight?: 1280 | 1920;
+  /** Reject long static stretches in footage-led episodes. */
+  requireMotion?: boolean;
   output: string;
   fps?: number;
   voice: { provider: 'elevenlabs' | 'mock'; voiceId?: string; speed?: number; stability?: number; style?: number };
