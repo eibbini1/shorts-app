@@ -313,3 +313,30 @@ On November 5, the Windows scheduled task and its Node process were verified liv
 The 07:15 UTC cycle verified all five local packs as current and reported five
 publishing version mismatches for review. This confirms the guard ran in the
 installed worker; it does not confirm the current state of the remote schedules.
+
+## BB production checkpoint
+
+On November 5, all 97 tests in 20 files passed at 06a5f4f. The app has opt-in
+portrait Food and Natural grades, source audio mixing, and hold mode for a
+single action without replaying the clip sound. Local renders verified these
+controls. See AUTOMATION.md for the BB editorial, publishing, and analytics
+workflow. Technical QA does not clear footage rights or prove audience lift.
+
+The Parmigiano private preview passed technical QA. Release needs original
+or cleared footage. The chocolate Short has AI-generated opening and reveal
+references, a private timing preview, and a Mac smoke test in
+BB_CHOCOLATE_SHELL_PRODUCTION.md. There is no verified generated motion on
+the M1 yet and neither Short has been uploaded.
+
+Next motion experiments: a locked macro with real spoon contact and falling
+shards; a rack focus from shell to filling; and a slow spoon lift with visible
+texture. Try native 1080x1920 export when source footage supports it; upscaling
+does not restore missing detail. Remotion motion blur is a candidate for
+animated titles, not subject movement. Mediabunny is a candidate for browser
+media editing, not a necessary replacement for the current FFmpeg renderer.
+Neither is a production dependency. The 100-channel study remains incomplete.
+
+References:
+- https://www.remotion.dev/docs/motion-blur/
+- https://mediabunny.dev/guide/converting-media-files
+- https://support.google.com/youtube/answer/1722171
