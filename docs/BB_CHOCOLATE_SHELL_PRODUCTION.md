@@ -30,3 +30,16 @@ can read the crack and the filling reveal; with sound, the tap and snap line
 up with the spoon and do not drown out the voice. Review the BB catalog and
 source rights before scheduling. Keep this concept separate from the 2012
 chocolate auction story.
+
+## Mac motion test
+
+The two AI-generated visual references are in assets/demo/chocolate-shell.
+Use opening.png for the initial generation; reveal.png shows the intended
+payoff and is not required by the single-image smoke test.
+
+    sh scripts/test-mac-motion.sh assets/demo/chocolate-shell/opening.png "Locked macro camera. The spoon lowers and taps the thin chocolate shell once. A small crack opens exactly at contact and a tiny shard falls onto the plate. Keep the shell shape, gold accent and lighting consistent. Keep the filling hidden. No camera motion or text." storage/motion/chocolate-crack-test.mp4
+
+Reject takes where the spoon bends or passes through the shell, a crack
+appears before contact, or the shard floats. Review the full clip on the Mac.
+Use the separate reveal reference for a second shot only after the opening
+passes. These stills and the existing timing preview do not validate motion.
