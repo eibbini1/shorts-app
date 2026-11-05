@@ -71,8 +71,8 @@ Node 22.16+ is required; verification used Node 26.13. SQLite uses Node's built-
 In a spec with `kind: "stills"`, add a `video` path to any scene
 alongside its existing `image` and `text`. Use a local clip trimmed to the
 action you want, such as fries falling into frame. The renderer center-crops
-to the output dimensions and repeats short clips to cover the narration. Source audio is
-discarded. Narration, captions, and transitions come from the episode.
+to the output dimensions and repeats short clips to cover the narration. Source audio is muted by default. For a portrait shot, set
+`"sourceAudioGain": 0.35` to blend the clip's first audio track under narration. Narration, captions, and transitions come from the episode.
 Use a clip long enough to cover the scene when a repeat would be visible.
 
 Draft briefs may set an optional `visualStyle` string for another subject,
