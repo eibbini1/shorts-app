@@ -121,3 +121,39 @@ These controls grade supplied stills and footage; they do not generate motion.
 For a portrait action that should happen once, set `"videoFill": "hold"`.
 The clip plays once and the last frame holds to cover the rest of the scene.
 Its source sound does not repeat. Omit the field for the existing loop mode.
+
+## BB channel manager workflow
+
+Use this checklist for each new Short, from the editorial brief through review
+of audience response.
+
+1. **Research and compare.** Check BB's catalog for duplicates. Study relevant
+   clips for their first shot, question, pacing, sound, and visible payoff.
+   Record what was actually reviewed. Use primary sources for factual claims.
+2. **Script the hook and payoff.** Put a visible action and a specific question
+   in the opening. Give a clue in the middle. Answer the exact question on
+   screen before the ending. Avoid reusing a BB story or footage without a
+   genuinely new production.
+3. **Create images and motion.** The chocolate reference images were made
+   with Codex's built-in image generation in chat, without a Shorts app API
+   call or API key. Availability and usage limits depend on the Codex plan;
+   this does not promise unlimited free images. The app's automation does not
+   generate images. Save approved stills as scene images. Film or separately
+   generate moving shots, then add their files as scene video inputs. The
+   local Mac motion route still requires a real generation test. Keep paid
+   generation behind explicit approval.
+4. **Edit and review.** Check that the action looks natural at phone size.
+   Use the Food or Natural grade as appropriate, keep captions off the food,
+   and mix the real crack or sizzle where useful. Use hold mode when the
+   action should play only once. Review muted and with sound, then run QA.
+5. **Package, upload and publish.** Verify sources and asset permissions,
+   title, description, captions and applicable disclosures. Upload the passing
+   pack to the configured BB channel, confirm the scheduled time, and preserve
+   the upload journal. Check the live video before calling it published.
+6. **Manage comments.** Review comments and draft specific, helpful replies
+   or one question to pin. Publish replies or pins only when instructed.
+   Treat comments as viewer feedback, not as a guarantee of reach.
+7. **Measure and iterate.** Compare comparable Shorts at 24 and 72 hours
+   using Stayed to watch, engaged views, retention at the reveal, and
+   subscribers gained per 1,000 engaged views when available. Log the hook
+   and what changed. Choose one clear change for the next test.
