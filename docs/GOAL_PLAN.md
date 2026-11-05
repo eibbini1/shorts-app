@@ -374,3 +374,31 @@ review for word-level accuracy. Assets and private renders remain local.
    results and approval; reuse accepted takes and regenerate only the failed
    shot. Feed accepted footage into the existing editor. Keep paid generation
    behind approval and verify final motion, sound and caption sync before release.
+
+## Local AI creation milestone
+
+The next app workflow is topic suggestions, a complete timed scenario,
+approved reference images, generated motion clips, then the existing editor.
+Prefer local runtimes and maintained Node tools; do not upgrade unrelated
+packages or spend on a provider without approval.
+
+- Scenario: `node scripts/bb-local-scenario.mjs "your topic" draft-id`.
+  Start Ollama and install an approved local model, for example
+  `ollama pull qwen3:1.7b`. The command uses only the loopback endpoint.
+  It proposes five angles and one timed shot plan, with narration, image
+  prompts, subject motion, sound, and claims to check. Zod validates the
+  structure and the script checks the runtime. Output stays review-only.
+  The model is a starting candidate; evaluate writing quality before use.
+- Images: validate a no-cloud-node ComfyUI workflow on the M1 before
+  wiring it into the app. Pin a compatible model and workflow, save seeds
+  and prompts per shot, and review visual continuity. No local image
+  workflow has been verified yet.
+- Motion: validate the M1 LTX-MLX chocolate contact test before integrating
+  scene generation. Keep generated assets separate from the publish queue
+  until editorial and technical review pass.
+- Audio: Kokoro af_heart has run offline on Windows. The app already
+  accepts a recorded WAV and timings; keep scratch or unverified captions
+  separate from release assets.
+
+References: https://docs.ollama.com/capabilities/structured-outputs
+and https://docs.comfy.org/development/comfyui-server/comms_routes
