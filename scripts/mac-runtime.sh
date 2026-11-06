@@ -10,6 +10,9 @@ case "${1:-}" in
   motion)
     shift
     export LTX_MLX_BIN="$PWD/storage/tools/ltx-2-mlx/.venv/bin/ltx-2-mlx"
+    [[ -f storage/setup/ltx-model-dir.txt ]] || { echo "Run npm run setup:mac to download the motion model first." >&2; exit 1; }
+    export LTX_MODEL_DIR="$(cat storage/setup/ltx-model-dir.txt)"
+    [[ -d "$LTX_MODEL_DIR" ]] || { echo "Motion model directory is missing; rerun npm run setup:mac." >&2; exit 1; }
     exec sh scripts/test-mac-motion.sh "$@"
     ;;
   *) echo "Usage: bash scripts/mac-runtime.sh comfy|motion"; exit 1 ;;
