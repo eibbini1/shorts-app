@@ -142,14 +142,24 @@ def main():
 
     make_ass(scenes)
     ass_filter = f"ass={WORK / 'captions.ass'}:fontsdir={ROOT / 'assets/fonts'}"
+    music_mode = os.environ.get('CHOCOLATE_MUSIC_MODE', 'original')
+    if music_mode not in ('original', 'none'):
+        raise SystemExit('CHOCOLATE_MUSIC_MODE must be original or none')
+    audio_graph = (
+        "[1:a]highpass=f=80,acompressor=threshold=0.12:ratio=2:attack=8:release=120[voice];"
+        "[2:a]volume=0.045[bed];[3:a]volume=0.12[fx];[4:a]volume=0.55[beat];"
+        "[voice][bed][fx][beat]amix=inputs=4:duration=first:normalize=0,"
+        "loudnorm=I=-16:TP=-1.5:LRA=11[a]"
+        if music_mode == 'original' else
+        "[1:a]highpass=f=80,acompressor=threshold=0.12:ratio=2:attack=8:release=120[voice];"
+        "[3:a]volume=0.12[fx];[voice][fx]amix=inputs=2:duration=first:normalize=0,"
+        "loudnorm=I=-16:TP=-1.5:LRA=11[a]"
+    )
     run('ffmpeg', '-y', '-hide_banner', '-loglevel', 'error', '-i', base,
         '-i', narration, '-i', WORK / 'ambient.wav', '-i', WORK / 'sfx.wav', '-i', WORK / 'beat.wav',
         '-filter_complex',
         f"[0:v]{ass_filter},fade=t=out:st=29.7:d=0.3[v];"
-        "[1:a]highpass=f=80,acompressor=threshold=0.12:ratio=2:attack=8:release=120[voice];"
-        "[2:a]volume=0.045[bed];[3:a]volume=0.12[fx];[4:a]volume=0.55[beat];"
-        "[voice][bed][fx][beat]amix=inputs=4:duration=first:normalize=0,"
-        "loudnorm=I=-16:TP=-1.5:LRA=11[a]",
+        + audio_graph,
         '-map', '[v]', '-map', '[a]', '-t', 30, '-c:v', 'libx264',
         '-preset', 'veryfast', '-crf', 19, '-pix_fmt', 'yuv420p',
         '-r', FPS, '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', OUT)

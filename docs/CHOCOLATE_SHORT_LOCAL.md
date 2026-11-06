@@ -40,6 +40,13 @@ Open the MP4 with sound and inspect the contact sheet. The script checks the
 30-second duration, frame count, dimensions, and decode. Check the voice level,
 caption reading time, and reveal on a phone before using it publicly.
 
+To make a voice-and-effects version for adding a current song in YouTube's
+Shorts editor, run:
+
+```sh
+CHOCOLATE_MUSIC_MODE=none npm run make:chocolate:mac
+```
+
 ## Music and visual limits
 
 The background rhythm is original, made locally without samples. The spoon moves
