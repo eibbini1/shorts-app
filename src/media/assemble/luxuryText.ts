@@ -58,8 +58,7 @@ export function makeCaption(words: string[], active: number, size = 62, maxW = 6
 }
 
 /** Elegant spaced gold wordmark with hairline rules, e.g. the end lockup or opening kicker. */
-export function makeWordmark(txt: string, size: number, sub?: string): Canvas {
-  const w = 700;
+export function makeWordmark(txt: string, size: number, sub?: string, w = 700): Canvas {
   const h = Math.ceil(size * 2.6 + (sub ? size * 0.9 : 0));
   const c = createCanvas(w, h);
   const ctx = c.getContext('2d');
@@ -70,7 +69,7 @@ export function makeWordmark(txt: string, size: number, sub?: string): Canvas {
   ctx.font = `600 ${size}px Lora`;
   ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 14;
   ctx.fillStyle = GOLD;
-  ctx.fillText(txt, w / 2 + size * 0.11, h / 2 - (sub ? size * 0.3 : 0));
+  ctx.fillText(txt, w / 2 + size * 0.11, h / 2 - (sub ? size * 0.3 : 0), w - size * 0.55);
   ctx.shadowBlur = 0;
   ctx.strokeStyle = GOLD; ctx.lineWidth = 2;
   const y1 = h / 2 - size * 0.95 - (sub ? size * 0.3 : 0);
@@ -80,7 +79,7 @@ export function makeWordmark(txt: string, size: number, sub?: string): Canvas {
     c2.letterSpacing = `${Math.round(size * 0.1)}px`;
     ctx.font = `500 ${Math.round(size * 0.42)}px Lora`;
     ctx.fillStyle = 'rgba(255,255,255,0.92)';
-    ctx.fillText(sub, w / 2, y2 + size * 0.55);
+    ctx.fillText(sub, w / 2, y2 + size * 0.55, w - size * 0.55);
   }
   return c;
 }

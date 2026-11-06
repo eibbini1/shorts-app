@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { runFfmpeg, getMediaDuration } from '../shared/ffmpegExec.js';
 import { logger } from '../../shared/logger.js';
-import { synthesize } from '../voice/VoiceProvider.js';
+import { sceneVoice } from '../voice/VoiceProvider.js';
 import { renderOverlay, type OverlayItem } from './overlayRenderer.js';
 import { makeCaption, makeWordmark, ensureLuxuryFont } from './luxuryText.js';
 import { writeAmbientBed, writeSfxWav, type SfxCue } from './sfx.js';
@@ -15,7 +15,7 @@ import type { StillsSpec } from './types.js';
  */
 type Motion = 'in' | 'out' | 'left' | 'right' | 'hook' | 'reveal' | 'side' | 'tiltdown' | 'tiltup' | 'diag';
 type Transition = 'fade' | 'flash' | 'gold' | 'cut';
-type LongScene = { image: string; video?: string; text: string; motion?: Motion; transition?: Transition };
+type LongScene = { narration?: import('../voice/VoiceProvider.js').LocalNarration; image: string; video?: string; text: string; motion?: Motion; transition?: Transition };
 type LongSpec = Omit<StillsSpec, 'scenes'> & { width?: number; height?: number; scenes: LongScene[] };
 
 const LEAD = 0.18;
@@ -61,7 +61,7 @@ export async function assembleStillsLong(specPath: string, repoRoot: string): Pr
   let cursor = 0;
   for (let i = 0; i < spec.scenes.length; i++) {
     const sc = spec.scenes[i]!;
-    const v = await synthesize(sc.text, voiceDir, spec.voice);
+    const v = await sceneVoice(sc, repoRoot, voiceDir, spec.voice);
     const last = i === spec.scenes.length - 1;
     const dur = LEAD + v.durationSec + (last ? END_TAIL : TAIL);
     const F = Math.round(dur * fps);

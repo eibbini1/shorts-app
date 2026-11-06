@@ -144,3 +144,28 @@ an observable material change between ingredients and finished dessert.
 A BB motion prompt can isolate a single preparation action and use a separate
 finished-texture shot for the payoff. These sampled observations do not establish
 exact pacing, the final serving shot, or an audience effect.
+
+## Next visual review batch
+
+Selected from the saved candidate metadata for BB's immediate creative
+questions. These are queued, not reviewed or ranked.
+
+- Zach Choi, grilled cheese: https://www.youtube.com/watch?v=dOOOeyBAQxQ
+  Check the first visible food action and timing of the texture payoff.
+- Great Indian Asmr, chicken shawarma: https://www.youtube.com/watch?v=2dR6SzUwbpY
+  Check the use of preparation sounds and whether sound lands on contact.
+- Food for shot, cinematic chutney: https://www.youtube.com/watch?v=12M8_m_Vm_s
+  Check lighting, framing, and how the camera makes texture readable.
+- radmiru, unusual jelly: https://www.youtube.com/watch?v=v3_v68cZhlE
+  Check whether motion or the cross-section delivers the reveal.
+- Cooking With Shereen, Parmigiano: https://www.youtube.com/watch?v=-9St-k_izrc
+  Check how quickly the viewer can identify the cheese and what is shown
+  while the factual hook is delivered.
+- Iron Chef Dad, frozen dinner transformation:
+  https://www.youtube.com/watch?v=4Oh_dO4hy4Q
+  Check the question established in the opening and whether the final shot
+  visibly answers it.
+
+Record the opening, first visible action, reveal and ending with timestamps.
+Mark any missing observations. Record video orientation before counting it
+as a Shorts comparison. Public views do not prove any edit caused retention.

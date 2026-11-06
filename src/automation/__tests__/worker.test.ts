@@ -3,6 +3,36 @@ import {spawn} from 'node:child_process';
 import {mkdtemp,mkdir,writeFile,rm} from 'node:fs/promises';
 import path from 'node:path';import os from 'node:os';import {pathToFileURL} from 'node:url';
 describe('automation worker exclusion',()=>{
+  it('keeps watching after initial discovery fails and recovers on the next tick',async()=>{
+    const root=await mkdtemp(path.join(os.tmpdir(),'shorts-worker-recovery-'));
+    const loader=pathToFileURL(path.resolve('node_modules/tsx/dist/loader.mjs')).href;
+    const script=path.resolve('src/cli/automate.ts');
+    let worker:ReturnType<typeof spawn>|undefined;
+    try {
+      await writeFile(path.join(root,'automation.json'),JSON.stringify({cron:'* * * * * *'}));
+      worker=spawn(process.execPath,['--import',loader,script,'--watch','--prepare-only'],{cwd:root,stdio:['ignore','pipe','pipe']});
+      await new Promise<void>((resolve,reject)=>{
+        const timer=setTimeout(()=>reject(new Error('Initial discovery failure was not observed')),10000);
+        let error='';
+        worker!.stderr!.on('data',data=>{error+=String(data);if(error.includes('ENOENT')){clearTimeout(timer);resolve();}});
+        worker!.once('error',reject);
+        worker!.once('exit',code=>{clearTimeout(timer);reject(new Error('Watcher exited '+code));});
+      });
+      await mkdir(path.join(root,'episodes'));
+      await writeFile(path.join(root,'episodes/recovered.assemble.json'),'{}');
+      // An invalid episode produces a normal per-episode report: discovery recovered.
+      await new Promise<void>((resolve,reject)=>{
+        const timer=setTimeout(()=>reject(new Error('Watcher did not retry discovery')),10000);
+        worker!.stderr!.on('data',data=>{if(String(data).includes('FAILED episodes')){clearTimeout(timer);resolve();}});
+        worker!.once('exit',code=>{clearTimeout(timer);reject(new Error('Watcher exited '+code));});
+      });
+      expect(worker.exitCode).toBeNull();
+    } finally {
+      if(worker && worker.exitCode===null){const closed=new Promise<void>(resolve=>worker!.once('close',()=>resolve()));worker.kill();await closed;}
+      await rm(root,{recursive:true,force:true});
+    }
+  },25000);
+
   it('rejects a second worker while a real watcher owns the lock',async()=>{
     const root=await mkdtemp(path.join(os.tmpdir(),'shorts-worker-'));
     const loader=pathToFileURL(path.resolve('node_modules/tsx/dist/loader.mjs')).href;

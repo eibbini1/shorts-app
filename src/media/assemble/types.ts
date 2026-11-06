@@ -54,11 +54,20 @@ export interface AssembleSpec {
   musicVolume?: number;
 }
 
+export type SceneColorGrade = 'cinema' | 'natural' | 'food';
+
 export interface StillsScene {
   /** Still image (e.g. from Flow/Nano Banana). Relative to the repo root or absolute. */
   image: string;
   /** Optional local footage for the portrait scene. */
   video?: string;
+  /** Optional grade for this shot; defaults to the existing cinema look. */
+  colorGrade?: SceneColorGrade;
+  /** Mix the clip's first audio track at this gain (0–1); omitted means muted. */
+  sourceAudioGain?: number;
+  narration?: import('../voice/VoiceProvider.js').LocalNarration;
+  /** Hold the final frame when footage is shorter than the scene. Default: loop. */
+  videoFill?: 'loop' | 'hold';
   /** Narration for this scene (voiced + captioned word by word). */
   text: string;
   motion?: 'in' | 'out' | 'left' | 'right';
@@ -75,6 +84,10 @@ export type SceneTransition = 'fade' | 'flash' | 'gold' | 'cut' | 'punch' | 'whi
 /** Luxury / documentary mode: stills + cinematic camera moves + ElevenLabs narration + gold captions. */
 export interface StillsSpec {
   kind: 'stills';
+  /** Native portrait export height. Defaults to 1280. */
+  portraitHeight?: 1280 | 1920;
+  /** Reject long static stretches in footage-led episodes. */
+  requireMotion?: boolean;
   output: string;
   fps?: number;
   voice: { provider: 'elevenlabs' | 'mock'; voiceId?: string; speed?: number; stability?: number; style?: number };

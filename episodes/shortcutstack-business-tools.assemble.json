@@ -1,0 +1,30 @@
+{
+  "output": "storage/episodes/shortcutstack-business-tools/assembled.mp4",
+  "width": 1080,
+  "height": 1920,
+  "fps": 24,
+  "clips": [
+    {
+      "file": "storage/episodes/shortcutstack-business-tools/clip0.mp4"
+    },
+    {
+      "file": "storage/episodes/shortcutstack-business-tools/clip1.mp4"
+    },
+    {
+      "file": "storage/episodes/shortcutstack-business-tools/clip2.mp4"
+    },
+    {
+      "file": "storage/episodes/shortcutstack-business-tools/clip3.mp4"
+    },
+    {
+      "file": "storage/episodes/shortcutstack-business-tools/clip4.mp4"
+    },
+    {
+      "file": "storage/episodes/shortcutstack-business-tools/clip5.mp4"
+    },
+    {
+      "file": "storage/episodes/shortcutstack-business-tools/clip6.mp4"
+    }
+  ],
+  "events": []
+}

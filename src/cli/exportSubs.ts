@@ -1,7 +1,7 @@
-import { existsSync, readdirSync } from 'node:fs';
+
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { synthesize } from '../media/voice/VoiceProvider.js';
+import { sceneVoice } from '../media/voice/VoiceProvider.js';
 import type { StillsSpec } from '../media/assemble/types.js';
 
 /**
@@ -19,19 +19,18 @@ const arg = (n: string, d?: string) => {
 };
 const root = process.cwd();
 const specPath = path.resolve(root, arg('spec', '')!);
-const spec = JSON.parse((await readFile(specPath, 'utf8')).replace(/^﻿/, '')) as StillsSpec;
+const spec = JSON.parse((await readFile(specPath, 'utf8')).replace(/^﻿/, '')) as StillsSpec & { width?: number; height?: number };
 const voiceDir = path.join(path.dirname(path.resolve(root, spec.output)), '_voice');
-if (!existsSync(voiceDir) || readdirSync(voiceDir).length === 0) throw new Error(`no cached narration in ${voiceDir}; run voiceOnly first`);
 
 type W = { word: string; start: number; end: number };
 const cues: { start: number; end: number; text: string }[] = [];
 const sceneStarts: number[] = [];
 let cursor = 0;
 for (const [si, sc] of spec.scenes.entries()) {
-  const v = await synthesize(sc.text, voiceDir, spec.voice, true);
+  const v = await sceneVoice(sc, root, voiceDir, spec.voice, true);
   sceneStarts.push(cursor);
   // mirror the renderer's tight-open trim so cues stay in sync
-  const tight = !!spec.tightOpen && si === 0;
+  const tight = !!spec.tightOpen && si === 0 && !((spec.width ?? 0) > (spec.height ?? 1));
   const trim = tight ? Math.max(0, ((v.words as W[])[0]?.start ?? 0) - 0.03) : 0;
   const LEAD = tight ? 0.02 : LEAD0;
   const ws = (v.words as W[]).map((w) => ({ ...w, start: w.start - trim, end: w.end - trim }));

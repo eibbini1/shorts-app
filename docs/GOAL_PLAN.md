@@ -24,8 +24,8 @@ Support Shorts and long videos and allow subjects beyond luxury food.
 - Preserve the existing branch and uncommitted work.
 - Use D drive for the project to save C drive space.
 - Push verified work and this plan to the existing GitHub repository.
-- The user has a Mac available for generation. Its chip, unified memory and
-  access method are pending.
+- The user has an Apple M1 MacBook Pro with 16 GB unified memory.
+  macOS version and access to that machine remain pending.
 
 ## Verified implementation
 
@@ -269,7 +269,7 @@ restart.
 All 122 search-derived candidates now have a documented matched-title screen.
 The screen distinguishes food preparation, price comparisons, eating content,
 stylized animation, fantasy effects, tutorials and unrelated samples. This is a
-completed metadata triage pass, not 122 completed visual reviews. Five sampled
+completed metadata triage pass, not 122 completed visual reviews. Eight sampled
 visual reviews are recorded separately. The requested best 100 comparison and
 retention-based validation remain unfinished.
 
@@ -283,3 +283,212 @@ a separate consent step after the service is enabled; this has not been tested.
 The existing Data API connection remains usable for metadata snapshots.
 
 Reference https://developers.google.com/youtube/analytics/reference/reports/query
+
+Research integrity check on November 4 2026 confirmed 122 unique candidate
+channels, 122 documented metadata screens, 188 unique candidate videos and
+eight unique sampled visual reviews. Video channel references and review note
+paths passed consistency checks. These counts do not establish a completed
+best 100 ranking or an audience performance conclusion.
+
+## Worker startup recovery
+
+The watcher now catches an initial cycle failure and remains available for the
+next scheduled retry. One-time runs still fail on the same error. A real-process
+regression test starts with a missing episodes directory, creates it after the
+first discovery error, and confirms discovery is retried without restarting the
+worker. Existing worker exclusion remains covered.
+
+Verification for this recovery change: build and lint passed, all 95 tests in
+20 files passed, and npm audit --omit=dev reported zero vulnerabilities.
+
+## Upload recovery version check
+
+A resumed uploaded record now checks the local video digest before recovering
+a confirmed remote schedule. A changed render cannot be marked scheduled by
+that shortcut. The regression test confirms a review error, an unchanged upload
+journal and no additional insert, schedule update or remote status request.
+All seven publishing tests passed. No live uploads were changed by this test.
+
+On November 5, the Windows scheduled task and its Node process were verified live.
+The 07:15 UTC cycle verified all five local packs as current and reported five
+publishing version mismatches for review. This confirms the guard ran in the
+installed worker; it does not confirm the current state of the remote schedules.
+
+## BB production checkpoint
+
+On November 5, all 97 tests in 20 files passed at 06a5f4f. The app has opt-in
+portrait Food and Natural grades, source audio mixing, and hold mode for a
+single action without replaying the clip sound. Local renders verified these
+controls. See AUTOMATION.md for the BB editorial, publishing, and analytics
+workflow. Technical QA does not clear footage rights or prove audience lift.
+
+The Parmigiano private preview passed technical QA. Release needs original
+or cleared footage. The chocolate Short has AI-generated opening and reveal
+references, a private timing preview, and a Mac smoke test in
+BB_CHOCOLATE_SHELL_PRODUCTION.md. There is no verified generated motion on
+the M1 yet and neither Short has been uploaded.
+
+Next motion experiments: a locked macro with real spoon contact and falling
+shards; a rack focus from shell to filling; and a slow spoon lift with visible
+texture. Try native 1080x1920 export when source footage supports it; upscaling
+does not restore missing detail. Remotion motion blur is a candidate for
+animated titles, not subject movement. Mediabunny is a candidate for browser
+media editing, not a necessary replacement for the current FFmpeg renderer.
+Neither is a production dependency. The 100-channel study remains incomplete.
+
+References:
+- https://www.remotion.dev/docs/motion-blur/
+- https://mediabunny.dev/guide/converting-media-files
+- https://support.google.com/youtube/answer/1722171
+
+The portrait renderer now supports optional native 1080x1920 output, with
+scaled titles and captions. The default stays 720x1280. An isolated render
+with a hook, moving footage, hold, Food grade, and source audio passed decode
+and dimension verification; build and lint passed. See the agent quick start
+in AUTOMATION.md for all settings, defaults, and the safe testing workflow.
+
+On November 5 at 08:19 UTC, verify-live-run accepted all five rebuilt BB
+packs. The older watcher still reported stale inputs. After its cycle
+finished, a controlled restart loaded the current code. The first new cycle
+reported all five packs current and all five uploads needs-review because
+the render digests differ from the already uploaded versions. No duplicate
+upload or schedule change was made by that cycle.
+
+## Creation engines before the editor
+
+The renderer assembles supplied motion. The moving Chocolate Textures review
+cut used three Mixkit Free License clips and offline Kokoro af_heart. It
+rendered at 720x1280, about 30 seconds, and passed technical and motion QA.
+It is a different story from the gold-shell concept and has not been uploaded.
+Caption timings were estimated from the recorded takes and need listening
+review for word-level accuracy. Assets and private renders remain local.
+
+1. Generate matched reference images from a shot brief. Store the prompt,
+   model, input hashes and approved images. Check subject and lighting
+   continuity across the opening and reveal.
+2. Validate a real local image-to-video run on the M1. Start with the
+   chocolate spoon contact, fracture, and falling shard in one locked shot.
+   If it passes, generate the spoon-lift reveal. Run the existing smoke test
+   and inspect the full clip and frame strip.
+3. Integrate only after validating output: one job per shot, persisted inputs,
+   results and approval; reuse accepted takes and regenerate only the failed
+   shot. Feed accepted footage into the existing editor. Keep paid generation
+   behind approval and verify final motion, sound and caption sync before release.
+
+## Local AI creation milestone
+
+The next app workflow is topic suggestions, a complete timed scenario,
+approved reference images, generated motion clips, then the existing editor.
+Prefer local runtimes and maintained Node tools; do not upgrade unrelated
+packages or spend on a provider without approval.
+
+- Scenario: `node scripts/bb-local-scenario.mjs "your topic" draft-id`.
+  Start Ollama and install an approved local model, for example
+  `ollama pull qwen3:1.7b`. The command uses only the loopback endpoint.
+  It proposes five angles and one timed shot plan, with narration, image
+  prompts, subject motion, sound, and claims to check. Zod validates the
+  structure and the script checks the runtime. Output stays review-only.
+  The model is a starting candidate; evaluate writing quality before use.
+- Images: validate a no-cloud-node ComfyUI workflow on the M1 before
+  wiring it into the app. Pin a compatible model and workflow, save seeds
+  and prompts per shot, and review visual continuity. No local image
+  workflow has been verified yet.
+- Motion: validate the M1 LTX-MLX chocolate contact test before integrating
+  scene generation. Keep generated assets separate from the publish queue
+  until editorial and technical review pass.
+- Audio: Kokoro af_heart has run offline on Windows. The app already
+  accepts a recorded WAV and timings; keep scratch or unverified captions
+  separate from release assets.
+
+References: https://docs.ollama.com/capabilities/structured-outputs
+and https://docs.comfy.org/development/comfyui-server/comms_routes
+
+## Windows and Mac local generation implementation — 2026-11-06
+
+Windows is a first-class orchestration, editing and export target. It must also
+pass an actual local generative video test before that capability is complete.
+Verified Windows hardware is MX330 2 GB VRAM and approximately 8 GB system RAM.
+
+Implemented scripts/local-media.mjs hardware/service diagnostics, ComfyUI API
+workflow bindings, reference upload, persisted prompt IDs, input-hashed results,
+output hashes and exclusive job locks. An explicitly configured Mac ComfyUI
+worker can use the same interface. Added local-media-export.mjs to feed reviewed
+clips and aligned local narration into the existing editor.
+
+Build and two workflow-binding tests passed. No ComfyUI service is available,
+and Ollama has no models. Real generation, model selection/pinning, sampled peak
+memory, automatic Kokoro alignment, real interruption testing and a fresh
+30-second generated chocolate preview remain unfinished. See LOCAL_MEDIA.md
+for commands, setup, recovery details and acceptance requirements.
+
+### Mac bootstrap added
+
+Use bash scripts/setup-mac.sh from the repository, or npm run setup:mac when
+Node exists. It includes Homebrew/tool setup, isolated image/video runtimes,
+text/image/video model downloads and a Kokoro af_heart test. See MAC_HANDOFF.md.
+Bash syntax and Windows rejection pass. Actual Mac installation and media
+generation remain acceptance tasks.
+
+### Cross-topic scenario support
+
+Local scenarios accept brand, format and target duration for arbitrary topics.
+Shorts support 10–180 seconds and long videos 60–1800. Approved media export uses
+the landscape editor for long videos and preserves the selected brand.
+See LOCAL_SCENARIOS.md. Schema tests pass. Real inference and rendered quality
+still require model-backed acceptance runs.
+
+## Main goal acceptance checklist — activated November 6, 2026
+
+Complete the local Node app with local AI and role-based agents on Windows and
+Apple Silicon. Preserve content review, final publish approval and separate
+approval for paid services. Internet is required for downloads, research and
+YouTube operations. Update this checklist from actual evidence.
+
+- [ ] One-command setup verified on both machines, including model loading.
+- [ ] Separate BB, WorklessAI and custom channel profiles throughout the pipeline.
+- [ ] Local-model ideas and complete scenario JSON demonstrated for Shorts and long videos.
+- [ ] Source checks and catalog-based repetition checks for each channel.
+- [ ] Local reference images and genuine subject-moving clips verified visually.
+- [ ] Continuity, shot regeneration and prompt/model/seed provenance.
+- [ ] Offline af_heart narration, measured caption alignment and mixed sound.
+- [ ] Edited portrait and landscape exports, covers and measured duration.
+- [ ] Local planner/researcher/visual/editor/reviewer/publisher agents connected.
+- [ ] Persistent jobs, restart recovery and meaningful automated QA demonstrated.
+- [ ] Correct-channel approved publishing, scheduling and duplicate protection.
+- [ ] Authorized comment workflow and same-age performance comparisons.
+- [ ] Complete food Short and WorklessAI long video accepted through normal entrypoints.
+- [ ] Manual setup and operation reproduced from the GitHub checkout.
+
+Delivery policy: commit and push verified relevant changes to feature/hook-log
+after each completed work unit. Record unfinished acceptance checks explicitly.
+Keep secrets and private generated media outside Git. Model files are downloaded
+by setup, not committed. Mac evidence requires an actual Mac run.
+
+Immediate milestone: install the small local text model on Windows and run both
+food and WorklessAI scenarios through the real Ollama endpoint, then address
+generation failures before proceeding to visual-model integration.
+
+### Channel-aware local drafting
+
+Added explicit BB and WorklessAI profiles with audience, tone, visual style and
+separate catalogs, custom-profile loading and conflicting-brand rejection.
+Tests verify separate catalogs and malformed catalog handling. Publishing
+identity enforcement remains unfinished. The qwen3 download is live but slow;
+actual model-generated scenarios remain pending.
+
+### Local editorial review command
+
+Added scenario:review using existing variation logic. Reports bind to the input
+digest and include same-brand draft overlap, narration pacing warnings, unreadable
+drafts and unresolved claims. A synthetic CLI smoke test verified duplicate
+detection, cross-brand exclusion, timing warnings and factsVerified:false.
+TypeScript build passed. Automated source research and real-model generation
+remain pending; this report alone does not approve production or publishing.
+
+### Reusable offline narration verified
+
+scenario:narrate generated two actual af_heart chocolate takes with remote model
+fetching disabled. FFprobe measured 2.48 and 2.42 seconds. A second normal CLI run
+reused both audio files after checksum verification. Outputs stay in ignored
+storage. The input was a synthetic scenario fixture, not an Ollama-generated
+script. Word alignment, listening review and the final preview remain pending.

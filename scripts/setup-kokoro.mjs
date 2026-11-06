@@ -1,0 +1,10 @@
+import { KokoroTTS } from '../storage/tools/kokoro/node_modules/kokoro-js/dist/kokoro.js';
+import { env } from '../storage/tools/kokoro/node_modules/@huggingface/transformers/src/transformers.js';
+import path from 'node:path';
+import { mkdir } from 'node:fs/promises';
+env.cacheDir = path.resolve('storage/tools/kokoro/models');
+await mkdir('storage/setup', { recursive: true });
+const tts = await KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', { dtype: 'q8', device: 'cpu' });
+const audio = await tts.generate('Listen to the chocolate shell crack.', { voice: 'af_heart' });
+await audio.save('storage/setup/af-heart-test.wav');
+console.log('Kokoro af_heart sample saved to storage/setup/af-heart-test.wav');

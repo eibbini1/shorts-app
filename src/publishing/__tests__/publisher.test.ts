@@ -25,6 +25,33 @@ async function fixture() {
   return {root,api,file:path.join(root,'episodes/demo.pack.json')};
 }
 describe('scheduled uploads',()=>{
+  it('blocks identical video submitted under a different episode name',async()=>{
+    const f=await fixture();
+    try {
+      const api=f.api as unknown as youtube_v3.Youtube;
+      await publishPack(api,f.file,f.root);
+      const renamed=path.join(f.root,'episodes/renamed.pack.json');
+      await expect(publishPack(api,renamed,f.root)).rejects.toThrow('Identical video already recorded');
+      expect(f.api.videos.insert).toHaveBeenCalledTimes(1);
+      expect(Object.keys(await readUploadJournal(f.root))).toEqual(['episodes/demo.assemble.json']);
+    }finally{await rm(f.root,{recursive:true,force:true});}
+  });
+  it('requires review before recovering a schedule for a changed local video',async()=>{
+    const f=await fixture();
+    try {
+      const original=await publishPack(f.api as unknown as youtube_v3.Youtube,f.file,f.root);
+      const journal=await readUploadJournal(f.root);
+      journal['episodes/demo.assemble.json']={...original,phase:'uploaded',videoDigest:'old-upload-digest'};
+      await writeFile(path.join(f.root,'storage/automation/uploads.json'),JSON.stringify(journal));
+      f.api.videos.list.mockClear();
+      await expect(publishPack(f.api as unknown as youtube_v3.Youtube,f.file,f.root)).rejects.toBeInstanceOf(PublishingReviewRequiredError);
+      expect(f.api.videos.list).not.toHaveBeenCalled();
+      expect(f.api.videos.insert).toHaveBeenCalledTimes(1);
+      expect(f.api.videos.update).toHaveBeenCalledTimes(1);
+      expect(await readUploadJournal(f.root)).toEqual(journal);
+    }finally{await rm(f.root,{recursive:true,force:true});}
+  });
+
   it('rejects a changed local video after an upload is scheduled', async () => {
     const { root, api, file } = await fixture();
     try {
