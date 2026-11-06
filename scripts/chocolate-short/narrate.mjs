@@ -10,11 +10,12 @@ env.allowRemoteModels = false;
 await mkdir(out, { recursive: true });
 
 const scenes = [
-  { text: 'The gold is only the beginning. What is hiding beneath this chocolate shell?', caption: 'WHAT IS INSIDE?', visual: 'motion' },
-  { text: 'The spoon moves closer. One gentle touch, and the moment changes.', caption: 'WAIT FOR IT', visual: 'opening' },
-  { text: 'Now look inside. Dark chocolate opens around a soft pistachio center.', caption: 'THE REVEAL', visual: 'reveal' },
-  { text: 'A bright ribbon of raspberry runs through the middle. Crisp, creamy, and a little tart.', caption: 'PISTACHIO + RASPBERRY', visual: 'reveal-detail' },
-  { text: 'One spoonful brings all three layers together. Which part would you taste first?', caption: 'YOUR FIRST BITE?', visual: 'reveal-spoon' },
+  { text: 'A golden shell. One spoon. Watch what happens inside.', caption: 'WATCH CLOSELY', visual: 'approach' },
+  { text: 'The shell breaks. Pistachio cream stretches as the spoon lifts.', caption: 'PISTACHIO CENTER', visual: 'lift' },
+  { text: 'Then the raspberry center brings a bright, tart surprise.', caption: 'RASPBERRY REVEAL', visual: 'ribbon' },
+  { text: 'Watch the layers fold together: crisp chocolate, cream, and fruit.', caption: 'THREE TEXTURES', visual: 'scoop' },
+  { text: 'One glossy bite carries all three textures toward you.', caption: 'THE PERFECT BITE', visual: 'hero' },
+  { text: 'Tart raspberry balances rich pistachio and dark chocolate.', caption: 'TART BALANCES RICH', visual: 'finish' },
 ];
 
 const tts = await KokoroTTS.from_pretrained('onnx-community/Kokoro-82M-v1.0-ONNX', { dtype: 'q8', device: 'cpu' });

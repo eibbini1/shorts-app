@@ -1,10 +1,10 @@
 # Make the 30-second chocolate Short on the Mac
 
-This local preview uses the existing LTX chocolate motion test, the two bundled
-chocolate images, offline Kokoro narration, FFmpeg, and an original 96 BPM rhythm
-and sound effects synthesized by the project. It makes a 720 × 1280, 24 fps,
-30-second H.264/AAC MP4 and a contact sheet for review. It does not call a paid
-generation service or download chart music.
+This video uses six connected local LTX motion clips of one chocolate dessert, offline
+Kokoro narration, FFmpeg, and an original 96 BPM rhythm and sound effects made
+by the project. It makes a 720 × 1280, 24 fps, 30-second H.264/AAC MP4 and a
+contact sheet for review. The final line explains how tart raspberry balances
+rich pistachio and chocolate. It does not call a paid generation service.
 
 ## One-time setup
 
@@ -14,20 +14,19 @@ From the repository root on the Apple Silicon Mac:
 npm run setup:mac
 ```
 
-The motion source must already exist at `storage/setup/chocolate-motion-smoke.mp4`.
-If missing, make it with:
-
-```sh
-npm run test:motion:mac -- "$PWD/assets/demo/chocolate-shell/opening.png" \
-  "The chocolate shell slowly cracks open, revealing the filling; natural macro motion" \
-  "$PWD/storage/setup/chocolate-motion-smoke.mp4"
-```
+The opening and reveal images are included under `assets/demo/chocolate-shell/`.
 
 ## Generate and review
 
 ```sh
 npm run make:chocolate:mac
 ```
+
+The first run generates six connected 4-second LTX shots from the opening and
+reveal reference images. On a 16 GB Apple Silicon Mac, allow roughly 30 minutes
+for model generation. The files are cached under
+`storage/chocolate-short-local/motion`, so later renders reuse them. You can
+generate just the shots with `npm run chocolate:motion:mac`.
 
 The command prints a timestamped MP4 path under `storage/chocolate-short-local`.
 It also writes a matching `.review.png` contact sheet. To choose another output:
@@ -49,11 +48,11 @@ CHOCOLATE_MUSIC_MODE=none npm run make:chocolate:mac
 
 ## Music and visual limits
 
-The background rhythm is original, made locally without samples. The spoon moves
-in the opening LTX clip. Later shots use controlled moves over the existing
-reference images; the actual shell fracture was not captured as video. This is
-a complete preview, with a clear still-image reveal, rather than a claim that
-the shell cracked naturally in motion.
+The background rhythm is original, made locally without samples. Every visual
+section in this version comes from LTX motion footage. The clip sequence is
+generated from the final frame of the previous shot to keep the dessert, plate,
+lighting, and spoon connected. Review the output because local generative video
+can still introduce small changes between shots or unrealistic food motion.
 
 For a chart song that is currently trending on YouTube, select it using YouTube's
 Shorts audio picker when uploading. Do not embed a downloaded copy into the MP4:

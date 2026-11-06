@@ -1,4 +1,4 @@
-"""Render the free local 30-second chocolate preview from reviewed assets."""
+"""Render a 30-second chocolate Short entirely from local LTX motion clips."""
 
 import json
 import os
@@ -9,12 +9,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 WORK = Path(os.environ.get('CHOCOLATE_WORK_DIR', ROOT / 'storage/chocolate-short-local')).resolve()
 OUT = Path(os.environ.get('CHOCOLATE_OUTPUT', WORK / 'chocolate-short-30s.mp4')).resolve()
-OPENING = ROOT / 'assets/demo/chocolate-shell/opening.png'
-REVEAL = ROOT / 'assets/demo/chocolate-shell/reveal.png'
-MOTION = ROOT / 'storage/setup/chocolate-motion-smoke.mp4'
+MOTION_DIR = ROOT / 'storage/chocolate-short-local/motion'
 FPS = 24
-FRAMES = [138, 136, 150, 151, 145]
+FRAMES = [120] * 6
 assert sum(FRAMES) == 720
+CLIPS = [MOTION_DIR / f'{name}.mp4' for name in
+         ('crack-to-reveal', 'lift', 'ribbon', 'scoop', 'hero', 'finish')]
+CLIP_FRAMES = [120] * 6
+assert sum(CLIP_FRAMES) == 720
 
 
 def run(*args):
@@ -22,18 +24,32 @@ def run(*args):
     subprocess.run([str(x) for x in args], check=True)
 
 
-def video_segment(source, frames, destination, size, start_x, drift_x, start_y, drift_y):
-    width, height = size
+def motion_segment(source, frames, destination):
+    probe = json.loads(subprocess.check_output([
+        'ffprobe', '-v', 'error', '-select_streams', 'v:0',
+        '-show_entries', 'stream=nb_frames,r_frame_rate', '-of', 'json', str(source),
+    ]))['streams'][0]
+    if probe['r_frame_rate'] != '24/1':
+        raise RuntimeError(f'Expected 24 fps LTX clip: {source}')
+    source_frames = int(probe['nb_frames'])
+    # minterpolate drops the final two timestamps; extend the input slightly.
+    speed = (frames + 2) / source_frames
     vf = (
-        f'scale={width}:{height},'
-        f"crop=720:1280:x='{start_x}+({drift_x})*n/{max(1,frames-1)}':"
-        f"y='{start_y}+({drift_y})*n/{max(1,frames-1)}',"
+        f'setpts={speed:.9f}*(PTS-STARTPTS),'
+        f'minterpolate=fps={FPS}:mi_mode=mci:mc_mode=aobmc:me_mode=bidir,'
+        'scale=768:1280,crop=720:1280:24:0,'
         'eq=contrast=1.04:saturation=1.06:gamma=1.02,setsar=1,format=yuv420p'
     )
-    run('ffmpeg', '-y', '-hide_banner', '-loglevel', 'error', '-loop', '1',
-        '-framerate', FPS, '-i', source, '-vf', vf, '-frames:v', frames,
-        '-an', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', 18,
-        '-r', FPS, '-pix_fmt', 'yuv420p', destination)
+    run('ffmpeg', '-y', '-hide_banner', '-loglevel', 'error', '-i', source,
+        '-vf', vf, '-frames:v', frames, '-an', '-c:v', 'libx264',
+        '-preset', 'veryfast', '-crf', 18, '-r', FPS, '-pix_fmt', 'yuv420p',
+        destination)
+    out_probe = json.loads(subprocess.check_output([
+        'ffprobe', '-v', 'error', '-select_streams', 'v:0',
+        '-show_entries', 'stream=nb_frames', '-of', 'json', str(destination),
+    ]))['streams'][0]
+    if int(out_probe['nb_frames']) != frames:
+        raise RuntimeError(f'Wrong frame count in {destination}')
 
 
 def ass_time(seconds):
@@ -100,26 +116,11 @@ def main():
     scenes = json.loads((WORK / 'scenes.json').read_text())
     segments = []
 
-    tease = WORK / 'v00-gold-tease.mp4'
-    video_segment(OPENING, 12, tease, (1250, 2210), 0, 8, 600, 3)
-    segments.append(tease)
-    motion_piece = WORK / 'v00-motion.mp4'
-    run('ffmpeg', '-y', '-hide_banner', '-loglevel', 'error', '-i', MOTION,
-        '-vf', 'fps=24,scale=768:1280,crop=720:1280:24:0,eq=contrast=1.04:saturation=1.06,format=yuv420p',
-        '-frames:v', 49, '-an', '-c:v', 'libx264', '-preset', 'veryfast',
-        '-crf', 18, '-r', FPS, '-pix_fmt', 'yuv420p', motion_piece)
-    segments.append(motion_piece)
-
-    still_specs = [
-        (OPENING, FRAMES[0] - 49 - 12, (800, 1417), 28, 24, 48, 20),
-        (OPENING, FRAMES[1], (870, 1540), 100, -55, 130, -65),
-        (REVEAL, FRAMES[2], (800, 1417), 38, 25, 100, 20),
-        (REVEAL, FRAMES[3], (1080, 1912), 125, 100, 450, 80),
-        (REVEAL, FRAMES[4], (1080, 1912), 310, -75, 450, 45),
-    ]
-    for index, spec in enumerate(still_specs, 1):
-        output = WORK / f'v{index:02d}-still.mp4'
-        video_segment(*spec[:2], output, *spec[2:])
+    for index, (source, frames) in enumerate(zip(CLIPS, CLIP_FRAMES)):
+        if not source.is_file():
+            raise SystemExit(f'Missing motion clip: {source}. Run npm run chocolate:motion:mac first.')
+        output = WORK / f'v{index:02d}-motion.mp4'
+        motion_segment(source, frames, output)
         segments.append(output)
 
     (WORK / 'video-list.txt').write_text(''.join(f"file '{p}'\n" for p in segments))
