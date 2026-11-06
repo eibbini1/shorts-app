@@ -484,3 +484,11 @@ drafts and unresolved claims. A synthetic CLI smoke test verified duplicate
 detection, cross-brand exclusion, timing warnings and factsVerified:false.
 TypeScript build passed. Automated source research and real-model generation
 remain pending; this report alone does not approve production or publishing.
+
+### Reusable offline narration verified
+
+scenario:narrate generated two actual af_heart chocolate takes with remote model
+fetching disabled. FFprobe measured 2.48 and 2.42 seconds. A second normal CLI run
+reused both audio files after checksum verification. Outputs stay in ignored
+storage. The input was a synthetic scenario fixture, not an Ollama-generated
+script. Word alignment, listening review and the final preview remain pending.

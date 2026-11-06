@@ -51,3 +51,20 @@ per second as a timing warning. Declared claims remain source-review-required.
 Unreadable drafts are reported. This command does not fetch sources, approve
 facts or approve publication. Review the full script for claims omitted by the
 model. Regenerate the report after editing the scenario.
+
+## Offline narration
+
+    npm run scenario:narrate -- drafts/generated/ID.local-scenario.json
+
+Run setup first to populate the Kokoro model cache. This command disables remote
+model fetching and generates af_heart takes at speed 1. Each take is keyed by
+text and voice settings. Existing audio must match its saved checksum before
+reuse. FFprobe measures actual duration and the manifest flags overruns.
+Locks prevent concurrent writers; after an abrupt kill verify the old process
+has stopped before removing a stale lock. A normal failure releases the lock.
+
+Outputs are in storage/narration. Caption alignment remains required and no word
+timestamps are fabricated. Use aligned narration in the approved media manifest.
+Takes over 450 characters require splitting before synthesis. A full long-form
+script should use short narrated shots. The initial smoke test used two manually
+written chocolate lines; it does not establish text-model generation quality.
