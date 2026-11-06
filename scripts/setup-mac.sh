@@ -57,38 +57,10 @@ done
 [[ "$ready" == 1 ]] || { echo "Ollama failed to start. Inspect brew services info ollama."; exit 1; }
 ollama pull qwen3:1.7b
 
-# Models are saved outside Git. Download only the weights used by the Mac
-# distilled image-to-video smoke test; the full pack also contains dev and
-# older distilled transformers, LoRAs, and unused upscalers (tens of GB).
+# Models are saved outside Git. The large transformer uses restart-safe chunks
+# with byte progress; other selected files use the Hugging Face cache.
 export HF_HOME="$ROOT/storage/models/huggingface"
-storage/tools/ComfyUI/.venv/bin/python - <<'PY'
-import json
-from pathlib import Path
-from huggingface_hub import HfApi, hf_hub_download, snapshot_download
-api = HfApi()
-record = {}
-image_repo = "stable-diffusion-v1-5/stable-diffusion-v1-5"
-video_repo = "dgrauet/ltx-2.3-mlx-q4"
-for repo in [image_repo, video_repo]:
-    record[repo] = api.model_info(repo).sha
-hf_hub_download(image_repo, "v1-5-pruned-emaonly.safetensors",
-    revision=record[image_repo], local_dir="storage/tools/ComfyUI/models/checkpoints")
-video_files = [
-    "config.json", "embedded_config.json", "quantize_config.json", "split_model.json",
-    "transformer-distilled-1.1.safetensors", "connector.safetensors",
-    "vae_encoder.safetensors", "vae_decoder.safetensors",
-    "spatial_upscaler_x2_v1_1.safetensors", "spatial_upscaler_x2_v1_1_config.json",
-    "audio_vae.safetensors", "vocoder.safetensors",
-]
-print("Downloading the 12 files required for the distilled Mac motion test.", flush=True)
-video_path = snapshot_download(video_repo, revision=record[video_repo],
-    allow_patterns=video_files, max_workers=2)
-missing = [name for name in video_files if not (Path(video_path) / name).is_file()]
-if missing:
-    raise RuntimeError(f"LTX snapshot is missing required files: {', '.join(missing)}")
-Path("storage/setup/ltx-model-dir.txt").write_text(video_path + "\n")
-Path("storage/setup/model-revisions.json").write_text(json.dumps(record, indent=2))
-PY
+storage/tools/ComfyUI/.venv/bin/python scripts/download-mac-model.py
 storage/tools/ltx-2-mlx/.venv/bin/ltx-2-mlx info --model "$(cat storage/setup/ltx-model-dir.txt)" > storage/setup/ltx-model-info.txt
 mkdir -p storage/tools/kokoro
 if [[ ! -f storage/tools/kokoro/package.json ]]; then

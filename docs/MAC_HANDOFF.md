@@ -127,7 +127,9 @@ the LTX 2.3 q4 files needed for the distilled motion test, and Kokoro 1.2.1
 with an af_heart test recording. The first motion test also downloads the
 separate Gemma text encoder used by LTX. Model files remain under ignored
 `storage/`; `storage/setup/ltx-model-dir.txt` points the test at the selected
-local snapshot, so the CLI does not download the full LTX repository again.
+local model directory, so the CLI does not download the full LTX repository again.
+The large transformer is downloaded in verified, restart-safe chunks with a
+byte-based progress display; rerunning setup reuses completed chunks.
 Allow at least 50 GiB free disk as a conservative setup budget. Downloads require
 internet and can take considerable time. Runtime source revisions and model
 revisions are recorded under storage/setup. Existing runtime checkouts are reused.
