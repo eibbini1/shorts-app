@@ -402,3 +402,21 @@ packages or spend on a provider without approval.
 
 References: https://docs.ollama.com/capabilities/structured-outputs
 and https://docs.comfy.org/development/comfyui-server/comms_routes
+
+## Windows and Mac local generation implementation — 2026-11-06
+
+Windows is a first-class orchestration, editing and export target. It must also
+pass an actual local generative video test before that capability is complete.
+Verified Windows hardware is MX330 2 GB VRAM and approximately 8 GB system RAM.
+
+Implemented scripts/local-media.mjs hardware/service diagnostics, ComfyUI API
+workflow bindings, reference upload, persisted prompt IDs, input-hashed results,
+output hashes and exclusive job locks. An explicitly configured Mac ComfyUI
+worker can use the same interface. Added local-media-export.mjs to feed reviewed
+clips and aligned local narration into the existing editor.
+
+Build and two workflow-binding tests passed. No ComfyUI service is available,
+and Ollama has no models. Real generation, model selection/pinning, sampled peak
+memory, automatic Kokoro alignment, real interruption testing and a fresh
+30-second generated chocolate preview remain unfinished. See LOCAL_MEDIA.md
+for commands, setup, recovery details and acceptance requirements.
