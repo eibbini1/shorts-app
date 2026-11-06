@@ -28,7 +28,9 @@ done
 export PATH="$(brew --prefix node@24)/bin:$PATH"
 npm ci
 npm run build
-uv python install 3.12
+if ! uv python find 3.12 >/dev/null 2>&1; then
+  uv python install 3.12
+fi
 
 # Keep local runtimes isolated and reuse the exact checkout on repeat runs.
 checkout() {
