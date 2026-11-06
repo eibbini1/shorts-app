@@ -475,3 +475,12 @@ separate catalogs, custom-profile loading and conflicting-brand rejection.
 Tests verify separate catalogs and malformed catalog handling. Publishing
 identity enforcement remains unfinished. The qwen3 download is live but slow;
 actual model-generated scenarios remain pending.
+
+### Local editorial review command
+
+Added scenario:review using existing variation logic. Reports bind to the input
+digest and include same-brand draft overlap, narration pacing warnings, unreadable
+drafts and unresolved claims. A synthetic CLI smoke test verified duplicate
+detection, cross-brand exclusion, timing warnings and factsVerified:false.
+TypeScript build passed. Automated source research and real-model generation
+remain pending; this report alone does not approve production or publishing.

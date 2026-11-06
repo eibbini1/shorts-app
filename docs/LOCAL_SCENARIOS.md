@@ -39,3 +39,15 @@ Profiles supply audience, tone, visual style and their own catalog path. Copy
 one to create another channel. A conflicting --brand is rejected. Profiles and
 settings are saved with the draft for review. Profiles currently govern drafting;
 YouTube credential/channel enforcement remains a separate integration milestone.
+
+## Review a generated scenario
+
+    npm run scenario:review -- drafts/generated/ID.local-scenario.json
+
+The review report is saved under storage/reviews using a SHA-256 digest of the
+input. It compares other local scenario drafts of the same brand, reusing the
+existing hook/closing-line repetition checks. It flags narration above 3.2 words
+per second as a timing warning. Declared claims remain source-review-required.
+Unreadable drafts are reported. This command does not fetch sources, approve
+facts or approve publication. Review the full script for claims omitted by the
+model. Regenerate the report after editing the scenario.
