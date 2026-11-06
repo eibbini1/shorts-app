@@ -33,7 +33,11 @@
     "automate:watch": "tsx src/cli/automate.ts --watch",
     "draft-shorts": "tsx src/cli/draftShorts.ts",
     "approve-draft": "tsx src/cli/approveDraft.ts",
-    "channel-snapshot": "tsx src/cli/channelSnapshot.ts"
+    "channel-snapshot": "tsx src/cli/channelSnapshot.ts",
+    "setup:mac": "bash scripts/setup-mac.sh",
+    "start:comfy:mac": "bash scripts/mac-runtime.sh comfy",
+    "test:motion:mac": "bash scripts/mac-runtime.sh motion",
+    "doctor:local": "node scripts/local-media.mjs doctor"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.65",

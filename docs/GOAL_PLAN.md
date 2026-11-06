@@ -420,3 +420,11 @@ and Ollama has no models. Real generation, model selection/pinning, sampled peak
 memory, automatic Kokoro alignment, real interruption testing and a fresh
 30-second generated chocolate preview remain unfinished. See LOCAL_MEDIA.md
 for commands, setup, recovery details and acceptance requirements.
+
+### Mac bootstrap added
+
+Use bash scripts/setup-mac.sh from the repository, or npm run setup:mac when
+Node exists. It includes Homebrew/tool setup, isolated image/video runtimes,
+text/image/video model downloads and a Kokoro af_heart test. See MAC_HANDOFF.md.
+Bash syntax and Windows rejection pass. Actual Mac installation and media
+generation remain acceptance tasks.

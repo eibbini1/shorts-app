@@ -109,3 +109,36 @@ command. After creating the output directory, an example is
 The existing render-demo command accepts a local audio file and matching text.
 Check the local speech timing, pronunciation and caption alignment. The say
 commands have not been run from this Windows environment.
+
+## One-command Apple Silicon setup
+
+From the cloned repository folder in Mac Terminal, run
+
+    bash scripts/setup-mac.sh
+
+If Node is already available, the equivalent command is
+
+    npm run setup:mac
+
+The installer bootstraps Homebrew if needed (its installer may request your Mac
+password), Node 24, FFmpeg, uv, Git and Ollama. It installs project dependencies,
+isolated ComfyUI and LTX-MLX runtimes, qwen3:1.7b, a Stable Diffusion 1.5 checkpoint,
+the LTX 2.3 q4 model, and Kokoro 1.2.1 with an af_heart test recording.
+Allow at least 50 GiB free disk as a conservative setup budget. Downloads require
+internet and can take considerable time. Runtime source revisions and model
+revisions are recorded under storage/setup. Existing runtime checkouts are reused.
+The script is rerunnable after an interrupted installation.
+
+    npm run doctor:local
+    npm run start:comfy:mac
+    npm run test:motion:mac -- /absolute/reference.png "The shell cracks and crumbs fall" /absolute/test.mp4
+
+Run the motion test in another Terminal after stopping ComfyUI to free memory.
+The start command binds ComfyUI to localhost. A remote Windows worker requires
+a separately configured reachable service. The downloaded image checkpoint is
+a baseline candidate; image workflow selection and visual review are still needed.
+LTX generation may download additional supporting assets on its first run.
+Generated model caches and installation logs remain in ignored storage.
+
+Shell syntax and the non-Mac rejection were checked on Windows. Installation,
+model loading and generation on the actual M1 have not yet been tested.
