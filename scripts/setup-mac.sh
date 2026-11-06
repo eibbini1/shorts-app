@@ -28,7 +28,9 @@ done
 export PATH="$(brew --prefix node@24)/bin:$PATH"
 npm ci
 npm run build
-uv python install 3.12
+if ! uv python find 3.12 >/dev/null 2>&1; then
+  uv python install 3.12
+fi
 
 # Keep local runtimes isolated and reuse the exact checkout on repeat runs.
 checkout() {
@@ -55,23 +57,11 @@ done
 [[ "$ready" == 1 ]] || { echo "Ollama failed to start. Inspect brew services info ollama."; exit 1; }
 ollama pull qwen3:1.7b
 
-# Models are saved outside Git. Hugging Face downloads resume on rerun.
+# Models are saved outside Git. The large transformer uses restart-safe chunks
+# with byte progress; other selected files use the Hugging Face cache.
 export HF_HOME="$ROOT/storage/models/huggingface"
-storage/tools/ComfyUI/.venv/bin/python - <<'PY'
-import json
-from pathlib import Path
-from huggingface_hub import HfApi, hf_hub_download, snapshot_download
-api = HfApi()
-record = {}
-image_repo = "stable-diffusion-v1-5/stable-diffusion-v1-5"
-video_repo = "dgrauet/ltx-2.3-mlx-q4"
-for repo in [image_repo, video_repo]:
-    record[repo] = api.model_info(repo).sha
-hf_hub_download(image_repo, "v1-5-pruned-emaonly.safetensors",
-    revision=record[image_repo], local_dir="storage/tools/ComfyUI/models/checkpoints")
-snapshot_download(video_repo, revision=record[video_repo])
-Path("storage/setup/model-revisions.json").write_text(json.dumps(record, indent=2))
-PY
+storage/tools/ComfyUI/.venv/bin/python scripts/download-mac-model.py
+storage/tools/ltx-2-mlx/.venv/bin/ltx-2-mlx info --model "$(cat storage/setup/ltx-model-dir.txt)" > storage/setup/ltx-model-info.txt
 mkdir -p storage/tools/kokoro
 if [[ ! -f storage/tools/kokoro/package.json ]]; then
   printf '{"private":true,"type":"module"}\n' > storage/tools/kokoro/package.json
