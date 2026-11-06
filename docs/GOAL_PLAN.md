@@ -436,3 +436,34 @@ Shorts support 10–180 seconds and long videos 60–1800. Approved media export
 the landscape editor for long videos and preserves the selected brand.
 See LOCAL_SCENARIOS.md. Schema tests pass. Real inference and rendered quality
 still require model-backed acceptance runs.
+
+## Main goal acceptance checklist — activated November 6, 2026
+
+Complete the local Node app with local AI and role-based agents on Windows and
+Apple Silicon. Preserve content review, final publish approval and separate
+approval for paid services. Internet is required for downloads, research and
+YouTube operations. Update this checklist from actual evidence.
+
+- [ ] One-command setup verified on both machines, including model loading.
+- [ ] Separate BB, WorklessAI and custom channel profiles throughout the pipeline.
+- [ ] Local-model ideas and complete scenario JSON demonstrated for Shorts and long videos.
+- [ ] Source checks and catalog-based repetition checks for each channel.
+- [ ] Local reference images and genuine subject-moving clips verified visually.
+- [ ] Continuity, shot regeneration and prompt/model/seed provenance.
+- [ ] Offline af_heart narration, measured caption alignment and mixed sound.
+- [ ] Edited portrait and landscape exports, covers and measured duration.
+- [ ] Local planner/researcher/visual/editor/reviewer/publisher agents connected.
+- [ ] Persistent jobs, restart recovery and meaningful automated QA demonstrated.
+- [ ] Correct-channel approved publishing, scheduling and duplicate protection.
+- [ ] Authorized comment workflow and same-age performance comparisons.
+- [ ] Complete food Short and WorklessAI long video accepted through normal entrypoints.
+- [ ] Manual setup and operation reproduced from the GitHub checkout.
+
+Delivery policy: commit and push verified relevant changes to feature/hook-log
+after each completed work unit. Record unfinished acceptance checks explicitly.
+Keep secrets and private generated media outside Git. Model files are downloaded
+by setup, not committed. Mac evidence requires an actual Mac run.
+
+Immediate milestone: install the small local text model on Windows and run both
+food and WorklessAI scenarios through the real Ollama endpoint, then address
+generation failures before proceeding to visual-model integration.
