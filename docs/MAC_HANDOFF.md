@@ -60,10 +60,20 @@ the bundled reference images. Stop ComfyUI before a long LTX render to leave
 memory for the motion model. Do not claim the draft, still image, and chocolate
 recipe are one general single-command pipeline yet.
 
-The new old-man-and-cat Short is **unfinished** at this handoff: five of six
-motion clips are saved locally in this Codex task's `work/cat-short/motion`
-folder, along with the Kokoro line and original soundtrack. The final LTX shot,
-montage, and full quality review are the next creative tasks.
+The old-man-and-cat Short was subsequently exported in this Codex task as
+`outputs/old-man-cat-30s-local-tools.mp4`. It has six LTX motion clips, one
+Kokoro line, an original local soundtrack, and no subtitle stream. The final
+dozing shot uses a local ComfyUI/SD 1.5 reference variation. FFprobe verified
+30.000 seconds, 720×1280, 24 fps, 720 video frames, H.264 video and AAC audio;
+FFmpeg decoded it without errors. A contact sheet was reviewed. The user should
+still watch the full video for acting, continuity, and sound before publication.
+
+Its first five shot reference images, and the source image used for the final
+ComfyUI variation, originated from Codex image generation. Motion, the final
+reference variation, speech, soundtrack synthesis, and montage ran locally on
+the Mac. The render therefore demonstrates all installed local production
+tools, but the visual reference assets are not fully local in origin. Generated
+media remains outside Git, in ignored storage or the Codex task outputs.
 
 ## Historical setup notes
 

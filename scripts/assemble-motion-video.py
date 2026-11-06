@@ -61,6 +61,8 @@ def main():
         destination = work / f'segment-{index:03d}.mp4'
         vf = (f'setpts={speed:.9f}*(PTS-STARTPTS),'
               f'minterpolate=fps={FPS}:mi_mode=mci:mc_mode=aobmc:me_mode=bidir,'
+              f'tpad=stop_mode=clone:stop_duration=0.125,'
+              f'trim=end_frame={frames},setpts=PTS-STARTPTS,'
               f'scale={width}:{height}:force_original_aspect_ratio=increase,'
               f'crop={width}:{height},setsar=1,format=yuv420p')
         print(f'Assembling shot {index + 1}/{len(shots)}: {source.name}', flush=True)
