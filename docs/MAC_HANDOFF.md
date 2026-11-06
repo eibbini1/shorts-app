@@ -123,13 +123,13 @@ If Node is already available, the equivalent command is
 The installer bootstraps Homebrew if needed (its installer may request your Mac
 password), Node 24, FFmpeg, uv, Git and Ollama. It installs project dependencies,
 isolated ComfyUI and LTX-MLX runtimes, qwen3:1.7b, a Stable Diffusion 1.5 checkpoint,
-the LTX 2.3 q4 files needed for the distilled motion test, and Kokoro 1.2.1
-with an af_heart test recording. The first motion test also downloads the
-separate Gemma text encoder used by LTX. Model files remain under ignored
+the LTX 2.3 q4 files and Gemma text encoder needed for the distilled motion
+test, and Kokoro 1.2.1 with an af_heart test recording. Model files remain under ignored
 `storage/`; `storage/setup/ltx-model-dir.txt` points the test at the selected
 local model directory, so the CLI does not download the full LTX repository again.
-The large transformer is downloaded in verified, restart-safe chunks with a
-byte-based progress display; rerunning setup reuses completed chunks.
+The large transformer and Gemma model shards are downloaded in verified,
+restart-safe chunks with a byte-based progress display; rerunning setup reuses
+completed chunks.
 Allow at least 50 GiB free disk as a conservative setup budget. Downloads require
 internet and can take considerable time. Runtime source revisions and model
 revisions are recorded under storage/setup. Existing runtime checkouts are reused.

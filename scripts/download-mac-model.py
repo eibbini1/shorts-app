@@ -12,7 +12,9 @@ from huggingface_hub import HfApi, hf_hub_download, snapshot_download
 
 IMAGE_REPO = "stable-diffusion-v1-5/stable-diffusion-v1-5"
 VIDEO_REPO = "dgrauet/ltx-2.3-mlx-q4"
+GEMMA_REPO = "mlx-community/gemma-3-12b-it-4bit"
 TRANSFORMER = "transformer-distilled-1.1.safetensors"
+GEMMA_WEIGHTS = ("model-00001-of-00002.safetensors", "model-00002-of-00002.safetensors")
 VIDEO_FILES = (
     "config.json", "embedded_config.json", "quantize_config.json", "split_model.json",
     TRANSFORMER, "connector.safetensors", "vae_encoder.safetensors",
@@ -131,6 +133,7 @@ def main() -> None:
     api = HfApi()
     image = api.model_info(IMAGE_REPO)
     video = api.model_info(VIDEO_REPO, files_metadata=True)
+    gemma = api.model_info(GEMMA_REPO, files_metadata=True)
     revision = video.sha
     metadata = {item.rfilename: item for item in video.siblings}
     missing = set(VIDEO_FILES) - metadata.keys()
@@ -158,11 +161,36 @@ def main() -> None:
         raise RuntimeError(f"No SHA256 metadata for {TRANSFORMER}")
     download_resumable(VIDEO_REPO, revision, TRANSFORMER, weight.lfs.size,
                        weight.lfs.sha256, model_dir / TRANSFORMER)
+
+    gemma_metadata = {item.rfilename: item for item in gemma.siblings}
+    if not set(GEMMA_WEIGHTS).issubset(gemma_metadata):
+        raise RuntimeError("Gemma repository is missing expected model shards")
+    gemma_small = [name for name in gemma_metadata if name not in GEMMA_WEIGHTS]
+    gemma_cached = Path(snapshot_download(GEMMA_REPO, revision=gemma.sha,
+                                          allow_patterns=gemma_small, max_workers=2))
+    gemma_dir = Path("storage/models/gemma-text") / gemma.sha
+    gemma_dir.mkdir(parents=True, exist_ok=True)
+    for name in gemma_small:
+        source = gemma_cached / name
+        if not source.is_file():
+            raise RuntimeError(f"Gemma snapshot is missing {name}")
+        target = gemma_dir / name
+        if target.is_symlink() or target.is_file():
+            target.unlink()
+        target.symlink_to(source.resolve())
+    for name in GEMMA_WEIGHTS:
+        weight = gemma_metadata[name]
+        if weight.lfs is None:
+            raise RuntimeError(f"No SHA256 metadata for {name}")
+        download_resumable(GEMMA_REPO, gemma.sha, name, weight.lfs.size,
+                           weight.lfs.sha256, gemma_dir / name)
+
     Path("storage/setup/ltx-model-dir.txt").write_text(str(model_dir.resolve()) + "\n")
+    Path("storage/setup/gemma-model-dir.txt").write_text(str(gemma_dir.resolve()) + "\n")
     Path("storage/setup/model-revisions.json").write_text(json.dumps({
-        IMAGE_REPO: image.sha, VIDEO_REPO: revision,
+        IMAGE_REPO: image.sha, VIDEO_REPO: revision, GEMMA_REPO: gemma.sha,
     }, indent=2) + "\n")
-    print(f"Mac motion model ready: {model_dir}", flush=True)
+    print(f"Mac motion models ready: {model_dir} and {gemma_dir}", flush=True)
 
 
 if __name__ == "__main__":
