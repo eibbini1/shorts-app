@@ -1,0 +1,8 @@
+{
+  "id": "worklessai",
+  "brand": "WorklessAI",
+  "audience": "Adults and small business owners learning practical AI productivity",
+  "tone": "Clear, helpful and lightly humorous; demonstrate claims",
+  "visualStyle": "Readable screen demonstrations, colourful diagrams and clear before-and-after comparisons",
+  "catalogFile": "storage/analytics/worklessai-latest.json"
+}

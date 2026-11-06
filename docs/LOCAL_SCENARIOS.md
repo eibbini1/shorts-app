@@ -29,3 +29,13 @@ Codex skills do not execute inside Ollama. Reusable storytelling instructions
 are embedded in the prompt. Editorial research and approval remain separate.
 Tests cover food Shorts, a five-minute WorklessAI plan, invalid durations and
 workflow binding. Real inference is pending a downloaded local text model.
+
+## Explicit channel profiles
+
+    npm run draft:local -- "Inbox automation" inbox-profile --channel channels/worklessai.json --format long --seconds 300
+    npm run draft:local -- "Chocolate textures" chocolate-profile --channel channels/bb.json
+
+Profiles supply audience, tone, visual style and their own catalog path. Copy
+one to create another channel. A conflicting --brand is rejected. Profiles and
+settings are saved with the draft for review. Profiles currently govern drafting;
+YouTube credential/channel enforcement remains a separate integration milestone.

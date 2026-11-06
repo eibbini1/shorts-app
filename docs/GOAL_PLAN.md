@@ -467,3 +467,11 @@ by setup, not committed. Mac evidence requires an actual Mac run.
 Immediate milestone: install the small local text model on Windows and run both
 food and WorklessAI scenarios through the real Ollama endpoint, then address
 generation failures before proceeding to visual-model integration.
+
+### Channel-aware local drafting
+
+Added explicit BB and WorklessAI profiles with audience, tone, visual style and
+separate catalogs, custom-profile loading and conflicting-brand rejection.
+Tests verify separate catalogs and malformed catalog handling. Publishing
+identity enforcement remains unfinished. The qwen3 download is live but slow;
+actual model-generated scenarios remain pending.
