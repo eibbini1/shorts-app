@@ -1,0 +1,12 @@
+{
+  "output": "storage/episodes/shortcutstack-business-tools-v2/ShortcutStack-AI-Tools-Refined.mp4",
+  "width": 1080,
+  "height": 1920,
+  "fps": 24,
+  "clips": [
+    {
+      "file": "storage/episodes/shortcutstack-business-tools-v2/edited.mp4"
+    }
+  ],
+  "events": []
+}

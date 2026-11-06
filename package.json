@@ -37,7 +37,9 @@
     "setup:mac": "bash scripts/setup-mac.sh",
     "start:comfy:mac": "bash scripts/mac-runtime.sh comfy",
     "test:motion:mac": "bash scripts/mac-runtime.sh motion",
-    "doctor:local": "node scripts/local-media.mjs doctor"
+    "doctor:local": "node scripts/local-media.mjs doctor",
+    "draft:local": "node scripts/bb-local-scenario.mjs",
+    "scenario:export": "node scripts/local-media-export.mjs"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.65",

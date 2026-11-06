@@ -428,3 +428,11 @@ Node exists. It includes Homebrew/tool setup, isolated image/video runtimes,
 text/image/video model downloads and a Kokoro af_heart test. See MAC_HANDOFF.md.
 Bash syntax and Windows rejection pass. Actual Mac installation and media
 generation remain acceptance tasks.
+
+### Cross-topic scenario support
+
+Local scenarios accept brand, format and target duration for arbitrary topics.
+Shorts support 10–180 seconds and long videos 60–1800. Approved media export uses
+the landscape editor for long videos and preserves the selected brand.
+See LOCAL_SCENARIOS.md. Schema tests pass. Real inference and rendered quality
+still require model-backed acceptance runs.
