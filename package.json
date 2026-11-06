@@ -41,7 +41,8 @@
     "draft:local": "node scripts/bb-local-scenario.mjs",
     "scenario:export": "node scripts/local-media-export.mjs",
     "scenario:review": "tsx src/cli/reviewScenario.ts",
-    "scenario:narrate": "node scripts/narrate-scenario.mjs"
+    "scenario:narrate": "node scripts/narrate-scenario.mjs",
+    "make:chocolate:mac": "bash scripts/chocolate-short-local.sh"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.65",
