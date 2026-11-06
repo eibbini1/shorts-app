@@ -14,10 +14,14 @@ def model_dir(name):
     override = os.environ.get(f'CHOCOLATE_{name.upper().replace("-", "_")}_DIR')
     if override:
         return Path(override).expanduser().resolve()
-    matches = sorted((ROOT / f'storage/models/{name}').glob('*'))
-    if not matches:
-        raise SystemExit(f'Missing {name} model. Run npm run setup:mac first.')
-    return matches[-1]
+    pointer = ROOT / ('storage/setup/ltx-model-dir.txt' if name == 'ltx-motion'
+                      else 'storage/setup/gemma-model-dir.txt')
+    if pointer.is_file():
+        selected = Path(pointer.read_text().strip())
+        if selected.is_dir():
+            return selected
+        raise SystemExit(f'Active {name} model is missing: {selected}')
+    raise SystemExit(f'Missing active {name} model pointer. Run npm run setup:mac first.')
 
 
 def run(args):

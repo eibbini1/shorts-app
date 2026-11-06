@@ -43,7 +43,8 @@
     "scenario:review": "tsx src/cli/reviewScenario.ts",
     "scenario:narrate": "node scripts/narrate-scenario.mjs",
     "make:chocolate:mac": "bash scripts/chocolate-short-local.sh",
-    "chocolate:motion:mac": "python3 scripts/chocolate-short/generate-motion.py"
+    "chocolate:motion:mac": "python3 scripts/chocolate-short/generate-motion.py",
+    "models:check:mac": "python3 scripts/models-status-mac.py"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.65",
