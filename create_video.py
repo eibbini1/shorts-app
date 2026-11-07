@@ -674,7 +674,8 @@ def main():
         command = ["npm", "run", "pipeline", "--", "--spec", SPEC_PATH]
         if os.environ.get("SHORTS_ALLOW_VOICE_SPEND") == "1":
             command.append("--allow-voice-spend")  # uncached ElevenLabs lines spend characters
-        result = subprocess.run(command, env=env, shell=True)
+        # A list with shell=True only works on Windows (npm is npm.cmd there); on macOS and Linux it would run bare "npm".
+        result = subprocess.run(command, env=env, shell=(os.name == "nt"))
         if result.returncode != 0:
             print(f"\n❌ Pipeline failed (exit {result.returncode}). See the log above.")
             raise SystemExit(result.returncode)
