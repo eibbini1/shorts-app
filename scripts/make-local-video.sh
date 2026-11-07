@@ -7,7 +7,7 @@ usage() {
 Usage:
   bash scripts/make-local-video.sh
   bash scripts/make-local-video.sh --draft-only [--model gemma-local]
-  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--chain-images]
+  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--chain-images] [--stills FOLDER]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json [--watch]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json --preview
 
@@ -18,7 +18,7 @@ USAGE
 
 default_model='qwen3:1.7b'
 [[ -s storage/setup/gemma-model-dir.txt ]] && default_model='gemma-local'
-scenario=''; status=''; chain=''; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
+scenario=''; status=''; chain=''; stills=''; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
 while (($#)); do
   case "$1" in
     --scenario) scenario="${2:?Missing scenario path}"; shift 2 ;;
@@ -26,6 +26,7 @@ while (($#)); do
     --watch) watch=1; shift ;;
     --preview) preview=1; shift ;;
     --chain-images) chain='--chain-images'; shift ;;
+    --stills) stills="$2"; shift 2 ;;
     --draft-only) draft_only=1; shift ;;
     --model) model="${2:?Missing model name}"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
@@ -103,5 +104,6 @@ base="$(basename "$scenario" .local-scenario.json)"
 base="${base%.json}"
 output="outputs/$base-$(date +%Y%m%d-%H%M%S).mp4"
 echo "Rendering local video to $output"
-python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" ${chain:+$chain}
+python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" ${chain:+$chain} ${stills:+--stills "$stills"}
 echo "Video ready: $output"
+python3 scripts/finish-local-video.py --scenario "$scenario" --video "$output" && echo "Captioned video and upload pack are next to $output"
