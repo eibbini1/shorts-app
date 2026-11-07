@@ -107,6 +107,13 @@ def main():
     actual_seconds = sum(shot['seconds'] for shot in plan['shots'])
     if actual_seconds != settings['seconds']:
         parser.error(f'Shot timings add to {actual_seconds}s; edit them to equal {settings["seconds"]}s before rendering')
+    minimum_shots = math.ceil(actual_seconds / 6)
+    if len(plan['shots']) < minimum_shots:
+        parser.error(f'{actual_seconds}s needs at least {minimum_shots} distinct shots. This plan has {len(plan["shots"])} and would repeat footage. Redraft or expand it before rendering')
+    for field in ('imagePrompt', 'motionPrompt'):
+        values = [' '.join(shot[field].lower().split()) for shot in plan['shots']]
+        if len(set(values)) != len(values):
+            parser.error(f'Repeated {field} across shots. Edit the story before spending time on motion generation')
     if settings['seconds'] > 60: parser.error('Interactive local renderer supports up to 60 seconds per run')
     aspect = settings['format']
     width, height = (384, 640) if aspect == 'short' else (640, 384)

@@ -6,7 +6,7 @@ usage() {
   cat <<'USAGE'
 Usage:
   bash scripts/make-local-video.sh
-  bash scripts/make-local-video.sh --draft-only
+  bash scripts/make-local-video.sh --draft-only [--model gemma-local]
   bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--chain-images]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json [--watch]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json --preview
@@ -16,7 +16,9 @@ It saves a local Ollama shot plan for review before expensive rendering.
 USAGE
 }
 
-scenario=''; status=''; chain=''; draft_only=0; watch=0; preview=0
+default_model='qwen3:1.7b'
+[[ -s storage/setup/gemma-model-dir.txt ]] && default_model='gemma-local'
+scenario=''; status=''; chain=''; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
 while (($#)); do
   case "$1" in
     --scenario) scenario="${2:?Missing scenario path}"; shift 2 ;;
@@ -25,6 +27,7 @@ while (($#)); do
     --preview) preview=1; shift ;;
     --chain-images) chain='--chain-images'; shift ;;
     --draft-only) draft_only=1; shift ;;
+    --model) model="${2:?Missing model name}"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) usage; exit 2 ;;
   esac
@@ -50,6 +53,7 @@ if [[ -z "$scenario" ]]; then
   [[ -n "${topic//[[:space:]]/}" ]] || { echo 'Please enter a video idea.' >&2; exit 2; }
   read -r -p 'Visual style and tone [cinematic, warm]: ' style
   style="${style:-cinematic, warm}"
+  read -r -p 'What should change or happen by the end? [let the model choose]: ' ending
   read -r -p 'Length in seconds [30, max 60]: ' seconds
   seconds="${seconds:-30}"
   [[ "$seconds" =~ ^[0-9]+$ ]] && ((seconds >= 10 && seconds <= 60)) || { echo 'Length must be 10-60 seconds.' >&2; exit 2; }
@@ -62,19 +66,27 @@ if [[ -z "$scenario" ]]; then
     *) echo 'Choose vertical or wide.' >&2; exit 2 ;;
   esac
   if [[ "$format" == 'long' ]] && ((seconds < 60)); then echo 'Wide format requires 60 seconds in the current scenario schema.' >&2; exit 2; fi
-  if ! curl -fsS --max-time 3 http://127.0.0.1:11434/api/tags >/dev/null; then
+  if [[ "$model" != 'gemma-local' ]] && ! curl -fsS --max-time 3 http://127.0.0.1:11434/api/tags >/dev/null; then
     echo 'Starting local Ollama...'; brew services start ollama
   fi
   id="local-video-$(date +%Y%m%d-%H%M%S)"
-  node scripts/bb-local-scenario.mjs "$topic. Visual style and tone: $style." "$id" --brand 'Local Studio' --format "$format" --seconds "$seconds"
+  node scripts/story-scenario.mjs "$topic" "$id" --style "$style" --ending "$ending" --format "$format" --seconds "$seconds" --model "$model"
   scenario="drafts/generated/$id.local-scenario.json"
   echo "Review the shot plan: $scenario"
   python3 - "$scenario" <<'PY'
 import json,sys
 data=json.load(open(sys.argv[1]))
 print('Title:',data['plan']['title'])
+print('Story model:',data.get('model','unknown'))
+if 'storyArc' in data:
+    arc=data['storyArc']
+    print('Story:',arc['goal'],'→',arc['obstacle'],'→',arc['turn'],'→',data['plan']['payoff'])
+    repairs=data.get('qualityChecks',{}).get('fieldsNeedingRepair',0)
+    if repairs: print('Review closely:',repairs,'shot field(s) needed an automatic repair.')
 for i,shot in enumerate(data['plan']['shots'],1):
-    print(f"  {i}. {shot['seconds']}s | {shot['narration'][:100]} | {shot['motionPrompt'][:110]}")
+    beat=data.get('storyArc',{}).get('beats',[])
+    label=beat[i-1]['label'] if len(beat)>=i else 'Shot'
+    print(f"  {i}. {label} | {shot['seconds']}s | {shot['narration'][:100]} | {shot['motionPrompt'][:110]}")
 if data['plan']['claimsToCheck']:
     print('Claims to check:', '; '.join(data['plan']['claimsToCheck']))
 PY
