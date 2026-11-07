@@ -8,22 +8,34 @@ Usage:
   bash scripts/make-local-video.sh
   bash scripts/make-local-video.sh --draft-only
   bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--chain-images]
+  bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json [--watch]
 
 The interactive path asks for a subject, visual style, runtime, and orientation.
 It saves a local Ollama shot plan for review before expensive rendering.
 USAGE
 }
 
-scenario=''; chain=''; draft_only=0
+scenario=''; status=''; chain=''; draft_only=0; watch=0
 while (($#)); do
   case "$1" in
     --scenario) scenario="${2:?Missing scenario path}"; shift 2 ;;
+    --status) status="${2:?Missing scenario path}"; shift 2 ;;
+    --watch) watch=1; shift ;;
     --chain-images) chain='--chain-images'; shift ;;
     --draft-only) draft_only=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) usage; exit 2 ;;
   esac
 done
+
+if [[ -n "$status" ]]; then
+  [[ -z "$scenario" ]] || { echo 'Use --status or --scenario, not both.' >&2; exit 2; }
+  status_args=(--scenario "$status")
+  if ((watch)); then status_args+=(--watch); fi
+  python3 scripts/local_video_progress.py "${status_args[@]}"
+  exit 0
+fi
+((watch == 0)) || { echo '--watch requires --status.' >&2; exit 2; }
 
 if [[ -z "$scenario" ]]; then
   read -r -p 'What is the video about? ' topic

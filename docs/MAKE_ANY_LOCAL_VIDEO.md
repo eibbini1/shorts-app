@@ -9,6 +9,15 @@ npm run make:any:mac
 
 The script asks for a subject, visual style and tone, length (10–60 seconds), and vertical or wide framing. Wide is currently 60 seconds; vertical can be 10–60. Local Ollama Qwen drafts a shot plan in `drafts/generated/`. Read its prompts, timing, narration, factual claims and story continuity before answering `y` to render. You can stop at the plan by answering `n` or with `npm run make:any:mac -- --draft-only`.
 
+During a render the terminal shows a whole-job progress bar, completed LTX clip count and a rolling time estimate. Each LTX clip also keeps its own detailed model progress output. The estimate is approximate because clip runtime varies with model loading and Mac activity. To check an existing run from a second Terminal, use its saved scenario path:
+
+```sh
+npm run make:any:mac -- --status drafts/generated/YOUR-ID.local-scenario.json
+npm run make:any:mac -- --status drafts/generated/YOUR-ID.local-scenario.json --watch
+```
+
+`--watch` refreshes every 30 seconds. This also works for a render started before the progress feature was added; leave that original Terminal running. Press Ctrl+C in the status Terminal to stop watching without interrupting the render.
+
 After editing the plan, render it directly:
 
 ```sh

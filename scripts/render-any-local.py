@@ -5,7 +5,9 @@ import json
 import math
 import os
 import subprocess
+import time
 from pathlib import Path
+from local_video_progress import snapshot
 
 ROOT = Path(__file__).resolve().parents[1]
 FPS = 24
@@ -53,20 +55,37 @@ def still(work, index, shot, seed, source, width, height):
     return target
 
 
-def clip(work, index, part, shot, seed, reference, width, height, model, gemma):
+def clip(work, index, part, shot, seed, reference, width, height, model, gemma, progress):
     prompt = shot['motionPrompt'].strip() + ' One continuous camera take with coherent physical movement, stable subject identity and lighting.'
     key = digest({'prompt': prompt, 'seed': seed, 'referenceHash': file_hash(reference),
                   'model': model, 'gemma': gemma, 'frames': 97, 'width': width, 'height': height})
     target = work / 'motion' / f'shot-{index:02d}-part-{part:02d}-{key}.mp4'
     if valid_video(target):
         print(f'Reusing motion {index + 1}.{part + 1}: {target.name}', flush=True)
+        print(progress(), flush=True)
         return target
     print(f'Generating local LTX motion {index + 1}.{part + 1}: {target.name}', flush=True)
-    run(ROOT / 'storage/tools/ltx-2-mlx/.venv/bin/ltx-2-mlx', 'generate',
+    command = [ROOT / 'storage/tools/ltx-2-mlx/.venv/bin/ltx-2-mlx', 'generate',
         '--model', model, '--gemma', gemma, '--distilled', '--low-ram', '--no-audio',
         '--seed', seed, '--image', reference, 0, 1.0, '--prompt', prompt,
-        '-H', height, '-W', width, '-f', 97, '--frame-rate', FPS, '-o', target)
+        '-H', height, '-W', width, '-f', 97, '--frame-rate', FPS, '-o', target]
+    started = time.monotonic()
+    process = subprocess.Popen([str(item) for item in command], cwd=ROOT)
+    try:
+        while True:
+            try:
+                code = process.wait(timeout=30)
+                break
+            except subprocess.TimeoutExpired:
+                print(progress((index, part), time.monotonic()-started), flush=True)
+    except KeyboardInterrupt:
+        process.terminate()
+        process.wait()
+        raise
+    if code: raise subprocess.CalledProcessError(code, command)
     if not valid_video(target): raise RuntimeError(f'Motion failed verification: {target}')
+    progress.observed.append(time.monotonic()-started)
+    print(progress(), flush=True)
     return target
 
 
@@ -99,6 +118,12 @@ def main():
     gemma = (ROOT / 'storage/setup/gemma-model-dir.txt').read_text().strip()
     expected = sum(math.ceil(shot['seconds'] / 5) for shot in plan['shots'])
     print(f'{len(plan["shots"])} shots require {expected} new motion clips; allow several minutes per uncached clip.', flush=True)
+    class Progress:
+        observed = []
+        def __call__(self, active=None, elapsed=0):
+            return snapshot(scenario, work, output, active, elapsed, self.observed)
+    progress = Progress()
+    print(progress(), flush=True)
     segments = []
     previous = None
     for index, shot in enumerate(plan['shots']):
@@ -115,13 +140,14 @@ def main():
                     '-frames:v', 1, anchor)
                 reference = anchor
             previous_clip = clip(work, index, part, shot, 2200 + index * 10 + part,
-                                 reference, width, height, model, gemma)
+                                 reference, width, height, model, gemma, progress)
             segments.append({'file': str(previous_clip), 'seconds': frames / FPS})
     manifest = {'aspect': aspect, 'shots': segments,
                 'soundtrack': 'soundtrack.wav',
                 'voice': {'file': 'voice-timeline.wav', 'startSeconds': 0}}
     manifest_path = work / 'film-manifest.json'
     manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
+    print(progress(), flush=True)
     run('python3', ROOT / 'scripts/assemble-motion-video.py', '--manifest', manifest_path, '--output', output)
     provenance = {'scenario': str(scenario), 'scenarioSha256': file_hash(scenario),
                   'output': str(output), 'outputSha256': file_hash(output),
@@ -130,6 +156,7 @@ def main():
                   'sound': 'original local synthesis', 'chainImages': args.chain_images,
                   'motionClips': len(segments), 'totalSeconds': settings['seconds']}
     output.with_suffix('.provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
+    print(progress(), flush=True)
     print(f'Finished local video: {output}')
 
 
