@@ -41,6 +41,9 @@ MODEL_NAME = os.environ.get("SHORTS_MODEL", "qwen3:4b-instruct-2507-q4_K_M")  # 
 
 # Target video length. About 2.5 spoken words per second; 60 s means 6-7 scenes and ~150 words.
 TARGET_SECONDS = int(os.environ.get("SHORTS_SECONDS", "60"))
+# Soft 384x640 motion clips: lanczos upscale, light sharpening, fine film grain so they sit beside the stills (SHORTS_CLIP_FILTER to override).
+CLIP_FILTER = os.environ.get("SHORTS_CLIP_FILTER", "scale=720:1280:flags=lanczos,unsharp=5:5:0.5:5:5:0.0,noise=alls=5:allf=t")
+HOOK_WORDS = max(5, int(os.environ.get("SHORTS_HOOK_WORDS", "10")))  # 8 tests well for retention; 10 is the default
 MIN_SCENES, MAX_SCENES = (6, 7) if TARGET_SECONDS >= 50 else (5, 6)
 TOTAL_WORDS = round(TARGET_SECONDS * 2.5)
 OTHER_WORDS = max(10, round((TOTAL_WORDS - 10) / (MAX_SCENES - 1)))
@@ -132,8 +135,8 @@ def parse_model_json(content: str) -> dict:
     return json.loads(content[start:end + 1])
 
 
-def clamp_hook(text, limit=10) -> str:
-    return " ".join(str(text or "").split()[:limit])
+def clamp_hook(text, limit=None) -> str:
+    return " ".join(str(text or "").split()[:limit or HOOK_WORDS])
 
 
 def call_ollama(payload):
@@ -172,9 +175,9 @@ def repair_script(spec):
         return
     hook = " ".join(str(spec.get("hookText") or "").split())
     first = " ".join(str(scenes[0].get("text") or "").split())
-    if len(first.split()) > 10 and hook and len(hook.split()) <= 10:
+    if len(first.split()) > HOOK_WORDS and hook and len(hook.split()) <= HOOK_WORDS:
         scenes[0]["text"] = hook
-    elif len(hook.split()) > 10 and first and len(first.split()) <= 10:
+    elif len(hook.split()) > HOOK_WORDS and first and len(first.split()) <= HOOK_WORDS:
         spec["hookText"] = first
 
 
@@ -187,13 +190,13 @@ def script_problems(spec):
     elif any(not isinstance(s, dict) or not str(s.get("text", "")).strip() for s in scenes):
         problems.append("a scene has no text")
     elif len(str(scenes[0]["text"]).split()) > 10:
-        problems.append(f"scene 1 has {len(str(scenes[0]['text']).split())} words, needs 10 or fewer")
+        problems.append(f"scene 1 has {len(str(scenes[0]['text']).split())} words, needs {HOOK_WORDS} or fewer")
     total_words = sum(len(str(s.get("text", "")).split()) for s in scenes) if isinstance(scenes, list) else 0
     if scenes and total_words < 0.8 * TOTAL_WORDS:
         problems.append(f"only {total_words} words, needs about {TOTAL_WORDS}")
     hook_words = len(str(spec.get("hookText", "")).split())
-    if hook_words > 10:
-        problems.append(f"hookText has {hook_words} words, needs 10 or fewer")
+    if hook_words > HOOK_WORDS:
+        problems.append(f"hookText has {hook_words} words, needs {HOOK_WORDS} or fewer")
     return problems
 
 
@@ -346,7 +349,7 @@ def animate_scene(image_path, scene, scene_idx):
             with open(raw_path, "wb") as f:
                 f.write(data)
         # Scale to the video size the renderer uses and make sure the codec is plain H.264.
-        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", raw_path, "-an", "-vf", "scale=720:1280:flags=lanczos",
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", raw_path, "-an", "-vf", CLIP_FILTER,
                         "-pix_fmt", "yuv420p", "-c:v", "libx264", "-crf", "18", clip_path], check=True)
         os.remove(raw_path)
         print(f"      ✅ Clip -> {clip_path}")
@@ -443,10 +446,10 @@ def main():
     system_prompt = (
         "You are a viral short-video director. Output ONLY valid JSON with no markdown block formatting.\n"
         "STRICT HOOK & DURATION RULES FOR 80+ RETENTION SCORE:\n"
-        "1. 'hookText': MUST be 10 words or fewer.\n"
-        "2. Scene 1 'text' is the hook line itself: 10 words or fewer, and it MUST include a curiosity gap ('Guess why' or 'Here is why'), a concrete price ('$1,000'), AND name a specific luxury item ('truffle', 'gold', 'wagyu', 'caviar').\n"
+        f"1. 'hookText': MUST be {HOOK_WORDS} words or fewer.\n"
+        f"2. Scene 1 'text' is the hook line itself: {HOOK_WORDS} words or fewer, and it MUST include a curiosity gap ('Guess why' or 'Here is why'), a concrete price ('$1,000'), AND name a specific luxury item ('truffle', 'gold', 'wagyu', 'caviar').\n"
         "3. Tension: Include high-tension words ('banned', 'forbidden', 'secret', 'scam') in the opening scenes.\n"
-        f"4. Total Length: Create exactly {MIN_SCENES} or {MAX_SCENES} scenes. Scene 1 is the 10-word hook, the other scenes have about {OTHER_WORDS} words each (about {TOTAL_WORDS} words in total) for a video of about {TARGET_SECONDS} seconds. Every scene after the first MUST be 2 or 3 full sentences and at least {OTHER_WORDS - 4} words; shorter scenes make the video too short.\n"
+        f"4. Total Length: Create exactly {MIN_SCENES} or {MAX_SCENES} scenes. Scene 1 is the {HOOK_WORDS}-word hook, the other scenes have about {OTHER_WORDS} words each (about {TOTAL_WORDS} words in total) for a video of about {TARGET_SECONDS} seconds. Every scene after the first MUST be 2 or 3 full sentences and at least {OTHER_WORDS - 4} words; shorter scenes make the video too short.\n"
         "5. Closing scene: End with a divisive opinion-gap question ('Genius or total scam? Drop your take below.').\n"
         "STORYTELLING: write for the ear, as a narrator speaking to ONE viewer ('you'). Every scene has a job:\n"
         "- Scene 1 HOOK: the shocking price, the secret, the question. Never start with 'Welcome' or 'Today'.\n"
@@ -472,7 +475,7 @@ def main():
 
     user_prompt = (
         f"Topic: {topic}. Voice: {voice_preset}. "
-        f"Create {MIN_SCENES} or {MAX_SCENES} scenes (a 10-word hook first, then about {OTHER_WORDS} words per scene, about {TOTAL_WORDS} words in total) with the shot, subject, setting, lighting and action fields filled for each scene."
+        f"Create {MIN_SCENES} or {MAX_SCENES} scenes (a {HOOK_WORDS}-word hook first, then about {OTHER_WORDS} words per scene, about {TOTAL_WORDS} words in total) with the shot, subject, setting, lighting and action fields filled for each scene."
     )
     if hook_prompt:
         user_prompt += f" Hook: {hook_prompt}."
