@@ -55,6 +55,21 @@ def still(work, index, shot, seed, source, width, height):
     return target
 
 
+def own_still(folder, work, index, width, height):
+    """Uses a supplied still for this shot, cropped to the video aspect. Returns None when the folder has none."""
+    for ext in ('png', 'jpg', 'jpeg', 'webp'):
+        source = folder / f'shot-{index + 1:02d}.{ext}'
+        if source.is_file():
+            target = work / 'refs' / f'own-{index + 1:02d}-{file_hash(source)[:12]}.png'
+            if not target.is_file():
+                run('ffmpeg', '-y', '-v', 'error', '-i', source, '-vf',
+                    f'scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height}', target)
+            print(f'Using your still for shot {index + 1}: {source.name}', flush=True)
+            return target
+    print(f'No supplied still for shot {index + 1}; generating with FLUX', flush=True)
+    return None
+
+
 def clip(work, index, part, shot, seed, reference, width, height, model, gemma, progress):
     prompt = shot['motionPrompt'].strip() + ' One continuous camera take with coherent physical movement, stable subject identity and lighting.'
     key = digest({'prompt': prompt, 'seed': seed, 'referenceHash': file_hash(reference),
@@ -95,6 +110,7 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--work-dir', type=Path)
     parser.add_argument('--chain-images', action='store_true', help='Edit previous still to preserve one subject')
+    parser.add_argument('--stills', type=Path, help='Folder with your own stills named shot-01.png, shot-02.png ... (for example from Google Flow). Missing shots fall back to FLUX')
     args = parser.parse_args()
     scenario = args.scenario.expanduser().resolve()
     output = args.output.expanduser().resolve()
@@ -134,8 +150,10 @@ def main():
     segments = []
     previous = None
     for index, shot in enumerate(plan['shots']):
-        reference = still(work, index, shot, 1200 + index,
-                          previous if args.chain_images else None, width, height)
+        reference = own_still(args.stills.expanduser().resolve(), work, index, width, height) if args.stills else None
+        if reference is None:
+            reference = still(work, index, shot, 1200 + index,
+                              previous if args.chain_images else None, width, height)
         previous = reference
         parts = math.ceil(shot['seconds'] / 5)
         total_frames = shot['seconds'] * FPS
@@ -158,7 +176,7 @@ def main():
     run('python3', ROOT / 'scripts/assemble-motion-video.py', '--manifest', manifest_path, '--output', output)
     provenance = {'scenario': str(scenario), 'scenarioSha256': file_hash(scenario),
                   'output': str(output), 'outputSha256': file_hash(output),
-                  'imageModel': 'FLUX.2 Klein 4B q4 via MFLUX', 'videoModel': model,
+                  'imageModel': 'user-supplied stills (FLUX for any missing shot)' if args.stills else 'FLUX.2 Klein 4B q4 via MFLUX', 'videoModel': model,
                   'textEncoder': gemma, 'voice': 'Kokoro ONNX local',
                   'sound': 'original local synthesis', 'chainImages': args.chain_images,
                   'motionClips': len(segments), 'totalSeconds': settings['seconds']}
