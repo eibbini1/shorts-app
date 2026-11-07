@@ -68,6 +68,7 @@ IMAGE_STYLE = os.environ.get("SHORTS_IMAGE_STYLE", "Moody dark food photography 
 # Fixed order that gives a different camera position in every neighbouring scene.
 SHOT_CYCLE = ["macro close-up", "wide establishing shot", "detail close-up", "overhead flat lay",
               "over-the-shoulder medium shot", "low-angle hero shot"]
+PHOTO_LOOK = os.environ.get("SHORTS_PHOTO_LOOK", "photorealistic")  # e.g. "Pixar-style 3D animated" for cartoon characters
 IMAGE_EXCLUDE = "Vertical 9:16 composition. No text, no watermark, no logos, no people's faces."
 
 
@@ -81,7 +82,7 @@ def compose_image_prompt(scene, topic="", ground=False):
         subject = f"{subject}, with {topic} clearly visible in the foreground"
     setting = clean("setting")
     lighting = clean("lighting") or "warm key light from camera-left with soft shadows"
-    parts = [f"A photorealistic {shot} of {subject}" + (f", set in {setting}." if setting else ".")]
+    parts = [f"A {PHOTO_LOOK} {shot} of {subject}" + (f", set in {setting}." if setting else ".")]
     parts.append(f"Lit by {lighting}.")
     parts.append(f"Captured with {SHOT_LOOK[shot]}.")
     parts.append(IMAGE_STYLE)
@@ -192,7 +193,7 @@ def script_problems(spec):
         problems.append(f"needs {MIN_SCENES} or {MAX_SCENES} scenes")
     elif any(not isinstance(s, dict) or not str(s.get("text", "")).strip() for s in scenes):
         problems.append("a scene has no text")
-    elif len(str(scenes[0]["text"]).split()) > 10:
+    elif len(str(scenes[0]["text"]).split()) > HOOK_WORDS:
         problems.append(f"scene 1 has {len(str(scenes[0]['text']).split())} words, needs {HOOK_WORDS} or fewer")
     total_words = sum(len(str(s.get("text", "")).split()) for s in scenes) if isinstance(scenes, list) else 0
     if scenes and total_words < 0.8 * TOTAL_WORDS:
