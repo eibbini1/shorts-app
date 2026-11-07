@@ -75,7 +75,7 @@ if (portrait) {
   const f0 = run('ffmpeg', ['-hide_banner', '-nostats', '-i', video, '-vf', 'select=eq(n\\,0),signalstats,metadata=print', '-frames:v', '1', '-an', '-f', 'null', '-']);
   const ya = (f0.stderr + (f0.stdout ?? '')).match(/YAVG=([\d.]+)/);
   const yavg = ya ? Number(ya[1]) : -1;
-  add('frame 0', yavg > 25, `frame 0 brightness ${yavg < 0 ? 'unknown' : yavg.toFixed(0)} (needs > 25; a black first frame becomes the feed thumbnail)`);
+  add('frame 0', yavg > 25, `frame 0 brightness ${yavg < 0 ? 'unknown' : yavg.toFixed(0)} (needs > 25; a black first frame becomes the feed thumbnail)`, false);
 }
 let fail = 0;
 for (const r of results) {

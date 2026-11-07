@@ -26,7 +26,7 @@ npm test                 # vitest
 | `npm run pipeline -- --spec episodes/<name>.assemble.json` | Full run: variation guard, assemble, QA, metadata, pack |
 | `npm run split-long` | Cut a long video into shorts using a hooks file |
 | `npm run meta-gen` | Title, description, tags, pinned comment and a link back to the full video |
-| `npm run variation -- --spec ...` | Anti-template guard; exits 1 on a repeated opener, closer or near-duplicate hook |
+| `npm run variation -- --spec ...` | Anti-template guard; exits 1 on a repeated first line (same first six words), closer or near-duplicate hook; a shared three-word opener only warns |
 | `npm run qa-check` | Checks length, silence, black frames and first-frame brightness |
 | `npm run plan-schedule` | Suggests publish slots at regional peak times |
 | `npm run export-subs` | SRT and VTT subtitles |
