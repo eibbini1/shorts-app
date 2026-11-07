@@ -18,6 +18,14 @@ npm run make:any:mac -- --status drafts/generated/YOUR-ID.local-scenario.json --
 
 `--watch` refreshes every 30 seconds. This also works for a render started before the progress feature was added; leave that original Terminal running. Press Ctrl+C in the status Terminal to stop watching without interrupting the render.
 
+To inspect the moving clips that have finished so far, create a quick contact sheet in another Terminal:
+
+```sh
+npm run make:any:mac -- --status drafts/generated/YOUR-ID.local-scenario.json --preview
+```
+
+This saves `preview-contact-sheet.png` in that render's `storage/any-local/` work folder. It extracts one frame at two seconds from each completed clip and does not pause or modify the ongoing render. Run it again later to include newly completed clips. Inspect the full moving MP4 when the render finishes; still frames cannot prove motion quality or story continuity.
+
 After editing the plan, render it directly:
 
 ```sh
