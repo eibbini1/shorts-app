@@ -1,0 +1,8 @@
+{
+  "positive_prefix": "luxury cinematic food photography, appetizing glossy texture, macro lens, shallow depth of field, warm dramatic side light, elegant dark setting, rich natural detail",
+  "negative": "text, subtitles, watermark, logo, people, hands, extra utensils, duplicate desserts, deformed food, blurry, low quality, cartoon",
+  "width": 512,
+  "height": 768,
+  "steps": 25,
+  "cfg": 7
+}

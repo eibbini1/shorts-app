@@ -1,0 +1,8 @@
+{
+  "positive_prefix": "cozy nostalgic apartment in golden morning light, high quality stylized 3D animation still, rounded expressive characters, tactile fabric and fur, warm cinematic composition, playful sincere mood, consistent character design",
+  "negative": "text, subtitles, watermark, logo, duplicate people, duplicate cats, extra limbs, malformed hands, distorted face, blurry, low quality, horror, photorealistic",
+  "width": 512,
+  "height": 768,
+  "steps": 25,
+  "cfg": 7
+}

@@ -1,5 +1,86 @@
 # Continue on the M1 Mac
 
+## Current Mac example: a 30-second chocolate Short
+
+This section supersedes the older, pre-installation notes below. On the Mac,
+`feature/chocolate-short-local` has already produced a complete 30-second
+portrait chocolate Short using local LTX motion, Kokoro narration, original
+sound, and FFmpeg assembly. The active model revisions are recorded in
+`storage/setup`. Inspect Git before running because local work may be newer.
+
+Copy these commands into Terminal from the existing project folder. The draft
+step asks Ollama/Qwen for ideas and a timed scenario to review. The finished
+chocolate recipe that follows uses its own reviewed, bundled shot plan and
+reference images; it does not automatically consume the new draft.
+
+```sh
+cd /Users/eibbini/Documents/shorts-app
+git status --short
+git branch --show-current
+npm run doctor:local
+ollama list
+npm run models:check:mac
+
+STAMP="$(date +%Y%m%d-%H%M%S)"
+npm run draft:local -- "Chocolate shell reveal" "chocolate-terminal-$STAMP" --channel channels/bb.json --format short --seconds 30
+
+OUTPUT="$PWD/storage/chocolate-short-local/chocolate-terminal-$STAMP.mp4"
+npm run make:chocolate:mac -- "$OUTPUT"
+ffprobe -v error -show_entries format=duration:stream=codec_name,width,height -of json "$OUTPUT"
+ffmpeg -v error -xerror -i "$OUTPUT" -f null -
+open "$OUTPUT"
+open "${OUTPUT%.mp4}.review.png"
+```
+
+`make:chocolate:mac` generates six real moving LTX shots, local Kokoro voice,
+original music and effects, captions, and a 720×1280 MP4 at 24 fps. It reuses
+verified motion clips on rerun, but a first render may take substantial time on
+the 16 GB Mac. The contact sheet is for a quick scan; watch the full MP4 for
+motion, continuity, speech, timing, and sound. Keep generated media under ignored
+`storage/` and do not commit it to Git.
+
+For a separate local still-image test with ComfyUI, start it in one Terminal:
+
+```sh
+cd /Users/eibbini/Documents/shorts-app
+npm run start:comfy:mac
+```
+
+Then, in another Terminal, run:
+
+```sh
+cd /Users/eibbini/Documents/shorts-app
+npm run image:local:mac -- --prompt "A glossy dark chocolate dome with gold leaf on a charcoal plate" --preset assets/presets/luxury-food.json --output "$PWD/storage/chocolate-short-local/chocolate-local-still.png"
+open "$PWD/storage/chocolate-short-local/chocolate-local-still.png"
+```
+
+The standalone image command calls the installed ComfyUI and Stable Diffusion
+1.5 checkpoint. It is a separate capability: the proven chocolate video uses
+the bundled reference images. Stop ComfyUI before a long LTX render to leave
+memory for the motion model. Do not claim the draft, still image, and chocolate
+recipe are one general single-command pipeline yet.
+
+The old-man-and-cat Short was subsequently exported in this Codex task as
+`outputs/old-man-cat-30s-local-tools.mp4`. It has six LTX motion clips, one
+Kokoro line, an original local soundtrack, and no subtitle stream. The final
+dozing shot uses a local ComfyUI/SD 1.5 reference variation. FFprobe verified
+30.000 seconds, 720×1280, 24 fps, 720 video frames, H.264 video and AAC audio;
+FFmpeg decoded it without errors. A contact sheet was reviewed. The user should
+still watch the full video for acting, continuity, and sound before publication.
+
+Its first five shot reference images, and the source image used for the final
+ComfyUI variation, originated from Codex image generation. Motion, the final
+reference variation, speech, soundtrack synthesis, and montage ran locally on
+the Mac. The render therefore demonstrates all installed local production
+tools, but the visual reference assets are not fully local in origin. Generated
+media remains outside Git, in ignored storage or the Codex task outputs.
+
+## Historical setup notes
+
+The sections below record the original pre-installation handoff. Their branch,
+readiness, and verification statements are historical; use the current section
+above for the working Mac commands and status.
+
 ## Current handoff
 
 Use feature/hook-log in https://github.com/eibbini1/shorts-app.

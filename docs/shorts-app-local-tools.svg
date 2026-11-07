@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="820" viewBox="0 0 1280 820" role="img" aria-label="Diagram of the Shorts app local AI tools and their handoffs">
+<defs><style>
+.bg{fill:#10151e}.card{fill:#1b2533;stroke:#58718e;stroke-width:2}.active{stroke:#65d6a5}.pending{stroke:#e5ad62}.t{font:700 26px system-ui,Arial;fill:#f7f8fa}.s{font:17px system-ui,Arial;fill:#c7d4df}.small{font:14px system-ui,Arial;fill:#9eb2c4}.line{stroke:#80a7ca;stroke-width:3;fill:none;marker-end:url(#arrow)}.dash{stroke-dasharray:8 7}.label{font:700 18px system-ui,Arial;fill:#f4fbff}
+</style><marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#80a7ca"/></marker></defs>
+<rect class="bg" width="1280" height="820"/>
+<text x="55" y="58" class="t" font-size="32">Shorts app: what each local tool does</text>
+<text x="55" y="90" class="s">Scripts connect the tools. The models create the content.</text>
+<rect x="55" y="130" width="215" height="108" rx="16" class="card active"/><text x="75" y="169" class="label">Your idea</text><text x="75" y="199" class="s">Subject, audience, format</text>
+<rect x="350" y="130" width="245" height="108" rx="16" class="card active"/><text x="370" y="169" class="label">Ollama + Qwen</text><text x="370" y="199" class="s">Hook, script, shot plan</text>
+<rect x="350" y="282" width="245" height="104" rx="16" class="card active"/><text x="370" y="320" class="label">Google Trends RSS</text><text x="370" y="350" class="s">Dated, online, optional</text>
+<rect x="675" y="130" width="245" height="108" rx="16" class="card active"/><text x="695" y="169" class="label">ComfyUI + SD 1.5</text><text x="695" y="199" class="s">Reference images</text>
+<rect x="980" y="130" width="245" height="108" rx="16" class="card active"/><text x="1000" y="169" class="label">LTX + Gemma</text><text x="1000" y="199" class="s">Moving video shots</text>
+<path class="line" d="M270 184 H350"/><path class="line" d="M595 184 H675"/><path class="line" d="M920 184 H980"/><path class="line dash" d="M472 282 V238"/>
+<rect x="350" y="446" width="245" height="108" rx="16" class="card active"/><text x="370" y="485" class="label">Kokoro</text><text x="370" y="515" class="s">Spoken voice</text>
+<rect x="55" y="446" width="215" height="108" rx="16" class="card pending"/><text x="75" y="485" class="label">Music + effects</text><text x="75" y="515" class="s">Original or licensed</text>
+<rect x="675" y="446" width="245" height="108" rx="16" class="card active"/><text x="695" y="485" class="label">FFmpeg</text><text x="695" y="515" class="s">Montage and sound mix</text>
+<rect x="980" y="446" width="245" height="108" rx="16" class="card pending"/><text x="1000" y="485" class="label">Human review</text><text x="1000" y="515" class="s">Story, motion, audio</text>
+<path class="line" d="M472 238 V446"/><path class="line" d="M270 500 H675"/><path class="line" d="M595 500 H675"/><path class="line" d="M1102 238 V405 H920 V470"/><path class="line" d="M920 500 H980"/>
+<rect x="675" y="654" width="550" height="98" rx="16" class="card active"/><text x="695" y="694" class="label">Export: 9:16 Short or 16:9 film</text><text x="695" y="724" class="s">Current complete recipe is subject specific</text>
+<path class="line" d="M1102 554 V654"/>
+<text x="55" y="640" class="small">GREEN = installed and tested</text><text x="55" y="668" class="small">AMBER = choice or integration to finish</text><text x="55" y="708" class="small">No paid inference API is required for the local path.</text><text x="55" y="733" class="small">Hardware, storage and optional licensed media still cost money.</text>
+<text x="55" y="785" class="small">The optional model checker compares upstream versions; it does not auto-switch or train model weights.</text>
+</svg>

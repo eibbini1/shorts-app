@@ -41,7 +41,18 @@
     "draft:local": "node scripts/bb-local-scenario.mjs",
     "scenario:export": "node scripts/local-media-export.mjs",
     "scenario:review": "tsx src/cli/reviewScenario.ts",
-    "scenario:narrate": "node scripts/narrate-scenario.mjs"
+    "scenario:narrate": "node scripts/narrate-scenario.mjs",
+    "make:chocolate:mac": "bash scripts/chocolate-short-local.sh",
+    "make:gold-steak:mac": "bash scripts/gold-steak-local.sh",
+    "make:crust:mac": "python3 scripts/steak-crust-local.py",
+    "make:any:mac": "bash scripts/make-local-video.sh",
+    "chocolate:motion:mac": "python3 scripts/chocolate-short/generate-motion.py",
+    "models:check:mac": "python3 scripts/models-status-mac.py",
+    "trends:local": "python3 scripts/fetch-trends.py",
+    "montage:local:mac": "python3 scripts/assemble-motion-video.py",
+    "image:local:mac": "python3 scripts/create-local-image.py",
+    "image:flux:mac": "python3 scripts/create-flux-image.py",
+    "review:shot:local": "python3 scripts/record-shot-review.py"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.65",
