@@ -22,14 +22,17 @@ OLLAMA_TIMEOUT = int(os.environ.get("SHORTS_TIMEOUT", "1200"))
 VOICE_PROVIDER = os.environ.get("SHORTS_VOICE", "mock")  # "elevenlabs" for real narration
 IMAGE_TIMEOUT = int(os.environ.get("SHORTS_IMAGE_TIMEOUT", "90"))
 # Heavier machines (for example an Apple Silicon Mac) can run ComfyUI locally for better images and real video clips.
-#   SHORTS_IMAGE_PROVIDER=pollinations (default) | comfyui
+#   SHORTS_IMAGE_PROVIDER=pollinations (default) | comfyui | flux (local FLUX.2 Klein via mflux, Mac)
 #   SHORTS_VIDEO_PROVIDER=none (default) | ltx-mlx | comfyui   animates chosen scene images into real motion clips
 #       ltx-mlx = the runtime from scripts/setup-mac.sh (set LTX_MLX_BIN to override its path)
 #   SHORTS_VIDEO_SCENES=auto (hook, catch, ending) | all | 1,4,7
 # ComfyUI workflows are "Save (API Format)" JSON files. Like scripts/local-media.mjs, the exact string values
 # "{{prompt}}", "{{seed}}", "{{width}}", "{{height}}" and (video only) "{{image}}" are replaced before the run.
 IMAGE_PROVIDER = os.environ.get("SHORTS_IMAGE_PROVIDER", "pollinations").strip().lower()
+FLUX_BIN = os.environ.get("FLUX_BIN", os.path.join("storage", "tools", "mflux", ".venv", "bin", "mflux-generate-flux2"))
+FLUX_MODEL = os.environ.get("FLUX_MODEL", os.path.join("storage", "models", "flux2-klein-4b-4bit"))
 VIDEO_PROVIDER = os.environ.get("SHORTS_VIDEO_PROVIDER", "none").strip().lower()
+VIDEO_FRAMES = max(25, int(os.environ.get("SHORTS_VIDEO_FRAMES", "97")))  # 97 frames at 24 fps = 4 s clips (proven on this Mac); 49 = 2 s
 VIDEO_SCENES = os.environ.get("SHORTS_VIDEO_SCENES", "auto").strip().lower()
 COMFY_URL = os.environ.get("COMFY_URL", "http://127.0.0.1:8188").rstrip("/")
 COMFY_IMAGE_WORKFLOW = os.environ.get("COMFY_IMAGE_WORKFLOW", os.path.join("workflows", "image.api.json"))
@@ -61,7 +64,7 @@ SHOT_LOOK = {
     "over-the-shoulder medium shot": "85mm portrait lens, shallow depth of field, soft background",
     "detail close-up": "85mm lens at f/1.8, sharp focus on the texture, blurred background",
 }
-IMAGE_STYLE = "Moody dark food photography with deep shadows and warm gold highlights, cinematic color grading, subtle film grain."
+IMAGE_STYLE = os.environ.get("SHORTS_IMAGE_STYLE", "Moody dark food photography with deep shadows and warm gold highlights, cinematic color grading, subtle film grain.")  # SHORTS_IMAGE_STYLE overrides the look for other formats
 # Fixed order that gives a different camera position in every neighbouring scene.
 SHOT_CYCLE = ["macro close-up", "wide establishing shot", "detail close-up", "overhead flat lay",
               "over-the-shoulder medium shot", "low-angle hero shot"]
@@ -322,7 +325,7 @@ def animate_scene(image_path, scene, scene_idx):
     try:
         print(f"   🎞️  Animating scene {scene_idx} with {VIDEO_PROVIDER} (this can take minutes): {prompt}")
         if VIDEO_PROVIDER == "ltx-mlx":
-            # Same settings as scripts/test-mac-motion.sh (49 frames at 24 fps, 384x640, distilled, low RAM).
+            # Same settings as scripts/test-mac-motion.sh (384x640, 24 fps, distilled, low RAM); 97 frames = 4 s like the earlier Mac clips.
             raw_path = clip_path + ".raw.mp4"
             env = dict(os.environ, HF_HOME=os.environ.get("HF_HOME", os.path.join("storage", "models", "huggingface")))
             # setup:mac records the local model dirs (see scripts/mac-runtime.sh); fall back to hub names.
@@ -338,7 +341,7 @@ def animate_scene(image_path, scene, scene_idx):
             gemma_model = _setup_dir("GEMMA_MODEL_DIR", "gemma-model-dir.txt", "mlx-community/gemma-3-12b-it-4bit")
             subprocess.run([LTX_MLX_BIN, "generate", "--model", ltx_model, "--gemma", gemma_model, "--distilled", "--low-ram",
                             "--seed", str(42 + scene_idx), "--image", image_path, "--prompt", prompt,
-                            "-H", "640", "-W", "384", "-f", "49", "--frame-rate", "24", "-o", raw_path],
+                            "-H", "640", "-W", "384", "-f", str(VIDEO_FRAMES), "--frame-rate", "24", "-o", raw_path],
                            check=True, timeout=COMFY_TIMEOUT, env=env)
         else:
             data, ext = comfy_run(COMFY_VIDEO_WORKFLOW, {"image": comfy_upload(image_path), "prompt": prompt,
@@ -362,6 +365,22 @@ def animate_scene(image_path, scene, scene_idx):
 def generate_ai_scene_image(prompt_text, output_path, scene_idx, total_scenes):
     """Generates 9:16 portrait visual assets via AI API or falls back to a stylized slide."""
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    if IMAGE_PROVIDER == "flux":
+        # FLUX.2 Klein 4B (4-bit, MLX) from scripts/setup-mflux-mac.sh: native 720x1280, no watermark, about a minute per image on an M1.
+        try:
+            if os.path.exists(output_path):
+                os.remove(output_path)  # mflux writes name_1.png instead of overwriting, which would leave a stale image in place
+            subprocess.run([FLUX_BIN, "--model", FLUX_MODEL, "--base-model", "flux2-klein-4b", "--prompt", prompt_text,
+                            "--width", "720", "--height", "1280", "--steps", "4", "--seed", str(scene_idx * 17 + 7),
+                            "--low-ram", "--output", output_path], check=True, timeout=COMFY_TIMEOUT)
+            with open(output_path, "rb") as f:
+                why = image_problem(f.read())
+            if why:
+                raise ValueError(why)
+            print(f"      ✅ FLUX image -> {output_path}")
+            return
+        except Exception as err:
+            print(f"      ⚠️  FLUX image failed ({err}). Trying the free endpoint instead...")
     if IMAGE_PROVIDER == "comfyui":
         try:
             data, _ = comfy_run(COMFY_IMAGE_WORKFLOW, {"prompt": prompt_text, "seed": scene_idx * 17, "width": 832, "height": 1472})
@@ -447,7 +466,7 @@ def main():
         "You are a viral short-video director. Output ONLY valid JSON with no markdown block formatting.\n"
         "STRICT HOOK & DURATION RULES FOR 80+ RETENTION SCORE:\n"
         f"1. 'hookText': MUST be {HOOK_WORDS} words or fewer.\n"
-        f"2. Scene 1 'text' is the hook line itself: {HOOK_WORDS} words or fewer, and it MUST include a curiosity gap ('Guess why' or 'Here is why'), a concrete price ('$1,000'), AND name a specific luxury item ('truffle', 'gold', 'wagyu', 'caviar').\n"
+        f"2. Scene 1 'text' is the hook line itself: {HOOK_WORDS} words or fewer, and it MUST include a curiosity gap ('Guess why' or 'Here is why'), a concrete price ('$1,000'), AND name the topic's own main item (the product, dish or object the video is about).\n"
         "3. Tension: Include high-tension words ('banned', 'forbidden', 'secret', 'scam') in the opening scenes.\n"
         f"4. Total Length: Create exactly {MIN_SCENES} or {MAX_SCENES} scenes. Scene 1 is the {HOOK_WORDS}-word hook, the other scenes have about {OTHER_WORDS} words each (about {TOTAL_WORDS} words in total) for a video of about {TARGET_SECONDS} seconds. Every scene after the first MUST be 2 or 3 full sentences and at least {OTHER_WORDS - 4} words; shorter scenes make the video too short.\n"
         "5. Closing scene: End with a divisive opinion-gap question ('Genius or total scam? Drop your take below.').\n"
@@ -524,9 +543,14 @@ def main():
         except Exception as e:
             last_error = e
             print(f"   Attempt {attempt}/3 rejected: {e}")
+            # Tell the model exactly what was wrong so the next attempt can fix it instead of repeating the same draft.
+            payload["messages"][1]["content"] += f"\nYour previous draft was rejected: {e}. Write it again and fix exactly that. Every scene after the first needs 2 or 3 full sentences."
     if spec_data is None:
         e = last_error
         print(f"\n❌ Ollama issue or JSON parse error: {e}")
+        if os.environ.get("SHORTS_ALLOW_TEMPLATE") != "1":
+            # The template makes up claims ("banned", "only three chefs in the world") and is built to game the hook score, so it must never be published by accident.
+            raise SystemExit("Script generation failed 3 times. Stopping instead of using the generic template. Fix the prompt or facts, use SHORTS_SCRIPT, or set SHORTS_ALLOW_TEMPLATE=1 for a throwaway draft.")
         print("Falling back to the built-in template (about 40 seconds, generic, review before publishing)...")
         short_topic = " ".join(topic.split()[:3]) or "dish"
         fb_hook = hook_prompt or f"Guess why this $1,000 banned {short_topic} is secret."
@@ -599,7 +623,7 @@ def main():
         if VOICE_PROVIDER == "elevenlabs":
             spec_data["voice"].update({"speed": 1, "stability": 0.45, "style": 0.5})
     spec_data.setdefault("fps", 30)
-    spec_data.setdefault("music", "ambient")
+    spec_data.setdefault("music", os.environ.get("SHORTS_MUSIC") or "ambient")  # SHORTS_MUSIC=/path/to/track.mp3 uses a licensed track instead of the built-in ambient bed
     if "scenes" not in spec_data or not isinstance(spec_data["scenes"], list) or len(spec_data["scenes"]) == 0:
         spec_data["scenes"] = [{"text": f"Overview of {topic}.", "subject": topic, "voice": voice_preset}]
 
