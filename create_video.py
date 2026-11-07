@@ -43,7 +43,10 @@ SHOT_LOOK = {
     "over-the-shoulder medium shot": "85mm portrait lens, shallow depth of field, soft background",
     "detail close-up": "85mm lens at f/1.8, sharp focus on the texture, blurred background",
 }
-IMAGE_STYLE = "Cinematic color grading, subtle film grain, rich contrast."
+IMAGE_STYLE = "Moody dark food photography with deep shadows and warm gold highlights, cinematic color grading, subtle film grain."
+# Fixed order that gives a different camera position in every neighbouring scene.
+SHOT_CYCLE = ["macro close-up", "wide establishing shot", "detail close-up", "overhead flat lay",
+              "over-the-shoulder medium shot", "low-angle hero shot"]
 IMAGE_EXCLUDE = "Vertical 9:16 composition. No text, no watermark, no logos, no people's faces."
 
 
@@ -314,7 +317,7 @@ def main():
         "- Scene 4 TWIST: the surprising catch, introduced with 'But' or 'Here is the catch'.\n"
         "- Scene 5 COMPARISON: set the price or scale against something familiar (a car, a month of rent).\n"
         "- Middle scenes before the last: PAYOFF, what the first bite or the owner's reaction is like.\n"
-        "- Last scene CTA: one divisive question that makes people comment.\n"
+        "- Last scene CTA: one divisive question that makes people comment. Reuse one key word from the hook so the ending leads back into the start.\n"
         "Voice rules: sentences of 6 to 14 words, simple everyday words, one idea and at most one number per scene, concrete nouns instead of adjectives like 'amazing'. "
         "End every scene except the last with a small open loop ('and that is not even the strange part') so people keep watching. Never write 'In conclusion' or 'Subscribe'.\n"
         "TRUTH: use only facts that are widely known or frame them as 'reportedly' or 'some say'. Never invent names of people, restaurants, studies or statistics.\n"
@@ -334,6 +337,11 @@ def main():
     )
     if hook_prompt:
         user_prompt += f" Hook: {hook_prompt}."
+    # SHORTS_FACTS=facts.txt holds checked facts (prices, origins). The model must use only these, so it cannot invent claims.
+    facts_file = os.environ.get("SHORTS_FACTS", "").strip()
+    if facts_file:
+        with open(facts_file, encoding="utf-8") as f:
+            user_prompt += "\nUse ONLY these verified facts for every claim, price and origin; do not add others:\n" + f.read().strip()[:1500]
 
     payload = {
         "model": MODEL_NAME,
@@ -452,6 +460,13 @@ def main():
     spec_data.setdefault("music", "ambient")
     if "scenes" not in spec_data or not isinstance(spec_data["scenes"], list) or len(spec_data["scenes"]) == 0:
         spec_data["scenes"] = [{"text": f"Overview of {topic}.", "subject": topic, "voice": voice_preset}]
+
+    # A small model often repeats the same shot, so neighbouring scenes always get a different camera position.
+    previous_shot = None
+    for i, scene in enumerate(spec_data["scenes"]):
+        if scene.get("shot") not in SHOT_LOOK or scene.get("shot") == previous_shot:
+            scene["shot"] = next(s for s in SHOT_CYCLE[i % len(SHOT_CYCLE):] + SHOT_CYCLE if s != previous_shot)
+        previous_shot = scene["shot"]
 
     # Generate Image Assets for each scene
     os.makedirs(ASSET_DIR, exist_ok=True)
