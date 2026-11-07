@@ -21,6 +21,21 @@ OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434/api/chat")
 OLLAMA_TIMEOUT = int(os.environ.get("SHORTS_TIMEOUT", "1200"))
 VOICE_PROVIDER = os.environ.get("SHORTS_VOICE", "mock")  # "elevenlabs" for real narration
 IMAGE_TIMEOUT = int(os.environ.get("SHORTS_IMAGE_TIMEOUT", "90"))
+# Heavier machines (for example an Apple Silicon Mac) can run ComfyUI locally for better images and real video clips.
+#   SHORTS_IMAGE_PROVIDER=pollinations (default) | comfyui
+#   SHORTS_VIDEO_PROVIDER=none (default) | ltx-mlx | comfyui   animates chosen scene images into real motion clips
+#       ltx-mlx = the runtime from scripts/setup-mac.sh (set LTX_MLX_BIN to override its path)
+#   SHORTS_VIDEO_SCENES=auto (hook, catch, ending) | all | 1,4,7
+# ComfyUI workflows are "Save (API Format)" JSON files. Like scripts/local-media.mjs, the exact string values
+# "{{prompt}}", "{{seed}}", "{{width}}", "{{height}}" and (video only) "{{image}}" are replaced before the run.
+IMAGE_PROVIDER = os.environ.get("SHORTS_IMAGE_PROVIDER", "pollinations").strip().lower()
+VIDEO_PROVIDER = os.environ.get("SHORTS_VIDEO_PROVIDER", "none").strip().lower()
+VIDEO_SCENES = os.environ.get("SHORTS_VIDEO_SCENES", "auto").strip().lower()
+COMFY_URL = os.environ.get("COMFY_URL", "http://127.0.0.1:8188").rstrip("/")
+COMFY_IMAGE_WORKFLOW = os.environ.get("COMFY_IMAGE_WORKFLOW", os.path.join("workflows", "image.api.json"))
+COMFY_VIDEO_WORKFLOW = os.environ.get("COMFY_VIDEO_WORKFLOW", os.path.join("workflows", "video.api.json"))
+COMFY_TIMEOUT = int(os.environ.get("COMFY_TIMEOUT", "1800"))
+LTX_MLX_BIN = os.environ.get("LTX_MLX_BIN", os.path.join("storage", "tools", "ltx-2-mlx", ".venv", "bin", "ltx-2-mlx"))
 MOTIONS = ["in", "left", "out", "right"]
 MODEL_NAME = os.environ.get("SHORTS_MODEL", "qwen3:4b-instruct-2507-q4_K_M")  # SHORTS_MODEL=qwen3:1.7b for fast drafts
 
@@ -88,9 +103,10 @@ SCRIPT_SCHEMA = {
                     "subject": {"type": "string"},
                     "setting": {"type": "string"},
                     "lighting": {"type": "string"},
+                    "action": {"type": "string"},
                     "voice": {"type": "string"},
                 },
-                "required": ["text", "shot", "subject", "setting", "lighting"],
+                "required": ["text", "shot", "subject", "setting", "lighting", "action"],
             },
         },
     },
@@ -213,15 +229,16 @@ def image_problem(data):
     return None
 
 
-def strip_watermark(data):
+def strip_watermark(data, keep=0.95):
     """The free endpoint stamps a 'pollinations.ai' mark in the bottom-right corner. Crop 5% off the
-    bottom (and the same share off the sides, to keep 9:16) and scale back up to 1080x1920."""
+    bottom (and the same share off the sides, to keep 9:16) and scale back up to 1080x1920.
+    keep=1.0 only fits the image to 9:16 without cropping a mark."""
     if not HAS_PIL:
         return data
     import io
     img = Image.open(io.BytesIO(data)).convert("RGB")
     w, h = img.size
-    nh = round(h * 0.95)
+    nh = round(h * keep)
     nw = round(nh * 9 / 16)
     left = max(0, (w - nw) // 2)
     img = img.crop((left, 0, left + min(nw, w), nh)).resize((1080, 1920), Image.LANCZOS)
@@ -230,9 +247,130 @@ def strip_watermark(data):
     return out.getvalue()
 
 
+def comfy_upload(path):
+    """Uploads an image to ComfyUI and returns the name its workflows use to load it."""
+    boundary = "----shorts" + str(int(time.time() * 1000))
+    with open(path, "rb") as f:
+        content = f.read()
+    head = (f'--{boundary}\r\nContent-Disposition: form-data; name="image"; filename="{os.path.basename(path)}"\r\n'
+            "Content-Type: image/png\r\n\r\n").encode()
+    tail = (f'\r\n--{boundary}\r\nContent-Disposition: form-data; name="overwrite"\r\n\r\ntrue\r\n--{boundary}--\r\n').encode()
+    req = urllib.request.Request(f"{COMFY_URL}/upload/image", data=head + content + tail,
+                                 headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
+    with urllib.request.urlopen(req, timeout=120) as response:
+        return json.load(response)["name"]
+
+
+def comfy_run(workflow_path, values):
+    """Runs a ComfyUI API-format workflow and returns (file bytes, file extension) of its first output."""
+    with open(workflow_path, encoding="utf-8") as f:
+        text = f.read()
+    for key, value in values.items():
+        text = text.replace('"{{' + key + '}}"', json.dumps(value))
+    body = json.dumps({"prompt": json.loads(text)}).encode()
+    req = urllib.request.Request(f"{COMFY_URL}/prompt", data=body, headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=60) as response:
+        prompt_id = json.load(response)["prompt_id"]
+    deadline = time.time() + COMFY_TIMEOUT
+    while time.time() < deadline:
+        time.sleep(3)
+        with urllib.request.urlopen(f"{COMFY_URL}/history/{prompt_id}", timeout=60) as response:
+            entry = json.load(response).get(prompt_id)
+        if not entry:
+            continue
+        if entry.get("status", {}).get("status_str") == "error":
+            raise RuntimeError("ComfyUI reported an error for this workflow")
+        for node in entry.get("outputs", {}).values():
+            for kind in ("images", "videos", "gifs"):
+                for item in node.get(kind, []):
+                    if item.get("type") == "temp":
+                        continue
+                    query = urllib.parse.urlencode({"filename": item["filename"], "subfolder": item.get("subfolder", ""), "type": item.get("type", "output")})
+                    with urllib.request.urlopen(f"{COMFY_URL}/view?{query}", timeout=300) as response:
+                        return response.read(), os.path.splitext(item["filename"])[1].lower()
+        raise RuntimeError("ComfyUI finished but returned no image or video")
+    raise TimeoutError(f"ComfyUI did not finish within {COMFY_TIMEOUT}s")
+
+
+def pick_video_scenes(count):
+    """Scene numbers (1-based) that become real clips: hook, the catch (4th), and the ending by default."""
+    if VIDEO_PROVIDER not in ("comfyui", "ltx-mlx"):
+        return set()
+    if VIDEO_SCENES == "all":
+        return set(range(1, count + 1))
+    if VIDEO_SCENES == "auto":
+        return {1, min(4, count), count}
+    return {int(n) for n in VIDEO_SCENES.split(",") if n.strip().isdigit() and 1 <= int(n) <= count}
+
+
+def motion_prompt(scene):
+    """Subject-motion prompt in the style of docs/MOTION_SHOT_RECIPE.md: steady camera, one visible physical action."""
+    subject = " ".join(str(scene.get("subject") or "the subject").split()).strip(" .")
+    action = " ".join(str(scene.get("action") or "").split()).strip(" .") or "light and steam move gently across the scene"
+    camera = "Locked macro camera" if scene.get("shot") in ("macro close-up", "detail close-up") else "Steady camera"
+    return f"{camera}. {action}. Preserve the original {subject}, composition and lighting. No text, no camera movement."
+
+
+def animate_scene(image_path, scene, scene_idx):
+    """Turns a scene image into a short motion clip. Returns the clip path, or None to keep the still."""
+    clip_path = os.path.join(ASSET_DIR, f"clip_{scene_idx}.mp4").replace("\\", "/")
+    raw_path = clip_path + ".raw"
+    prompt = motion_prompt(scene)
+    try:
+        print(f"   🎞️  Animating scene {scene_idx} with {VIDEO_PROVIDER} (this can take minutes): {prompt}")
+        if VIDEO_PROVIDER == "ltx-mlx":
+            # Same settings as scripts/test-mac-motion.sh (49 frames at 24 fps, 384x640, distilled, low RAM).
+            raw_path = clip_path + ".raw.mp4"
+            env = dict(os.environ, HF_HOME=os.environ.get("HF_HOME", os.path.join("storage", "models", "huggingface")))
+            # setup:mac records the local model dirs (see scripts/mac-runtime.sh); fall back to hub names.
+            def _setup_dir(var, marker, hub):
+                if os.environ.get(var):
+                    return os.environ[var]
+                try:
+                    with open(os.path.join("storage", "setup", marker), encoding="utf-8") as f:
+                        return f.read().strip() or hub
+                except OSError:
+                    return hub
+            ltx_model = _setup_dir("LTX_MODEL_DIR", "ltx-model-dir.txt", "dgrauet/ltx-2.3-mlx-q4")
+            gemma_model = _setup_dir("GEMMA_MODEL_DIR", "gemma-model-dir.txt", "mlx-community/gemma-3-12b-it-4bit")
+            subprocess.run([LTX_MLX_BIN, "generate", "--model", ltx_model, "--gemma", gemma_model, "--distilled", "--low-ram",
+                            "--seed", str(42 + scene_idx), "--image", image_path, "--prompt", prompt,
+                            "-H", "640", "-W", "384", "-f", "49", "--frame-rate", "24", "-o", raw_path],
+                           check=True, timeout=COMFY_TIMEOUT, env=env)
+        else:
+            data, ext = comfy_run(COMFY_VIDEO_WORKFLOW, {"image": comfy_upload(image_path), "prompt": prompt,
+                                                          "seed": scene_idx * 17, "width": 720, "height": 1280})
+            if ext not in (".mp4", ".webm", ".mov", ".gif"):
+                raise ValueError(f"workflow returned {ext or 'no file type'}, needs a video output")
+            raw_path = clip_path + ".raw" + ext
+            with open(raw_path, "wb") as f:
+                f.write(data)
+        # Scale to the video size the renderer uses and make sure the codec is plain H.264.
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", raw_path, "-an", "-vf", "scale=720:1280:flags=lanczos",
+                        "-pix_fmt", "yuv420p", "-c:v", "libx264", "-crf", "18", clip_path], check=True)
+        os.remove(raw_path)
+        print(f"      ✅ Clip -> {clip_path}")
+        return clip_path
+    except Exception as err:
+        print(f"      ⚠️  Animation failed ({err}). Keeping the still image with camera motion.")
+        return None
+
+
 def generate_ai_scene_image(prompt_text, output_path, scene_idx, total_scenes):
     """Generates 9:16 portrait visual assets via AI API or falls back to a stylized slide."""
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    if IMAGE_PROVIDER == "comfyui":
+        try:
+            data, _ = comfy_run(COMFY_IMAGE_WORKFLOW, {"prompt": prompt_text, "seed": scene_idx * 17, "width": 832, "height": 1472})
+            why = image_problem(data)
+            if why:
+                raise ValueError(why)
+            with open(output_path, "wb") as f:
+                f.write(strip_watermark(data, keep=1.0))
+            print(f"      ✅ ComfyUI image -> {output_path}")
+            return
+        except Exception as err:
+            print(f"      ⚠️  ComfyUI image failed ({err}). Trying the free endpoint instead...")
     clean_prompt = urllib.parse.quote(prompt_text)
     
     # Valid vertical 9:16 AI image generation URL (1080x1920)
@@ -321,19 +459,20 @@ def main():
         "Voice rules: sentences of 6 to 14 words, simple everyday words, one idea and at most one number per scene, concrete nouns instead of adjectives like 'amazing'. "
         "End every scene except the last with a small open loop ('and that is not even the strange part') so people keep watching. Never write 'In conclusion' or 'Subscribe'.\n"
         "TRUTH: use only facts that are widely known or frame them as 'reportedly' or 'some say'. Never invent names of people, restaurants, studies or statistics.\n"
-        "IMAGE DIRECTION: for every scene describe ONE photograph that shows what the narration says. Fill four fields:\n"
+        "IMAGE DIRECTION: for every scene describe ONE photograph that shows what the narration says. Fill five fields:\n"
         f"- shot: one of {', '.join(SHOT_TYPES)}. Use a different shot in every scene: start wide or macro, move to details, end on a hero shot.\n"
         "- subject: one concrete thing with materials, colors and texture (8 to 18 words). Example for a different topic: 'a brushed-steel pocket watch resting on dark green velvet, its gold hands catching the light'. Never copy the examples.\n"
         "- setting: where it is, with time of day and 2 background details. Example for a different topic: 'a candlelit oak desk in a quiet study at dusk, leather books blurred behind'.\n"
         "- lighting: direction and quality. Example: 'warm low key light from camera-left, deep shadows, soft rim light'.\n"
+        "- action: ONE physical movement of the subject itself that a video model can animate, never a camera move. Example for a different topic: 'the gold hands of the watch tick forward and a speck of dust drifts through the light'.\n"
         "Describe things that are visible; never write abstract ideas, camera brands, text, logos or real people.\n"
         "UPLOAD DETAILS: 'kicker' is a 2 to 3 word label of the subject (for example 'Truffle Pasta'). 'keywords' are 3 to 6 lowercase search phrases a viewer would type on YouTube (for example 'most expensive pasta').\n"
-        "JSON structure: {\"tightOpen\": true, \"hookText\": \"string\", \"kicker\": \"string\", \"keywords\": [\"string\"], \"scenes\": [{\"text\": \"string\", \"shot\": \"string\", \"subject\": \"string\", \"setting\": \"string\", \"lighting\": \"string\", \"voice\": \"string\"}]}"
+        "JSON structure: {\"tightOpen\": true, \"hookText\": \"string\", \"kicker\": \"string\", \"keywords\": [\"string\"], \"scenes\": [{\"text\": \"string\", \"shot\": \"string\", \"subject\": \"string\", \"setting\": \"string\", \"lighting\": \"string\", \"action\": \"string\", \"voice\": \"string\"}]}"
     )
 
     user_prompt = (
         f"Topic: {topic}. Voice: {voice_preset}. "
-        f"Create {MIN_SCENES} or {MAX_SCENES} scenes (a 10-word hook first, then about {OTHER_WORDS} words per scene, about {TOTAL_WORDS} words in total) with the shot, subject, setting and lighting fields filled for each scene."
+        f"Create {MIN_SCENES} or {MAX_SCENES} scenes (a 10-word hook first, then about {OTHER_WORDS} words per scene, about {TOTAL_WORDS} words in total) with the shot, subject, setting, lighting and action fields filled for each scene."
     )
     if hook_prompt:
         user_prompt += f" Hook: {hook_prompt}."
@@ -482,6 +621,19 @@ def main():
         scene.setdefault("motion", MOTIONS[(i - 1) % len(MOTIONS)])
         if not scene.get("voice"):
             scene["voice"] = voice_preset
+
+    # Clips are made after all images, so a 16 GB Mac can stop ComfyUI first and give the memory to the video model.
+    video_scenes = pick_video_scenes(len(spec_data["scenes"]))
+    if video_scenes:
+        if IMAGE_PROVIDER == "comfyui" and VIDEO_PROVIDER == "ltx-mlx":
+            print("\n💡 Images are done. If memory is tight, stop ComfyUI now (the video model needs it).")
+        print("\n🎞️  Creating real motion clips...")
+        for i, scene in enumerate(spec_data["scenes"], 1):
+            if i in video_scenes:
+                clip = animate_scene(scene["image"], scene, i)
+                if clip:
+                    scene["video"] = clip
+                    scene["videoFill"] = "hold"
 
     # Step 2: Display Interactive Preview Card
     print("\n" + "=" * 60)

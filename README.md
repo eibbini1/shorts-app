@@ -63,3 +63,19 @@ See [docs/AUTOMATION.md](docs/AUTOMATION.md). Run `npm run automate -- --dry-run
 Connect once using [docs/YOUTUBE_SETUP.md](docs/YOUTUBE_SETUP.md), then `npm run yt-upload -- --auth`. Complete packs include a passing QA report and checksums. Uploads remain private until thumbnails and captions are attached and YouTube confirms the future publication time. Saved remote IDs prevent duplicate uploads on reruns; ambiguous upload results require checking Studio before retrying.
 
 `npm run list-pending` shows queue and upload state. `npm run verify-live-run` verifies all configured packs against current inputs and artifact checksums. `npm run build`, `npm run lint` and `npm test` are the validation commands.
+
+## Optional real motion and local image providers (create_video.py)
+
+Off by default. The Windows generator keeps using Pollinations stills unless you opt in.
+
+| Variable | Values | Meaning |
+|---|---|---|
+| SHORTS_IMAGE_PROVIDER | pollinations (default), comfyui | Scene image source. ComfyUI falls back to Pollinations on error. |
+| SHORTS_VIDEO_PROVIDER | none (default), ltx-mlx, comfyui | Animate scene images into short clips (Apple Silicon Mac). |
+| SHORTS_VIDEO_SCENES | auto (default), all, or a CSV such as 1,4,7 | Which scenes to animate. auto = hook, a middle scene and the ending. |
+| COMFY_URL, COMFY_IMAGE_WORKFLOW, COMFY_VIDEO_WORKFLOW, COMFY_TIMEOUT | | ComfyUI server and API-format workflows with {{prompt}}, {{seed}}, {{image}} placeholders. |
+| LTX_MLX_BIN | path | LTX-MLX CLI. Model folders come from LTX_MODEL_DIR / GEMMA_MODEL_DIR or storage/setup/*.txt written by npm run setup:mac. |
+| SHORTS_SCRIPT | JSON file | Use this script and skip Ollama. |
+| SHORTS_FACTS | text file | Verified facts (max 1500 chars) added to the script prompt. |
+
+Run motion on the Mac with: SHORTS_VIDEO_PROVIDER=ltx-mlx python create_video.py. This is not yet verified on real Mac hardware.
