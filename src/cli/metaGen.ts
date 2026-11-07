@@ -29,7 +29,7 @@ const KEYWORDS: [RegExp, string][] = [
 const tags = new Set<string>(['luxury food', 'most expensive food', 'billionaire food', 'Billionaire Bites', 'food facts', 'shorts']);
 for (const [re, t] of KEYWORDS) if (re.test(all)) tags.add(t);
 
-const { score, fixes, breakdown } = scoreHook(texts);
+const { score, fixes, breakdown } = scoreHook(texts, spec.hookText);
 const rawTitle = first.replace(/\s+Here's why\.?$/i, '').replace(/\.$/, '');
 const title = shortTitle(arg('title') ?? spokenToDigits(rawTitle)) || spec.kicker || 'Luxury food';
 const hashtags = ['#luxuryfood', ...[...tags].slice(6, 8).map((t) => '#' + t.replace(/\W+/g, '').toLowerCase()), '#shorts'];

@@ -92,11 +92,11 @@ export function pinnedComment(family: string, topic: string): string {
 export interface HookResult { score: number; fixes: string[]; breakdown: Record<string, number> }
 
 /** Heuristic scoring of the opening and structure of a Short script. Max 100; most scripts land 45-85. */
-export function scoreHook(texts: string[]): HookResult {
+export function scoreHook(texts: string[], hookText?: string): HookResult {
   const first = texts[0] ?? '';
   const last = texts[texts.length - 1] ?? '';
   const all = texts.join(' ');
-  const words = first.split(/\s+/).filter(Boolean).length;
+  const words = (hookText?.trim() || first).split(/\s+/).filter(Boolean).length;
   const totalWords = all.split(/\s+/).filter(Boolean).length;
   const estSec = totalWords / 2.6;
   const b: Record<string, number> = {};
