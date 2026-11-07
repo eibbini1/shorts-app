@@ -44,6 +44,8 @@
     "scenario:narrate": "node scripts/narrate-scenario.mjs",
     "make:chocolate:mac": "bash scripts/chocolate-short-local.sh",
     "make:gold-steak:mac": "bash scripts/gold-steak-local.sh",
+    "make:crust:mac": "python3 scripts/steak-crust-local.py",
+    "make:any:mac": "bash scripts/make-local-video.sh",
     "chocolate:motion:mac": "python3 scripts/chocolate-short/generate-motion.py",
     "models:check:mac": "python3 scripts/models-status-mac.py",
     "trends:local": "python3 scripts/fetch-trends.py",

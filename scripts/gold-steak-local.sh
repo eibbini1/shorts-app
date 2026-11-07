@@ -24,6 +24,9 @@ for name in season sear slice gold; do
 done
 if [[ "$images_ready" == 1 ]]; then
   echo 'Reusing four saved local reference images; ComfyUI startup skipped.'
+  if curl -fsS --max-time 3 http://127.0.0.1:8188/system_stats >/dev/null 2>&1; then
+    curl -fsS --max-time 30 -H 'Content-Type: application/json' -d '{"unload_models":true,"free_memory":true}' http://127.0.0.1:8188/free >/dev/null
+  fi
 elif ! curl -fsS --max-time 3 http://127.0.0.1:8188/system_stats >/dev/null 2>&1; then
   bash scripts/mac-runtime.sh comfy >"$GOLD_STEAK_WORK_DIR/comfy.log" 2>&1 &
   comfy_pid=$!
