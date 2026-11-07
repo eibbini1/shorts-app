@@ -22,14 +22,17 @@ OLLAMA_TIMEOUT = int(os.environ.get("SHORTS_TIMEOUT", "1200"))
 VOICE_PROVIDER = os.environ.get("SHORTS_VOICE", "mock")  # "elevenlabs" for real narration
 IMAGE_TIMEOUT = int(os.environ.get("SHORTS_IMAGE_TIMEOUT", "90"))
 # Heavier machines (for example an Apple Silicon Mac) can run ComfyUI locally for better images and real video clips.
-#   SHORTS_IMAGE_PROVIDER=pollinations (default) | comfyui
+#   SHORTS_IMAGE_PROVIDER=pollinations (default) | comfyui | flux (local FLUX.2 Klein via mflux, Mac)
 #   SHORTS_VIDEO_PROVIDER=none (default) | ltx-mlx | comfyui   animates chosen scene images into real motion clips
 #       ltx-mlx = the runtime from scripts/setup-mac.sh (set LTX_MLX_BIN to override its path)
 #   SHORTS_VIDEO_SCENES=auto (hook, catch, ending) | all | 1,4,7
 # ComfyUI workflows are "Save (API Format)" JSON files. Like scripts/local-media.mjs, the exact string values
 # "{{prompt}}", "{{seed}}", "{{width}}", "{{height}}" and (video only) "{{image}}" are replaced before the run.
 IMAGE_PROVIDER = os.environ.get("SHORTS_IMAGE_PROVIDER", "pollinations").strip().lower()
+FLUX_BIN = os.environ.get("FLUX_BIN", os.path.join("storage", "tools", "mflux", ".venv", "bin", "mflux-generate-flux2"))
+FLUX_MODEL = os.environ.get("FLUX_MODEL", os.path.join("storage", "models", "flux2-klein-4b-4bit"))
 VIDEO_PROVIDER = os.environ.get("SHORTS_VIDEO_PROVIDER", "none").strip().lower()
+VIDEO_FRAMES = max(25, int(os.environ.get("SHORTS_VIDEO_FRAMES", "97")))  # 97 frames at 24 fps = 4 s clips (proven on this Mac); 49 = 2 s
 VIDEO_SCENES = os.environ.get("SHORTS_VIDEO_SCENES", "auto").strip().lower()
 COMFY_URL = os.environ.get("COMFY_URL", "http://127.0.0.1:8188").rstrip("/")
 COMFY_IMAGE_WORKFLOW = os.environ.get("COMFY_IMAGE_WORKFLOW", os.path.join("workflows", "image.api.json"))
@@ -41,6 +44,9 @@ MODEL_NAME = os.environ.get("SHORTS_MODEL", "qwen3:4b-instruct-2507-q4_K_M")  # 
 
 # Target video length. About 2.5 spoken words per second; 60 s means 6-7 scenes and ~150 words.
 TARGET_SECONDS = int(os.environ.get("SHORTS_SECONDS", "60"))
+# Soft 384x640 motion clips: lanczos upscale, light sharpening, fine film grain so they sit beside the stills (SHORTS_CLIP_FILTER to override).
+CLIP_FILTER = os.environ.get("SHORTS_CLIP_FILTER", "scale=720:1280:flags=lanczos,unsharp=5:5:0.5:5:5:0.0,noise=alls=5:allf=t")
+HOOK_WORDS = max(5, int(os.environ.get("SHORTS_HOOK_WORDS", "10")))  # 8 tests well for retention; 10 is the default
 MIN_SCENES, MAX_SCENES = (6, 7) if TARGET_SECONDS >= 50 else (5, 6)
 TOTAL_WORDS = round(TARGET_SECONDS * 2.5)
 OTHER_WORDS = max(10, round((TOTAL_WORDS - 10) / (MAX_SCENES - 1)))
@@ -58,10 +64,11 @@ SHOT_LOOK = {
     "over-the-shoulder medium shot": "85mm portrait lens, shallow depth of field, soft background",
     "detail close-up": "85mm lens at f/1.8, sharp focus on the texture, blurred background",
 }
-IMAGE_STYLE = "Moody dark food photography with deep shadows and warm gold highlights, cinematic color grading, subtle film grain."
+IMAGE_STYLE = os.environ.get("SHORTS_IMAGE_STYLE", "Moody dark food photography with deep shadows and warm gold highlights, cinematic color grading, subtle film grain.")  # SHORTS_IMAGE_STYLE overrides the look for other formats
 # Fixed order that gives a different camera position in every neighbouring scene.
 SHOT_CYCLE = ["macro close-up", "wide establishing shot", "detail close-up", "overhead flat lay",
               "over-the-shoulder medium shot", "low-angle hero shot"]
+PHOTO_LOOK = os.environ.get("SHORTS_PHOTO_LOOK", "photorealistic")  # e.g. "Pixar-style 3D animated" for cartoon characters
 IMAGE_EXCLUDE = "Vertical 9:16 composition. No text, no watermark, no logos, no people's faces."
 
 
@@ -75,7 +82,7 @@ def compose_image_prompt(scene, topic="", ground=False):
         subject = f"{subject}, with {topic} clearly visible in the foreground"
     setting = clean("setting")
     lighting = clean("lighting") or "warm key light from camera-left with soft shadows"
-    parts = [f"A photorealistic {shot} of {subject}" + (f", set in {setting}." if setting else ".")]
+    parts = [f"A {PHOTO_LOOK} {shot} of {subject}" + (f", set in {setting}." if setting else ".")]
     parts.append(f"Lit by {lighting}.")
     parts.append(f"Captured with {SHOT_LOOK[shot]}.")
     parts.append(IMAGE_STYLE)
@@ -132,8 +139,8 @@ def parse_model_json(content: str) -> dict:
     return json.loads(content[start:end + 1])
 
 
-def clamp_hook(text, limit=10) -> str:
-    return " ".join(str(text or "").split()[:limit])
+def clamp_hook(text, limit=None) -> str:
+    return " ".join(str(text or "").split()[:limit or HOOK_WORDS])
 
 
 def call_ollama(payload):
@@ -172,9 +179,9 @@ def repair_script(spec):
         return
     hook = " ".join(str(spec.get("hookText") or "").split())
     first = " ".join(str(scenes[0].get("text") or "").split())
-    if len(first.split()) > 10 and hook and len(hook.split()) <= 10:
+    if len(first.split()) > HOOK_WORDS and hook and len(hook.split()) <= HOOK_WORDS:
         scenes[0]["text"] = hook
-    elif len(hook.split()) > 10 and first and len(first.split()) <= 10:
+    elif len(hook.split()) > HOOK_WORDS and first and len(first.split()) <= HOOK_WORDS:
         spec["hookText"] = first
 
 
@@ -186,14 +193,14 @@ def script_problems(spec):
         problems.append(f"needs {MIN_SCENES} or {MAX_SCENES} scenes")
     elif any(not isinstance(s, dict) or not str(s.get("text", "")).strip() for s in scenes):
         problems.append("a scene has no text")
-    elif len(str(scenes[0]["text"]).split()) > 10:
-        problems.append(f"scene 1 has {len(str(scenes[0]['text']).split())} words, needs 10 or fewer")
+    elif len(str(scenes[0]["text"]).split()) > HOOK_WORDS:
+        problems.append(f"scene 1 has {len(str(scenes[0]['text']).split())} words, needs {HOOK_WORDS} or fewer")
     total_words = sum(len(str(s.get("text", "")).split()) for s in scenes) if isinstance(scenes, list) else 0
     if scenes and total_words < 0.8 * TOTAL_WORDS:
         problems.append(f"only {total_words} words, needs about {TOTAL_WORDS}")
     hook_words = len(str(spec.get("hookText", "")).split())
-    if hook_words > 10:
-        problems.append(f"hookText has {hook_words} words, needs 10 or fewer")
+    if hook_words > HOOK_WORDS:
+        problems.append(f"hookText has {hook_words} words, needs {HOOK_WORDS} or fewer")
     return problems
 
 
@@ -319,7 +326,7 @@ def animate_scene(image_path, scene, scene_idx):
     try:
         print(f"   🎞️  Animating scene {scene_idx} with {VIDEO_PROVIDER} (this can take minutes): {prompt}")
         if VIDEO_PROVIDER == "ltx-mlx":
-            # Same settings as scripts/test-mac-motion.sh (49 frames at 24 fps, 384x640, distilled, low RAM).
+            # Same settings as scripts/test-mac-motion.sh (384x640, 24 fps, distilled, low RAM); 97 frames = 4 s like the earlier Mac clips.
             raw_path = clip_path + ".raw.mp4"
             env = dict(os.environ, HF_HOME=os.environ.get("HF_HOME", os.path.join("storage", "models", "huggingface")))
             # setup:mac records the local model dirs (see scripts/mac-runtime.sh); fall back to hub names.
@@ -335,7 +342,7 @@ def animate_scene(image_path, scene, scene_idx):
             gemma_model = _setup_dir("GEMMA_MODEL_DIR", "gemma-model-dir.txt", "mlx-community/gemma-3-12b-it-4bit")
             subprocess.run([LTX_MLX_BIN, "generate", "--model", ltx_model, "--gemma", gemma_model, "--distilled", "--low-ram",
                             "--seed", str(42 + scene_idx), "--image", image_path, "--prompt", prompt,
-                            "-H", "640", "-W", "384", "-f", "49", "--frame-rate", "24", "-o", raw_path],
+                            "-H", "640", "-W", "384", "-f", str(VIDEO_FRAMES), "--frame-rate", "24", "-o", raw_path],
                            check=True, timeout=COMFY_TIMEOUT, env=env)
         else:
             data, ext = comfy_run(COMFY_VIDEO_WORKFLOW, {"image": comfy_upload(image_path), "prompt": prompt,
@@ -346,7 +353,7 @@ def animate_scene(image_path, scene, scene_idx):
             with open(raw_path, "wb") as f:
                 f.write(data)
         # Scale to the video size the renderer uses and make sure the codec is plain H.264.
-        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", raw_path, "-an", "-vf", "scale=720:1280:flags=lanczos",
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", raw_path, "-an", "-vf", CLIP_FILTER,
                         "-pix_fmt", "yuv420p", "-c:v", "libx264", "-crf", "18", clip_path], check=True)
         os.remove(raw_path)
         print(f"      ✅ Clip -> {clip_path}")
@@ -359,6 +366,22 @@ def animate_scene(image_path, scene, scene_idx):
 def generate_ai_scene_image(prompt_text, output_path, scene_idx, total_scenes):
     """Generates 9:16 portrait visual assets via AI API or falls back to a stylized slide."""
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    if IMAGE_PROVIDER == "flux":
+        # FLUX.2 Klein 4B (4-bit, MLX) from scripts/setup-mflux-mac.sh: native 720x1280, no watermark, about a minute per image on an M1.
+        try:
+            if os.path.exists(output_path):
+                os.remove(output_path)  # mflux writes name_1.png instead of overwriting, which would leave a stale image in place
+            subprocess.run([FLUX_BIN, "--model", FLUX_MODEL, "--base-model", "flux2-klein-4b", "--prompt", prompt_text,
+                            "--width", "720", "--height", "1280", "--steps", "4", "--seed", str(scene_idx * 17 + 7),
+                            "--low-ram", "--output", output_path], check=True, timeout=COMFY_TIMEOUT)
+            with open(output_path, "rb") as f:
+                why = image_problem(f.read())
+            if why:
+                raise ValueError(why)
+            print(f"      ✅ FLUX image -> {output_path}")
+            return
+        except Exception as err:
+            print(f"      ⚠️  FLUX image failed ({err}). Trying the free endpoint instead...")
     if IMAGE_PROVIDER == "comfyui":
         try:
             data, _ = comfy_run(COMFY_IMAGE_WORKFLOW, {"prompt": prompt_text, "seed": scene_idx * 17, "width": 832, "height": 1472})
@@ -443,10 +466,10 @@ def main():
     system_prompt = (
         "You are a viral short-video director. Output ONLY valid JSON with no markdown block formatting.\n"
         "STRICT HOOK & DURATION RULES FOR 80+ RETENTION SCORE:\n"
-        "1. 'hookText': MUST be 10 words or fewer.\n"
-        "2. Scene 1 'text' is the hook line itself: 10 words or fewer, and it MUST include a curiosity gap ('Guess why' or 'Here is why'), a concrete price ('$1,000'), AND name a specific luxury item ('truffle', 'gold', 'wagyu', 'caviar').\n"
+        f"1. 'hookText': MUST be {HOOK_WORDS} words or fewer.\n"
+        f"2. Scene 1 'text' is the hook line itself: {HOOK_WORDS} words or fewer, and it MUST include a curiosity gap ('Guess why' or 'Here is why'), a concrete price ('$1,000'), AND name the topic's own main item (the product, dish or object the video is about).\n"
         "3. Tension: Include high-tension words ('banned', 'forbidden', 'secret', 'scam') in the opening scenes.\n"
-        f"4. Total Length: Create exactly {MIN_SCENES} or {MAX_SCENES} scenes. Scene 1 is the 10-word hook, the other scenes have about {OTHER_WORDS} words each (about {TOTAL_WORDS} words in total) for a video of about {TARGET_SECONDS} seconds. Every scene after the first MUST be 2 or 3 full sentences and at least {OTHER_WORDS - 4} words; shorter scenes make the video too short.\n"
+        f"4. Total Length: Create exactly {MIN_SCENES} or {MAX_SCENES} scenes. Scene 1 is the {HOOK_WORDS}-word hook, the other scenes have about {OTHER_WORDS} words each (about {TOTAL_WORDS} words in total) for a video of about {TARGET_SECONDS} seconds. Every scene after the first MUST be 2 or 3 full sentences and at least {OTHER_WORDS - 4} words; shorter scenes make the video too short.\n"
         "5. Closing scene: End with a divisive opinion-gap question ('Genius or total scam? Drop your take below.').\n"
         "STORYTELLING: write for the ear, as a narrator speaking to ONE viewer ('you'). Every scene has a job:\n"
         "- Scene 1 HOOK: the shocking price, the secret, the question. Never start with 'Welcome' or 'Today'.\n"
@@ -472,7 +495,7 @@ def main():
 
     user_prompt = (
         f"Topic: {topic}. Voice: {voice_preset}. "
-        f"Create {MIN_SCENES} or {MAX_SCENES} scenes (a 10-word hook first, then about {OTHER_WORDS} words per scene, about {TOTAL_WORDS} words in total) with the shot, subject, setting, lighting and action fields filled for each scene."
+        f"Create {MIN_SCENES} or {MAX_SCENES} scenes (a {HOOK_WORDS}-word hook first, then about {OTHER_WORDS} words per scene, about {TOTAL_WORDS} words in total) with the shot, subject, setting, lighting and action fields filled for each scene."
     )
     if hook_prompt:
         user_prompt += f" Hook: {hook_prompt}."
@@ -521,9 +544,14 @@ def main():
         except Exception as e:
             last_error = e
             print(f"   Attempt {attempt}/3 rejected: {e}")
+            # Tell the model exactly what was wrong so the next attempt can fix it instead of repeating the same draft.
+            payload["messages"][1]["content"] += f"\nYour previous draft was rejected: {e}. Write it again and fix exactly that. Every scene after the first needs 2 or 3 full sentences."
     if spec_data is None:
         e = last_error
         print(f"\n❌ Ollama issue or JSON parse error: {e}")
+        if os.environ.get("SHORTS_ALLOW_TEMPLATE") != "1":
+            # The template makes up claims ("banned", "only three chefs in the world") and is built to game the hook score, so it must never be published by accident.
+            raise SystemExit("Script generation failed 3 times. Stopping instead of using the generic template. Fix the prompt or facts, use SHORTS_SCRIPT, or set SHORTS_ALLOW_TEMPLATE=1 for a throwaway draft.")
         print("Falling back to the built-in template (about 40 seconds, generic, review before publishing)...")
         short_topic = " ".join(topic.split()[:3]) or "dish"
         fb_hook = hook_prompt or f"Guess why this $1,000 banned {short_topic} is secret."
@@ -596,7 +624,7 @@ def main():
         if VOICE_PROVIDER == "elevenlabs":
             spec_data["voice"].update({"speed": 1, "stability": 0.45, "style": 0.5})
     spec_data.setdefault("fps", 30)
-    spec_data.setdefault("music", "ambient")
+    spec_data.setdefault("music", os.environ.get("SHORTS_MUSIC") or "ambient")  # SHORTS_MUSIC=/path/to/track.mp3 uses a licensed track instead of the built-in ambient bed
     if "scenes" not in spec_data or not isinstance(spec_data["scenes"], list) or len(spec_data["scenes"]) == 0:
         spec_data["scenes"] = [{"text": f"Overview of {topic}.", "subject": topic, "voice": voice_preset}]
 
@@ -671,7 +699,8 @@ def main():
         command = ["npm", "run", "pipeline", "--", "--spec", SPEC_PATH]
         if os.environ.get("SHORTS_ALLOW_VOICE_SPEND") == "1":
             command.append("--allow-voice-spend")  # uncached ElevenLabs lines spend characters
-        result = subprocess.run(command, env=env, shell=True)
+        # A list with shell=True only works on Windows (npm is npm.cmd there); on macOS and Linux it would run bare "npm".
+        result = subprocess.run(command, env=env, shell=(os.name == "nt"))
         if result.returncode != 0:
             print(f"\n❌ Pipeline failed (exit {result.returncode}). See the log above.")
             raise SystemExit(result.returncode)
