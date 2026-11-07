@@ -32,9 +32,13 @@ export const fingerprint = (texts: string[]): Fingerprint => ({
   opener: norm(texts[0] ?? '').split(' ').slice(0, 3).join(' '),
 });
 
+const lead = (f: Fingerprint) => norm(f.hook).split(' ').slice(0, 6).join(' ');
+
 export function compare(a: Fingerprint, b: Fingerprint): string[] {
   const issues: string[] = [];
   if (a.opener && a.opener === b.opener) issues.push(`same opener "${a.opener}"`);
+  // A shared 3-word opener only warns; the same first six words is a repeated opening line.
+  if (lead(a).split(' ').length >= 4 && lead(a) === lead(b)) issues.push(`same opening line "${lead(a)}"`);
   if (norm(a.cta) === norm(b.cta)) issues.push('identical closing line');
   else if (jaccard(a.cta, b.cta) > 0.6) issues.push('near-identical closing line');
   if (jaccard(a.hook, b.hook) > 0.5) issues.push('near-duplicate hook text');

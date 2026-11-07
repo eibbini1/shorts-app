@@ -93,6 +93,8 @@ export interface StillsSpec {
   voice: { provider: 'elevenlabs' | 'mock'; voiceId?: string; speed?: number; stability?: number; style?: number };
   /** Small gold kicker line shown at the top for the first seconds. */
   kicker?: string;
+  /** Search phrases that metaGen adds to the upload tags. */
+  keywords?: string[];
   /** Tight open: trims dead air before the first word and shows hookText from frame 0. */
   tightOpen?: boolean;
   /** Big on-screen hook (e.g. "$1,000 BURGER") visible from the very first frame for ~2.4 s. */

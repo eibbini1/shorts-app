@@ -51,6 +51,13 @@ describe('variation guard', () => {
     const c = fingerprint(['In Sardinia, one cheese is outlawed.', 'z', 'Should this stay illegal? Drop your take below.']);
     expect(compare(a, c)).toEqual([]);
   });
+  it('blocks a repeated opening line but not a shared 3-word opener', () => {
+    const x = fingerprint(['Guess why this $1,000 truffle is banned.', 'x', 'Ending one here.']);
+    const y = fingerprint(['Guess why this $1,000 truffle costs so much.', 'y', 'A different ending.']);
+    const z = fingerprint(['Guess why gold ice cream is illegal.', 'z', 'Another ending.']);
+    expect(hardVariationIssues(compare(x, y)).some((s) => s.includes('same opening line'))).toBe(true);
+    expect(hardVariationIssues(compare(x, z))).toEqual([]);
+  });
   it('jaccard is 1 for identical text, 0 for disjoint', () => {
     expect(jaccard('one two three four', 'one two three four')).toBe(1);
     expect(jaccard('one two three four', 'five six seven eight')).toBe(0);

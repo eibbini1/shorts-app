@@ -21,7 +21,6 @@ const run = (bin: string, args: string[]) => {
 };
 
 const pr = run('ffprobe', ['-v', 'error', '-show_entries', 'stream=codec_type,width,height,r_frame_rate,sample_rate:format=duration', '-of', 'json', video]);
-if (pr.status !== 0) { console.error('ffprobe failed: ' + pr.stderr); process.exit(1); }
 const info = JSON.parse(pr.stdout) as { streams: { codec_type: string; width?: number; height?: number; r_frame_rate?: string }[]; format: { duration: string } };
 const v = info.streams.find((s) => s.codec_type === 'video');
 const hasAudio = info.streams.some((s) => s.codec_type === 'audio');
@@ -51,8 +50,8 @@ add('frame rate', fps >= 23, `${fps.toFixed(2)} fps`);
 if (loud) {
   const i = Number(loud.input_i);
   const tp = Number(loud.input_tp);
-  add('loudness', Math.abs(i + 14) <= 2.5, `${i.toFixed(1)} LUFS (target -14)`);
-  add('true peak', tp <= -0.9, `${tp.toFixed(1)} dBTP (max -1)`);
+  add('loudness', Math.abs(i + 14) <= 2, `${i.toFixed(1)} LUFS (target -14)`);
+  add('true peak', tp <= -1, `${tp.toFixed(1)} dBTP (max -1)`);
 } else add('loudness', false, 'could not measure');
 if (process.argv.includes('--require-motion')) {
   const motion = run('ffmpeg', ['-hide_banner', '-nostats', '-i', video, '-vf', 'freezedetect=n=-50dB:d=2.5', '-an', '-f', 'null', '-']);
