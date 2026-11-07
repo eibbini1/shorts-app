@@ -200,7 +200,7 @@ def image_problem(data):
         img = Image.open(io.BytesIO(data)).convert("L")
         if img.height <= img.width:
             return "not a portrait image"
-        small = list(img.resize((16, 16)).getdata())
+        small = list(img.resize((16, 16)).tobytes())
         mean = sum(small) / len(small)
         if (sum((p - mean) ** 2 for p in small) / len(small)) ** 0.5 < 6:
             return "image is almost flat"
