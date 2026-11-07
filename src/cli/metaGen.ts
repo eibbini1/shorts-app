@@ -28,6 +28,7 @@ const KEYWORDS: [RegExp, string][] = [
 ];
 const tags = new Set<string>(['luxury food', 'most expensive food', 'billionaire food', 'Billionaire Bites', 'food facts', 'shorts']);
 for (const [re, t] of KEYWORDS) if (re.test(all)) tags.add(t);
+for (const k of spec.keywords ?? []) tags.add(k);
 
 const { score, fixes, breakdown } = scoreHook(texts, spec.hookText);
 const rawTitle = first.replace(/\s+Here's why\.?$/i, '').replace(/\.$/, '');
