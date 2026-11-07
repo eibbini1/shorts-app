@@ -10,6 +10,12 @@ const args=parseArgs({allowPositionals:true,options:{style:{type:'string',defaul
 const execFileAsync=promisify(execFile);
 const [topic,id]=args.positionals;
 if (!topic?.trim() || !/^[a-z0-9][a-z0-9-]{0,79}$/.test(id??'')) throw new Error('Usage: node scripts/story-scenario.mjs "subject" draft-id [--style ...] [--ending ...] [--seconds 30]');
+const prehistoricCars=/\b(flin(?:t)?ston(?:e)?s?|stone[ -]?age|caveman|prehistoric)\b/i.test(topic) && /\b(cars?|vehicles?|racing)\b/i.test(topic);
+const subjectRules=prehistoricCars?
+  'The user wants playful prehistoric cartoon cars: handmade stone-and-wood vehicles, stone wheels, foot-powered movement, expressive rounded characters and physical comedy. Keep the story inside this primitive cartoon world. Never introduce a real car make or model, combustion engine, carburetor, fuel, GPS, asphalt race track or modern repair manual.':
+  `The exact requested subject is "${topic}". Preserve its defining nouns, era, species, medium and visual premise throughout the outline and every shot. Do not substitute a realistic or unrelated subject.`;
+const forbiddenModern=/\b(fairlane|ford|chevrolet|ferrari|engine|carburetor|gasoline|petrol|fuel|gps|dashboard|asphalt|spark plug|exhaust|gearbox|piston|horsepower|repair manual)\b/i;
+function subjectIssue(value){return prehistoricCars && forbiddenModern.test(value);}
 const settings=scenarioSettings({brand:'Local Studio',format:args.values.format,seconds:args.values.seconds});
 if (settings.seconds>60) throw new Error('Local story builder supports up to 60 seconds');
 const model=args.values.model;
@@ -66,7 +72,7 @@ const selected=count===2?['Hook and goal','Payoff and closing image']:
   count===6?['Hook','Goal','Obstacle','New plan','Action','Payoff']:
   Array.from({length:count},(_,i)=>core[Math.round(i*(core.length-1)/(count-1))]);
 const beats=selected.map((label,i)=>({number:i+1,label,seconds:durations[i]}));
-const outlineInstruction='You are a visual story editor. Develop one concrete, filmable story from any subject. Pick a specific protagonist or focal object, one setting, a visible goal, a physical obstacle that temporarily prevents the goal, a change of approach, and a satisfying visible outcome. If the user gives an ending, the goal and payoff MUST directly be that ending. Do not invent another mission, destination or unrelated stakes. The requested ending is success, never the obstacle. The turn must visibly solve the obstacle, and the payoff must answer the opening. Avoid vague metaphors, repeated dashboard or beauty shots, fabricated facts, and unsupported claims. Keep one consistent subject, lighting progression, props and location. Write compact JSON fields only.';
+const outlineInstruction=`You are a visual story editor. ${subjectRules} Develop one concrete, filmable story from the user's subject. Pick a specific protagonist or focal object, one setting, a visible goal, a physical obstacle that temporarily prevents the goal, a change of approach, and a satisfying visible outcome. If the user gives an ending, the goal and payoff MUST directly be that ending. Do not invent another mission, destination or unrelated stakes. The requested ending is success, never the obstacle. The turn must visibly solve the obstacle, and the payoff must answer the opening. Avoid vague metaphors, repeated beauty shots, fabricated facts, and unsupported claims. Keep one consistent subject, lighting progression, props and location. Write compact JSON fields only.`;
 const anchorWords=new Set((args.values.ending.toLowerCase().match(/[a-z]{5,}/g)||[]).filter(word=>!['after','around','before','driver','takes','taking','reaches','reach','along','while','through','there','their','where','which','empty','small','safe','sunrise','sunset','morning','night'].includes(word)));
 function endingMatches(goal){
   if(!anchorWords.size) return true;
@@ -77,10 +83,12 @@ let outline;
 for(let attempt=1;attempt<=2;attempt++){
   outline=await ask(outlineSchema,outlineInstruction,
     {topic,style:args.values.style,requestedEnding:args.values.ending||'Choose a concrete satisfying ending',seconds:settings.seconds,
-      correction:attempt>1?'Your prior goal did not match the requested ending. Use that ending as the literal goal and payoff; remove unrelated missions.':undefined});
-  if(endingMatches(outline.goal)) break;
-  console.log('Rewriting an outline whose goal missed the requested ending');
-  if(attempt===2) throw new Error('The local model did not keep the requested ending as its goal. No video render was started. Try a more specific ending or another local story model.');
+      correction:attempt>1?`Your prior outline violated this requirement: ${subjectRules} Keep the requested ending as the literal goal and payoff when one was supplied.`:undefined});
+  const storyText=[outline.title,outline.hook,outline.payoff,outline.protagonist,outline.setting,outline.goal,outline.obstacle,outline.turn,outline.visualBible].join(' ');
+  const subjectMiss=subjectIssue(storyText) || (prehistoricCars && !/\b(stone|wood|prehistoric|caveman|foot-powered|foot powered)\b/i.test(storyText));
+  if(endingMatches(outline.goal) && !subjectMiss) break;
+  console.log(`Rewriting an outline that missed ${subjectMiss?'the requested subject':'the requested ending'}`);
+  if(attempt===2) throw new Error('The local model did not keep the requested subject or ending. No video render was started. Try a more specific prompt or another local story model.');
 }
 console.log(`Story spine: ${outline.goal} → ${outline.obstacle} → ${outline.turn} → ${outline.payoff}`);
 const shots=[];
@@ -163,11 +171,12 @@ for(let i=0;i<count;i++){
   let issues=[];
   for(let attempt=1;attempt<=2;attempt++){
     shot=await ask(shotSchema,
-      'Write ONE shot for ONE specific story beat. Follow the beat directive literally. Keep the same subject, car or object, location, props and lighting progression from the outline. Do not include any event assigned to a later beat. The imagePrompt depicts one distinct physical event. The motionPrompt describes visible subject movement and one camera move in a single continuous take with no cut or montage. Narration is one specific sentence, about four to ten words for a five-second shot. No unsupported facts or generic mood-only phrases. Sound names one localized effect. Output only JSON.',
+      `Write ONE shot for ONE specific story beat. ${subjectRules} Follow the beat directive literally. Keep the same subject, location, props and lighting progression from the outline. Do not include any event assigned to a later beat. The imagePrompt depicts one distinct physical event. The motionPrompt describes visible subject movement and one camera move in a single continuous take with no cut or montage. Narration is one specific sentence, about four to ten words for a five-second shot. No unsupported facts or generic mood-only phrases. Sound names one localized effect. Output only JSON.`,
       {topic,style:args.values.style,outline,beat,directive:beatDirective(beat),previousShots:shots.map((item,j)=>({beat:beats[j].label,imagePrompt:item.imagePrompt,motionPrompt:item.motionPrompt})),
-        correction:attempt>1?'The last answer repeated a scene, included a cut, or had unsuitable narration. Make this beat visibly distinct and speakable.':undefined});
+        correction:attempt>1?`The last answer repeated a scene, included a cut, changed the subject, or had unsuitable narration. ${subjectRules} Make this beat visibly distinct and speakable.`:undefined});
     const words=shot.narration.split(/\s+/).length;
     issues=[];
+    if(subjectIssue(Object.values(shot).join(' '))) issues.push('subject');
     if(seenImages.some(value=>similar(value,shot.imagePrompt,0.85))) issues.push('image');
     if(seenMotion.some(value=>similar(value,shot.motionPrompt,0.85))||/\b(cut to|quick cut|montage|transition to)\b/i.test(shot.motionPrompt)) issues.push('motion');
     if(seenNarration.some(value=>similar(value,shot.narration,0.85))||words>Math.ceil(beat.seconds*2.5)||
@@ -175,6 +184,7 @@ for(let i=0;i<count;i++){
     if(!issues.length) break;
     rewriteCount++;
     if(attempt===2){
+      if(issues.includes('subject')) throw new Error(`Beat ${i+1} changed the requested subject. No scenario was saved or rendered.`);
       console.log(`Repairing ${issues.join(', ')} in beat ${i+1}; review it closely`);
       fallbackCount+=issues.length;
       break;

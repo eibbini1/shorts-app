@@ -4,6 +4,8 @@ The old `local-video-20261107-070129.local-scenario.json` car draft came from on
 
 The interactive `npm run make:any:mac` workflow now uses the Gemma 12B text model already installed for LTX on the tested Mac. It asks for a subject, visual style, desired ending, duration and orientation. It first drafts a protagonist, setting, goal, physical obstacle, solution and payoff. It checks that a requested ending remains the goal. Then it writes one shot at a time against fixed, timed story beats. For a 30-second film the six beats are hook, goal, obstacle, new plan, action and payoff; for 60 seconds there are twelve beats from hook and setup through approach, obstacle, alternate plan, payoff and closing image.
 
+The subject is also a constraint. For example, "cartoon cars like flinstons" means foot-powered stone-and-wood cartoon vehicles throughout; it must not turn into a modern Fairlane with an engine. The planner retries a mismatched outline or shot and stops before rendering if the subject still drifts. This catches that specific failure, though other creative mismatches still require review.
+
 Each shot gets one still prompt, one continuous-motion prompt, a speakable voice line and a sound cue. The planner checks timing, repeated prompt text, overly similar prompts, narration length and cut instructions. It repairs only the failing field and records the repair count in `qualityChecks`. The renderer rejects sparse plans such as three shots stretched over 60 seconds before starting narration or GPU work. The twelve 60-second beats follow one causal route: hook, setup, goal, original approach, obstacle, reaction, new plan, start, progress, final approach, payoff, closing image.
 
 Draft without rendering:
