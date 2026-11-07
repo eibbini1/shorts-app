@@ -57,9 +57,15 @@ def main():
         if data['r_frame_rate'] != '24/1':
             parser.error(f'Shot {index} must be 24 fps')
         source_frames = int(data['nb_frames'])
+        start_frame = int(shot.get('startFrame', 0))
+        end_frame = int(shot.get('endFrame', source_frames))
+        if not 0 <= start_frame < end_frame <= source_frames:
+            parser.error(f'Shot {index} has invalid source frame bounds')
+        source_frames = end_frame - start_frame
         speed = (frames + 2) / source_frames
         destination = work / f'segment-{index:03d}.mp4'
-        vf = (f'setpts={speed:.9f}*(PTS-STARTPTS),'
+        vf = (f'trim=start_frame={start_frame}:end_frame={end_frame},'
+              f'setpts={speed:.9f}*(PTS-STARTPTS),'
               f'minterpolate=fps={FPS}:mi_mode=mci:mc_mode=aobmc:me_mode=bidir,'
               f'tpad=stop_mode=clone:stop_duration=0.125,'
               f'trim=end_frame={frames},setpts=PTS-STARTPTS,'
