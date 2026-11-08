@@ -109,3 +109,4 @@ echo "Rendering local video to $output"
 python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" ${chain:+$chain} ${stills:+--stills "$stills"}
 echo "Video ready: $output"
 python3 scripts/finish-local-video.py --scenario "$scenario" --video "$output" && echo "Captioned video and upload pack are next to $output"
+python3 scripts/qa-local-video.py --video "${output%.mp4}.captioned.mp4" || echo "QA found problems: read the qa block in ${output%.mp4}.pack.json before uploading." >&2
