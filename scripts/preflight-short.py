@@ -20,13 +20,14 @@ ROOT = Path(__file__).resolve().parents[1]
 NON_USD = re.compile(r'\b(yen|dirhams?|rupees?|pounds?|euros?|£|€)\b|[£€¥]', re.I)
 CONTRAST = re.compile(r'\b(vs\.?|versus|same|instead|but|only|yet)\b', re.I)
 BANNED = re.compile(r'\b(illegal|banned|ban|forbidden|outlawed)\b', re.I)
+NUMBER = re.compile(r'\d|\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion)\b', re.I)
 VAGUE_OPEN = re.compile(r'^(this|these|the|a|an)\b', re.I)
 
 
 def hook_score(line):
     words = line.split()
     score, notes = 40, []
-    if re.search(r'\d|thousand|million|hundred|billion', line, re.I):
+    if NUMBER.search(line):
         score += 20; notes.append('number in the first line')
     else:
         notes.append('no number in the first line')
@@ -40,7 +41,7 @@ def hook_score(line):
         score += 10
     else:
         score -= 10; notes.append('first line over 12 words')
-    if VAGUE_OPEN.match(line) and not re.search(r'\d', line):
+    if VAGUE_OPEN.match(line) and not NUMBER.search(line):
         score -= 10; notes.append('vague opening')
     if NON_USD.search(line):
         score -= 15; notes.append('non-USD currency')
