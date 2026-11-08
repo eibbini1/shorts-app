@@ -1,0 +1,61 @@
+{
+  "id": "process-reveal",
+  "name": "How it is made",
+  "evidence": "untested candidate: no evidence on this channel yet; run once, then compare engaged views and swipe-away",
+  "platform": "youtube-shorts",
+  "aspect": "9:16",
+  "lengthSeconds": [
+    20,
+    35
+  ],
+  "hook": {
+    "type": "process",
+    "formula": "\"This {item} takes {time_or_effort} to make.\" Start on the hardest step."
+  },
+  "slots": [
+    "item",
+    "time_or_effort",
+    "source"
+  ],
+  "beats": [
+    {
+      "role": "hook",
+      "start": 0,
+      "end": 4,
+      "text": "This {item} takes {time_or_effort} to make."
+    },
+    {
+      "role": "step 1",
+      "start": 4,
+      "end": 12,
+      "text": "{step_1}"
+    },
+    {
+      "role": "step 2",
+      "start": 12,
+      "end": 20,
+      "text": "{step_2}"
+    },
+    {
+      "role": "result",
+      "start": 20,
+      "end": 28,
+      "text": "{result}"
+    },
+    {
+      "role": "cta",
+      "start": 28,
+      "end": 32,
+      "text": "Would you wait that long? Comment yes or no."
+    }
+  ],
+  "captions": "large centred captions in the safe zone, one short phrase at a time",
+  "cta": "Would you wait that long? Comment yes or no.",
+  "loopBack": "Loop back to the hardest step.",
+  "rules": [
+    "all prices in US dollars",
+    "a new item every upload; never repost an item",
+    "every number needs a source before upload"
+  ],
+  "notes": ""
+}

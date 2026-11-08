@@ -1,0 +1,64 @@
+{
+  "id": "would-you-rather-menu",
+  "name": "Would you rather menu",
+  "evidence": "own channel: this format produced about 1.2K views (31 Oct to 2 Nov 2026); no external study confirms it",
+  "platform": "youtube-shorts",
+  "aspect": "9:16",
+  "lengthSeconds": [
+    15,
+    25
+  ],
+  "hook": {
+    "type": "choice",
+    "formula": "\"Billionaire menu: you can only pick one.\" Three priced options."
+  },
+  "slots": [
+    "option_a",
+    "price_a",
+    "option_b",
+    "price_b",
+    "option_c",
+    "price_c"
+  ],
+  "beats": [
+    {
+      "role": "hook",
+      "start": 0,
+      "end": 3,
+      "text": "Billionaire menu. You can only pick one."
+    },
+    {
+      "role": "option A",
+      "start": 3,
+      "end": 8,
+      "text": "{option_a}, {price_a}."
+    },
+    {
+      "role": "option B",
+      "start": 8,
+      "end": 13,
+      "text": "{option_b}, {price_b}."
+    },
+    {
+      "role": "option C",
+      "start": 13,
+      "end": 18,
+      "text": "{option_c}, {price_c}."
+    },
+    {
+      "role": "cta",
+      "start": 18,
+      "end": 22,
+      "text": "Which one do you pick? Comment A, B or C."
+    }
+  ],
+  "captions": "large centred captions in the safe zone, one short phrase at a time",
+  "cta": "Which one do you pick? Comment A, B or C.",
+  "loopBack": "Close by repeating the question over the first option.",
+  "rules": [
+    "all prices in US dollars",
+    "a new item every upload; never repost an item",
+    "every number needs a source before upload"
+  ],
+  "notes": ""
+}
