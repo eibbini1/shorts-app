@@ -7,7 +7,7 @@ usage() {
 Usage:
   bash scripts/make-local-video.sh
   bash scripts/make-local-video.sh --draft-only [--model gemma-local]
-  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--chain-images] [--stills FOLDER] [--allow-repeat] [--allow-silence]
+  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--chain-images] [--stills FOLDER] [--allow-repeat] [--allow-silence] [--allow-bad-first]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json [--watch]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json --preview
 
@@ -29,6 +29,7 @@ while (($#)); do
     --stills) stills="$2"; shift 2 ;;
     --allow-repeat) allow_repeat='--allow'; shift ;;
     --allow-silence) allow_silence='--allow-silence'; shift ;;
+    --allow-bad-first) allow_bad_first='--allow-bad-first'; shift ;;
     --draft-only) draft_only=1; shift ;;
     --model) model="${2:?Missing model name}"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
@@ -112,7 +113,7 @@ echo "Step 2/4  Pre-render check (topic, hook, length, currency, claims)"
 python3 scripts/preflight-short.py "$scenario" ${allow_repeat:+$allow_repeat} || { echo "Preflight blocked this scenario (repeat topic). Change the topic, or add --allow-repeat to render anyway." >&2; exit 3; }
 t_checks=$SECONDS
 echo "Step 3/4  Rendering local video to $output (about 5 min per shot on an M1: still, motion, voice, assembly)"
-python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" ${chain:+$chain} ${allow_silence:+$allow_silence} ${stills:+--stills "$stills"}
+python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" ${chain:+$chain} ${allow_silence:+$allow_silence} ${allow_bad_first:+$allow_bad_first} ${stills:+--stills "$stills"}
 t_render=$SECONDS
 echo "Video ready: $output"
 echo "Step 4/4  Captions, upload pack and quality check"

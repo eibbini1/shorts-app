@@ -9,6 +9,7 @@ import subprocess
 import time
 from pathlib import Path
 from local_video_progress import snapshot
+from first_checks import check_still, check_clip
 
 ROOT = Path(__file__).resolve().parents[1]
 FPS = 24
@@ -120,6 +121,7 @@ def main():
     parser.add_argument('--work-dir', type=Path)
     parser.add_argument('--chain-images', action='store_true', help='Edit previous still to preserve one subject')
     parser.add_argument('--allow-silence', action='store_true', help='Continue even when the voice track has gaps over 1.5 s')
+    parser.add_argument('--allow-bad-first', action='store_true', help='Skip the first-picture and first-clip checks')
     parser.add_argument('--stills', type=Path, help='Folder with your own stills named shot-01.png, shot-02.png ... (for example from Google Flow). Missing shots fall back to FLUX')
     args = parser.parse_args()
     scenario = args.scenario.expanduser().resolve()
@@ -164,11 +166,17 @@ def main():
     print(progress(), flush=True)
     segments = []
     previous = None
+    gate = None if args.allow_bad_first else True
     for index, shot in enumerate(plan['shots']):
         reference = own_still(args.stills.expanduser().resolve(), work, index, width, height) if args.stills else None
         if reference is None:
             reference = still(work, index, shot, 1200 + index,
                               previous if args.chain_images else None, width, height)
+        if gate and index == 0:
+            problem = check_still(reference)
+            if problem:
+                parser.error(f'First picture failed: {problem}. Stopped before the clip step (use --allow-bad-first to override)')
+            print('First picture check passed', flush=True)
         previous = reference
         parts = math.ceil(shot['seconds'] / 5)
         total_frames = shot['seconds'] * FPS
@@ -181,6 +189,11 @@ def main():
                 reference = anchor
             previous_clip = clip(work, index, part, shot, 2200 + index * 10 + part,
                                  reference, width, height, model, gemma, progress)
+            if gate and index == 0 and part == 0:
+                problem = check_clip(previous_clip)
+                if problem:
+                    parser.error(f'First clip failed: {problem}. Stopped before the remaining clips (use --allow-bad-first to override)')
+                print('First clip check passed', flush=True)
             segments.append({'file': str(previous_clip), 'seconds': frames / FPS})
     manifest = {'aspect': aspect, 'shots': segments,
                 'soundtrack': 'soundtrack.wav',
