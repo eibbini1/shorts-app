@@ -72,6 +72,14 @@ def main():
         warnings.append('length outside the 20-35 s band')
     if words / seconds > 3.2:
         warnings.append('narration too dense for the time')
+    # Per-shot pacing: speech runs about 2.6 words per second. A shot much longer than its line leaves dead air.
+    for i, shot in enumerate(plan['shots'], 1):
+        speech = len(shot['narration'].split()) / 2.6 + 0.3
+        gap = shot['seconds'] - speech
+        if gap > 1.2:
+            warnings.append(f'shot {i}: line fills about {speech:.1f} s of {shot["seconds"]} s, so about {gap:.1f} s of silence; shorten the shot to {speech + 0.6:.0f} s or add words')
+        elif gap < -0.2:
+            warnings.append(f'shot {i}: line needs about {speech:.1f} s but the shot is {shot["seconds"]} s; trim words or lengthen the shot')
     if NON_USD.search(first):
         warnings.append('non-USD money in the first line: use dollars')
     if not plan.get('claimsToCheck'):
