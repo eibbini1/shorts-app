@@ -1,4 +1,5 @@
 """Render a reviewed local scenario with FLUX, LTX, Kokoro and FFmpeg."""
+import re
 import argparse
 import hashlib
 import json
@@ -104,12 +105,21 @@ def clip(work, index, part, shot, seed, reference, width, height, model, gemma, 
     return target
 
 
+def voice_gaps(wav, limit=1.5):
+    out = subprocess.run(['ffmpeg', '-hide_banner', '-i', str(wav), '-af', f'silencedetect=noise=-35dB:d={limit}', '-f', 'null', '-'],
+                         capture_output=True, text=True).stderr
+    starts = [float(m) for m in re.findall(r'silence_start: ([\d.]+)', out)]
+    ends = [float(m) for m in re.findall(r'silence_end: ([\d.]+)', out)]
+    return [(a, b) for a, b in zip(starts, ends) if a > 0.5]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--scenario', required=True, type=Path)
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--work-dir', type=Path)
     parser.add_argument('--chain-images', action='store_true', help='Edit previous still to preserve one subject')
+    parser.add_argument('--allow-silence', action='store_true', help='Continue even when the voice track has gaps over 1.5 s')
     parser.add_argument('--stills', type=Path, help='Folder with your own stills named shot-01.png, shot-02.png ... (for example from Google Flow). Missing shots fall back to FLUX')
     args = parser.parse_args()
     scenario = args.scenario.expanduser().resolve()
@@ -136,6 +146,11 @@ def main():
     work.joinpath('refs').mkdir(parents=True, exist_ok=True)
     work.joinpath('motion').mkdir(exist_ok=True)
     run('node', ROOT / 'scripts/narrate-any-local.mjs', scenario, work)
+    # Fail-fast gate: voice exists now, clips do not. Stop here if shots would leave dead air.
+    gaps = voice_gaps(work / 'voice-timeline.wav')
+    if gaps and not args.allow_silence:
+        lines = ', '.join(f'{a:.1f}-{b:.1f} s ({b - a:.1f} s)' for a, b in gaps)
+        parser.error(f'Voice track has silence over 1.5 s at {lines}. Shorten those shots to the line length plus 0.6 s (total must stay equal to settings.seconds), or pass --allow-silence. Stopped before the 25-minute clip step')
     run(ROOT / 'storage/tools/ComfyUI/.venv/bin/python', ROOT / 'scripts/sound-any-local.py', scenario, work)
     model = (ROOT / 'storage/setup/ltx-model-dir.txt').read_text().strip()
     gemma = (ROOT / 'storage/setup/gemma-model-dir.txt').read_text().strip()
