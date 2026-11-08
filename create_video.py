@@ -29,6 +29,11 @@ IMAGE_TIMEOUT = int(os.environ.get("SHORTS_IMAGE_TIMEOUT", "90"))
 # ComfyUI workflows are "Save (API Format)" JSON files. Like scripts/local-media.mjs, the exact string values
 # "{{prompt}}", "{{seed}}", "{{width}}", "{{height}}" and (video only) "{{image}}" are replaced before the run.
 IMAGE_PROVIDER = os.environ.get("SHORTS_IMAGE_PROVIDER", "pollinations").strip().lower()
+# FLUX only, for a recurring character. Scene 1 becomes the reference for the rest. Tested on FLUX.2 Klein:
+# strength 0.35 ignores the reference, 0.6 loses the character, 0.7 keeps the character and room, 0.8 copies the pose.
+# It keeps identity but does not follow big pose changes, so it is off by default.
+CHAIN_IMAGES = os.environ.get("SHORTS_CHAIN_IMAGES", "0") == "1"
+CHAIN_STRENGTH = os.environ.get("SHORTS_CHAIN_STRENGTH", "0.7")
 FLUX_BIN = os.environ.get("FLUX_BIN", os.path.join("storage", "tools", "mflux", ".venv", "bin", "mflux-generate-flux2"))
 FLUX_MODEL = os.environ.get("FLUX_MODEL", os.path.join("storage", "models", "flux2-klein-4b-4bit"))
 VIDEO_PROVIDER = os.environ.get("SHORTS_VIDEO_PROVIDER", "none").strip().lower()
@@ -214,7 +219,7 @@ def load_font(size):
 _SEEN_HASHES = []
 
 
-def image_problem(data):
+def image_problem(data, near=26):
     """Returns why an image is unusable (flat, wrong shape, copy of an earlier scene) or None. Needs Pillow."""
     if not HAS_PIL:
         return None
@@ -228,7 +233,7 @@ def image_problem(data):
         if (sum((p - mean) ** 2 for p in small) / len(small)) ** 0.5 < 6:
             return "image is almost flat"
         bits = [p > mean for p in small]
-        if any(sum(a != b for a, b in zip(bits, old)) < 26 for old in _SEEN_HASHES):
+        if any(sum(a != b for a, b in zip(bits, old)) < near for old in _SEEN_HASHES):
             return "looks like an earlier scene"
         _SEEN_HASHES.append(bits)
     except Exception as err:
@@ -363,7 +368,7 @@ def animate_scene(image_path, scene, scene_idx):
         return None
 
 
-def generate_ai_scene_image(prompt_text, output_path, scene_idx, total_scenes):
+def generate_ai_scene_image(prompt_text, output_path, scene_idx, total_scenes, anchor_path=None):
     """Generates 9:16 portrait visual assets via AI API or falls back to a stylized slide."""
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     if IMAGE_PROVIDER == "flux":
@@ -371,11 +376,15 @@ def generate_ai_scene_image(prompt_text, output_path, scene_idx, total_scenes):
         try:
             if os.path.exists(output_path):
                 os.remove(output_path)  # mflux writes name_1.png instead of overwriting, which would leave a stale image in place
-            subprocess.run([FLUX_BIN, "--model", FLUX_MODEL, "--base-model", "flux2-klein-4b", "--prompt", prompt_text,
-                            "--width", "720", "--height", "1280", "--steps", "4", "--seed", str(scene_idx * 17 + 7),
-                            "--low-ram", "--output", output_path], check=True, timeout=COMFY_TIMEOUT)
+            command = [FLUX_BIN, "--model", FLUX_MODEL, "--base-model", "flux2-klein-4b", "--prompt", prompt_text,
+                       "--width", "720", "--height", "1280", "--steps", "4", "--seed", str(scene_idx * 17 + 7),
+                       "--low-ram", "--output", output_path]
+            if anchor_path and os.path.exists(anchor_path):
+                command[command.index("--prompt") + 1] = "Same character and setting as the reference image. " + prompt_text
+                command += ["--image", anchor_path, CHAIN_STRENGTH]  # scene 1 anchors the look and the character of every later scene
+            subprocess.run(command, check=True, timeout=COMFY_TIMEOUT)
             with open(output_path, "rb") as f:
-                why = image_problem(f.read())
+                why = image_problem(f.read(), near=8 if anchor_path else 26)  # chained scenes look alike on purpose; only reject near copies
             if why:
                 raise ValueError(why)
             print(f"      ✅ FLUX image -> {output_path}")
@@ -618,7 +627,8 @@ def main():
     spec_data["kind"] = "stills"
     spec_data["output"] = "out/interactive.mp4"
     if "brand" not in spec_data or not isinstance(spec_data["brand"], dict) or not spec_data["brand"].get("name"):
-        spec_data["brand"] = {"name": "Local Shorts"}
+        # The end card shows this name. Use the channel name when given, else the video's own kicker, never a made-up brand.
+        spec_data["brand"] = {"name": os.environ.get("SHORTS_BRAND") or spec_data["kicker"] or "Shorts"}
     if "voice" not in spec_data or not isinstance(spec_data["voice"], dict) or spec_data["voice"].get("provider") not in ["elevenlabs", "mock"]:
         spec_data["voice"] = {"provider": VOICE_PROVIDER}
         if VOICE_PROVIDER == "elevenlabs":
@@ -644,7 +654,8 @@ def main():
         scene["image_prompt"] = img_prompt
         image_filename = f"scene_{i}.png"
         image_path = os.path.join(ASSET_DIR, image_filename).replace("\\", "/")
-        generate_ai_scene_image(img_prompt, image_path, i, len(spec_data["scenes"]))
+        anchor = os.path.join(ASSET_DIR, "scene_1.png") if CHAIN_IMAGES and i > 1 else None
+        generate_ai_scene_image(img_prompt, image_path, i, len(spec_data["scenes"]), anchor)
         scene["image"] = image_path
         scene.setdefault("motion", MOTIONS[(i - 1) % len(MOTIONS)])
         if not scene.get("voice"):
