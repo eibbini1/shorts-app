@@ -13,6 +13,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from first_checks import longest_freeze as measure_freeze
+
 
 def ffmpeg_log(args):
     return subprocess.run(['ffmpeg', '-hide_banner', '-nostats', *args], capture_output=True, text=True).stderr
@@ -33,8 +35,8 @@ def main():
     longest_black = max(map(float, black), default=0)
     results['blackFrames'] = {'longestSeconds': longest_black, 'ok': longest_black < 0.5}
     # Each clip is a still brought to life; a long frozen stretch means the motion model returned a still.
-    frozen = re.findall(r'freeze_duration: ([\d.]+)', ffmpeg_log(['-i', str(video), '-vf', 'freezedetect=n=-55dB:d=1.5', '-an', '-f', 'null', '-']))
-    longest_freeze = max(map(float, frozen), default=0)
+    longest_freeze_s = measure_freeze(video)
+    longest_freeze = longest_freeze_s
     results['frozenPicture'] = {'longestSeconds': longest_freeze, 'ok': longest_freeze < 2.5}
 
     loud = ffmpeg_log(['-i', str(video), '-af', 'loudnorm=I=-16:TP=-1.5:print_format=json', '-vn', '-f', 'null', '-'])
@@ -69,8 +71,8 @@ def main():
         print(f'{status:4} {name}: {detail}')
         if not item['ok']:
             failures.append(name)
-    pack = args.pack or video.with_name(video.name.replace('.captioned.mp4', '.pack.json'))
-    if pack.is_file():
+    pack = args.pack or (video.with_name(video.name.replace('.captioned.mp4', '.pack.json')) if '.captioned.mp4' in video.name else None)
+    if pack and pack.is_file():
         data = json.loads(pack.read_text())
         data['qa'] = {'passed': not failures, 'failed': failures, 'checks': results}
         pack.write_text(json.dumps(data, indent=2) + '\n')
