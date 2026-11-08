@@ -1,0 +1,56 @@
+{
+  "id": "banned-foods",
+  "name": "Banned or illegal food",
+  "evidence": "own channel: this format produced about 1.2K views (31 Oct to 2 Nov 2026); no external study confirms it; every claim needs a source",
+  "platform": "youtube-shorts",
+  "aspect": "9:16",
+  "lengthSeconds": [
+    20,
+    35
+  ],
+  "hook": {
+    "type": "surprise",
+    "formula": "Name the shocking food first: \"{food} is illegal to sell in {place}.\""
+  },
+  "slots": [
+    "food",
+    "place",
+    "reason",
+    "source"
+  ],
+  "beats": [
+    {
+      "role": "hook",
+      "start": 0,
+      "end": 4,
+      "text": "{food} is illegal to sell in {place}."
+    },
+    {
+      "role": "why",
+      "start": 4,
+      "end": 14,
+      "text": "{reason}"
+    },
+    {
+      "role": "twist",
+      "start": 14,
+      "end": 24,
+      "text": "{twist}"
+    },
+    {
+      "role": "cta",
+      "start": 24,
+      "end": 28,
+      "text": "Would you try it? Comment yes or no."
+    }
+  ],
+  "captions": "large centred captions in the safe zone, one short phrase at a time",
+  "cta": "Would you try it? Comment yes or no.",
+  "loopBack": "End on the food shot that opened the Short.",
+  "rules": [
+    "all prices in US dollars",
+    "a new item every upload; never repost an item",
+    "every number needs a source before upload"
+  ],
+  "notes": "One food per Short, not a list."
+}

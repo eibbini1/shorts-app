@@ -1,0 +1,63 @@
+{
+  "id": "same-item-two-prices",
+  "name": "Same item, two prices",
+  "evidence": "own channel: this format produced about 1.2K views (31 Oct to 2 Nov 2026); no external study confirms it",
+  "platform": "youtube-shorts",
+  "aspect": "9:16",
+  "lengthSeconds": [
+    15,
+    25
+  ],
+  "hook": {
+    "type": "price contrast",
+    "formula": "Open on both prices: \"{item}: {price_a} versus {price_b}. What is the difference?\""
+  },
+  "slots": [
+    "item",
+    "price_a",
+    "price_b",
+    "difference",
+    "source"
+  ],
+  "beats": [
+    {
+      "role": "hook",
+      "start": 0,
+      "end": 3,
+      "text": "{item}: {price_a} versus {price_b}. What is the difference?"
+    },
+    {
+      "role": "item A",
+      "start": 3,
+      "end": 8,
+      "text": "The {price_a} version: {detail_a}"
+    },
+    {
+      "role": "item B",
+      "start": 8,
+      "end": 14,
+      "text": "The {price_b} version: {detail_b}"
+    },
+    {
+      "role": "reveal",
+      "start": 14,
+      "end": 20,
+      "text": "The difference: {difference}"
+    },
+    {
+      "role": "cta",
+      "start": 20,
+      "end": 24,
+      "text": "Would you pay {price_b}? Comment yes or no."
+    }
+  ],
+  "captions": "large centred captions in the safe zone, one short phrase at a time",
+  "cta": "Would you pay {price_b}? Comment yes or no.",
+  "loopBack": "Last line returns to the opening price pair.",
+  "rules": [
+    "all prices in US dollars",
+    "a new item every upload; never repost an item",
+    "every number needs a source before upload"
+  ],
+  "notes": ""
+}

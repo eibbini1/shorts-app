@@ -1,0 +1,67 @@
+{
+  "id": "countdown",
+  "name": "Countdown of three",
+  "evidence": "untested candidate: no evidence on this channel yet; run once, then compare engaged views and swipe-away",
+  "platform": "youtube-shorts",
+  "aspect": "9:16",
+  "lengthSeconds": [
+    25,
+    40
+  ],
+  "hook": {
+    "type": "ranking",
+    "formula": "\"Three {category}, from {low_price} to {high_price}.\" Most surprising last."
+  },
+  "slots": [
+    "category",
+    "item_1",
+    "price_1",
+    "item_2",
+    "price_2",
+    "item_3",
+    "price_3",
+    "low_price",
+    "high_price"
+  ],
+  "beats": [
+    {
+      "role": "hook",
+      "start": 0,
+      "end": 4,
+      "text": "Three {category}, from {low_price} to {high_price}."
+    },
+    {
+      "role": "third",
+      "start": 4,
+      "end": 12,
+      "text": "Number three: {item_1}, {price_1}."
+    },
+    {
+      "role": "second",
+      "start": 12,
+      "end": 20,
+      "text": "Number two: {item_2}, {price_2}."
+    },
+    {
+      "role": "first",
+      "start": 20,
+      "end": 30,
+      "text": "Number one: {item_3}, {price_3}."
+    },
+    {
+      "role": "cta",
+      "start": 30,
+      "end": 34,
+      "text": "Which would you eat? Comment 1, 2 or 3."
+    }
+  ],
+  "captions": "large centred captions in the safe zone, one short phrase at a time",
+  "cta": "Which would you eat? Comment 1, 2 or 3.",
+  "loopBack": "Return to the number three shot at the end.",
+  "rules": [
+    "all prices in US dollars",
+    "a new item every upload; never repost an item",
+    "every number needs a source before upload"
+  ],
+  "notes": ""
+}
