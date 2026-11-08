@@ -104,9 +104,29 @@ fi
 base="$(basename "$scenario" .local-scenario.json)"
 base="${base%.json}"
 output="outputs/$base-$(date +%Y%m%d-%H%M%S).mp4"
+t_start=$SECONDS
+echo "Step 1/4  Environment check"
+python3 scripts/check-env.py || { echo "Fix the FAIL lines above, then run this again." >&2; exit 4; }
+echo "Step 2/4  Pre-render check (topic, hook, length, currency, claims)"
 python3 scripts/preflight-short.py "$scenario" ${allow_repeat:+$allow_repeat} || { echo "Preflight blocked this scenario (repeat topic). Change the topic, or add --allow-repeat to render anyway." >&2; exit 3; }
-echo "Rendering local video to $output"
+t_checks=$SECONDS
+echo "Step 3/4  Rendering local video to $output (about 5 min per shot on an M1: still, motion, voice, assembly)"
 python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" ${chain:+$chain} ${stills:+--stills "$stills"}
+t_render=$SECONDS
 echo "Video ready: $output"
+echo "Step 4/4  Captions, upload pack and quality check"
 python3 scripts/finish-local-video.py --scenario "$scenario" --video "$output" && echo "Captioned video and upload pack are next to $output"
 python3 scripts/qa-local-video.py --video "${output%.mp4}.captioned.mp4" || echo "QA found problems: read the qa block in ${output%.mp4}.pack.json before uploading." >&2
+t_end=$SECONDS
+checks_s=$((t_checks - t_start)); render_s=$((t_render - t_checks)); finish_s=$((t_end - t_render)); total_s=$((t_end - t_start))
+printf 'Timing: checks %ds, render %dm%02ds, captions+QA %ds, total %dm%02ds\n' "$checks_s" $((render_s / 60)) $((render_s % 60)) "$finish_s" $((total_s / 60)) $((total_s % 60))
+python3 - "${output%.mp4}.pack.json" "$checks_s" "$render_s" "$finish_s" "$total_s" <<'PY'
+import json, sys
+pack, *secs = sys.argv[1], *map(int, sys.argv[2:])
+try:
+    data = json.load(open(pack))
+    data['timingsSeconds'] = dict(zip(('checks', 'render', 'captionsAndQa', 'total'), secs))
+    json.dump(data, open(pack, 'w'), indent=2); open(pack, 'a').write('\n')
+except OSError:
+    pass
+PY
