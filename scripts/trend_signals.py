@@ -30,6 +30,17 @@ YT_KEEP_DAYS = 30
 PRICE_HINT = re.compile(r'(\$\s?\d|\bvs\b|\bmost expensive\b|\bcosts?\b)', re.I)
 
 
+def api_key():
+    """YOUTUBE_API_KEY from the environment, else from the line YOUTUBE_API_KEY=... in the git-ignored .env file."""
+    key = os.environ.get('YOUTUBE_API_KEY')
+    env = ROOT / '.env'
+    if not key and env.is_file():
+        for line in env.read_text().splitlines():
+            if line.startswith('YOUTUBE_API_KEY='):
+                key = line.split('=', 1)[1].strip().strip('"\'')
+    return key or None
+
+
 def get_json(url, timeout=30):
     request = urllib.request.Request(url, headers={'User-Agent': UA})
     with urllib.request.urlopen(request, timeout=timeout) as response:
@@ -179,10 +190,10 @@ def main():
     health = []
     wiki, status, detail = fetch_wiki(db, load_lines(ROOT / 'episodes/signal-watchlist.txt'), now)
     health.append(('wikimedia', status, detail))
-    key = os.environ.get('YOUTUBE_API_KEY')
+    key = api_key()
     if args.no_youtube or not key:
         videos = []
-        health.append(('youtube', 'skipped', 'disabled' if args.no_youtube else 'YOUTUBE_API_KEY not set; free key from Google Cloud console, YouTube Data API v3'))
+        health.append(('youtube', 'skipped', 'disabled' if args.no_youtube else 'YOUTUBE_API_KEY not set in the environment or .env; free key from Google Cloud console, YouTube Data API v3'))
     else:
         videos, status, detail = fetch_youtube(db, load_lines(ROOT / 'episodes/signal-queries.txt'), key, now)
         health.append(('youtube', status, detail))
