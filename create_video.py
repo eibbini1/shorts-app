@@ -568,6 +568,7 @@ def suggest_hook(brief):
         "messages": [
             {"role": "system", "content": (
                 f"Write three distinct spoken hooks, each at most {HOOK_WORDS} words. "
+                "Give one question, one action-led line, and one line that highlights a visible change. "
                 "Name the subject or detail. Create a question or visual promise that the payoff "
                 "can answer. Avoid unsupported prices, records, superlatives and legal claims. "
                 "Pick the clearest, most specific option the brief can actually show, using a 1-based index."
@@ -579,10 +580,16 @@ def suggest_hook(brief):
     pick = result.get("pick")
     if not isinstance(options, list) or len(options) != 3 or type(pick) is not int or not 1 <= pick <= 3:
         raise ValueError("Invalid hook suggestions")
-    hooks = [" ".join(option.split()) if isinstance(option, str) else "" for option in options]
-    if any(not hook or len(hook.split()) > HOOK_WORDS for hook in hooks):
-        raise ValueError("Hook suggestions exceed the spoken hook limit")
-    return hooks[pick - 1]
+    # Try the model's pick first, then the other candidates in their original order.
+    for index in [pick - 1, *(i for i in range(3) if i != pick - 1)]:
+        option = options[index]
+        hook = " ".join(option.split()) if isinstance(option, str) else ""
+        if not hook or len(hook.split()) > HOOK_WORDS:
+            continue
+        if re.match(r"^(?:welcome back|today we|you won't believe|wait until the end)\b", hook, re.I):
+            continue
+        return hook
+    raise ValueError("No usable hook suggestion within the spoken hook limit")
 
 
 def review_hook_payoff(draft, expected_payoff):
