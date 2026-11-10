@@ -1,7 +1,6 @@
 import argparse
 import os
 import shutil
-import sys
 import json
 import subprocess
 import urllib.request
@@ -511,12 +510,28 @@ def render_spec(spec_path, rerender=False):
         raise SystemExit(result.returncode)
 
 
-def rerender():
-    with open(SPEC_PATH, encoding="utf-8-sig") as f:
+TRANSITIONS = ("fade", "cut", "flash", "gold", "punch", "whip")
+EFFECT_LEVELS = {"off": 0, "subtle": 0.4, "standard": 0.8}
+
+
+def configure_edit(spec, transition, effects):
+    if transition:
+        for scene in spec["scenes"][1:]:
+            scene["transition"] = transition
+    if effects:
+        spec["soundEffectsVolume"] = EFFECT_LEVELS[effects]
+
+
+def rerender(args):
+    with open(args.rerender, encoding="utf-8-sig") as f:
         spec = json.load(f)
-    configure_voice(spec)
-    target = os.path.join("episodes", "interactive-rerender.assemble.json")
-    spec["output"] = "out/interactive-rerender.mp4"
+    configure_voice(spec, args.voice_provider or "", args.voice_id or "")
+    configure_edit(spec, args.transition, args.effects)
+    name = "interactive-rerender" if args.name == "interactive" else args.name
+    target = os.path.join("episodes", name + ".assemble.json")
+    if os.path.abspath(target) == os.path.abspath(args.rerender):
+        raise SystemExit("Choose a different --name to preserve the source spec.")
+    spec["output"] = f"out/{name}/{name}.mp4"
     with open(target, "w", encoding="utf-8") as f:
         json.dump(spec, f, indent=2)
     render_spec(target, rerender=True)
@@ -526,6 +541,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--voice-provider', choices=('mock', 'elevenlabs'), help='Narration provider for this run')
     parser.add_argument('--voice-id', help='ElevenLabs voice ID. Defaults to the configured voice or Brian.')
+    parser.add_argument("--rerender", nargs="?", const=SPEC_PATH, help="Reuse a saved spec and its visuals")
+    parser.add_argument("--transition", choices=TRANSITIONS)
+    parser.add_argument("--effects", choices=EFFECT_LEVELS, help="Sound effects level, separate from music")
     parser.add_argument("--topic")
     parser.add_argument("--hook", help="Opening line or idea")
     parser.add_argument("--audience", help="Who should watch this Short?")
@@ -540,6 +558,11 @@ def main():
         parser.error('--voice-id requires ElevenLabs')
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,59}", args.name):
         parser.error("--name must use lowercase letters, digits or hyphens")
+    if args.rerender:
+        if args.preview:
+            parser.error("--preview applies to new projects only")
+        rerender(args)
+        return
     unattended = args.yes or args.preview
     if unattended and not args.topic:
         parser.error("--topic is required with --yes or --preview")
@@ -721,7 +744,22 @@ def main():
     if "brand" not in spec_data or not isinstance(spec_data["brand"], dict) or not spec_data["brand"].get("name"):
         # The end card shows this name. Use the channel name when given, else the video's own kicker, never a made-up brand.
         spec_data["brand"] = {"name": os.environ.get("SHORTS_BRAND") or spec_data["kicker"] or "Shorts"}
-    configure_voice(spec_data, args.voice_provider or "", args.voice_id or "")
+    voice_provider = args.voice_provider
+    voice_id = args.voice_id
+    transition = args.transition
+    effects = args.effects
+    if not unattended:
+        voice_provider = voice_provider or input("Voice [elevenlabs/mock, Enter keeps current]: ").strip().lower()
+        if (voice_provider or VOICE_PROVIDER) == "elevenlabs" and not voice_id:
+            voice_id = input("ElevenLabs voice ID [Enter uses configured voice or Brian]: ").strip()
+        transition = transition or input("Transition [fade/cut/flash/gold/punch/whip, Enter keeps scene settings]: ").strip().lower()
+        effects = effects or input("Sound effects [off/subtle/standard, Enter keeps current]: ").strip().lower()
+    if transition and transition not in TRANSITIONS or effects and effects not in EFFECT_LEVELS:
+        parser.error("Choose a listed transition and sound-effects level")
+    if voice_id and (voice_provider or VOICE_PROVIDER) == "mock":
+        parser.error("--voice-id requires ElevenLabs")
+    configure_voice(spec_data, voice_provider or "", voice_id or "")
+    configure_edit(spec_data, transition, effects)
     spec_data.setdefault("fps", 30)
     spec_data.setdefault("music", os.environ.get("SHORTS_MUSIC") or "ambient")  # SHORTS_MUSIC=/path/to/track.mp3 uses a licensed track instead of the built-in ambient bed
     if "scenes" not in spec_data or not isinstance(spec_data["scenes"], list) or len(spec_data["scenes"]) == 0:

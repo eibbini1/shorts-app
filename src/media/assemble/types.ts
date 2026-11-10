@@ -103,5 +103,7 @@ export interface StillsSpec {
   scenes: StillsScene[];
   /** 'ambient' = original synthesized bed, or a path to your own royalty-free track. */
   music?: string;
+  /** Gain for generated transition and accent sounds, from 0 to 1. */
+  soundEffectsVolume?: number;
   musicVolume?: number;
 }

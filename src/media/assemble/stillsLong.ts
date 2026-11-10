@@ -129,7 +129,11 @@ export async function assembleStillsLong(specPath: string, repoRoot: string): Pr
   await writeSfxWav(sfx, cues, totalSec);
 
   const inputs = ['-i', base, '-i', overlay, '-i', sfx];
-  let graph = '[0:v][1:v]overlay=0:0:format=auto[v];[2:a]volume=0.8[s];';
+  const effectsVolume = spec.soundEffectsVolume ?? 0.8;
+  if (!Number.isFinite(effectsVolume) || effectsVolume < 0 || effectsVolume > 1) {
+    throw new Error('soundEffectsVolume must be a number from 0 to 1');
+  }
+  let graph = `[0:v][1:v]overlay=0:0:format=auto[v];[2:a]volume=${effectsVolume}[s];`;
   const musicWanted = spec.music ?? 'ambient';
   if (musicWanted !== 'none') {
     let musicFile: string;
