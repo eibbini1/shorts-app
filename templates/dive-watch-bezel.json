@@ -1,0 +1,48 @@
+{
+  "tightOpen": true,
+  "hookText": "Why does this bezel only turn one way?",
+  "kicker": "DIVE WATCH BEZEL",
+  "keywords": ["dive watch bezel", "unidirectional bezel", "watch mechanism"],
+  "scenes": [
+    {
+      "text": "Why does this bezel only turn one way?",
+      "shot": "macro close-up",
+      "subject": "an unbranded brushed-steel dive watch with a matte black bezel and white triangle at twelve",
+      "setting": "on a charcoal watchmaker mat, crown on the right",
+      "lighting": "soft cool light from the left with a narrow silver rim",
+      "action": "a gloved fingertip nudges the knurled bezel counterclockwise by one click while the watch stays fixed"
+    },
+    {
+      "text": "Before a dive, line up the triangle with the minute hand.",
+      "shot": "overhead flat lay",
+      "subject": "the same brushed-steel dive watch, matte black bezel, white triangle and fixed minute hand",
+      "setting": "on the same charcoal watchmaker mat, crown on the right",
+      "lighting": "soft cool light from the left with a narrow silver rim",
+      "action": "the outer bezel rotates counterclockwise until the triangle aligns with the minute hand"
+    },
+    {
+      "text": "As the minute hand moves, read elapsed time against the bezel.",
+      "shot": "detail close-up",
+      "subject": "the same watch dial and bezel, with the minute hand pointing to the bezel scale",
+      "setting": "on the same charcoal watchmaker mat, crown on the right",
+      "lighting": "soft cool light from the left with a narrow silver rim",
+      "action": "a fingertip points to the bezel mark directly beside the minute hand without moving the watch"
+    },
+    {
+      "text": "If you bump it, that one-way click makes the dive look longer.",
+      "shot": "over-the-shoulder medium shot",
+      "subject": "the same brushed-steel watch and black bezel next to a single gloved fingertip",
+      "setting": "on the same charcoal watchmaker mat, crown on the right",
+      "lighting": "soft cool light from the left with a narrow silver rim",
+      "action": "the fingertip bumps the bezel one click counterclockwise while the minute hand stays fixed"
+    },
+    {
+      "text": "That little click gives you a reason to surface sooner.",
+      "shot": "low-angle hero shot",
+      "subject": "the same unbranded steel dive watch, with the bezel triangle offset from the minute hand",
+      "setting": "on the same charcoal watchmaker mat, crown on the right",
+      "lighting": "soft cool light from the left with a narrow silver rim",
+      "action": "the fingertip withdraws and the watch holds still in the final position"
+    }
+  ]
+}

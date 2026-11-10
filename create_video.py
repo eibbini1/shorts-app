@@ -1,4 +1,7 @@
+import argparse
 import os
+import shutil
+import sys
 import json
 import subprocess
 import urllib.request
@@ -19,7 +22,7 @@ except ImportError:
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434/api/chat")
 # One 4B script can take 7 minutes on a CPU laptop, so the default timeout is generous.
 OLLAMA_TIMEOUT = int(os.environ.get("SHORTS_TIMEOUT", "1200"))
-VOICE_PROVIDER = os.environ.get("SHORTS_VOICE", "mock")  # "elevenlabs" for real narration
+VOICE_PROVIDER = os.environ.get("SHORTS_VOICE", "").strip().lower()
 IMAGE_TIMEOUT = int(os.environ.get("SHORTS_IMAGE_TIMEOUT", "90"))
 # Heavier machines (for example an Apple Silicon Mac) can run ComfyUI locally for better images and real video clips.
 #   SHORTS_IMAGE_PROVIDER=pollinations (default) | comfyui | flux (local FLUX.2 Klein via mflux, Mac)
@@ -90,6 +93,8 @@ def compose_image_prompt(scene, topic="", ground=False):
     parts = [f"A {PHOTO_LOOK} {shot} of {subject}" + (f", set in {setting}." if setting else ".")]
     parts.append(f"Lit by {lighting}.")
     parts.append(f"Captured with {SHOT_LOOK[shot]}.")
+    if clean("action"):
+        parts.append(f"Show the setup just before this action: {clean('action')}. Keep the contact point visible.")
     parts.append(IMAGE_STYLE)
     parts.append(IMAGE_EXCLUDE)
     return " ".join(parts)
@@ -128,6 +133,11 @@ ASSET_DIR = "assets"
 SPEC_PATH = os.path.join("episodes", "interactive.assemble.json")
 IMG_BASE = "https://image.pollinations.ai/prompt/"
 FONT_PATH = os.path.join("assets", "fonts", "Poppins-Bold.ttf")
+
+
+def open_image_bytes(file):
+    with open(file, "rb") as image:
+        return image.read(12)
 
 
 def is_image(data: bytes) -> bool:
@@ -320,7 +330,7 @@ def motion_prompt(scene):
     subject = " ".join(str(scene.get("subject") or "the subject").split()).strip(" .")
     action = " ".join(str(scene.get("action") or "").split()).strip(" .") or "light and steam move gently across the scene"
     camera = "Locked macro camera" if scene.get("shot") in ("macro close-up", "detail close-up") else "Steady camera"
-    return f"{camera}. {action}. Preserve the original {subject}, composition and lighting. No text, no camera movement."
+    return f"{camera}. Start from the reference frame. Animate one action: {action}. Show the result and hold briefly. Preserve {subject}, composition and lighting. No cuts, text or camera movement."
 
 
 def animate_scene(image_path, scene, scene_idx):
@@ -460,37 +470,100 @@ def generate_ai_scene_image(prompt_text, output_path, scene_idx, total_scenes, a
     print(f"      ✅ Rendered fallback scene image -> {output_path}")
 
 
+def configure_voice(spec, provider_override="", voice_id_override=""):
+    existing = spec.get("voice")
+    existing = existing if isinstance(existing, dict) else {}
+    requested_provider = provider_override or VOICE_PROVIDER
+    provider = requested_provider or ("elevenlabs" if voice_id_override else existing.get("provider", "mock"))
+    if provider not in ("elevenlabs", "mock"):
+        raise SystemExit("SHORTS_VOICE must be elevenlabs or mock.")
+    voice = existing.copy() if existing.get("provider") == provider else {}
+    voice["provider"] = provider
+    if provider == "elevenlabs":
+        for key, value in {"speed": 1, "stability": 0.45, "style": 0.5}.items():
+            voice.setdefault(key, value)
+        voice_id = voice_id_override or os.environ.get("ELEVENLABS_VOICE_ID", "").strip()
+        if voice_id:
+            voice["voiceId"] = voice_id
+        if requested_provider == "elevenlabs" or voice_id_override:
+            for scene in spec["scenes"]:
+                scene.pop("narration", None)  # Recorded takes otherwise override the provider.
+    spec["voice"] = voice
+
+
+def render_spec(spec_path, rerender=False):
+    env = os.environ.copy()
+    env["OPENAI_BASE_URL"] = "http://localhost:11434/v1"
+    env["OPENAI_API_KEY"] = "ollama"
+    env["OPENAI_MODEL"] = MODEL_NAME
+
+    npm = shutil.which("npm.cmd" if os.name == "nt" else "npm")
+    if not npm:
+        raise SystemExit("npm is missing. Install Node.js and reopen Command Prompt.")
+    command = [npm, "run", "pipeline", "--", "--spec", spec_path]
+    if rerender:
+        command.append("--skip-variation")  # Intentional reuse of the same script.
+    if os.environ.get("SHORTS_ALLOW_VOICE_SPEND") == "1":
+        command.append("--allow-voice-spend")  # uncached ElevenLabs lines spend characters
+    result = subprocess.run(command, env=env)
+    if result.returncode != 0:
+        print(f"\n❌ Pipeline failed (exit {result.returncode}). See the log above.")
+        raise SystemExit(result.returncode)
+
+
+def rerender():
+    with open(SPEC_PATH, encoding="utf-8-sig") as f:
+        spec = json.load(f)
+    configure_voice(spec)
+    target = os.path.join("episodes", "interactive-rerender.assemble.json")
+    spec["output"] = "out/interactive-rerender.mp4"
+    with open(target, "w", encoding="utf-8") as f:
+        json.dump(spec, f, indent=2)
+    render_spec(target, rerender=True)
+
+
 def main():
-    print("=" * 60)
-    print(" 🎬 LOCAL AI SHORT VIDEO GENERATOR (~" + str(TARGET_SECONDS) + "s, 80+ Hook Score)")
-    print("=" * 60)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--voice-provider', choices=('mock', 'elevenlabs'), help='Narration provider for this run')
+    parser.add_argument('--voice-id', help='ElevenLabs voice ID. Defaults to the configured voice or Brian.')
+    parser.add_argument("--topic")
+    parser.add_argument("--hook", help="Opening line or idea")
+    parser.add_argument("--audience", help="Who should watch this Short?")
+    parser.add_argument("--payoff", help="What should the final shot visibly answer?")
+    parser.add_argument("--story", choices=("1", "2", "3"))
+    parser.add_argument("--name", default="interactive", help="Name for saved assets, spec and video")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--yes", action="store_true", help="Render without prompting")
+    mode.add_argument("--preview", action="store_true", help="Show the preview without rendering")
+    args = parser.parse_args()
+    if args.voice_id and (args.voice_provider or VOICE_PROVIDER) == 'mock':
+        parser.error('--voice-id requires ElevenLabs')
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,59}", args.name):
+        parser.error("--name must use lowercase letters, digits or hyphens")
+    unattended = args.yes or args.preview
+    if unattended and not args.topic:
+        parser.error("--topic is required with --yes or --preview")
+    topic = (args.topic if args.topic is not None else input("What is the Short about? ")).strip()
+    if not topic:
+        parser.error("The topic cannot be empty")
+    saved_script = os.environ.get("SHORTS_SCRIPT", "").strip()
+    def brief_value(value, question):
+        return value or ("" if unattended or saved_script else input(question).strip())
+    hook_prompt = brief_value(args.hook, "Opening line or idea [optional]: ")
+    audience = brief_value(args.audience, "Who is this for? [general audience]: ")
+    payoff = brief_value(args.payoff, "What should viewers see or learn at the end? [optional]: ")
+    asset_dir = ASSET_DIR if args.name == "interactive" else os.path.join("storage", "interactive", args.name)
+    spec_path = os.path.join("episodes", args.name + ".assemble.json")
+    voice_preset = "neutral"
+    print(f"Creating a roughly {TARGET_SECONDS}-second Short about {topic}.")
 
-    topic = input("\n[1/3] What is your video topic or story idea? ").strip()
-    voice_preset = input("[2/3] Choose voice preset (e.g. en_male, en_female) [default: en_female]: ").strip() or "en_female"
-    hook_prompt = input("[3/3] Custom hook line (or press Enter for AI to generate): ").strip()
-
-    print(f"\n🤖 Contacting local Ollama model ({MODEL_NAME}) to generate script & image prompts...")
-
-    # System prompt engineered for 80+ hook retention score AND the target total duration
     system_prompt = (
         "You are a viral short-video director. Output ONLY valid JSON with no markdown block formatting.\n"
-        "STRICT HOOK & DURATION RULES FOR 80+ RETENTION SCORE:\n"
-        f"1. 'hookText': MUST be {HOOK_WORDS} words or fewer.\n"
-        f"2. Scene 1 'text' is the hook line itself: {HOOK_WORDS} words or fewer, and it MUST include a curiosity gap ('Guess why' or 'Here is why'), a concrete price ('$1,000'), AND name the topic's own main item (the product, dish or object the video is about).\n"
-        "3. Tension: Include high-tension words ('banned', 'forbidden', 'secret', 'scam') in the opening scenes.\n"
-        f"4. Total Length: Create exactly {MIN_SCENES} or {MAX_SCENES} scenes. Scene 1 is the {HOOK_WORDS}-word hook, the other scenes have about {OTHER_WORDS} words each (about {TOTAL_WORDS} words in total) for a video of about {TARGET_SECONDS} seconds. Every scene after the first MUST be 2 or 3 full sentences and at least {OTHER_WORDS - 4} words; shorter scenes make the video too short.\n"
-        "5. Closing scene: End with a divisive opinion-gap question ('Genius or total scam? Drop your take below.').\n"
-        "STORYTELLING: write for the ear, as a narrator speaking to ONE viewer ('you'). Every scene has a job:\n"
-        "- Scene 1 HOOK: the shocking price, the secret, the question. Never start with 'Welcome' or 'Today'.\n"
-        "- Scene 2 STAKES: why this matters, with one concrete number.\n"
-        "- Scene 3 REVEAL: what it is made of or how it is made, with sensory detail (smell, crunch, shine).\n"
-        "- Scene 4 TWIST: the surprising catch, introduced with 'But' or 'Here is the catch'.\n"
-        "- Scene 5 COMPARISON: set the price or scale against something familiar (a car, a month of rent).\n"
-        "- Middle scenes before the last: PAYOFF, what the first bite or the owner's reaction is like.\n"
-        "- Last scene CTA: one divisive question that makes people comment. Reuse one key word from the hook so the ending leads back into the start.\n"
-        "Voice rules: sentences of 6 to 14 words, simple everyday words, one idea and at most one number per scene, concrete nouns instead of adjectives like 'amazing'. "
-        "End every scene except the last with a small open loop ('and that is not even the strange part') so people keep watching. Never write 'In conclusion' or 'Subscribe'.\n"
-        "TRUTH: use only facts that are widely known or frame them as 'reportedly' or 'some say'. Never invent names of people, restaurants, studies or statistics.\n"
+        f"Write {MIN_SCENES} or {MAX_SCENES} scenes and about {TOTAL_WORDS} spoken words. "
+        f"Keep the opening narration and hookText within {HOOK_WORDS} words each. "
+        "Open on a visible action and raise a question the ending answers. Build through a clue to a visible payoff. "
+        "Use verified supplied facts for prices, records or legal claims. Without facts, write a demonstration. "
+        "Keep recurring subjects, props and lighting consistent across linked shots.\n"
         "IMAGE DIRECTION: for every scene describe ONE photograph that shows what the narration says. Fill five fields:\n"
         f"- shot: one of {', '.join(SHOT_TYPES)}. Use a different shot in every scene: start wide or macro, move to details, end on a hero shot.\n"
         "- subject: one concrete thing with materials, colors and texture (8 to 18 words). Example for a different topic: 'a brushed-steel pocket watch resting on dark green velvet, its gold hands catching the light'. Never copy the examples.\n"
@@ -506,6 +579,23 @@ def main():
         f"Topic: {topic}. Voice: {voice_preset}. "
         f"Create {MIN_SCENES} or {MAX_SCENES} scenes (a {HOOK_WORDS}-word hook first, then about {OTHER_WORDS} words per scene, about {TOTAL_WORDS} words in total) with the shot, subject, setting, lighting and action fields filled for each scene."
     )
+    if not os.environ.get("SHORTS_SCRIPT", "").strip():
+        angles = [
+            ("The reveal", f"What happens when you test {topic}?", "Show a setup, a clue and the result."),
+            ("Before and after", f"Spot what changed with {topic}.", "Demonstrate the step connecting two comparable states."),
+            ("One detail", f"Watch this detail on {topic}.", "Start close and reveal how the detail works."),
+        ]
+        for index, (title, hook, story) in enumerate(angles, 1):
+            print(f"{index}. {title} | {hook} | {story}")
+        pick = args.story or ("1" if unattended else input("Pick a story [1]: ").strip() or "1")
+        if pick not in ("1", "2", "3"):
+            raise SystemExit("Choose story 1, 2 or 3.")
+        title, hook, story = angles[int(pick) - 1]
+        user_prompt += f" Story: {title}. {story} Suggested hook to adapt: {hook}."
+    if audience:
+        user_prompt += f" Audience: {audience}."
+    if payoff:
+        user_prompt += f" Visible payoff: {payoff}."
     if hook_prompt:
         user_prompt += f" Hook: {hook_prompt}."
     # SHORTS_FACTS=facts.txt holds checked facts (prices, origins). The model must use only these, so it cannot invent claims.
@@ -539,6 +629,8 @@ def main():
         if problems:
             raise SystemExit(f"SHORTS_SCRIPT rejected: {'; '.join(problems)}")
         spec_data = candidate
+    if spec_data is None:
+        print(f'Generating script with local Ollama model {MODEL_NAME}...')
     for attempt in range(1, 4):
         if spec_data is not None:
             break
@@ -625,14 +717,11 @@ def main():
     kw = spec_data.get("keywords")
     spec_data["keywords"] = [" ".join(str(k).lower().split()) for k in kw if str(k).strip()][:6] if isinstance(kw, list) else []
     spec_data["kind"] = "stills"
-    spec_data["output"] = "out/interactive.mp4"
+    spec_data["output"] = "out/interactive.mp4" if args.name == "interactive" else f"out/{args.name}/{args.name}.mp4"
     if "brand" not in spec_data or not isinstance(spec_data["brand"], dict) or not spec_data["brand"].get("name"):
         # The end card shows this name. Use the channel name when given, else the video's own kicker, never a made-up brand.
         spec_data["brand"] = {"name": os.environ.get("SHORTS_BRAND") or spec_data["kicker"] or "Shorts"}
-    if "voice" not in spec_data or not isinstance(spec_data["voice"], dict) or spec_data["voice"].get("provider") not in ["elevenlabs", "mock"]:
-        spec_data["voice"] = {"provider": VOICE_PROVIDER}
-        if VOICE_PROVIDER == "elevenlabs":
-            spec_data["voice"].update({"speed": 1, "stability": 0.45, "style": 0.5})
+    configure_voice(spec_data, args.voice_provider or "", args.voice_id or "")
     spec_data.setdefault("fps", 30)
     spec_data.setdefault("music", os.environ.get("SHORTS_MUSIC") or "ambient")  # SHORTS_MUSIC=/path/to/track.mp3 uses a licensed track instead of the built-in ambient bed
     if "scenes" not in spec_data or not isinstance(spec_data["scenes"], list) or len(spec_data["scenes"]) == 0:
@@ -645,17 +734,30 @@ def main():
             scene["shot"] = next(s for s in SHOT_CYCLE[i % len(SHOT_CYCLE):] + SHOT_CYCLE if s != previous_shot)
         previous_shot = scene["shot"]
 
+    image_folder = os.environ.get("SHORTS_SCENE_IMAGES", "").strip()
+    supplied = []
+    if image_folder:
+        for index in range(1, len(spec_data["scenes"]) + 1):
+            image = os.path.join(image_folder, f"scene_{index}.png")
+            if not os.path.isfile(image) or not is_image(open_image_bytes(image)):
+                raise SystemExit(f"Missing or unreadable scene image: {image}")
+            supplied.append(image)
+
     # Generate Image Assets for each scene
-    os.makedirs(ASSET_DIR, exist_ok=True)
+    os.makedirs(asset_dir, exist_ok=True)
     print("\n🎨 Creating visual scene assets...")
     for i, scene in enumerate(spec_data["scenes"], 1):
         # The hook and the closing image must show the topic itself, so the video is recognisable at a glance.
         img_prompt = compose_image_prompt(scene, topic, ground=i in (1, len(spec_data["scenes"])))
         scene["image_prompt"] = img_prompt
         image_filename = f"scene_{i}.png"
-        image_path = os.path.join(ASSET_DIR, image_filename).replace("\\", "/")
-        anchor = os.path.join(ASSET_DIR, "scene_1.png") if CHAIN_IMAGES and i > 1 else None
-        generate_ai_scene_image(img_prompt, image_path, i, len(spec_data["scenes"]), anchor)
+        image_path = os.path.join(asset_dir, image_filename).replace("\\", "/")
+        anchor = os.path.join(asset_dir, "scene_1.png") if CHAIN_IMAGES and i > 1 else None
+        if supplied:
+            image_path = supplied[i - 1].replace("\\", "/")
+            print(f"   Using supplied scene image: {image_path}")
+        else:
+            generate_ai_scene_image(img_prompt, image_path, i, len(spec_data["scenes"]), anchor)
         scene["image"] = image_path
         scene.setdefault("motion", MOTIONS[(i - 1) % len(MOTIONS)])
         if not scene.get("voice"):
@@ -688,33 +790,21 @@ def main():
         print(f"   [{i}] Narration: \"{scene.get('text')}\"")
         print(f"       Visual Prompt : \"{scene.get('image_prompt', 'N/A')}\"")
         print(f"       Generated Asset: {scene.get('image')}")
-    print(" ⚠️  A small local model wrote this script. Check every claim against a primary source before publishing.")
+    print(" ⚠️  Review the script and verify factual claims before publishing.")
     print("=" * 60)
 
     # Step 3: Launch Assembly Pipeline
-    confirm = input("\nGenerate this video now? (Y/n): ").strip().lower()
-    if confirm in ['', 'y', 'yes']:
+    confirm = "yes" if args.yes else "no" if args.preview else input("\nRender this preview? (y/N): ").strip().lower()
+    if confirm in ['y', 'yes']:
         os.makedirs("episodes", exist_ok=True)
         os.makedirs("out", exist_ok=True)
-        with open(SPEC_PATH, "w", encoding="utf-8") as f:
+        with open(spec_path, "w", encoding="utf-8") as f:
             json.dump(spec_data, f, indent=2)
 
-        print(f"\n✅ Spec saved to {SPEC_PATH}")
+        print(f"\n✅ Spec saved to {spec_path}")
         print("🚀 Launching shorts-app assembly pipeline...\n")
 
-        env = os.environ.copy()
-        env["OPENAI_BASE_URL"] = "http://localhost:11434/v1"
-        env["OPENAI_API_KEY"] = "ollama"
-        env["OPENAI_MODEL"] = MODEL_NAME
-
-        command = ["npm", "run", "pipeline", "--", "--spec", SPEC_PATH]
-        if os.environ.get("SHORTS_ALLOW_VOICE_SPEND") == "1":
-            command.append("--allow-voice-spend")  # uncached ElevenLabs lines spend characters
-        # A list with shell=True only works on Windows (npm is npm.cmd there); on macOS and Linux it would run bare "npm".
-        result = subprocess.run(command, env=env, shell=(os.name == "nt"))
-        if result.returncode != 0:
-            print(f"\n❌ Pipeline failed (exit {result.returncode}). See the log above.")
-            raise SystemExit(result.returncode)
+        render_spec(spec_path)
     else:
         print("\nOperation cancelled. No video was rendered.")
 

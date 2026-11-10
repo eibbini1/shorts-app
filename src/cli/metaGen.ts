@@ -26,19 +26,20 @@ const KEYWORDS: [RegExp, string][] = [
   [/ice cream|scoop/i, 'gold ice cream'], [/cupcake/i, 'gold cupcake'], [/dessert|sundae/i, 'most expensive dessert'],
   [/dubai/i, 'Dubai'], [/london|liverpool|\buk\b/i, 'UK luxury food'], [/pizza/i, 'most expensive pizza'],
 ];
-const tags = new Set<string>(['luxury food', 'most expensive food', 'billionaire food', 'Billionaire Bites', 'food facts', 'shorts']);
-for (const [re, t] of KEYWORDS) if (re.test(all)) tags.add(t);
+const watch = /\b(watch(?:es)?|horology|submariner)\b/i.test([spec.kicker, ...(spec.keywords ?? [])].join(' '));
+const tags = new Set<string>(watch ? ['watches', 'watchmaking', 'shorts'] : ['luxury food', 'most expensive food', 'billionaire food', 'Billionaire Bites', 'food facts', 'shorts']);
+for (const [re, t] of KEYWORDS) if (!watch && re.test(all)) tags.add(t);
 for (const k of spec.keywords ?? []) tags.add(k);
 
-const { score, fixes, breakdown } = scoreHook(texts, spec.hookText);
+const { score, fixes, breakdown } = scoreHook(texts, spec.hookText, watch ? 'watch' : 'food');
 const rawTitle = first.replace(/\s+Here's why\.?$/i, '').replace(/\.$/, '');
-const title = shortTitle(arg('title') ?? spokenToDigits(rawTitle)) || spec.kicker || 'Luxury food';
-const hashtags = ['#luxuryfood', ...[...tags].slice(6, 8).map((t) => '#' + t.replace(/\W+/g, '').toLowerCase()), '#shorts'];
+const title = shortTitle(arg('title') ?? spokenToDigits(rawTitle)) || spec.kicker || (watch ? 'Watch details' : 'Luxury food');
+const hashtags = [watch ? '#watches' : '#luxuryfood', ...[...tags].slice(watch ? 3 : 6, watch ? 5 : 8).map((t) => '#' + t.replace(/\W+/g, '').toLowerCase()), '#shorts'];
 const description = [
   spokenToDigits(`${first} ${last}`).replace(/\s+/g, ' ').trim(),
   '',
   ...(arg('bridge') ? [`Full story: ${arg('bridge')}`, ''] : []),
-  "Follow Billionaire Bites for the world's most extraordinary food.",
+  watch ? "Follow for more watch mechanisms and design details." : "Follow Billionaire Bites for the world's most extraordinary food.",
   'Voiceover and visuals are AI-generated.',
   `Keywords: ${[...tags].slice(0, 12).join(', ')}`,
   hashtags.join(' '),
@@ -47,7 +48,7 @@ const description = [
 const region = arg('region') ?? (/[£]|london|liverpool|(?:costs?|pay|price)[^.!?]{0,45}pounds/i.test(all) ? 'uk' : /dirham|biryani|rupee|india/i.test(all) ? 'in' : 'us');
 const family = /illegal|banned|forbidden/i.test(all) ? 'taboo' : /only one|pick one|vs\.?\b/i.test(all) ? 'choice' : 'price';
 const topic = spec.kicker || [...tags][6] || 'this';
-const pinned = pinnedComment(family, topic);
+const pinned = watch ? "Which watch detail should we demonstrate next?" : pinnedComment(family, topic);
 const meta = { title, description, tags: [...tags], categoryId: '24', language: 'en', madeForKids: false, containsSyntheticMedia: true, region, hookScore: score, breakdown, fixes, pinnedComment: pinned, bridge: arg('bridge') ?? null };
 const out = specPath.replace(/\.assemble\.json$/, '') + '.meta.json';
 await writeFile(out, JSON.stringify(meta, null, 2), 'utf8');

@@ -92,7 +92,7 @@ export function pinnedComment(family: string, topic: string): string {
 export interface HookResult { score: number; fixes: string[]; breakdown: Record<string, number> }
 
 /** Heuristic scoring of the opening and structure of a Short script. Max 100; most scripts land 45-85. */
-export function scoreHook(texts: string[], hookText?: string): HookResult {
+export function scoreHook(texts: string[], hookText?: string, niche: 'food' | 'watch' = 'food'): HookResult {
   const first = texts[0] ?? '';
   const last = texts[texts.length - 1] ?? '';
   const all = texts.join(' ');
@@ -101,6 +101,19 @@ export function scoreHook(texts: string[], hookText?: string): HookResult {
   const estSec = totalWords / 2.6;
   const b: Record<string, number> = {};
   const fixes: string[] = [];
+  if (niche === 'watch') {
+    b.shortHook = words > 0 && words <= 10 ? 20 : words <= 14 && words > 0 ? 10 : 0;
+    b.mechanism = /\b(bezel|crown|clasp|rotor|dial|hand|escapement|chronograph|bracelet)\b/i.test(first) ? 20 : 0;
+    b.curiosity = /\?|\b(why|how|watch what|what happens)\b/i.test(first) ? 20 : 0;
+    b.demonstration = /\b(turns?|clicks?|moves?|rotates?|align|press|pull|point|opens?)\b/i.test(texts.slice(1).join(' ')) ? 15 : 0;
+    b.payoff = /\b(so|because|means|that|result)\b/i.test(last) ? 15 : 0;
+    b.pacing = estSec >= 10 && estSec <= 40 ? 10 : 0;
+    if (!b.shortHook) fixes.push('Open with a short spoken hook.');
+    if (!b.mechanism || !b.curiosity) fixes.push('Name the watch detail and raise a specific question in the opening.');
+    if (!b.demonstration || !b.payoff) fixes.push('Show one action and explain its visible result before the close.');
+    if (!b.pacing) fixes.push('Check the narration against the planned runtime.');
+    return { score: Object.values(b).reduce((sum, value) => sum + value, 0), fixes, breakdown: b };
+  }
   b.price = /[$£€]|\b(dirhams?|dollars?|pounds?|thousands?|millions?|hundreds?)\b/i.test(first) ? 20 : 0;
   if (!b.price) fixes.push('Open with a concrete price in the first sentence ("This steak costs 159 pounds.").');
   b.number = /\d|\b(one|two|three|four|five|ten|twenty|hundred|thousand|million)\b/i.test(first) ? 5 : 0;
