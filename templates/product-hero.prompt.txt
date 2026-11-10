@@ -1,0 +1,5 @@
+A $look $shot of $subject.$setting_clause
+Lighting: $lighting. Camera: $lens.$action_clause
+Art direction: $style
+Keep the primary subject sharp and recognizable. Use coherent materials, geometry, and proportions. Leave lower negative space for captions.
+$exclusions

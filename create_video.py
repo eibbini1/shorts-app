@@ -1,6 +1,7 @@
 import argparse
 from html import escape
 from pathlib import Path
+from string import Template
 import os
 import shutil
 import json
@@ -82,7 +83,7 @@ PHOTO_LOOK = os.environ.get("SHORTS_PHOTO_LOOK", "photorealistic")  # e.g. "Pixa
 IMAGE_EXCLUDE = "Vertical 9:16 composition. No text, no watermark, no logos, no people's faces."
 
 
-def compose_image_prompt(scene, topic="", ground=False):
+def compose_image_prompt(scene, topic="", ground=False, template=None):
     """Turns {shot, subject, setting, lighting} into a prose prompt a text-to-image model handles well."""
     clean = lambda key: " ".join(str(scene.get(key) or "").split()).strip(" .,")
     shot = scene.get("shot") if scene.get("shot") in SHOT_LOOK else SHOT_TYPES[0]
@@ -92,6 +93,15 @@ def compose_image_prompt(scene, topic="", ground=False):
         subject = f"{subject}, with {topic} clearly visible in the foreground"
     setting = clean("setting")
     lighting = clean("lighting") or "warm key light from camera-left with soft shadows"
+    if template is not None:
+        action = clean("action")
+        return template.substitute(
+            look=PHOTO_LOOK, shot=shot, subject=subject, topic=topic,
+            setting=setting, lighting=lighting, lens=SHOT_LOOK[shot],
+            style=IMAGE_STYLE, exclusions=IMAGE_EXCLUDE, action=action,
+            setting_clause=f" Set the scene in {setting}." if setting else "",
+            action_clause=f" Show the setup just before this action: {action}." if action else "",
+        ).strip()
     parts = [f"A {PHOTO_LOOK} {shot} of {subject}" + (f", set in {setting}." if setting else ".")]
     parts.append(f"Lit by {lighting}.")
     parts.append(f"Captured with {SHOT_LOOK[shot]}.")
@@ -658,6 +668,7 @@ def main():
     parser.add_argument("--effects", choices=EFFECT_LEVELS, help="Sound effects level, separate from music")
     parser.add_argument("--topic")
     parser.add_argument("--description", help="Story details and available visuals")
+    parser.add_argument("--image-template", type=Path, help="Reusable text prompt with named placeholders")
     parser.add_argument("--visual-constraints", help="Details that images and motion must preserve")
     parser.add_argument("--hook", help="Opening line or idea")
     parser.add_argument("--audience", help="Who should watch this Short?")
@@ -683,6 +694,14 @@ def main():
             parser.error("--preview, --draft-only and --strict-images apply to new projects only")
         rerender(args)
         return
+    image_template = None
+    if args.image_template:
+        try:
+            image_template = Template(args.image_template.read_text(encoding="utf-8-sig"))
+            if not compose_image_prompt({}, topic="preview", template=image_template):
+                parser.error("The image template is empty")
+        except (OSError, UnicodeError, ValueError, KeyError) as error:
+            parser.error(f"Invalid image template: {error}")
     unattended = args.yes or args.preview or args.draft_only
     if unattended and not args.topic:
         parser.error("--topic is required with --yes or --preview")
@@ -950,7 +969,7 @@ def main():
     print("\n🎨 Creating visual scene assets...")
     for i, scene in enumerate(spec_data["scenes"], 1):
         # The hook and the closing image must show the topic itself, so the video is recognisable at a glance.
-        img_prompt = compose_image_prompt(scene, topic, ground=i in (1, len(spec_data["scenes"])))
+        img_prompt = compose_image_prompt(scene, topic, ground=i in (1, len(spec_data["scenes"])), template=image_template)
         constraints = spec_data.get("visualConstraints")
         if constraints:
             img_prompt += f" Required continuity: {constraints}."

@@ -105,3 +105,16 @@ accept the suggestion or type a replacement. Unattended runs use the
 suggestion automatically. The accepted line becomes both scene-one narration
 and hookText. Use --description to supply the brief in unattended runs.
 An explicit --hook or an existing SHORTS_SCRIPT skips the suggestion call.
+
+### Reusable image prompts
+
+Use --image-template templates/product-hero.prompt.txt to apply the same
+composition structure across topics. The app fills the subject, shot,
+setting, lighting, lens, style and action per scene. Set SHORTS_IMAGE_STYLE
+for the overall look. Use --visual-constraints for details that must hold
+across shots, such as a single crown or consistent packaging. The default
+prompt builder still applies when no template is supplied.
+
+Supported placeholders are $look, $shot, $subject, $topic, $setting,
+$setting_clause, $lighting, $lens, $style, $action, $action_clause and
+$exclusions. Use $$ for a literal dollar sign.
