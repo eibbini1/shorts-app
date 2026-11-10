@@ -1,4 +1,6 @@
 import argparse
+from html import escape
+from pathlib import Path
 import os
 import shutil
 import json
@@ -377,7 +379,7 @@ def animate_scene(image_path, scene, scene_idx):
         return None
 
 
-def generate_ai_scene_image(prompt_text, output_path, scene_idx, total_scenes, anchor_path=None):
+def generate_ai_scene_image(prompt_text, output_path, scene_idx, total_scenes, anchor_path=None, strict=False):
     """Generates 9:16 portrait visual assets via AI API or falls back to a stylized slide."""
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     if IMAGE_PROVIDER == "flux":
@@ -399,6 +401,8 @@ def generate_ai_scene_image(prompt_text, output_path, scene_idx, total_scenes, a
             print(f"      ✅ FLUX image -> {output_path}")
             return
         except Exception as err:
+            if strict:
+                raise SystemExit(f"Scene {scene_idx} FLUX image rejected: {err}") from err
             print(f"      ⚠️  FLUX image failed ({err}). Trying the free endpoint instead...")
     if IMAGE_PROVIDER == "comfyui":
         try:
@@ -411,6 +415,8 @@ def generate_ai_scene_image(prompt_text, output_path, scene_idx, total_scenes, a
             print(f"      ✅ ComfyUI image -> {output_path}")
             return
         except Exception as err:
+            if strict:
+                raise SystemExit(f"Scene {scene_idx} ComfyUI image rejected: {err}") from err
             print(f"      ⚠️  ComfyUI image failed ({err}). Trying the free endpoint instead...")
     clean_prompt = urllib.parse.quote(prompt_text)
     
@@ -432,6 +438,8 @@ def generate_ai_scene_image(prompt_text, output_path, scene_idx, total_scenes, a
             if why and attempt < 4:
                 print(f"      🔁 {why}; retrying with a new seed...")
                 continue
+            if why and strict:
+                raise ValueError(why)
             with open(output_path, 'wb') as f:
                 f.write(strip_watermark(data))
             print(f"      ✅ Downloaded AI image -> {output_path}")
@@ -447,6 +455,9 @@ def generate_ai_scene_image(prompt_text, output_path, scene_idx, total_scenes, a
         except Exception as err:
             print(f"      ⚠️  AI endpoint failed ({err}). Rendering stylized 9:16 fallback slide...")
             break
+
+    if strict:
+        raise SystemExit(f"Scene {scene_idx} has no approved image. Retry or supply a replacement.")
 
     # Vibrant background colors to guarantee frame 0 brightness > 25 for QA check
     colors = [(75, 55, 115), (55, 85, 115), (115, 65, 55), (55, 95, 65), (85, 65, 105), (65, 75, 105)]
@@ -542,6 +553,7 @@ def main():
     parser.add_argument('--voice-provider', choices=('mock', 'elevenlabs'), help='Narration provider for this run')
     parser.add_argument('--voice-id', help='ElevenLabs voice ID. Defaults to the configured voice or Brian.')
     parser.add_argument("--rerender", nargs="?", const=SPEC_PATH, help="Reuse a saved spec and its visuals")
+    parser.add_argument("--strict-images", action="store_true", help="Reject invalid images and stop instead of using fallbacks")
     parser.add_argument("--transition", choices=TRANSITIONS)
     parser.add_argument("--effects", choices=EFFECT_LEVELS, help="Sound effects level, separate from music")
     parser.add_argument("--topic")
@@ -559,8 +571,8 @@ def main():
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,59}", args.name):
         parser.error("--name must use lowercase letters, digits or hyphens")
     if args.rerender:
-        if args.preview:
-            parser.error("--preview applies to new projects only")
+        if args.preview or args.strict_images:
+            parser.error("--preview and --strict-images apply to new projects only")
         rerender(args)
         return
     unattended = args.yes or args.preview
@@ -773,12 +785,19 @@ def main():
         previous_shot = scene["shot"]
 
     image_folder = os.environ.get("SHORTS_SCENE_IMAGES", "").strip()
+    if args.strict_images and not HAS_PIL:
+        parser.error("--strict-images requires Pillow in the Python environment")
+    _SEEN_HASHES.clear()
     supplied = []
     if image_folder:
         for index in range(1, len(spec_data["scenes"]) + 1):
             image = os.path.join(image_folder, f"scene_{index}.png")
             if not os.path.isfile(image) or not is_image(open_image_bytes(image)):
                 raise SystemExit(f"Missing or unreadable scene image: {image}")
+            if args.strict_images:
+                why = image_problem(Path(image).read_bytes(), near=1)
+                if why:
+                    raise SystemExit(f"Scene {index} image rejected: {why}")
             supplied.append(image)
 
     # Generate Image Assets for each scene
@@ -795,11 +814,25 @@ def main():
             image_path = supplied[i - 1].replace("\\", "/")
             print(f"   Using supplied scene image: {image_path}")
         else:
-            generate_ai_scene_image(img_prompt, image_path, i, len(spec_data["scenes"]), anchor)
+            generate_ai_scene_image(img_prompt, image_path, i, len(spec_data["scenes"]), anchor, strict=args.strict_images)
         scene["image"] = image_path
         scene.setdefault("motion", MOTIONS[(i - 1) % len(MOTIONS)])
         if not scene.get("voice"):
             scene["voice"] = voice_preset
+
+    review = Path("out") / args.name / "image-review.html"
+    review.parent.mkdir(parents=True, exist_ok=True)
+    cards = []
+    for index, scene in enumerate(spec_data["scenes"], 1):
+        uri = Path(scene["image"]).resolve().as_uri()
+        cards.append(f'<section><h2>Scene {index}</h2><img width="240" src="{escape(uri)}">'
+                     f'<p>{escape(scene["text"])}</p><p>{escape(scene["image_prompt"])}</p>'
+                     f'<p>{escape(motion_prompt(scene))}</p></section>')
+    review.write_text('<!doctype html><meta charset="utf-8"><title>Scene image review</title>'
+                      '<h1>Scene image review</h1><p>Compare the image to the expected subject and action. '
+                      'For watches, check dial markings, hand positions, bezel geometry and continuity.</p>'
+                      + ''.join(cards), encoding="utf-8")
+    print(f"Image review: {review.resolve()}")
 
     # Clips are made after all images, so a 16 GB Mac can stop ComfyUI first and give the memory to the video model.
     video_scenes = pick_video_scenes(len(spec_data["scenes"]))
