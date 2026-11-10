@@ -83,3 +83,9 @@ voice. Review the opening and payoff, then set SHORTS_SCRIPT to that file and
 run with --preview for image review. Keep the same SHORTS_SECONDS when reusing
 the draft. Use a fresh --name for each comparison. Prompt constraints and the
 editorial score are checks, while observed audience retention is separate.
+
+For an Ollama-generated draft, --payoff (or the interactive payoff answer)
+also enables a separate local review of the opening and ending. A rejected
+draft is regenerated with the reviewer's feedback within the existing
+three-attempt limit. Saved SHORTS_SCRIPT files retain their existing behavior.
+A passing verdict is an editorial signal and still needs human review.

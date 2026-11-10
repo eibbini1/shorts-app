@@ -548,6 +548,45 @@ def rerender(args):
     render_spec(target, rerender=True)
 
 
+def review_hook_payoff(draft, expected_payoff):
+    """Ask the local model to evaluate the promise using only the supplied draft."""
+    first, last = draft["scenes"][0], draft["scenes"][-1]
+    evidence = {
+        "hook": draft.get("hookText"),
+        "opening": {key: first.get(key) for key in ("text", "subject", "action")},
+        "ending": {key: last.get(key) for key in ("text", "subject", "action")},
+        "expected_payoff": expected_payoff,
+    }
+    result = parse_model_json(call_ollama({
+        "model": MODEL_NAME,
+        "stream": False,
+        "think": False,
+        "format": {
+            "type": "object",
+            "properties": {
+                "passed": {"type": "boolean"},
+                "reason": {"type": "string"},
+            },
+            "required": ["passed", "reason"],
+        },
+        "options": {"temperature": 0, "num_ctx": 4096},
+        "messages": [
+            {"role": "system", "content": (
+                "Review a short video's hook and ending. Pass only when the ending narration answers "
+                "the opening and the ending action shows the requested result. A repeated promise, "
+                "generic praise or a result that is merely implied fails. Judge only the supplied "
+                "evidence. On failure, give one specific revision in the reason."
+            )},
+            {"role": "user", "content": json.dumps(evidence, ensure_ascii=False)},
+        ],
+    }))
+    if type(result.get("passed")) is not bool or not isinstance(result.get("reason"), str) or not result["reason"].strip():
+        raise ValueError("Hook reviewer returned an invalid verdict")
+    if not result["passed"]:
+        raise ValueError(f"Hook payoff review: {result['reason'].strip()}")
+    print(f"Hook payoff review passed: {result['reason'].strip()}")
+
+
 HOOK_TEMPLATES = (
     ("Reveal", "Why does this detail work that way?", "Open on the action, show a clue, then reveal the cause."),
     ("Before and after", "Spot what changed.", "Use matching framing and show the step that connects both states."),
@@ -576,7 +615,7 @@ def main():
     parser.add_argument("--topic")
     parser.add_argument("--hook", help="Opening line or idea")
     parser.add_argument("--audience", help="Who should watch this Short?")
-    parser.add_argument("--payoff", help="What should the final shot visibly answer?")
+    parser.add_argument("--payoff", help="What should the final shot visibly answer? Triggers local hook review.")
     parser.add_argument("--story", type=int, choices=range(1, len(HOOK_TEMPLATES) + 1))
     parser.add_argument("--list-hooks", action="store_true")
     parser.add_argument("--name", default="interactive", help="Name for saved assets, spec and video")
@@ -701,17 +740,19 @@ def main():
             problems = script_problems(candidate)
             if problems:
                 raise ValueError("; ".join(problems))
+            if payoff:
+                review_hook_payoff(candidate, payoff)
             spec_data = candidate
             break
         except Exception as e:
             last_error = e
             print(f"   Attempt {attempt}/3 rejected: {e}")
             # Tell the model exactly what was wrong so the next attempt can fix it instead of repeating the same draft.
-            payload["messages"][1]["content"] += f"\nYour previous draft was rejected: {e}. Write it again and fix exactly that. Every scene after the first needs 2 or 3 full sentences."
+            payload["messages"][1]["content"] += f"\nYour previous draft was rejected: {e}. Write it again and fix exactly that. Keep the requested runtime and show the payoff in the final scene."
     if spec_data is None:
         e = last_error
         print(f"\n❌ Ollama issue or JSON parse error: {e}")
-        if os.environ.get("SHORTS_ALLOW_TEMPLATE") != "1":
+        if payoff or os.environ.get("SHORTS_ALLOW_TEMPLATE") != "1":
             # The template makes up claims ("banned", "only three chefs in the world") and is built to game the hook score, so it must never be published by accident.
             raise SystemExit("Script generation failed 3 times. Stopping instead of using the generic template. Fix the prompt or facts, use SHORTS_SCRIPT, or set SHORTS_ALLOW_TEMPLATE=1 for a throwaway draft.")
         print("Falling back to the built-in template (about 40 seconds, generic, review before publishing)...")
