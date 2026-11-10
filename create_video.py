@@ -332,7 +332,9 @@ def motion_prompt(scene):
     subject = " ".join(str(scene.get("subject") or "the subject").split()).strip(" .")
     action = " ".join(str(scene.get("action") or "").split()).strip(" .") or "light and steam move gently across the scene"
     camera = "Locked macro camera" if scene.get("shot") in ("macro close-up", "detail close-up") else "Steady camera"
-    return f"{camera}. Start from the reference frame. Animate one action: {action}. Show the result and hold briefly. Preserve {subject}, composition and lighting. No cuts, text or camera movement."
+    constraints = scene.get("visualConstraints")
+    continuity = f" Required continuity: {constraints}." if constraints else ""
+    return f"{camera}. Start from the reference frame. Animate one action: {action}. Show the result and hold briefly. Preserve {subject}, composition and lighting. No cuts, text or camera movement.{continuity}"
 
 
 def animate_scene(image_path, scene, scene_idx):
@@ -549,6 +551,40 @@ def rerender(args):
     render_spec(target, rerender=True)
 
 
+def suggest_hook(brief):
+    """Select a short, filmable hook from locally generated options."""
+    result = parse_model_json(call_ollama({
+        "model": MODEL_NAME, "stream": False, "think": False,
+        "format": {
+            "type": "object",
+            "properties": {
+                "options": {"type": "array", "minItems": 3, "maxItems": 3,
+                            "items": {"type": "string"}},
+                "pick": {"type": "integer", "minimum": 1, "maximum": 3},
+            },
+            "required": ["options", "pick"],
+        },
+        "options": {"temperature": 0.4, "num_ctx": 4096, "num_predict": 256},
+        "messages": [
+            {"role": "system", "content": (
+                f"Write three distinct spoken hooks, each at most {HOOK_WORDS} words. "
+                "Name the subject or detail. Create a question or visual promise that the payoff "
+                "can answer. Avoid unsupported prices, records, superlatives and legal claims. "
+                "Pick the clearest, most specific option the brief can actually show, using a 1-based index."
+            )},
+            {"role": "user", "content": brief},
+        ],
+    }))
+    options = result.get("options")
+    pick = result.get("pick")
+    if not isinstance(options, list) or len(options) != 3 or type(pick) is not int or not 1 <= pick <= 3:
+        raise ValueError("Invalid hook suggestions")
+    hooks = [" ".join(option.split()) if isinstance(option, str) else "" for option in options]
+    if any(not hook or len(hook.split()) > HOOK_WORDS for hook in hooks):
+        raise ValueError("Hook suggestions exceed the spoken hook limit")
+    return hooks[pick - 1]
+
+
 def review_hook_payoff(draft, expected_payoff):
     """Ask the local model to evaluate the promise using only the supplied draft."""
     first, last = draft["scenes"][0], draft["scenes"][-1]
@@ -614,6 +650,8 @@ def main():
     parser.add_argument("--transition", choices=TRANSITIONS)
     parser.add_argument("--effects", choices=EFFECT_LEVELS, help="Sound effects level, separate from music")
     parser.add_argument("--topic")
+    parser.add_argument("--description", help="Story details and available visuals")
+    parser.add_argument("--visual-constraints", help="Details that images and motion must preserve")
     parser.add_argument("--hook", help="Opening line or idea")
     parser.add_argument("--audience", help="Who should watch this Short?")
     parser.add_argument("--payoff", help="What should the final shot visibly answer? Triggers local hook review.")
@@ -647,7 +685,9 @@ def main():
     saved_script = os.environ.get("SHORTS_SCRIPT", "").strip()
     def brief_value(value, question):
         return value or ("" if unattended or saved_script else input(question).strip())
-    hook_prompt = brief_value(args.hook, "Opening line or idea [optional]: ")
+    hook_prompt = (args.hook or "").strip()
+    description = brief_value(args.description, "Describe the story and what we can show [optional]: ")
+    visual_constraints = brief_value(args.visual_constraints, "What visual details must stay consistent? [optional]: ")
     audience = brief_value(args.audience, "Who is this for? [general audience]: ")
     payoff = brief_value(args.payoff, "What should viewers see or learn at the end? [optional]: ")
     asset_dir = ASSET_DIR if args.name == "interactive" else os.path.join("storage", "interactive", args.name)
@@ -697,13 +737,30 @@ def main():
         user_prompt += f" Audience: {audience}."
     if payoff:
         user_prompt += f" Visible payoff: {payoff}."
-    if hook_prompt:
-        user_prompt += f" Hook: {hook_prompt}."
+    if visual_constraints:
+        user_prompt += f" Visual details to preserve across scenes: {visual_constraints}."
+    if description:
+        user_prompt += f" Story description and available visuals: {description}."
     # SHORTS_FACTS=facts.txt holds checked facts (prices, origins). The model must use only these, so it cannot invent claims.
     facts_file = os.environ.get("SHORTS_FACTS", "").strip()
     if facts_file:
         with open(facts_file, encoding="utf-8") as f:
             user_prompt += "\nUse ONLY these verified facts for every claim, price and origin; do not add others:\n" + f.read().strip()[:1500]
+
+    if not saved_script and not hook_prompt:
+        try:
+            proposal = suggest_hook(user_prompt)
+        except (ValueError, OSError) as error:
+            print(f"Hook suggestion unavailable ({error}). Continuing with script drafting.")
+        else:
+            print(f"Suggested hook: {proposal}")
+            hook_prompt = proposal if unattended else (
+                input("Press Enter to use it, or type your own hook: ").strip() or proposal
+            )
+    if not saved_script and hook_prompt:
+        if len(hook_prompt.split()) > HOOK_WORDS:
+            parser.error(f"The spoken hook must be {HOOK_WORDS} words or fewer")
+        user_prompt += f" Use this exact opening for scene 1 narration and hookText: {json.dumps(hook_prompt)}."
 
     payload = {
         "model": MODEL_NAME,
@@ -737,6 +794,9 @@ def main():
             break
         try:
             candidate = parse_model_json(call_ollama(payload))
+            if hook_prompt and isinstance(candidate.get("scenes"), list) and candidate["scenes"] and isinstance(candidate["scenes"][0], dict):
+                candidate["hookText"] = hook_prompt
+                candidate["scenes"][0]["text"] = hook_prompt
             repair_script(candidate)
             problems = script_problems(candidate)
             if problems:
@@ -814,6 +874,8 @@ def main():
             ]
         }
 
+    if visual_constraints:
+        spec_data["visualConstraints"] = visual_constraints
     if args.draft_only:
         destination = Path("out") / args.name / "draft.json"
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -882,6 +944,10 @@ def main():
     for i, scene in enumerate(spec_data["scenes"], 1):
         # The hook and the closing image must show the topic itself, so the video is recognisable at a glance.
         img_prompt = compose_image_prompt(scene, topic, ground=i in (1, len(spec_data["scenes"])))
+        constraints = spec_data.get("visualConstraints")
+        if constraints:
+            img_prompt += f" Required continuity: {constraints}."
+            scene["visualConstraints"] = constraints
         scene["image_prompt"] = img_prompt
         image_filename = f"scene_{i}.png"
         image_path = os.path.join(asset_dir, image_filename).replace("\\", "/")

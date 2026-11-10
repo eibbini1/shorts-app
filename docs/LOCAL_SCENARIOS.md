@@ -96,3 +96,12 @@ On November 10, the 20-second bezel brief passed local hook/payoff review
 with Qwen 1.7B in 67 seconds. The 4B model failed to allocate memory at the
 default context on this laptop. Windows therefore defaults to Qwen 1.7B.
 The macOS default remains 4B. Set SHORTS_MODEL to override either default.
+
+### Suggested opening
+
+Describe the story and available visuals, then choose a template and a payoff.
+Without --hook, Ollama writes three options and selects one. Press Enter to
+accept the suggestion or type a replacement. Unattended runs use the
+suggestion automatically. The accepted line becomes both scene-one narration
+and hookText. Use --description to supply the brief in unattended runs.
+An explicit --hook or an existing SHORTS_SCRIPT skips the suggestion call.
