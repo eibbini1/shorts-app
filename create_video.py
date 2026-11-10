@@ -523,7 +523,7 @@ def render_spec(spec_path, rerender=False):
     npm = shutil.which("npm.cmd" if os.name == "nt" else "npm")
     if not npm:
         raise SystemExit("npm is missing. Install Node.js and reopen Command Prompt.")
-    command = [npm, "run", "pipeline", "--", "--spec", spec_path]
+    command = [npm, "run", "pipeline", "--", "--spec", spec_path, "--min-hook-score", "85"]
     if rerender:
         command.append("--skip-variation")  # Intentional reuse of the same script.
     if os.environ.get("SHORTS_ALLOW_VOICE_SPEND") == "1":

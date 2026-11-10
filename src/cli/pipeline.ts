@@ -56,6 +56,20 @@ const sh = (label: string, script: string, args: string[]) => {
 // Anti-template guard (YouTube inauthentic-content policy): refuse near-duplicates of existing episodes
 if (!process.argv.includes('--skip-variation')) sh('variation guard', 'src/cli/variation.ts', ['--spec', specRel]);
 
+const metadataArgs = ['--spec', specRel, ...(arg('bridge') ? ['--bridge', arg('bridge')!] : [])];
+const minimumArg = arg('min-hook-score');
+if (process.argv.includes('--min-hook-score')) {
+  const minimum = Number(minimumArg);
+  if (!minimumArg || !/^\d+$/.test(minimumArg) || minimum > 100) {
+    throw new Error('--min-hook-score requires an integer from 0 to 100');
+  }
+  sh('hook score gate', 'src/cli/metaGen.ts', metadataArgs);
+  const { hookScore } = JSON.parse(await readFile(base + '.meta.json', 'utf8')) as { hookScore: number };
+  if (!Number.isFinite(hookScore) || hookScore < minimum) {
+    throw new Error(`Hook score ${hookScore}/100 is below ${minimum}/100. Revise the hook and payoff before rendering.`);
+  }
+}
+
 // Exact text and voice settings must match the provider cache key.
 const missing = [];
 for (const scene of spec.scenes) {
@@ -73,7 +87,7 @@ if (!process.argv.includes('--skip-render') && !resumeRender) {
   await atomicJson(receiptFile, { inputDigest: fingerprint, videoDigest: await fileDigest(out) });
 }
 sh('QA gate', 'src/cli/qaCheck.ts', ['--video', spec.output, '--expect', landscape ? 'landscape' : 'portrait', '--report', base + '.qa.json', ...(spec.requireMotion ? ['--require-motion'] : [])]);
-sh('metadata', 'src/cli/metaGen.ts', ['--spec', specRel, ...(arg('bridge') ? ['--bridge', arg('bridge')!] : [])]);
+if (minimumArg === undefined) sh('metadata', 'src/cli/metaGen.ts', metadataArgs);
 sh('thumbnails', 'src/cli/makeThumbs.ts', ['--spec', specRel]);
 sh('subtitles', 'src/cli/exportSubs.ts', ['--spec', specRel]);
 
