@@ -548,6 +548,23 @@ def rerender(args):
     render_spec(target, rerender=True)
 
 
+HOOK_TEMPLATES = (
+    ("Reveal", "Why does this detail work that way?", "Open on the action, show a clue, then reveal the cause."),
+    ("Before and after", "Spot what changed.", "Use matching framing and show the step that connects both states."),
+    ("Macro detail", "Can you spot the hidden detail?", "Open in macro, then pull back to show what the detail does."),
+    ("One click", "One click changes the reading.", "Show the original reading, one visible click, then the changed reading."),
+    ("Two choices", "Which one would you choose?", "Show two comparable options, one real tradeoff, and who each suits."),
+    ("Sound first", "Can you identify that sound?", "Open on a real available sound and reveal the component that made it."),
+    ("Design tradeoff", "Why would a designer leave that out?", "Show the design decision and demonstrate the tradeoff."),
+    ("Controlled test", "What changes if we move just this part?", "Keep the other variables fixed and show the result."),
+    ("Same angle, new light", "Watch what the light reveals.", "Keep the subject fixed and use a light sweep to reveal its finish."),
+    ("Misread", "This mark is easy to read wrong.", "Show a plausible misread and demonstrate the correct reading."),
+    ("Sequence", "Watch what happens after the second press.", "Show the controls in order and make the final state legible."),
+    ("Spot the difference", "These look alike until you turn them.", "Match framing and compare one visible detail. Use actual references."),
+    ("Loop back", "Remember where that hand started?", "Return to the opening frame with the meaning of the detail resolved."),
+)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--voice-provider', choices=('mock', 'elevenlabs'), help='Narration provider for this run')
@@ -560,22 +577,28 @@ def main():
     parser.add_argument("--hook", help="Opening line or idea")
     parser.add_argument("--audience", help="Who should watch this Short?")
     parser.add_argument("--payoff", help="What should the final shot visibly answer?")
-    parser.add_argument("--story", choices=("1", "2", "3"))
+    parser.add_argument("--story", type=int, choices=range(1, len(HOOK_TEMPLATES) + 1))
+    parser.add_argument("--list-hooks", action="store_true")
     parser.add_argument("--name", default="interactive", help="Name for saved assets, spec and video")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--yes", action="store_true", help="Render without prompting")
     mode.add_argument("--preview", action="store_true", help="Show the preview without rendering")
+    mode.add_argument("--draft-only", action="store_true", help="Save the validated story JSON before generating media")
     args = parser.parse_args()
+    if args.list_hooks:
+        for index, (title, hook, direction) in enumerate(HOOK_TEMPLATES, 1):
+            print(f"{index}. {title} | {hook} | {direction}")
+        return
     if args.voice_id and (args.voice_provider or VOICE_PROVIDER) == 'mock':
         parser.error('--voice-id requires ElevenLabs')
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,59}", args.name):
         parser.error("--name must use lowercase letters, digits or hyphens")
     if args.rerender:
-        if args.preview or args.strict_images:
-            parser.error("--preview and --strict-images apply to new projects only")
+        if args.preview or args.strict_images or args.draft_only:
+            parser.error("--preview, --draft-only and --strict-images apply to new projects only")
         rerender(args)
         return
-    unattended = args.yes or args.preview
+    unattended = args.yes or args.preview or args.draft_only
     if unattended and not args.topic:
         parser.error("--topic is required with --yes or --preview")
     topic = (args.topic if args.topic is not None else input("What is the Short about? ")).strip()
@@ -615,18 +638,21 @@ def main():
         f"Create {MIN_SCENES} or {MAX_SCENES} scenes (a {HOOK_WORDS}-word hook first, then about {OTHER_WORDS} words per scene, about {TOTAL_WORDS} words in total) with the shot, subject, setting, lighting and action fields filled for each scene."
     )
     if not os.environ.get("SHORTS_SCRIPT", "").strip():
-        angles = [
-            ("The reveal", f"What happens when you test {topic}?", "Show a setup, a clue and the result."),
-            ("Before and after", f"Spot what changed with {topic}.", "Demonstrate the step connecting two comparable states."),
-            ("One detail", f"Watch this detail on {topic}.", "Start close and reveal how the detail works."),
-        ]
-        for index, (title, hook, story) in enumerate(angles, 1):
-            print(f"{index}. {title} | {hook} | {story}")
-        pick = args.story or ("1" if unattended else input("Pick a story [1]: ").strip() or "1")
-        if pick not in ("1", "2", "3"):
-            raise SystemExit("Choose story 1, 2 or 3.")
-        title, hook, story = angles[int(pick) - 1]
-        user_prompt += f" Story: {title}. {story} Suggested hook to adapt: {hook}."
+        if not unattended and args.story is None:
+            for index, (title, hook, _) in enumerate(HOOK_TEMPLATES, 1):
+                print(f"{index}. {title} | {hook}")
+            pick = input("Pick a hook template [1]: ").strip() or "1"
+            if not pick.isdecimal() or int(pick) not in range(1, len(HOOK_TEMPLATES) + 1):
+                parser.error("Choose a numbered hook template")
+        else:
+            pick = args.story or 1
+        title, hook, direction = HOOK_TEMPLATES[int(pick) - 1]
+        user_prompt += (
+            f" Story template: {title}. {direction} "
+            f"Opening example: {hook} Adapt it to name the actual subject or mechanism. "
+            "The opening action must be possible in the first image and motion shot. "
+            "Write the answer or result into the final narration and final visual."
+        )
     if audience:
         user_prompt += f" Audience: {audience}."
     if payoff:
@@ -648,7 +674,7 @@ def main():
         "stream": False,
         "think": False,
         "format": SCRIPT_SCHEMA,
-        "options": {"temperature": 0.7, "num_ctx": 4096},
+        "options": {"temperature": 0.4, "num_ctx": 4096},
     }
 
     spec_data = None
@@ -745,6 +771,14 @@ def main():
                 }
             ]
         }
+
+    if args.draft_only:
+        destination = Path("out") / args.name / "draft.json"
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        with destination.open("x", encoding="utf-8") as f:
+            json.dump(spec_data, f, indent=2, ensure_ascii=False)
+        print(f"Draft saved: {destination.resolve()}")
+        return
 
     # Enforce shorts-app spec requirements
     spec_data["hookText"] = clamp_hook(spec_data.get("hookText") or hook_prompt)

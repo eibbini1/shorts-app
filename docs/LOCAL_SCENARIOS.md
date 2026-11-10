@@ -68,3 +68,18 @@ timestamps are fabricated. Use aligned narration in the approved media manifest.
 Takes over 450 characters require splitting before synthesis. A full long-form
 script should use short narrated shots. The initial smoke test used two manually
 written chocolate lines; it does not establish text-model generation quality.
+
+## Hook templates in create_video.py
+
+Use --list-hooks to see the 13 story structures, and --story NUMBER to select
+one. The first three retain their existing order. The selected template,
+audience, opening idea and visible payoff guide the local Ollama prompt.
+
+    set "SHORTS_SECONDS=20"
+    uv run --offline --python 3.12 python create_video.py --topic "Dive watch bezel" --audience "New collectors" --payoff "Show what one click changes" --story 4 --name bezel-draft --draft-only
+
+Draft-only mode saves out/bezel-draft/draft.json before generating images or
+voice. Review the opening and payoff, then set SHORTS_SCRIPT to that file and
+run with --preview for image review. Keep the same SHORTS_SECONDS when reusing
+the draft. Use a fresh --name for each comparison. Prompt constraints and the
+editorial score are checks, while observed audience retention is separate.
