@@ -49,7 +49,8 @@ COMFY_VIDEO_WORKFLOW = os.environ.get("COMFY_VIDEO_WORKFLOW", os.path.join("work
 COMFY_TIMEOUT = int(os.environ.get("COMFY_TIMEOUT", "1800"))
 LTX_MLX_BIN = os.environ.get("LTX_MLX_BIN", os.path.join("storage", "tools", "ltx-2-mlx", ".venv", "bin", "ltx-2-mlx"))
 MOTIONS = ["in", "left", "out", "right"]
-MODEL_NAME = os.environ.get("SHORTS_MODEL", "qwen3:4b-instruct-2507-q4_K_M")  # SHORTS_MODEL=qwen3:1.7b for fast drafts
+DEFAULT_MODEL = "qwen3:1.7b" if os.name == "nt" else "qwen3:4b-instruct-2507-q4_K_M"
+MODEL_NAME = os.environ.get("SHORTS_MODEL", DEFAULT_MODEL)
 
 # Target video length. About 2.5 spoken words per second; 60 s means 6-7 scenes and ~150 words.
 TARGET_SECONDS = int(os.environ.get("SHORTS_SECONDS", "60"))

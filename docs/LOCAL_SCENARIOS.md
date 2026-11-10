@@ -89,3 +89,10 @@ also enables a separate local review of the opening and ending. A rejected
 draft is regenerated with the reviewer's feedback within the existing
 three-attempt limit. Saved SHORTS_SCRIPT files retain their existing behavior.
 A passing verdict is an editorial signal and still needs human review.
+
+## Windows watch benchmark
+
+On November 10, the 20-second bezel brief passed local hook/payoff review
+with Qwen 1.7B in 67 seconds. The 4B model failed to allocate memory at the
+default context on this laptop. Windows therefore defaults to Qwen 1.7B.
+The macOS default remains 4B. Set SHORTS_MODEL to override either default.
