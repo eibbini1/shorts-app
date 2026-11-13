@@ -116,13 +116,15 @@ echo "Step 3/4  Rendering local video to $output (about 5 min per shot on an M1:
 python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" ${chain:+$chain} ${allow_silence:+$allow_silence} ${allow_bad_first:+$allow_bad_first} ${stills:+--stills "$stills"}
 t_render=$SECONDS
 echo "Video ready: $output"
-echo "Step 4/4  Captions, upload pack and quality check"
-python3 scripts/finish-local-video.py --scenario "$scenario" --video "$output" && echo "Captioned video and upload pack are next to $output"
-python3 scripts/qa-local-video.py --video "${output%.mp4}.captioned.mp4" || echo "QA found problems: read the qa block in ${output%.mp4}.pack.json before uploading." >&2
+echo "Step 4/4  Shot-synced ASMR, captions, upload pack and quality check"
+storage/tools/ComfyUI/.venv/bin/python scripts/add-sfx.py --scenario "$scenario" --video "$output"
+finished_video="${output%.mp4}.sfx.mp4"
+python3 scripts/finish-local-video.py --scenario "$scenario" --video "$finished_video" && echo "Captioned ASMR video and upload pack are next to $finished_video"
+python3 scripts/qa-local-video.py --video "${finished_video%.mp4}.captioned.mp4" || echo "QA found problems: read the qa block in ${finished_video%.mp4}.pack.json before uploading." >&2
 t_end=$SECONDS
 checks_s=$((t_checks - t_start)); render_s=$((t_render - t_checks)); finish_s=$((t_end - t_render)); total_s=$((t_end - t_start))
 printf 'Timing: checks %ds, render %dm%02ds, captions+QA %ds, total %dm%02ds\n' "$checks_s" $((render_s / 60)) $((render_s % 60)) "$finish_s" $((total_s / 60)) $((total_s % 60))
-python3 - "${output%.mp4}.pack.json" "$checks_s" "$render_s" "$finish_s" "$total_s" <<'PY'
+python3 - "${finished_video%.mp4}.pack.json" "$checks_s" "$render_s" "$finish_s" "$total_s" <<'PY'
 import json, sys
 pack, *secs = sys.argv[1], *map(int, sys.argv[2:])
 try:

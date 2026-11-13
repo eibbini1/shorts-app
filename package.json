@@ -50,6 +50,8 @@
     "models:check:mac": "python3 scripts/models-status-mac.py",
     "trends:local": "python3 scripts/fetch-trends.py",
     "montage:local:mac": "python3 scripts/assemble-motion-video.py",
+    "montage:footage:mac": "python3 scripts/montage-footage.py",
+    "trend:brief:mac": "python3 scripts/trend-brief.py",
     "image:local:mac": "python3 scripts/create-local-image.py",
     "image:flux:mac": "python3 scripts/create-flux-image.py",
     "review:shot:local": "python3 scripts/record-shot-review.py"

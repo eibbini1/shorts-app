@@ -22,6 +22,7 @@ CONTRAST = re.compile(r'\b(vs\.?|versus|same|instead|but|only|yet)\b', re.I)
 BANNED = re.compile(r'\b(illegal|banned|ban|forbidden|outlawed)\b', re.I)
 NUMBER = re.compile(r'\d|\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion)\b', re.I)
 VAGUE_OPEN = re.compile(r'^(this|these|the|a|an)\b', re.I)
+VISIBLE_ACTION = re.compile(r'\b(lift\w*|pull\w*|push\w*|pour\w*|drip\w*|jump\w*|run\w*|walk\w*|roll\w*|spin\w*|bite\w*|chew\w*|slic\w*|chop\w*|stir\w*|grab\w*|reach\w*|open\w*|clos\w*|arrang\w*|melt\w*|bubbl\w*|rac\w*|carry\w*|drop\w*|catch\w*|cross\w*|serv\w*|eat\w*|driv\w*|pedal\w*|sprinkl\w*|flip\w*|toss\w*|fold\w*|trac\w*|step\w*|climb\w*|break\w*|crack\w*|glid\w*)\b', re.I)
 
 
 def hook_score(line):
@@ -80,6 +81,8 @@ def main():
             warnings.append(f'shot {i}: line fills about {speech:.1f} s of {shot["seconds"]} s, so about {gap:.1f} s of silence; shorten the shot to {speech + 0.6:.0f} s or add words')
         elif gap < -0.2:
             warnings.append(f'shot {i}: line needs about {speech:.1f} s but the shot is {shot["seconds"]} s; trim words or lengthen the shot')
+        if not VISIBLE_ACTION.search(shot['motionPrompt']):
+            warnings.append(f'shot {i}: motion prompt has no recognizable physical action; review it for camera-only movement before rendering')
     if NON_USD.search(first):
         warnings.append('non-USD money in the first line: use dollars')
     if not plan.get('claimsToCheck'):

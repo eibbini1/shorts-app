@@ -2,6 +2,8 @@
 
 One command turns a reviewed plan into a captioned 720x1280 Short with an upload pack. Everything runs on your Mac: Gemma plans, FLUX makes the stills, LTX animates them, Kokoro speaks, ffmpeg assembles.
 
+For a much faster edit from clips you already have, use the [footage montage workflow](FOOTAGE_MONTAGE.md). It checks the cut plan before encoding and avoids a new LTX render.
+
 ## Quick start
 
 ```bash
@@ -30,15 +32,17 @@ Options for `--scenario`:
 | 1 Environment check | `scripts/check-env.py` | 1 s | Tools, models, ffmpeg captions filter, free disk (15 GB). FAIL lines say how to fix. |
 | 2 Pre-render check | `scripts/preflight-short.py` | 1 s | Repeat topic (blocks), hook score, length, non-USD money, missing claims (warn). |
 | 3 Render | `scripts/render-any-local.py` | about 25-30 min for 30 s | Stills, motion, voice, soundtrack, assembly, loudness. Reuses finished shots when their inputs are unchanged. |
-| 4 Finish | `finish-local-video.py`, `qa-local-video.py` | 5 s | Captions, SRT, upload pack, media QA. |
+| 4 Finish | `add-sfx.py`, `finish-local-video.py`, `qa-local-video.py` | seconds | Shot-synced ASMR Foley, voice ducking, captions, SRT, upload pack, media QA. |
 
 The timer line at the end (and `timingsSeconds` in the pack) shows where the time went.
 
 ## Outputs (in `outputs/`)
 
-- `ID-DATE.mp4` raw video and `ID-DATE.captioned.mp4` with captions (upload this one)
+- `ID-DATE.mp4` raw video, `ID-DATE.sfx.mp4` with ASMR Foley, and `ID-DATE.sfx.captioned.mp4` with Foley and captions (upload this one)
 - `ID-DATE.srt` captions file, `ID-DATE.provenance.json` how it was made
-- `ID-DATE.pack.json` title, description, tags, claims to check, `qa` block and `timingsSeconds`. Nothing is uploaded automatically.
+- `ID-DATE.sfx.pack.json` title, description, tags, claims to check, `qa` block and `timingsSeconds`. Nothing is uploaded automatically.
+
+The ASMR layer is generated locally from each shot's `sound`, `imagePrompt` and `motionPrompt`. It recognizes food actions including sizzle, bite/crunch, chew, pour, slice and utensil clink, and ducks the effects while narration speaks. These sounds are synthesized approximations; for publication-quality food ASMR, review the mix and replace weak cues with your own licensed or recorded Foley. The raw video is retained for comparison.
 
 ## The checks
 
