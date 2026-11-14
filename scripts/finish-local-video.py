@@ -168,7 +168,9 @@ def main():
                 'aiDisclosureReason': 'Photoreal AI food depicts a realistic scene that did not occur.',
                 'priceSourcesForDescription': evidence_sources,
                 'music': 'Use an appropriately licensed YouTube Studio Audio Library track; record track, license and required attribution before upload.',
-                'voiceAndSubtitles': 'No voice or subtitles' if not presentation['voice'] else 'Listen to narration and check caption timing.',
+                'voiceAndSubtitles': ('No voice or subtitles' if not presentation['voice'] else
+                                      'Listen to narration and check caption timing.' if presentation['captions'] else
+                                      'Listen to narration; this film has no captions.'),
                 'humanReview': 'Watch all final frames and listen to the full mix before publishing.',
                 'publicationStatus': 'blocked' if release_problems else 'review-required',
                 'releaseProblems': release_problems

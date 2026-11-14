@@ -24,6 +24,20 @@ class PresentationModeTests(unittest.TestCase):
         data['plan']['shots'][0]['sound'] = ''
         self.assertEqual(choose(data)['mode'], 'voiced')
 
+    def test_long_tactile_food_uses_sound_without_voice(self):
+        data = self.data(30, 6)
+        data['creativeSignature'] = {'format': 'tactile-recipe-reveal'}
+        self.assertEqual(choose(data)['mode'], 'asmr')
+        self.assertFalse(choose(data)['captions'])
+
+    def test_audio_plan_controls_voice_and_subtitles(self):
+        data = self.data(30, 6)
+        data['audioPlan'] = {'voice': 'none', 'subtitles': 'none'}
+        self.assertEqual(choose(data)['mode'], 'asmr')
+        data['audioPlan'] = {'voice': 'narration', 'subtitles': 'none'}
+        self.assertTrue(choose(data)['voice'])
+        self.assertFalse(choose(data)['captions'])
+
     def test_explicit_override_and_invalid_value(self):
         self.assertEqual(choose(self.data(10, 2, 'voiced'))['mode'], 'voiced')
         with self.assertRaisesRegex(ValueError, 'presentationMode'):
