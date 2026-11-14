@@ -1,0 +1,60 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 15,
+    "voice": "af_heart",
+    "presentationMode": "voiced"
+  },
+  "model": "hand-written",
+  "topic": "Sticky Korean Beef and Rice: a quick trending home recipe in three beats",
+  "style": "photoreal bright home-kitchen cooking video, soft natural window light, white marble counter, macro food close-ups with a few hands only, no faces, steam and texture visible, shallow depth of field, vertical framing",
+  "requestedEnding": "A spoon lifts sticky Korean beef over the steaming rice and sauce glistens.",
+  "totalSeconds": 15,
+  "template": "story",
+  "plan": {
+    "ideas": [
+      {
+        "title": "Sticky Korean Beef and Rice",
+        "angle": "three-beat quick recipe"
+      }
+    ],
+    "title": "Sticky Korean Beef and Rice",
+    "hook": "Five minutes of prep, yet this beef is sticky, sweet and savory.",
+    "payoff": "A spoon lifts sticky Korean beef over the steaming rice and sauce glistens.",
+    "shots": [
+      {
+        "seconds": 5,
+        "narration": "Five minutes of prep, yet this beef is sticky, sweet and savory.",
+        "imagePrompt": "Photoreal close-up of ground beef browning and crumbling in a hot skillet with a wooden spoon. The food is the clear hero of the frame. Visual style: photoreal bright home-kitchen cooking video, soft natural window light, white marble counter, macro food close-ups with a few hands only, no faces, steam and texture visible, shallow depth of field, vertical framing. Continuity: the same sticky glazed Korean-style ground beef over steamed white rice in a bowl with sesame seeds and sliced scallions and the same bright home kitchen throughout. No faces, no text, no labels.",
+        "motionPrompt": "A hand breaks up the browning ground beef in the hot skillet with a wooden spoon. Camera locked."
+      },
+      {
+        "seconds": 5,
+        "narration": "Soy, brown sugar, garlic and ginger turn the pan into glaze.",
+        "imagePrompt": "Photoreal close-up of dark glossy sauce bubbling around ground beef in the skillet, steam rising. The food is the clear hero of the frame. Visual style: photoreal bright home-kitchen cooking video, soft natural window light, white marble counter, macro food close-ups with a few hands only, no faces, steam and texture visible, shallow depth of field, vertical framing. Continuity: the same sticky glazed Korean-style ground beef over steamed white rice in a bowl with sesame seeds and sliced scallions and the same bright home kitchen throughout. No faces, no text, no labels.",
+        "motionPrompt": "Dark sticky sauce bubbles and a hand stirs it so it coats the browning beef; steam rises. Camera locked."
+      },
+      {
+        "seconds": 5,
+        "narration": "Spoon it over rice, add sesame seeds. Dinner in twenty minutes.",
+        "imagePrompt": "Photoreal close-up of a white bowl of steamed rice topped with sticky glazed Korean beef, sesame seeds and sliced scallions. The food is the clear hero of the frame. Visual style: photoreal bright home-kitchen cooking video, soft natural window light, white marble counter, macro food close-ups with a few hands only, no faces, steam and texture visible, shallow depth of field, vertical framing. Continuity: the same sticky glazed Korean-style ground beef over steamed white rice in a bowl with sesame seeds and sliced scallions and the same bright home kitchen throughout. No faces, no text, no labels.",
+        "motionPrompt": "A spoon lifts sticky Korean beef over the steaming rice and sauce glistens. Camera locked."
+      }
+    ],
+    "claimsToCheck": [
+      "Dish named on a 2026 recipe list; confirm the original recipe credit before publishing",
+      "AI-generated original footage; no reference footage, audio or branding reused",
+      "Do not state protein or time figures as facts without a source"
+    ]
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "dish named on a 2026 recipe list (Bon Appetit gallery); pacing reference only, not a verified view trend",
+    "sources": [
+      "https://www.bonappetit.com/gallery/best-recipes-2026",
+      "https://www.youtube.com/shorts/bkUpOMCZ9GQ"
+    ]
+  }
+}
