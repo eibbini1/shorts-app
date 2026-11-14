@@ -1,11 +1,26 @@
 # Roadmap
-Phase 0 (in progress): inventory, tests, baseline, docs, handover. 
-Phase 1 VERIFIED (2026-11-14): shot continuity (locked subject/prop descriptors + reference stills + end-frame chaining), caption phrase boundaries, hero shot + end card, audio tail trim. Gate: new film beats baseline 45/100 with inspected frames.
-Phase 2 VERIFIED (2D rig + colour-matched composite; mini-chef-studio/src/Crumb.tsx, scripts/composite-crumb.sh): Crumb 2D rig composited over footage with contact shadow/occlusion.
-Phase 3 PARTLY VERIFIED (scripts/master-export.sh = 1080p export only; scripts/bench-ltx-hires.sh benchmark; loudness change awaits owner OK): mastering (loudness, grade LUT, native-res/two-stage upscale benchmark on 16 GB).
-Phase 4 PLANNED: trend intelligence (branch feature/trend-feed-templates reviewed, not merged).
-Optional: cloud generation, disabled by default, spend-capped.
 
-## Native high-res benchmark (VERIFIED 2026-11-14, M1 16 GB)
-`--distilled` is already LTX's two-stage path (half-res + upscale + refine). `--two-stage` needs a dev transformer this pack lacks; `--dfr` is LTX 2.5 only.
-25 frames at -H 1920 -W 1080 -> output 1024x1920 (width rounds to 64): 657 s wall, 2.97 GB max RSS (excludes GPU-wired memory). A 97-frame clip would be roughly 40 min, a 6-shot film roughly 4 h vs 29 min now. Visibly sharper detail than lanczos-upscaled 720p. Opt-in only; default pipeline unchanged.
+Updated 2026-11-14. Read [AI_HANDOFF.md](AI_HANDOFF.md) for the active render and review branch. See [the food Short review](FOOD_SHORTS_REVIEW_20261114.md) for sampled hooks and their evidence limits.
+
+| Phase | State | Evidence and next gate |
+| --- | --- | --- |
+| 0: inventory and baseline | Complete | 16-second Juuni Ban and 30-second hotel hot-dog baselines retained locally. |
+| 1: continuity and captions | Verified on a prior 30-second film | Chained references, locked visual descriptors, phrase captions and quieter tails. Sampled review found continuity gains; rich physical action is still limited. |
+| 2: chef | 2D composite verified; 3D on-plate prototype | Juuni Ban on-plate placement sampled. The pipeline option now requires an explicit placement check. General per-shot tracking and occlusion remain open. |
+| 3: mastering | Technical path verified | 1080 export, measured loudness, dissolves and a common film grade. One-command final export and final-file QA passed on the 30-second hotel hot dog. Listening review remains open. Native 720 motion remains the default. |
+| 4: trend intelligence | Implemented; source validation ongoing | Wikipedia and YouTube signals rank together, including YouTube-only topics. A signal is an idea lead, not proof of a trend or rights to reuse footage/music. |
+| 5: full local film | In progress | Byakuya and hotel hot dog each have an exact 30-second technically passing final cut. Editorial review remains open. November cinnamon loaf is rendering. |
+
+## Native resolution benchmark
+
+On the 16 GB M1, a 25-frame 1024×1920 MLX LTX output took 657 seconds. A 97-frame clip is estimated near 40 minutes, and six clips near four hours. This was visibly sharper than a Lanczos-upscaled 720p film, but remains opt-in. Compare a same-prompt result and total runtime before replacing FLUX, Gemma, Kokoro or LTX. Cloud generation remains optional and off by default.
+
+## Next practical upgrades
+
+1. Finish the cinnamon film, inspect its final picture/sound and compare its opening to the Byakuya and hot-dog cuts. Require final-file QA plus owner editorial review as the release gate.
+2. Integrate duration-preserving speed ramps and music ducking only after a measured test keeps narration and captions in sync.
+3. Improve action variety and reference consistency shot by shot. A new video model should first win a same-prompt benchmark on this Mac.
+
+## Faster runs without weaker gates
+
+The render now prepares Kokoro narration and the original soundtrack concurrently; both finish and the silence gate runs **before** the first model clip. `--cache-only` reuses approved stills and clips and fails on a cache miss rather than unexpectedly starting a long model job. This is useful for changing narration and timing while retaining the shot prompts. The dominant cost remains MLX LTX motion generation, which runs one clip at a time on the 16 GB unified-memory Mac. FLUX stills are also sequential when `--chain-images` is used because each still depends on the previous one. Parallel FLUX/LTX jobs may cause memory pressure and retry costs, so the next speed work is measuring per-shot elapsed time and a same-prompt test of fewer frames or faster settings before changing the default. Final-file QA and story checks remain mandatory.

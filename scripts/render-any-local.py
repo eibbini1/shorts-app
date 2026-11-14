@@ -7,6 +7,7 @@ import math
 import os
 import subprocess
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from local_video_progress import snapshot
 from first_checks import check_still, check_clip
@@ -42,13 +43,15 @@ def valid_video(path):
         return False
 
 
-def still(work, index, shot, seed, source, width, height):
+def still(work, index, shot, seed, source, width, height, cache_only=False):
     key = digest({'prompt': shot['imagePrompt'], 'seed': seed, 'sourceHash': file_hash(source) if source else None,
                   'model': 'flux2-klein-4b-q4', 'width': width, 'height': height})
     target = work / 'refs' / f'shot-{index:02d}-{key}.png'
     if target.is_file() and target.with_suffix('.json').is_file():
         print(f'Reusing image {index + 1}: {target.name}', flush=True)
         return target
+    if cache_only:
+        raise RuntimeError(f'Cache-only mode: missing approved still for shot {index + 1}: {target}')
     print(f'Generating local FLUX image {index + 1}: {target.name}', flush=True)
     command = ['python3', ROOT / 'scripts/create-flux-image.py', '--prompt', shot['imagePrompt'],
                '--seed', seed, '--width', width, '--height', height, '--output', target]
@@ -72,7 +75,7 @@ def own_still(folder, work, index, width, height):
     return None
 
 
-def clip(work, index, part, shot, seed, reference, width, height, model, gemma, progress):
+def clip(work, index, part, shot, seed, reference, width, height, model, gemma, progress, cache_only=False):
     prompt = shot['motionPrompt'].strip() + ' One continuous camera take with coherent physical movement, stable subject identity and lighting.'
     key = digest({'prompt': prompt, 'seed': seed, 'referenceHash': file_hash(reference),
                   'model': model, 'gemma': gemma, 'frames': 97, 'width': width, 'height': height})
@@ -81,6 +84,8 @@ def clip(work, index, part, shot, seed, reference, width, height, model, gemma, 
         print(f'Reusing motion {index + 1}.{part + 1}: {target.name}', flush=True)
         print(progress(), flush=True)
         return target
+    if cache_only:
+        raise RuntimeError(f'Cache-only mode: missing valid motion for shot {index + 1}.{part + 1}: {target}')
     print(f'Generating local LTX motion {index + 1}.{part + 1}: {target.name}', flush=True)
     command = [ROOT / 'storage/tools/ltx-2-mlx/.venv/bin/ltx-2-mlx', 'generate',
         '--model', model, '--gemma', gemma, '--distilled', '--low-ram', '--no-audio',
@@ -123,6 +128,7 @@ def main():
     parser.add_argument('--allow-silence', action='store_true', help='Continue even when the voice track has gaps over 1.5 s')
     parser.add_argument('--allow-bad-first', action='store_true', help='Skip the first-picture and first-clip checks')
     parser.add_argument('--stills', type=Path, help='Folder with your own stills named shot-01.png, shot-02.png ... (for example from Google Flow). Missing shots fall back to FLUX')
+    parser.add_argument('--cache-only', action='store_true', help='Reuse existing FLUX/LTX assets; fail rather than start a model job on a cache miss')
     args = parser.parse_args()
     scenario = args.scenario.expanduser().resolve()
     output = args.output.expanduser().resolve()
@@ -147,13 +153,21 @@ def main():
     width, height = (384, 640) if aspect == 'short' else (640, 384)
     work.joinpath('refs').mkdir(parents=True, exist_ok=True)
     work.joinpath('motion').mkdir(exist_ok=True)
-    run('node', ROOT / 'scripts/narrate-any-local.mjs', scenario, work)
+    # Independent CPU tasks can overlap. Keep FLUX and LTX serial on 16 GB Macs;
+    # running both model jobs together competes for unified memory.
+    audio_started = time.monotonic()
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        voice_job = pool.submit(run, 'node', ROOT / 'scripts/narrate-any-local.mjs', scenario, work)
+        sound_job = pool.submit(run, ROOT / 'storage/tools/ComfyUI/.venv/bin/python',
+                                ROOT / 'scripts/sound-any-local.py', scenario, work)
+        voice_job.result()
+        sound_job.result()
+    print(f'Parallel voice and soundtrack preparation: {time.monotonic() - audio_started:.1f}s', flush=True)
     # Fail-fast gate: voice exists now, clips do not. Stop here if shots would leave dead air.
     gaps = voice_gaps(work / 'voice-timeline.wav')
     if gaps and not args.allow_silence:
         lines = ', '.join(f'{a:.1f}-{b:.1f} s ({b - a:.1f} s)' for a, b in gaps)
         parser.error(f'Voice track has silence over 1.5 s at {lines}. Shorten those shots to the line length plus 0.6 s (total must stay equal to settings.seconds), or pass --allow-silence. Stopped before the 25-minute clip step')
-    run(ROOT / 'storage/tools/ComfyUI/.venv/bin/python', ROOT / 'scripts/sound-any-local.py', scenario, work)
     model = (ROOT / 'storage/setup/ltx-model-dir.txt').read_text().strip()
     gemma = (ROOT / 'storage/setup/gemma-model-dir.txt').read_text().strip()
     expected = sum(math.ceil(shot['seconds'] / 5) for shot in plan['shots'])
@@ -171,7 +185,7 @@ def main():
         reference = own_still(args.stills.expanduser().resolve(), work, index, width, height) if args.stills else None
         if reference is None:
             reference = still(work, index, shot, 1200 + index,
-                              previous if args.chain_images else None, width, height)
+                              previous if args.chain_images else None, width, height, args.cache_only)
         if gate and index == 0:
             problem = check_still(reference)
             if problem:
@@ -188,7 +202,7 @@ def main():
                     '-frames:v', 1, anchor)
                 reference = anchor
             previous_clip = clip(work, index, part, shot, 2200 + index * 10 + part,
-                                 reference, width, height, model, gemma, progress)
+                                 reference, width, height, model, gemma, progress, args.cache_only)
             if gate and index == 0 and part == 0:
                 problem = check_clip(previous_clip)
                 if problem:

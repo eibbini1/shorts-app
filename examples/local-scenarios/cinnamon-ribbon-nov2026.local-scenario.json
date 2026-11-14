@@ -1,0 +1,149 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Local Studio",
+    "format": "short",
+    "seconds": 30,
+    "voice": "af_heart"
+  },
+  "model": "trend-researched-local",
+  "topic": "Cinnamon roll banana bread: one warm loaf, one pull-apart reveal",
+  "style": "Photorealistic warm bakery macro, amber morning light, high-end food commercial, tactile textures, one continuous kitchen and one pair of hands.",
+  "requestedEnding": "A warm slice tears open to reveal the cinnamon spiral and glossy vanilla glaze.",
+  "totalSeconds": 30,
+  "storyArc": {
+    "protagonist": "banana cinnamon loaf",
+    "setting": "walnut-counter bakery kitchen",
+    "goal": "Turn one banana loaf into a cinnamon-roll-style pull-apart dessert.",
+    "obstacle": "A plain loaf would hide the cinnamon flavor and offer no visual reveal.",
+    "turn": "Swirl a dark cinnamon ribbon into the batter, then glaze the warm split crown.",
+    "visualBible": "Same walnut-counter bakery kitchen, amber morning light, cream ceramic bowl, bronze loaf tin, white ceramic plate, one pair of adult hands. The same banana cinnamon loaf moves from batter to bake to glazed slice; the final spiral must match the opening. No labels, no extra people.",
+    "beats": [
+      {
+        "number": 1,
+        "label": "Finished-bite hook",
+        "seconds": 5
+      },
+      {
+        "number": 2,
+        "label": "Brown-butter base",
+        "seconds": 5
+      },
+      {
+        "number": 3,
+        "label": "Cinnamon spiral",
+        "seconds": 5
+      },
+      {
+        "number": 4,
+        "label": "Bake",
+        "seconds": 5
+      },
+      {
+        "number": 5,
+        "label": "Warm glaze",
+        "seconds": 5
+      },
+      {
+        "number": 6,
+        "label": "Pull-apart payoff",
+        "seconds": 5
+      }
+    ]
+  },
+  "qualityChecks": {
+    "exactTiming": true,
+    "uniquePromptText": true,
+    "narrationFits": true,
+    "endingLockedFromUser": false,
+    "rewrites": 0,
+    "fieldsNeedingRepair": 0
+  },
+  "plan": {
+    "ideas": [
+      {
+        "title": "The Cinnamon Ribbon",
+        "angle": "Finished pull-apart first, then show how one loaf gets its cinnamon spiral."
+      },
+      {
+        "title": "Brown Butter Reveal",
+        "angle": "Start with the glaze melt and reveal browned butter in the bake."
+      },
+      {
+        "title": "The Warm Slice",
+        "angle": "Make one cut through the loaf the story payoff."
+      },
+      {
+        "title": "Spiral Inside",
+        "angle": "Withhold the slice interior until the last seconds."
+      },
+      {
+        "title": "From Banana to Bakery",
+        "angle": "Follow one loaf from banana mash to plate."
+      }
+    ],
+    "title": "The Cinnamon Ribbon",
+    "hook": "One banana loaf. Yet its center pulls apart like a cinnamon roll.",
+    "payoff": "A warm slice tears open to reveal the cinnamon spiral and glossy vanilla glaze.",
+    "shots": [
+      {
+        "seconds": 5,
+        "narration": "One banana loaf. Yet its center pulls apart like a cinnamon roll.",
+        "imagePrompt": "Extreme close-up of a finished golden banana bread slice already being gently opened over a white ceramic plate, clearly visible moist cinnamon spiral and a thin vanilla glaze, warm steam. Same small walnut-counter bakery kitchen, amber morning window light, cream ceramic bowl, dark bronze loaf tin, one pair of bare adult hands, one banana-cinnamon loaf. No labels, no text, no extra people. Photorealistic luxury food photography, natural edible texture, shallow depth of field, no CGI look.",
+        "motionPrompt": "The two hands slowly pull the warm slice apart once, exposing a stretchy moist crumb and cinnamon spiral; camera tracks inward toward the opening. One continuous five-second physical action, stable geometry, no cuts, no text.",
+        "sound": "soft crumb tear, quiet room tone"
+      },
+      {
+        "seconds": 5,
+        "narration": "Browned butter and ripe bananas make the batter rich and glossy.",
+        "imagePrompt": "Overhead close-up of browned butter pouring into mashed ripe bananas in the cream ceramic bowl on the walnut counter. Same small walnut-counter bakery kitchen, amber morning window light, cream ceramic bowl, dark bronze loaf tin, one pair of bare adult hands, one banana-cinnamon loaf. No labels, no text, no extra people. Photorealistic luxury food photography, natural edible texture, shallow depth of field, no CGI look.",
+        "motionPrompt": "One hand pours browned butter in a narrow stream while the other folds the banana batter with a spatula; camera holds overhead. One continuous five-second physical action, stable geometry, no cuts, no text.",
+        "sound": "butter pour, spatula scrape"
+      },
+      {
+        "seconds": 5,
+        "narration": "A dark cinnamon ribbon spirals through the golden batter in the tin.",
+        "imagePrompt": "Macro side view of a dark cinnamon-sugar ribbon being drawn through pale banana batter inside the dark bronze loaf tin. Same small walnut-counter bakery kitchen, amber morning window light, cream ceramic bowl, dark bronze loaf tin, one pair of bare adult hands, one banana-cinnamon loaf. No labels, no text, no extra people. Photorealistic luxury food photography, natural edible texture, shallow depth of field, no CGI look.",
+        "motionPrompt": "The hand stirs once with a spoon through the cinnamon ribbon in one deliberate S-shaped swirl; camera follows the spoon tip. One continuous five-second physical action, stable geometry, no cuts, no text.",
+        "sound": "spoon scrape, sugar grains"
+      },
+      {
+        "seconds": 5,
+        "narration": "Inside the oven, the loaf rises and its edges turn deeply golden.",
+        "imagePrompt": "Close view through an oven door of the same bronze tin holding a fully risen banana loaf with a split golden crown. Same small walnut-counter bakery kitchen, amber morning window light, cream ceramic bowl, dark bronze loaf tin, one pair of bare adult hands, one banana-cinnamon loaf. No labels, no text, no extra people. Photorealistic luxury food photography, natural edible texture, shallow depth of field, no CGI look.",
+        "motionPrompt": "The banana cinnamon loaf visibly rises inside the bronze tin; its crown slowly cracks and a few tiny surface bubbles appear in the oven heat. Camera holds steady through the oven glass. One continuous five-second physical action, no cuts, no text.",
+        "sound": "gentle oven ambience",
+        "voiceLeadSeconds": 0.5
+      },
+      {
+        "seconds": 5,
+        "narration": "Warm vanilla glaze falls slowly into every golden ridge and crack.",
+        "imagePrompt": "Close-up of the baked loaf on the walnut counter, white vanilla glaze beginning to fall from a small spoon onto its split crown. Same small walnut-counter bakery kitchen, amber morning window light, cream ceramic bowl, dark bronze loaf tin, one pair of bare adult hands, one banana-cinnamon loaf. No labels, no text, no extra people. Photorealistic luxury food photography, natural edible texture, shallow depth of field, no CGI look.",
+        "motionPrompt": "One hand pours a thin continuous ribbon of glaze along the warm crown; camera tracks the flowing glaze. One continuous five-second physical action, stable geometry, no cuts, no text.",
+        "sound": "glaze pour, spoon clink",
+        "voiceLeadSeconds": 0.4
+      },
+      {
+        "seconds": 5,
+        "narration": "Now the reveal: soft banana, deep cinnamon, and a buttery warm center.",
+        "imagePrompt": "Hero close-up of a fresh slice from the same loaf held over the white ceramic plate, cinnamon spiral visible inside, shiny glaze on top, warm steam. Same small walnut-counter bakery kitchen, amber morning window light, cream ceramic bowl, dark bronze loaf tin, one pair of bare adult hands, one banana-cinnamon loaf. No labels, no text, no extra people. Photorealistic luxury food photography, natural edible texture, shallow depth of field, no CGI look.",
+        "motionPrompt": "The two hands tear the slice once and lift the two halves apart to reveal the spiral; camera pulls back to show the finished loaf behind. One continuous five-second physical action, stable geometry, no cuts, no text.",
+        "sound": "soft crumb tear, ceramic tap",
+        "voiceLeadSeconds": 0.3
+      }
+    ],
+    "claimsToCheck": [
+      "Trend inspiration: November 10, 2026 food-format study https://tryvolume.app/working/food-and-nutrition/2026-11-10 (finished bite before prep; cinnamon roll banana bread example)",
+      "Trend inspiration: November 6, 2026 restaurant-video read https://mochilabs.ai/blog/trends-for-restaurants (glossy pull-apart cinnamon roll)"
+    ]
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "broader luxury hot-dog trend, not a verified top worldwide trend",
+    "sources": [
+      "https://guide.michelin.com/en/article/dining-out/michelin-guide-hot-dogs",
+      "https://www.miaminewtimes.com/food-drink/miami-open-unveils-100-wagyu-hot-dog-topped-with-caviar-40531553/"
+    ]
+  },
+  "template": "hand-written-trend-story"
+}

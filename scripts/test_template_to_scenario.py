@@ -58,6 +58,22 @@ class TemplateToScenario(unittest.TestCase):
             done = subprocess.run(['node', str(HERE / 'bb-local-scenario.mjs'), '--validate', str(path)], capture_output=True, text=True)
             self.assertEqual(done.returncode, 0, done.stderr[-300:])
 
+    @unittest.skipUnless(shutil.which('node'), 'node not installed')
+    def test_every_template_passes_render_gates(self):
+        for tid, template in T.load_all().items():
+            with self.subTest(template=tid), tempfile.TemporaryDirectory() as folder:
+                scenario = B.build(tid, slots_for(template))
+                path = Path(folder) / 'x.local-scenario.json'
+                path.write_text(json.dumps(scenario))
+                for command in (
+                    ['node', str(HERE / 'bb-local-scenario.mjs'), '--validate', str(path)],
+                    ['python3', str(HERE / 'preflight-short.py'), str(path), '--strict', '--allow'],
+                    ['python3', str(HERE / 'audit-local-story.py'), str(path)],
+                ):
+                    done = subprocess.run(command, capture_output=True, text=True)
+                    self.assertEqual(done.returncode, 0, (done.stdout + done.stderr)[-700:])
+                self.assertEqual(sum(s['seconds'] for s in scenario['plan']['shots']), scenario['settings']['seconds'])
+
 
 if __name__ == '__main__':
     unittest.main()

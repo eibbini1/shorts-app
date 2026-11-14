@@ -7,7 +7,7 @@ usage() {
 Usage:
   bash scripts/make-local-video.sh
   bash scripts/make-local-video.sh --draft-only [--model gemma-local]
-  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--chain-images] [--stills FOLDER] [--allow-repeat] [--allow-silence] [--allow-bad-first]
+  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--chain-images] [--cache-only] [--stills FOLDER] [--allow-repeat] [--allow-silence] [--allow-bad-first]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json [--watch]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json --preview
 
@@ -18,7 +18,7 @@ USAGE
 
 default_model='qwen3:1.7b'
 [[ -s storage/setup/gemma-model-dir.txt ]] && default_model='gemma-local'
-scenario=''; status=''; chain=''; stills=''; allow_repeat=''; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
+scenario=''; status=''; chain=''; stills=''; allow_repeat=''; cache_only=''; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
 while (($#)); do
   case "$1" in
     --scenario) scenario="${2:?Missing scenario path}"; shift 2 ;;
@@ -26,6 +26,7 @@ while (($#)); do
     --watch) watch=1; shift ;;
     --preview) preview=1; shift ;;
     --chain-images) chain='--chain-images'; shift ;;
+    --cache-only) cache_only='--cache-only'; shift ;;
     --stills) stills="$2"; shift 2 ;;
     --allow-repeat) allow_repeat='--allow'; shift ;;
     --allow-silence) allow_silence='--allow-silence'; shift ;;
@@ -114,7 +115,7 @@ python3 scripts/preflight-short.py "$scenario" --strict ${allow_repeat:+$allow_r
 python3 scripts/audit-local-story.py "$scenario" || { echo 'Story gate blocked this scenario. Edit the plan before rendering.' >&2; exit 3; }
 t_checks=$SECONDS
 echo "Step 3/4  Rendering local video to $output (about 5 min per shot on an M1: still, motion, voice, assembly)"
-python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" ${chain:+$chain} ${allow_silence:+$allow_silence} ${allow_bad_first:+$allow_bad_first} ${stills:+--stills "$stills"}
+python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" ${chain:+$chain} ${cache_only:+$cache_only} ${allow_silence:+$allow_silence} ${allow_bad_first:+$allow_bad_first} ${stills:+--stills "$stills"}
 t_render=$SECONDS
 echo "Video ready: $output"
 echo "Step 4/4  Shot-synced ASMR, captions, upload pack and quality check"

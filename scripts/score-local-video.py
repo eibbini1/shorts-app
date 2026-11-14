@@ -17,6 +17,9 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--scenario', required=True, type=Path)
     p.add_argument('--pack', required=True, type=Path)
+    p.add_argument('--qa-report', type=Path, help='QA for the exact exported film; overrides the earlier pack QA')
+    p.add_argument('--allow-repeat', action='store_true', help='Treat a deliberate rerender of a previously used topic as allowed in preflight')
+    p.add_argument('--video', type=Path, help='Exact exported film for scene-cut analysis')
     p.add_argument('--editorial', type=Path, help='JSON with 0–5 scores for continuity, realism, story, audio, payoff')
     p.add_argument('--output', type=Path)
     p.add_argument('--min-score', type=int, default=90)
@@ -24,18 +27,22 @@ def main():
     a = p.parse_args()
     scenario = json.loads(a.scenario.read_text(encoding='utf-8-sig'))
     pack = json.loads(a.pack.read_text(encoding='utf-8-sig'))
-    checks = pack.get('qa', {}).get('checks', {})
+    qa = json.loads(a.qa_report.read_text()) if a.qa_report else pack.get('qa', {})
+    checks = qa.get('checks', {})
     technical = {name: bool(checks.get(name, {}).get('ok')) and 'skipped' not in str(checks.get(name, {}).get('note', '')).lower() for name in TECHNICAL}
     technical_points = 5 * sum(technical.values())
     audit = subprocess.run([sys.executable, str(ROOT / 'scripts/audit-local-story.py'), str(a.scenario)], capture_output=True, text=True)
-    preflight = subprocess.run([sys.executable, str(ROOT / 'scripts/preflight-short.py'), str(a.scenario), '--strict'], capture_output=True, text=True)
+    preflight_cmd = [sys.executable, str(ROOT / 'scripts/preflight-short.py'), str(a.scenario), '--strict']
+    if a.allow_repeat:
+        preflight_cmd.append('--allow')
+    preflight = subprocess.run(preflight_cmd, capture_output=True, text=True)
     hook = re.search(r'-> (\d+)/100', preflight.stdout)
     hook_score = int(hook.group(1)) if hook else 0
     story_points = (10 if audit.returncode == 0 else 0) + (5 if hook_score >= 70 else 0) + (5 if preflight.returncode == 0 else 0)
     scene_analysis = {'available': False}
     scene_python = ROOT / 'storage/tools/scenedetect/.venv/bin/python'
     video_name = pack.get('video')
-    video_path = a.pack.parent / video_name if video_name else None
+    video_path = a.video or (a.pack.parent / video_name if video_name else None)
     if scene_python.is_file() and video_path and video_path.is_file():
         probe = subprocess.run([str(scene_python), str(ROOT/'scripts/scene-cuts.py'), '--video', str(video_path)], capture_output=True, text=True, timeout=90)
         if probe.returncode == 0:
@@ -55,6 +62,7 @@ def main():
         'score': score, 'possible': 100, 'minimum': a.min_score, 'status': status,
         'technicalPoints': technical_points, 'storyPoints': story_points, 'editorialPoints': editorial_points,
         'technicalChecks': technical, 'hookScore': hook_score, 'editorial': editorial,
+        'reviewedVideo': str(video_path) if video_path else None,
         'sceneAnalysis': scene_analysis,
         'criticalEditorialBelow4': critical,
         'note': 'A 90+ score is a release gate, not a prediction of views. Editorial scores require actual viewing and listening; missing review cannot pass.',

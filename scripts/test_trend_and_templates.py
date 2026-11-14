@@ -37,6 +37,11 @@ class SignalTest(unittest.TestCase):
         self.assertFalse(by['Caviar']['covered'])
         self.assertNotIn('Saffron', by)
 
+    def test_youtube_only_topic_is_ranked(self):
+        rows = ts.score_topics({}, [{'title': 'Dubai chocolate strawberries', 'velocity': 9000}], [], tc.subject)
+        self.assertEqual(rows[0]['topic'], 'Dubai chocolate strawberries')
+        self.assertEqual(rows[0]['sources'], ['youtube'])
+
     def test_covered_needs_all_words(self):
         self.assertFalse(ts.covered('Kobe beef', ['Wagyu steak'], tc.subject))
 

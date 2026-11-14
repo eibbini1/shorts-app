@@ -6,7 +6,7 @@
       Opening-frame price text (0 to 2.6 s, fades out) and the 'Genius Approved' seal that slams in at the last shot
       with a low thump. Run after the captioned video exists.
 """
-import argparse, textwrap, json, subprocess, tempfile
+import argparse, textwrap, json, subprocess, tempfile, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -59,14 +59,19 @@ def seal(a):
     last = sum(s['seconds'] for s in sh[:-1])
     stamp = a.stamp or ROOT / 'outputs/_check/stamp.png'
     if not stamp.exists():
-        run(['python3', str(ROOT / 'scripts/make-stamp.py'), '--out', str(stamp)])
+        stamp.parent.mkdir(parents=True, exist_ok=True)
+        local_python = ROOT / 'storage/tools/ComfyUI/.venv/bin/python'
+        run([str(local_python if local_python.is_file() else sys.executable),
+             str(ROOT / 'scripts/make-stamp.py'), '--out', str(stamp)])
     with tempfile.TemporaryDirectory() as tmp:
         txt = Path(tmp) / 'open.txt'
         lines = textwrap.wrap(a.text, 22) or ['']   # wrap long hooks onto several lines so they stay inside the frame
         txt.write_text('\n'.join(lines), encoding='utf-8')
         size = max(44, min(64, int(64 * 19 / max(max(len(l) for l in lines), 1))))  # keep the longest line inside the margins
-        graph = (f"[0:v]drawtext=fontfile={FONT}:textfile={txt}:fontsize={size}:fontcolor=0xECC470:borderw=6:bordercolor=0x101010:"
-                 f"x=(w-text_w)/2:y=190:enable='between(t,0,2.6)':alpha='if(lt(t,2.2),1,(2.6-t)/0.4)'[t];"
+        opener = ("[0:v]null[t];" if a.no_opening_text else
+                  f"[0:v]drawtext=fontfile={FONT}:textfile={txt}:fontsize={size}:fontcolor=0xECC470:borderw=6:bordercolor=0x101010:"
+                  f"x=(w-text_w)/2:y=190:enable='between(t,0,2.6)':alpha='if(lt(t,2.2),1,(2.6-t)/0.4)'[t];")
+        graph = (opener +
                  f"[1:v]scale=300:-1,format=rgba,fade=t=in:st=0:d=0.12:alpha=1,setpts=PTS+{last}/TB[s];"
                  f"[t][s]overlay=x=W-w-24:y=120:eof_action=pass[v];"
                  f"[2:a]afade=t=out:st=0.04:d=0.26,volume=0.9,adelay={int(last * 1000)}|{int(last * 1000)}[th];"
@@ -124,6 +129,7 @@ def main():
     p.add_argument('--text', default='')
     p.add_argument('--stamp', type=Path)
     p.add_argument('--duration', type=float, default=0.3)
+    p.add_argument('--no-opening-text', action='store_true', help='Keep the end seal without duplicating burned opening captions')
     a = p.parse_args()
     {'flash': flash, 'punch': punch, 'seal': seal, 'dissolve': dissolve, 'grade': grade}[a.mode](a)
 
