@@ -1,0 +1,62 @@
+{
+  "id": "guess-the-price",
+  "name": "Guess the price",
+  "evidence": "own channel: this format produced about 1.2K views (31 Oct to 2 Nov 2026); no external study confirms it",
+  "platform": "youtube-shorts",
+  "aspect": "9:16",
+  "lengthSeconds": [
+    15,
+    25
+  ],
+  "hook": {
+    "type": "curiosity gap",
+    "formula": "\"Guess the price of {item}.\" Show the item first, no price."
+  },
+  "slots": [
+    "item",
+    "price",
+    "rarity_fact",
+    "source"
+  ],
+  "beats": [
+    {
+      "role": "hook",
+      "start": 0,
+      "end": 3,
+      "text": "Guess the price of {item}."
+    },
+    {
+      "role": "clue",
+      "start": 3,
+      "end": 10,
+      "text": "{rarity_fact}"
+    },
+    {
+      "role": "countdown",
+      "start": 10,
+      "end": 14,
+      "text": "Three. Two. One."
+    },
+    {
+      "role": "reveal",
+      "start": 14,
+      "end": 19,
+      "text": "{price}."
+    },
+    {
+      "role": "cta",
+      "start": 19,
+      "end": 23,
+      "text": "How close were you? Comment your guess."
+    }
+  ],
+  "captions": "large centred captions in the safe zone, one short phrase at a time",
+  "cta": "How close were you? Comment your guess.",
+  "loopBack": "Open the next Short with the previous reveal.",
+  "rules": [
+    "all prices in US dollars",
+    "a new item every upload; never repost an item",
+    "every number needs a source before upload"
+  ],
+  "notes": ""
+}
