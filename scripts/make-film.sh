@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # One command: template -> scenario -> local render -> Crumb composite -> 1080x1920 export.
 #   bash scripts/make-film.sh guess-the-price --slot item="..." --slot price='$95' --slot rarity_fact="..." --slot source="..."
-# Options: --draft-only (stop after the scenario is written and validated)  --no-crumb  --no-effects  --punch  --id NAME
+# Options: --crumb3d (3D Crumb instead of 2D)  --draft-only (stop after the scenario is written and validated)  --no-crumb  --no-effects  --punch  --id NAME
 # Effects (after the 1080p export): gold flash on every cut, opening hook text, end seal; --punch adds a zoom-punch with a low hit on each cut.
 # Local only, no paid services. A render takes about 5 min per shot on an M1 16 GB.
 set -euo pipefail
@@ -12,6 +12,7 @@ while [ $# -gt 0 ]; do case "$1" in
   --slot) slots+=(--slot "$2"); shift 2 ;;
   --draft-only) draft=1; shift ;;
   --no-crumb) crumb=0; shift ;;
+  --crumb3d) crumb3d=1; shift ;;
   --no-effects) effects=0; shift ;;
   --punch) punch=1; shift ;;
   --id) id="$2"; shift 2 ;;
@@ -31,11 +32,12 @@ film="$(ls -t outputs/"$id"-*.sfx.captioned.mp4 | head -1)"; [ -f "$film" ] || {
 final="$film"
 
 if [ "$crumb" = 1 ]; then
-  alpha="storage/p2/crumb-alpha.mov"
+  alpha="storage/p2/crumb-alpha.mov"; comp=Crumb; glflag=""
+  if [ "${crumb3d:-0}" = 1 ]; then alpha="storage/p6/crumb3d-alpha-30s.mov"; comp=Crumb3D; glflag="--gl=angle"; fi
   if [ ! -f "$alpha" ]; then
     echo "3/6 Render Crumb (transparent, cached afterwards)"
     chrome="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-    (cd mini-chef-studio && npx --no-install remotion render src/index.ts Crumb "../$alpha" --codec=prores --prores-profile=4444 \
+    (cd mini-chef-studio && npx --no-install remotion render src/index.ts $comp "../$alpha" $glflag --codec=prores --prores-profile=4444 \
       --pixel-format=yuva444p10le --image-format=png --browser-executable="$chrome" --concurrency=2)
   else echo "3/6 Crumb clip cached"; fi
   echo "4/6 Composite Crumb"
