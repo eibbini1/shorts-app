@@ -54,6 +54,7 @@
     "trend:brief:mac": "python3 scripts/trend-brief.py",
     "research:popular:mac": "python3 scripts/research-popular-videos.py",
     "direct:mac": "bash scripts/director-local.sh",
+    "ideas:mac": "python3 scripts/idea-picker-local.py",
     "story:audit:mac": "python3 scripts/audit-local-story.py",
     "learn:run:mac": "python3 scripts/log-local-run.py",
     "score:video:mac": "python3 scripts/score-local-video.py",

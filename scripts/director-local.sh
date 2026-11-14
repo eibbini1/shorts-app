@@ -3,13 +3,15 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-mode=''; check_only=0; existing=''
+mode=''; check_only=0; existing=''; ideas_file=''; idea_choice=''
 while (($#)); do
   case "$1" in
     --mode) mode="${2:?Choose ai or montage}"; shift 2 ;;
     --scenario) existing="${2:?Missing scenario path}"; shift 2 ;;
+    --ideas-file) ideas_file="${2:?Missing ideas file}"; shift 2 ;;
+    --idea-choice) idea_choice="${2:?Missing idea number}"; shift 2 ;;
     --check-only) check_only=1; shift ;;
-    -h|--help) echo 'Usage: bash scripts/director-local.sh [--mode ai|montage] [--scenario FILE] [--check-only]'; exit 0 ;;
+    -h|--help) echo 'Usage: bash scripts/director-local.sh [--mode ai|montage] [--ideas-file FILE] [--idea-choice 1-5] [--scenario FILE] [--check-only]'; exit 0 ;;
     *) echo "Unknown option: $1" >&2; exit 2 ;;
   esac
 done
@@ -44,20 +46,54 @@ if [[ "$mode" == 'montage' ]]; then
 fi
 
 if [[ -z "$existing" ]]; then
-  read -r -p 'Exact subject and main physical action: ' subject
+  suggested_subject=''; suggested_title=''; suggested_ending=''; suggested_style=''
+  if [[ -n "$ideas_file" ]]; then suggest='y'; else read -r -p 'Generate five local AI ideas to choose from first? [y/N]: ' suggest; fi
+  if [[ "$suggest" == 'y' || "$suggest" == 'Y' ]]; then
+    idea_args=()
+    if [[ -n "$ideas_file" ]]; then
+      idea_args+=(--ideas-file "$ideas_file")
+    else
+      read -r -p 'Niche or subject area [food cooking]: ' idea_niche; idea_niche="${idea_niche:-food cooking}"
+      read -r -p 'Google Trends region [US]: ' idea_region; idea_region="${idea_region:-US}"
+      idea_args+=(--niche "$idea_niche" --region "$idea_region")
+    fi
+    selection_file="$(mktemp)"
+    if [[ -n "$idea_choice" ]]; then idea_args+=(--choice "$idea_choice"); else idea_args+=(--pick); fi
+    if python3 scripts/idea-picker-local.py "${idea_args[@]}" --selection-out "$selection_file"; then
+      if [[ -s "$selection_file" ]]; then
+        suggested=()
+        while IFS= read -r item; do suggested+=("$item"); done < <(python3 - "$selection_file" <<'PY'
+import json,sys
+idea=json.load(open(sys.argv[1]))['idea']
+for key in ('subject','title','ending','style'):
+    print(idea[key].replace('\n',' ').strip())
+PY
+)
+        suggested_subject="${suggested[0]}"; suggested_title="${suggested[1]}"
+        suggested_ending="${suggested[2]}"; suggested_style="${suggested[3]}"
+      fi
+    else
+      echo 'Idea picker unavailable; enter your own subject below.' >&2
+    fi
+    rm -f "$selection_file"
+  fi
+  read -r -p "Exact subject and main physical action${suggested_subject:+ [$suggested_subject]}: " subject
+  subject="${subject:-$suggested_subject}"
   [[ -n "${subject//[[:space:]]/}" ]] || { echo 'A subject is required.' >&2; exit 2; }
-  read -r -p 'Title to keep (optional): ' title
-  read -r -p 'Visible ending or payoff (specific action): ' ending
+  read -r -p "Title to keep${suggested_title:+ [$suggested_title]}: " title
+  title="${title:-$suggested_title}"
+  read -r -p "Visible ending or payoff (specific action)${suggested_ending:+ [$suggested_ending]}: " ending
+  ending="${ending:-$suggested_ending}"
   [[ -n "${ending//[[:space:]]/}" ]] || { echo 'Give a visible ending so the story has a target.' >&2; exit 2; }
-  read -r -p 'Visual style, lighting and lens [warm cinematic macro]: ' style
-  style="${style:-warm cinematic macro}"
+  read -r -p "Visual style, lighting and lens [${suggested_style:-warm cinematic macro}]: " style
+  style="${style:-${suggested_style:-warm cinematic macro}}"
   read -r -p 'What do you admire in your reference? [pacing/texture/service; no copied footage]: ' craft
   read -r -p 'Length in seconds [30]: ' seconds; seconds="${seconds:-30}"
   [[ "$seconds" =~ ^[0-9]+$ ]] && ((seconds >= 10 && seconds <= 60)) || { echo 'Length must be 10–60 seconds.' >&2; exit 2; }
   read -r -p 'Format [vertical/wide, default vertical]: ' format; format="${format:-vertical}"
   case "$format" in vertical) scenario_format=short;; wide) scenario_format=long;; *) echo 'Choose vertical or wide.' >&2; exit 2;; esac
   if [[ "$format" == 'wide' ]] && ((seconds < 60)); then echo 'The current AI story schema needs 60 seconds for wide format.' >&2; exit 2; fi
-  read -r -p 'Research a fresh Google trend first? [y/N]: ' trends
+  if [[ "$suggest" == 'y' || "$suggest" == 'Y' ]]; then trends='n'; else read -r -p 'Research a fresh Google trend first? [y/N]: ' trends; fi
   if [[ "$trends" == 'y' || "$trends" == 'Y' ]]; then
     read -r -p 'Region [US]: ' region; region="${region:-US}"
     read -r -p 'Niche [food cooking]: ' niche; niche="${niche:-food cooking}"

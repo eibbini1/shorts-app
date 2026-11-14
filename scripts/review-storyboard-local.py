@@ -20,21 +20,25 @@ def main():
     storyboard = a.storyboard.read_bytes()
     beats = scenario.get('storyArc', {}).get('beats', [])
     planned = [{'shot':i+1,'beat':beats[i]['label'] if i<len(beats) else 'Shot',
-                'plannedAction':shot['motionPrompt'][:180]} for i,shot in enumerate(scenario['plan']['shots'])]
-    prompt = ('You are a skeptical film continuity reviewer. This contact sheet has six numbered frames in reading order. '
-              'Compare the visible subject, food shape, props, location, and chronology with the requested idea and shot plan. '
-              'Describe only what you can see. If a long hot-dog bun becomes a round roll or sausage becomes a patty, flag the exact shot. '
-              'If cooking is already plated too early or a final bite is absent, flag it. '
-              'Return JSON only: {"coherent":true/false,"shotDescriptions":[six short strings],"issues":[short concrete strings],"uncertainty":"short string"}. '
-              f'Requested idea: {scenario.get("topic", "")}. Planned shots: {json.dumps(planned)}')
-    body = {'model':a.model,'stream':False,'format':'json','options':{'temperature':0,'num_predict':700,'num_ctx':4096},
+                'action':shot['narration'][:90]} for i,shot in enumerate(scenario['plan']['shots'])]
+    prompt = ('Review this numbered six-frame storyboard for one continuous food story. '
+              'Check food shape, location, cooking order, and final bite against the plan. '
+              'List at most three concrete visible issues with shot numbers. No scene descriptions. '
+              'If uncertain, say so briefly. JSON only. '
+              f'Idea: {scenario.get("topic", "")[:180]}. Plan: {json.dumps(planned)}')
+    schema = {'type':'object','properties':{
+        'coherent':{'type':'boolean'},
+        'issues':{'type':'array','items':{'type':'string'},'maxItems':3},
+        'uncertainty':{'type':'string'}},
+        'required':['coherent','issues','uncertainty'],'additionalProperties':False}
+    body = {'model':a.model,'stream':False,'think':False,'format':schema,'options':{'temperature':0,'num_predict':450,'num_ctx':4096},
             'messages':[{'role':'user','content':prompt,'images':[base64.b64encode(storyboard).decode()]}]}
     request = urllib.request.Request('http://127.0.0.1:11434/api/chat', data=json.dumps(body).encode(),
                                      headers={'Content-Type':'application/json'})
     try:
         with urllib.request.urlopen(request, timeout=180) as response:
             raw = json.loads(response.read())['message']['content']
-        review = json.loads(raw)
+        review = json.loads(raw[raw.find('{'):raw.rfind('}')+1])
         if not isinstance(review.get('coherent'), bool) or not isinstance(review.get('issues'), list):
             raise ValueError('Vision model returned an incomplete review')
         status = 'advisory-pass' if review['coherent'] and not review['issues'] else 'review-images'

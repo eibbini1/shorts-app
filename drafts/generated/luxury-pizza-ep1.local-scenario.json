@@ -1,0 +1,105 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 30,
+    "voice": "bm_lewis"
+  },
+  "model": "gemma-local",
+  "topic": "The $2,700 record pizza vs the $9,000 pizza",
+  "style": "Photorealistic luxury food look, dark and rich with gold accents",
+  "requestedEnding": "Asks the viewer whether they would pay it, then promises part two",
+  "totalSeconds": 30,
+  "storyArc": {
+    "protagonist": "A black squid-ink pizza with gold leaf",
+    "setting": "dark luxury restaurant counters",
+    "goal": "Show a $2,700 record pizza next to a $5 slice.",
+    "obstacle": "An Italian chef makes one costing about $9,000.",
+    "turn": "Lobster, three caviars, 72-hour dough, cognac and champagne.",
+    "visualBible": "Dark marble, warm candlelight, gold accents, photorealistic food photography, no people faces."
+  },
+  "qualityChecks": {
+    "exactTiming": true,
+    "uniquePromptText": true,
+    "narrationFits": true,
+    "rewrites": 0,
+    "fieldsNeedingRepair": 0
+  },
+  "plan": {
+    "ideas": [
+      {
+        "title": "The price",
+        "angle": "A black gold-leaf pizza next to a plain five dollar slice."
+      },
+      {
+        "title": "The record",
+        "angle": "Guinness record: squid-ink dough, Stilton and 24-karat gold."
+      },
+      {
+        "title": "The toppings",
+        "angle": "Caviar and truffle placed on the pizza."
+      },
+      {
+        "title": "The rival",
+        "angle": "An Italian chef stretches 72-hour dough."
+      },
+      {
+        "title": "The feast and the question",
+        "angle": "Lobster, three caviars, cognac and champagne by candlelight, then a slice lifted to camera: would you pay it?"
+      }
+    ],
+    "title": "Same Food, Two Prices: $5 vs $2,700",
+    "hook": "Same food, two prices: five dollars, or two thousand seven hundred.",
+    "payoff": "Would you pay nine thousand dollars for pizza? Follow for part two!",
+    "claimsToCheck": [
+      "Guinness World Records: most expensive pizza commercially available, $2,700, Industry Kitchen, New York, 24 April 2017; black squid-ink dough, white Stilton, foie gras, truffles, Ossetra and Almas caviar, 24-karat gold leaf (guinnessworldrecords.com/world-records/most-expensive-pizza)",
+      "Tasting Table: Louis XIII pizza by Renato Viola, Salerno, EUR 8,300 (about $9,250), three caviars, lobster, buffalo mozzarella, dough proofed 72 hours, served with Louis XIII cognac, Krug champagne (tastingtable.com/749277/this-is-the-most-expensive-pizza-in-the-world)",
+      "The $5 slice is an illustrative everyday price, not a sourced figure"
+    ],
+    "shots": [
+      {
+        "seconds": 5,
+        "narration": "Same food, two prices: five dollars, or two thousand seven hundred.",
+        "imagePrompt": "A round black squid-ink pizza covered in gold leaf with one slice lifted away on a stretch of white cheese, and a plain pepperoni slice on a white paper plate at lower left, cheese stretching as the slice lifts. Photorealistic high-end product photograph. A dark marble counter in a warm kitchen. Vertical 9:16 frame, camera 30 degrees above the counter, pizza centred, paper-plate slice at lower left. 50mm lens, shallow depth of field, sharp focus on the pizza. Bright warm key light from the upper left with golden highlights. Glossy black crust, gold leaf, stretchy mozzarella. The slice and cheese strand have clear space around them, steam can rise, simple background.",
+        "motionPrompt": "The camera glides smoothly to the right along the counter, revealing the black gold pizza as the cheese strand stretches and steam rises; the pepperoni slice stays in the lower left.",
+        "sound": "Soft sizzle, a gentle whoosh as the camera glides, and a gold shimmer"
+      },
+      {
+        "seconds": 5,
+        "narration": "A Guinness World Record: squid-ink dough, Stilton cheese, and twenty-four karat gold.",
+        "imagePrompt": "A close-up of black pizza dough with white Stilton crumbles and flakes of 24-karat gold leaf, gold flakes settling on the cheese. Photorealistic high-end product photograph. A dark marble counter. Vertical 9:16 frame, the object centred with generous negative space above and below. Shot on an 85mm macro lens, shallow depth of field, razor-sharp focus on the object. Three-point softbox lighting with a warm key light and a specular highlight on the gold surfaces. Polished 24K gold (#D4AF37), black velvet, clear glass, fine reflections. The object sits fully visible with crisp reflections, a slow camera push-in has room to travel, the backdrop stays dark and uncluttered.",
+        "motionPrompt": "Slow glide across the pizza surface as a flake of gold leaf drifts down and settles on the cheese.",
+        "sound": "Soft shimmer chime"
+      },
+      {
+        "seconds": 5,
+        "narration": "Plus foie gras, truffles, and two caviars. Made in New York.",
+        "imagePrompt": "A gloved hand placing a small mound of black caviar and a shaved black truffle onto the black pizza, the caviar spoon lowering gently. Photorealistic high-end product photograph. A dark restaurant kitchen counter. Vertical 9:16 frame, the object centred with generous negative space above and below. Shot on an 85mm macro lens, shallow depth of field, razor-sharp focus on the object. Three-point softbox lighting with a warm key light and a specular highlight on the gold surfaces. Polished 24K gold (#D4AF37), black velvet, clear glass, fine reflections. The object sits fully visible with crisp reflections, a slow camera push-in has room to travel, the backdrop stays dark and uncluttered.",
+        "motionPrompt": "A spoon lowers a mound of caviar onto the pizza while fine truffle shavings fall; the camera pushes in slowly.",
+        "sound": "Quiet kitchen ambience"
+      },
+      {
+        "seconds": 5,
+        "narration": "One Italian chef beats it. His pizza costs about nine thousand dollars.",
+        "imagePrompt": "Two hands stretching proofed pizza dough on a floured wooden board, the dough gently stretching wider. Photorealistic editorial food photograph. A warm Italian kitchen with copper pots behind. Vertical 9:16 frame, the dish centred in the lower middle with soft negative space above. Shot on a 50mm lens at a 35 degree angle, shallow depth of field, crisp focus on the dish. Soft window light from the left with gentle warm highlights and a faint rim light. Glistening sauce, crisp edges, steam, matte ceramic plate, dark wood table. The dish and hands are fully in frame with clean edges, steam and a utensil have room to move, the background stays simple.",
+        "motionPrompt": "Hands stretch the dough wider as flour dust floats in warm window light; the camera holds steady.",
+        "sound": "Soft flour patting sounds"
+      },
+      {
+        "seconds": 5,
+        "narration": "Lobster, three caviars, seventy-two hour dough, served with cognac and champagne.",
+        "imagePrompt": "A small round pizza topped with lobster tail, three kinds of caviar and buffalo mozzarella on a white plate, beside a crystal cognac glass and a champagne flute, candle flames flickering. Photorealistic high-end product photograph. A candlelit table in an Italian dining room. Vertical 9:16 frame, the object centred with generous negative space above and below. Shot on an 85mm macro lens, shallow depth of field, razor-sharp focus on the object. Three-point softbox lighting with a warm key light and a specular highlight on the gold surfaces. Polished 24K gold (#D4AF37), black velvet, clear glass, fine reflections. The object sits fully visible with crisp reflections, a slow camera push-in has room to travel, the backdrop stays dark and uncluttered.",
+        "motionPrompt": "Slow push in as the candle flames flicker and bubbles rise in the champagne flute.",
+        "sound": "Gentle candlelit room tone"
+      },
+      {
+        "seconds": 5,
+        "narration": "Would you pay nine thousand dollars for pizza? Follow for part two!",
+        "imagePrompt": "A single slice of lobster and caviar pizza lifted on a polished gold server toward the camera, the slice rising slowly with a gentle cheese stretch. Photorealistic high-end product photograph. A dark candlelit table. Vertical 9:16 frame, the object centred with generous negative space above and below. Shot on an 85mm macro lens, shallow depth of field, razor-sharp focus on the object. Three-point softbox lighting with a warm key light and a specular highlight on the gold surfaces. Polished 24K gold (#D4AF37), black velvet, clear glass, fine reflections. The object sits fully visible with crisp reflections, a slow camera push-in has room to travel, the backdrop stays dark and uncluttered.",
+        "motionPrompt": "The gold server lifts the slice slowly toward the camera as the cheese stretches and the candle glows behind.",
+        "sound": "Soft chime ending"
+      }
+    ]
+  }
+}
