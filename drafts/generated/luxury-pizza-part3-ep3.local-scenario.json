@@ -1,0 +1,106 @@
+{
+ "status": "review-required",
+ "settings": {
+  "brand": "Billionaire Bites",
+  "format": "short",
+  "seconds": 30,
+  "voice": "eleven:brian"
+ },
+ "model": "gemma-local",
+ "topic": "Part 3: the $3,300 eBay charity pizza (Pizza Royale 007)",
+ "style": "Photorealistic luxury food look, dark and rich with gold accents",
+ "requestedEnding": "Asks the viewer whether they would bid, then promises more",
+ "totalSeconds": 30,
+ "storyArc": {
+  "protagonist": "A gold, lobster and caviar pizza sold on eBay",
+  "setting": "dark luxury kitchen counters and an Italian wood oven",
+  "goal": "Show the record pizza you could actually bid on.",
+  "obstacle": "Why would anyone pay over three thousand dollars for one pizza?",
+  "turn": "Shop price GBP 750 vs auction GBP 2,150, sold for charity.",
+  "visualBible": "Dark marble, candlelight, gold and amber accents, photorealistic food photography, no people faces."
+ },
+ "qualityChecks": {
+  "exactTiming": true,
+  "uniquePromptText": true,
+  "narrationFits": true,
+  "rewrites": 0,
+  "fieldsNeedingRepair": 0
+ },
+ "plan": {
+  "ideas": [
+   {
+    "title": "The price",
+    "angle": "Over $3,000 on eBay, for charity."
+   },
+   {
+    "title": "The chef",
+    "angle": "Domenico Crolla, Glasgow, James Bond premiere."
+   },
+   {
+    "title": "Two prices",
+    "angle": "GBP 750 in the shop vs GBP 2,150 at auction."
+   },
+   {
+    "title": "The toppings",
+    "angle": "Lobster, Beluga caviar, steak, salmon, gold."
+   },
+   {
+    "title": "The buyer and question",
+    "angle": "An Italian lawyer; would you bid?"
+   }
+  ],
+  "title": "Part 3: The $3,300 eBay Pizza Sold for Charity",
+  "hook": "This eBay pizza sold for over three thousand dollars, yet helped charity.",
+  "payoff": "Would you bid three thousand dollars on a pizza? Follow for more!",
+  "claimsToCheck": [
+   "Guinness World Records, Most expensive pizza sold at an online auction: GBP 2,150 (about US$3,321), Pizza Royale (Domenico Crolla), eBay, buyer an Italian lawyer, sold for charity; toppings lobster marinated in cognac, Beluga caviar, fillet steak marinated in Scotch, smoked salmon, edible gold leaf, white Italian truffles; normal retail price GBP 750 at a Glasgow shop (guinnessworldrecords.com/world-records/84911-most-expensive-pizza-sold-at-an-online-auction). Checked 9 Nov 2026",
+   "Irish Examiner (Nov 2006): made by Glasgow restaurateur Domenico Crolla for the Casino Royale premiere, 12-inch (irishexaminer.com/world/arid-20018012.html). Pre-sale article; charity name left out of the narration",
+   "Dates conflict (Guinness 2007, newspaper Nov 2006) so no year is spoken. Guinness says 'Louis VIII' cognac (typo), so only 'cognac' appears in the image prompt, not narrated.",
+   "The gavel and a counter are illustrative visuals only."
+  ],
+  "shots": [
+   {
+    "seconds": 5,
+    "narration": "This eBay pizza sold for over three thousand dollars, yet helped charity.",
+    "imagePrompt": "A twelve-inch pizza topped with pink lobster, black caviar and flakes of gold leaf on a dark plate, a bare marble counter, a gavel resting beside the plate, candlelight behind. Photorealistic high-end product photograph. A dark marble counter in a warm candlelit restaurant. Vertical 9:16 frame, the food centred with generous negative space above and below. Shot on an 85mm macro lens, shallow depth of field, razor-sharp focus on the subject. Warm key light with specular highlights and gold accents. The subject sits fully visible, the backdrop stays dark and uncluttered, no people, no faces, no text, no logos.",
+    "motionPrompt": "The camera glides smoothly to the right past the gavel, revealing the gold-flecked pizza as candle flames flicker and steam rises.",
+    "sound": "Soft sizzle, a gentle whoosh, a wooden gavel tap"
+   },
+   {
+    "seconds": 5,
+    "narration": "Glasgow chef Domenico Crolla made it for a James Bond premiere.",
+    "imagePrompt": "A rustic pizza kitchen with a wood-fired oven glowing orange, a chef's hands in white sleeves dressing a pizza with caviar on a floured marble counter, a red velvet curtain softly lit behind. Photorealistic high-end product photograph. A dark marble counter in a warm candlelit restaurant. Vertical 9:16 frame, the food centred with generous negative space above and below. Shot on an 85mm macro lens, shallow depth of field, razor-sharp focus on the subject. Warm key light with specular highlights and gold accents. The subject sits fully visible, the backdrop stays dark and uncluttered, no people, no faces, no text, no logos.",
+    "motionPrompt": "The camera pushes in slowly as the hands place a spoonful of caviar on the pizza and oven embers glow behind.",
+    "sound": "Crackling wood fire, soft spoon tap"
+   },
+   {
+    "seconds": 5,
+    "narration": "In the shop, seven hundred fifty pounds. On eBay, two thousand one hundred fifty.",
+    "imagePrompt": "Two pizzas side by side on a dark marble counter: a plain pizza box on the left, and a gold-leaf lobster pizza on a black plate on the right, price card shapes left blank. Photorealistic high-end product photograph. A dark marble counter in a warm candlelit restaurant. Vertical 9:16 frame, the food centred with generous negative space above and below. Shot on an 85mm macro lens, shallow depth of field, razor-sharp focus on the subject. Warm key light with specular highlights and gold accents. The subject sits fully visible, the backdrop stays dark and uncluttered, no people, no faces, no text, no logos.",
+    "motionPrompt": "The camera glides from the plain pizza box on the left to the glittering gold pizza on the right as steam rises.",
+    "sound": "Soft whoosh and a gold shimmer"
+   },
+   {
+    "seconds": 6,
+    "narration": "Marinated lobster, Beluga caviar, fillet steak, smoked salmon, and edible gold leaf.",
+    "imagePrompt": "A close-up of a pizza topped with pink lobster, glossy black caviar, thin slices of fillet steak, curls of smoked salmon and gold leaf, a small cut-crystal glass of cognac beside it. Photorealistic high-end product photograph. A dark marble counter in a warm candlelit restaurant. Vertical 9:16 frame, the food centred with generous negative space above and below. Shot on an 85mm macro lens, shallow depth of field, razor-sharp focus on the subject. Warm key light with specular highlights and gold accents. The subject sits fully visible, the backdrop stays dark and uncluttered, no people, no faces, no text, no logos.",
+    "motionPrompt": "A flake of gold leaf drifts down onto the caviar while the camera pushes in slowly and steam curls up.",
+    "sound": "Soft shimmer chime and kitchen ambience"
+   },
+   {
+    "seconds": 4,
+    "narration": "An Italian lawyer won the auction, and the money went to charity.",
+    "imagePrompt": "A wooden auction gavel resting on a black plate next to a small gold-topped pizza, a white truffle being shaved over it, warm candlelight. Photorealistic high-end product photograph. A dark marble counter in a warm candlelit restaurant. Vertical 9:16 frame, the food centred with generous negative space above and below. Shot on an 85mm macro lens, shallow depth of field, razor-sharp focus on the subject. Warm key light with specular highlights and gold accents. The subject sits fully visible, the backdrop stays dark and uncluttered, no people, no faces, no text, no logos.",
+    "motionPrompt": "White truffle shavings fall slowly onto the pizza as the camera pushes in on the gavel and plate.",
+    "sound": "Gentle gavel tap and a soft chime"
+   },
+   {
+    "seconds": 5,
+    "narration": "Would you bid three thousand dollars on a pizza? Follow for more!",
+    "imagePrompt": "A single slice of the gold, lobster and caviar pizza lifted toward the camera on a stretch of melted mozzarella, the rest of the pizza and the gavel blurred behind in candlelight. Photorealistic high-end product photograph. A dark marble counter in a warm candlelit restaurant. Vertical 9:16 frame, the food centred with generous negative space above and below. Shot on an 85mm macro lens, shallow depth of field, razor-sharp focus on the subject. Warm key light with specular highlights and gold accents. The subject sits fully visible, the backdrop stays dark and uncluttered, no people, no faces, no text, no logos.",
+    "motionPrompt": "The slice lifts slowly toward the camera as the mozzarella stretches and steam curls upward.",
+    "sound": "Gentle room tone and a soft chime ending"
+   }
+  ]
+ }
+}

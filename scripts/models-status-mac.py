@@ -62,6 +62,12 @@ def main():
         state = 'current' if installed and latest == installed else (
             'update available' if installed and latest else 'remote unavailable')
         print(f'  {label}: {state} ({(installed or "unknown")[:12]} / {(latest or "unknown")[:12]})')
+    mflux_python = ROOT / 'storage/tools/mflux/.venv/bin/python'
+    if mflux_python.exists():
+        version = command(str(mflux_python), '-c', 'import importlib.metadata; print(importlib.metadata.version("mflux"))')
+        print(f'  MFLUX runtime: {version or "unknown"} (installed; image engine)')
+    flux = ROOT / 'storage/models/flux2-klein-4b-4bit'
+    print(f'  FLUX.2 Klein 4B q4: {"installed" if (flux/"transformer/0.safetensors").is_file() else "missing"}')
     for label, name in [('Active LTX', 'ltx-model-dir.txt'),
                         ('Active Gemma', 'gemma-model-dir.txt')]:
         pointer = ROOT / 'storage/setup' / name
@@ -78,6 +84,7 @@ def main():
     print('  Ollama models:')
     for line in (ollama or 'unavailable').splitlines():
         print('    ' + line)
+    print('  Local vision reviewer: ' + ('installed' if ollama and 'qwen3-vl:4b' in ollama else 'missing (npm run vision:setup:mac)'))
     print('Check reports updates only. Keep the active model pinned until a sample render passes review.')
 
 

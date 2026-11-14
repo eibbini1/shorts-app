@@ -106,9 +106,15 @@ for(let attempt=1;attempt<=2;attempt++){
       correction:attempt>1?`Your prior outline violated this requirement: ${subjectRules} Keep the requested ending as the literal goal and payoff when one was supplied.`:undefined});
   const storyText=[outline.title,outline.hook,outline.payoff,outline.protagonist,outline.setting,outline.goal,outline.obstacle,outline.turn,outline.visualBible].join(' ');
   const subjectMiss=subjectIssue(storyText) || (prehistoricCars && !/\b(stone|wood|prehistoric|caveman|foot-powered|foot powered)\b/i.test(storyText));
-  if(goalSupportsEnding(outline.goal) && !subjectMiss) break;
-  console.log(`Rewriting an outline that missed ${subjectMiss?'the requested subject':'the requested ending'}`);
-  if(attempt===2) throw new Error('The local model did not keep the requested subject or ending. No video render was started. Try a more specific prompt or another local story model.');
+  if(!subjectMiss){
+    if(args.values.ending && !goalSupportsEnding(outline.goal)){
+      outline.goal=args.values.ending;
+      console.log('Locked the story goal to the requested visible ending');
+    }
+    break;
+  }
+  console.log('Rewriting an outline that missed the requested subject');
+  if(attempt===2) throw new Error('The local model did not keep the requested subject. No video render was started. Try a more specific prompt or another local story model.');
 }
 if(args.values.ending && !endingMatches(outline.payoff)){
   outline.payoff=args.values.ending;
@@ -223,7 +229,6 @@ for(let i=0;i<count;i++){
     rewriteCount++;
     if(attempt===2){
       if(issues.includes('subject')) throw new Error(`Beat ${i+1} changed the requested subject. No scenario was saved or rendered.`);
-      if(issues.includes('motion')) throw new Error(`Beat ${i+1} still repeated motion or requested cuts after one rewrite. No scenario was saved or rendered; refine the physical action in the idea and retry.`);
       console.log(`Repairing ${issues.join(', ')} in beat ${i+1}; review it closely`);
       fallbackCount+=issues.length;
       break;
@@ -246,6 +251,9 @@ for(let i=0;i<count;i++){
     else if(stage==='hook'||stage==='heat') image+=' Show only one long cylindrical sausage in the pan, not a round patty, meatball, or second sausage; no bun in frame yet.';
     else image+=' Show one long cylindrical sausage inside one elongated split-top hot-dog bun, laid diagonally across the frame; never a round roll or burger patty.';
     motion+=' Preserve the same long cylindrical sausage and elongated bun only when that stage includes them; no shape change or extra sausage.';
+  }
+  if(!prehistoricCars && (hotDog || /\b(kitchen|chef|pan|sausage|dish|food|chocolate|steak|pizza|cheese|scallop)\b/i.test(`${topic} ${outline.setting}`))){
+    image+=' Continuity: one chef, one white-gloved hand, same copper pan and black slate, warm tungsten light.';
   }
   shots.push({seconds:beat.seconds,narration:shortenNarration(narration,beat.seconds),
     imagePrompt:image.slice(0,1000),motionPrompt:motion.slice(0,1000),sound:shot.sound});

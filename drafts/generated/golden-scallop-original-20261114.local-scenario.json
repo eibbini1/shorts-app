@@ -1,0 +1,133 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Local Studio",
+    "format": "short",
+    "seconds": 30
+  },
+  "model": "gemma-local",
+  "topic": "One sea scallop cooked in a warm fine-dining kitchen: hot-pan sear, brown-butter basting, lemon sauce, careful plating, and service to one guest. Same scallop, chef hands, copper pan, white plate, and kitchen across six visibly moving shots.",
+  "style": "photoreal cinematic food film, warm tungsten light, macro lens, rich natural texture",
+  "requestedEnding": "The guest cuts the plated scallop to reveal its moist center and takes one satisfying bite.",
+  "totalSeconds": 30,
+  "storyArc": {
+    "protagonist": "The sea scallop",
+    "setting": "A warm, bustling fine-dining kitchen",
+    "goal": "To perfectly cook and plate the scallop for a guest.",
+    "obstacle": "Achieving the ideal sear and moist interior without overcooking.",
+    "turn": "The chef adjusts the heat and bastes with brown butter and lemon, carefully monitoring the scallop\u2019s color and texture.",
+    "visualBible": "Photorealistic, cinematic food film. Warm tungsten lighting. Macro lens emphasizing texture. Rich natural colors. Focus on the transformation of the scallop from raw to perfectly cooked. Consistent use of copper pan and white plate. Six visibly moving shots, showcasing the scallop's journey.",
+    "beats": [
+      {
+        "number": 1,
+        "label": "Hook",
+        "seconds": 5
+      },
+      {
+        "number": 2,
+        "label": "Goal",
+        "seconds": 5
+      },
+      {
+        "number": 3,
+        "label": "Obstacle",
+        "seconds": 5
+      },
+      {
+        "number": 4,
+        "label": "New plan",
+        "seconds": 5
+      },
+      {
+        "number": 5,
+        "label": "Action",
+        "seconds": 5
+      },
+      {
+        "number": 6,
+        "label": "Payoff",
+        "seconds": 5
+      }
+    ]
+  },
+  "qualityChecks": {
+    "exactTiming": true,
+    "uniquePromptText": true,
+    "narrationFits": true,
+    "endingLockedFromUser": false,
+    "rewrites": 2,
+    "fieldsNeedingRepair": 1
+  },
+  "plan": {
+    "ideas": [
+      {
+        "title": "Prep & Sear",
+        "angle": "Close-up: Chef's hands expertly pat dry a single sea scallop, prepping it for the hot pan. Focus on texture."
+      },
+      {
+        "title": "Copper's Embrace",
+        "angle": "Medium shot: The scallop hits the searing copper pan, immediate sizzle and browning. Camera follows the Maillard reaction."
+      },
+      {
+        "title": "Brown Butter's Magic",
+        "angle": "Close-up: Chef bastes the scallop with bubbling brown butter, the aroma visually suggested by the steam."
+      },
+      {
+        "title": "Lemon's Kiss",
+        "angle": "Medium shot: A squeeze of lemon juice over the scallop, highlighting the bright acidity. Focus on the sauce's sheen."
+      },
+      {
+        "title": "Plating Precision",
+        "angle": "Overhead shot: Chef carefully plates the scallop on a pristine white plate, showcasing the color contrast."
+      }
+    ],
+    "title": "The Golden Scallop",
+    "hook": "One scallop. Thirty seconds to a perfect golden crust.",
+    "payoff": "The guest cuts the plated scallop to reveal its moist center and takes one satisfying bite.",
+    "shots": [
+      {
+        "seconds": 5,
+        "narration": "One scallop. Thirty seconds to a perfect golden crust.",
+        "imagePrompt": "Close-up shot of a plump, raw sea scallop resting on a clean stainless steel prep surface in a warm, bustling fine-dining kitchen. The scallop's texture is prominent, with visible ridges and a slightly damp surface. Soft, warm tungsten light illuminates the scene, highlighting the scallop's natural color. Consistent subject: The sea scallop. Visual style: photoreal cinematic food film, warm tungsten light, macro lens, rich natural texture.",
+        "motionPrompt": "The chef's hands, clad in white gloves, swiftly and decisively pat the sea scallop dry with a clean linen towel, pressing firmly to remove excess moisture, ending with the scallop perfectly dry and ready for the pan; the camera smoothly tracks the hand movements from a slightly angled perspective, maintaining focus on the scallop\u2019s surface. One continuous take, no cuts.",
+        "sound": "Soft, subtle patting sound as the linen towel absorbs moisture."
+      },
+      {
+        "seconds": 5,
+        "narration": "The copper pan welcomes the sea scallop's heat.",
+        "imagePrompt": "Medium shot: A pristine, raw sea scallop descends into a preheated copper pan in a warm, bustling fine-dining kitchen. The pan's surface is shimmering with heat, and the scallop's initial contact creates a visible sizzle. Consistent subject: The sea scallop. Visual style: photoreal cinematic food film, warm tungsten light, macro lens, rich natural texture. Visual style: photoreal cinematic food film, warm tungsten light, macro lens, rich natural texture.",
+        "motionPrompt": "The sea scallop drops into the hot copper pan, immediately producing a visible sizzle and a slight color change on its surface as the Maillard reaction begins; the camera smoothly follows the scallop as it settles into the pan, maintaining focus on the initial searing action and the evolving color transformation. One continuous take, no cuts.",
+        "sound": "Sizzle"
+      },
+      {
+        "seconds": 5,
+        "narration": "Brown butter's richness elevates the scallop's flavor.",
+        "imagePrompt": "Close-up shot of a chef's hand pouring bubbling brown butter over a searing sea scallop in a warm, bustling fine-dining kitchen. The butter is a deep amber color, and the scallop's surface is beginning to brown. Consistent subject: The sea scallop. Visual style: photoreal cinematic food film, warm tungsten light, macro lens, rich natural texture. Visual style: photoreal cinematic food film, warm tungsten light, macro lens, rich natural texture.",
+        "motionPrompt": "The chef's hand steadily pours a stream of hot brown butter over the searing sea scallop in the copper pan, the butter bubbling and sizzling as it makes contact; the camera smoothly tracks the pouring action, maintaining focus on the scallop's surface as it absorbs the butter and the color intensifies. One continuous take, no cuts.",
+        "sound": "Sizzle and bubbling of brown butter"
+      },
+      {
+        "seconds": 5,
+        "narration": "A touch of lemon brightens the golden sear.",
+        "imagePrompt": "Medium shot: A chef's hand squeezes fresh lemon juice over a perfectly seared sea scallop in a warm, bustling fine-dining kitchen. The juice glistens as it lands on the scallop, highlighting its rich brown color. Consistent subject: The sea scallop. Visual style: photoreal cinematic food film, warm tungsten light, macro lens, rich natural texture. Visual style: photoreal cinematic food film, warm tungsten light, macro lens, rich natural texture.",
+        "motionPrompt": "The chef's hand swiftly and precisely squeezes a lemon half, releasing a stream of juice directly onto the seared sea scallop in the copper pan; the camera smoothly follows the hand's movement and the juice's descent, maintaining focus on the scallop's surface as it absorbs the liquid and its sheen intensifies. One continuous take, no cuts.",
+        "sound": "Sizzle and a gentle citrus squirt."
+      },
+      {
+        "seconds": 5,
+        "narration": "The chef plates it, ready for the final test.",
+        "imagePrompt": "Photoreal cinematic food film, warm tungsten light, macro lens. The same chef hands use a spoon to lift the same golden seared sea scallop from the copper pan onto a pristine white plate in the same fine-dining kitchen. A glossy brown-butter lemon sauce pools beside it; no other scallops, no text, no extra hands. Rich natural food texture, shallow depth of field.",
+        "motionPrompt": "In one continuous take, the chef lifts the sizzling golden scallop from the copper pan, sets it carefully in the center of the white plate, and spoons the glossy brown-butter lemon sauce around it. The scallop visibly moves from pan to plate; the camera tracks the hands and settles on the finished dish. No cuts, no text.",
+        "sound": "Soft pan sizzle, utensil against ceramic, spoon brushing sauce onto plate."
+      },
+      {
+        "seconds": 5,
+        "narration": "A perfect bite, a moment of pure satisfaction.",
+        "imagePrompt": "Close-up shot of a guest's hand delicately cutting into the perfectly seared and plated sea scallop on a pristine white plate in a warm, bustling fine-dining kitchen. The scallop's interior reveals a moist, pearly-white center, contrasting with the golden-brown crust. Consistent subject: The sea scallop. Visual style: photoreal cinematic food film, warm tungsten light, macro lens, rich natural texture. Visual style: photoreal cinematic food film, warm tungsten light, macro lens, rich natural texture.",
+        "motionPrompt": "The guest's stainless steel knife smoothly descends through the scallop, cleanly bisecting it to reveal the moist interior, followed by the guest's lips approaching and taking a bite; the camera smoothly tracks the knife's descent and the subsequent bite, maintaining focus on the scallop's texture and the guest's expression. One continuous take, no cuts.",
+        "sound": "Utensil clink, followed by a soft, satisfied crunch."
+      }
+    ],
+    "claimsToCheck": []
+  }
+}

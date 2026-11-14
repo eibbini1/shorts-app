@@ -1,0 +1,122 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 25
+  },
+  "model": "gemma-local",
+  "topic": "The $13,000 Iberico ham leg",
+  "style": "Photorealistic food documentary look, warm and rich",
+  "requestedEnding": "Asks the viewer whether they would pay it",
+  "totalSeconds": 25,
+  "storyArc": {
+    "protagonist": "A whole bone-in Iberico ham leg on a wooden stand in a Spanish cellar",
+    "setting": "close-up food photography",
+    "goal": "One cured ham leg listed at about thirteen thousand dollars.",
+    "obstacle": "Then the leg is cured for up to five years.",
+    "turn": "A record price listed in Japan in twenty twenty.",
+    "visualBible": "A whole bone-in Iberico ham leg on a wooden stand in a Spanish cellar Photorealistic, shot on a 50mm lens with shallow depth of field, warm natural light, rich food photography detail, vertical framing, no text, no logos, no people's faces.",
+    "beats": [
+      {
+        "number": 1,
+        "label": "Hook",
+        "seconds": 5
+      },
+      {
+        "number": 2,
+        "label": "Reveal",
+        "seconds": 5
+      },
+      {
+        "number": 3,
+        "label": "Detail",
+        "seconds": 5
+      },
+      {
+        "number": 4,
+        "label": "Twist",
+        "seconds": 5
+      },
+      {
+        "number": 5,
+        "label": "Question",
+        "seconds": 5
+      }
+    ]
+  },
+  "qualityChecks": {
+    "exactTiming": true,
+    "uniquePromptText": true,
+    "narrationFits": true,
+    "rewrites": 0,
+    "fieldsNeedingRepair": 0
+  },
+  "plan": {
+    "ideas": [
+      {
+        "title": "The Challenge",
+        "angle": "A food blogger attempts to create the ultimate cheesiest veg burger, showcasing the cheese pull."
+      },
+      {
+        "title": "The Prep",
+        "angle": "Close-up of patty construction: layering, pressing, ensuring maximum cheese coverage."
+      },
+      {
+        "title": "The Cook",
+        "angle": "Burger sizzling on the grill, cheese visibly melting and bubbling."
+      },
+      {
+        "title": "The Attempt",
+        "angle": "First pull fails - cheese breaks, patty falls apart. Frustration visible."
+      },
+      {
+        "title": "The Triumph",
+        "angle": "Second attempt: perfect pull, long glossy cheese stretch, ecstatic reaction."
+      }
+    ],
+    "title": "This Ham Leg Costs $13,000",
+    "hook": "One cured ham leg listed at about thirteen thousand dollars.",
+    "payoff": "Would you pay it for ham?",
+    "shots": [
+      {
+        "seconds": 5,
+        "narration": "This one ham leg costs thirteen thousand dollars.",
+        "imagePrompt": "A whole dark-red Iberico bellota ham leg with black hoof on a carving stand in a Spanish cellar, golden light Photorealistic, shot on a 50mm lens with shallow depth of field, warm natural light, rich food photography detail, vertical framing, no text, no logos, no people's faces.",
+        "motionPrompt": "Slow push in toward the ham leg as dust floats in the light.",
+        "sound": "Quiet cellar ambience"
+      },
+      {
+        "seconds": 5,
+        "narration": "Its pigs are raised for two years before curing even starts.",
+        "imagePrompt": "Black Iberian pigs walking among oak trees in golden evening light on a Spanish dehesa Photorealistic, shot on a 50mm lens with shallow depth of field, warm natural light, rich food photography detail, vertical framing, no text, no logos, no people's faces.",
+        "motionPrompt": "Gentle tracking shot following the pigs under the oaks.",
+        "sound": "Soft wind and distant bells"
+      },
+      {
+        "seconds": 5,
+        "narration": "Then the leg is cured for up to five years.",
+        "imagePrompt": "Rows of Iberico ham legs hanging from cellar beams in dim warm light Photorealistic, shot on a 50mm lens with shallow depth of field, warm natural light, rich food photography detail, vertical framing, no text, no logos, no people's faces.",
+        "motionPrompt": "Slow pan along the hanging hams.",
+        "sound": "Creaking wood and quiet cellar hush"
+      },
+      {
+        "seconds": 5,
+        "narration": "A record price listed in Japan in twenty twenty.",
+        "imagePrompt": "A master carver slicing paper-thin translucent slices of Iberico ham with a long knife, marbled fat glistening Photorealistic, shot on a 50mm lens with shallow depth of field, warm natural light, rich food photography detail, vertical framing, no text, no logos, no people's faces.",
+        "motionPrompt": "Close tracking of the knife gliding through the ham.",
+        "sound": "Soft knife slicing"
+      },
+      {
+        "seconds": 5,
+        "narration": "Would you pay it for ham? Comment yes or no.",
+        "imagePrompt": "A plate of thin Iberico ham slices fanned on a white plate beside a glass of red wine, shallow depth of field Photorealistic, shot on a 50mm lens with shallow depth of field, warm natural light, rich food photography detail, vertical framing, no text, no logos, no people's faces.",
+        "motionPrompt": "Slow push in on the plate as light flickers.",
+        "sound": "Warm restaurant ambience"
+      }
+    ],
+    "claimsToCheck": [
+      "Guinness World Records: most expensive leg of ham commercially available, Iberian Bellota ham, 1,429,000 yen (about $13,183), Taishi Co. Ltd, 3 Feb 2020; pigs reared two years, legs cured up to five years."
+    ]
+  }
+}

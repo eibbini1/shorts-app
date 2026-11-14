@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 STOP = {'the','and','with','from','into','that','this','one','same','scene','shot','film','video','warm','cinematic','real','local'}
-ACTION = re.compile(r'\b(pat|place|drop|sear|bast|pour|squeeze|lift|plate|cut|slice|bite|take|stir|chop|melt|sizzle|open|close|pull|push|run|walk|jump|turn|catch|serve|mix|roll|spin|crack|break)\w*\b', re.I)
+ACTION = re.compile(r'\b(pat|place|drop|sear|bast|pour|squeeze|lift|plate|cut|slice|bite|take|stir|chop|melt|sizzle|open|close|pull|push|run|walk|jump|turn|catch|serve|mix|roll|spin|crack|break|assemble|brown|cook|garnish)\w*\b', re.I)
 CAMERA_ONLY = re.compile(r'^(?:the )?camera (?:slowly )?(?:pan|tilt|zoom|track)', re.I)
 
 

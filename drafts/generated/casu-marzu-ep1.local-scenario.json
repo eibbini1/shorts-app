@@ -1,0 +1,122 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 25
+  },
+  "model": "gemma-local",
+  "topic": "Casu marzu, the banned Sardinian cheese",
+  "style": "Photorealistic food documentary look, warm and rich",
+  "requestedEnding": "Asks the viewer if they would try one bite",
+  "totalSeconds": 25,
+  "storyArc": {
+    "protagonist": "A rustic wheel of pale Sardinian sheep cheese on a wooden table",
+    "setting": "close-up food photography",
+    "goal": "A Sardinian cheese made with live maggots, banned from sale.",
+    "obstacle": "The maggots are part of how it is made.",
+    "turn": "Selling it is illegal, yet an estimated hundred tonnes are still made yearly.",
+    "visualBible": "A rustic wheel of pale Sardinian sheep cheese on a wooden table Photorealistic, shot on a 50mm lens with shallow depth of field, warm natural light, rich food photography detail, vertical framing, no text, no logos, no people's faces.",
+    "beats": [
+      {
+        "number": 1,
+        "label": "Hook",
+        "seconds": 5
+      },
+      {
+        "number": 2,
+        "label": "Reveal",
+        "seconds": 5
+      },
+      {
+        "number": 3,
+        "label": "Detail",
+        "seconds": 5
+      },
+      {
+        "number": 4,
+        "label": "Twist",
+        "seconds": 5
+      },
+      {
+        "number": 5,
+        "label": "Question",
+        "seconds": 5
+      }
+    ]
+  },
+  "qualityChecks": {
+    "exactTiming": true,
+    "uniquePromptText": true,
+    "narrationFits": true,
+    "rewrites": 0,
+    "fieldsNeedingRepair": 0
+  },
+  "plan": {
+    "ideas": [
+      {
+        "title": "The Challenge",
+        "angle": "A food blogger attempts to create the ultimate cheesiest veg burger, showcasing the cheese pull."
+      },
+      {
+        "title": "The Prep",
+        "angle": "Close-up of patty construction: layering, pressing, ensuring maximum cheese coverage."
+      },
+      {
+        "title": "The Cook",
+        "angle": "Burger sizzling on the grill, cheese visibly melting and bubbling."
+      },
+      {
+        "title": "The Attempt",
+        "angle": "First pull fails - cheese breaks, patty falls apart. Frustration visible."
+      },
+      {
+        "title": "The Triumph",
+        "angle": "Second attempt: perfect pull, long glossy cheese stretch, ecstatic reaction."
+      }
+    ],
+    "title": "The Cheese Italy Banned In 1962",
+    "hook": "A Sardinian cheese made with live maggots, banned from sale.",
+    "payoff": "Would you try one bite?",
+    "shots": [
+      {
+        "seconds": 5,
+        "narration": "Italy banned this cheese in nineteen sixty-two.",
+        "imagePrompt": "A rustic wheel of pale creamy Sardinian sheep cheese on an old wooden table, dramatic warm side light Photorealistic, shot on a 50mm lens with shallow depth of field, warm natural light, rich food photography detail, vertical framing, no text, no logos, no people's faces.",
+        "motionPrompt": "Slow push in on the cheese wheel.",
+        "sound": "Quiet rustic room tone"
+      },
+      {
+        "seconds": 5,
+        "narration": "It is a Sardinian sheep cheese made with live maggots.",
+        "imagePrompt": "Close-up macro of a cut piece of soft creamy pecorino cheese on a wooden board, tiny specks visible, rustic farmhouse behind Photorealistic, shot on a 50mm lens with shallow depth of field, warm natural light, rich food photography detail, vertical framing, no text, no logos, no people's faces.",
+        "motionPrompt": "Macro camera glides slowly across the cheese.",
+        "sound": "Soft low hum"
+      },
+      {
+        "seconds": 5,
+        "narration": "The maggots are part of how it is made.",
+        "imagePrompt": "A Sardinian cheesemaker's weathered hands cutting open a wheel of cheese in a stone farmhouse dairy Photorealistic, shot on a 50mm lens with shallow depth of field, warm natural light, rich food photography detail, vertical framing, no text, no logos, no people's faces.",
+        "motionPrompt": "Handheld push toward the hands as the knife cuts.",
+        "sound": "Knife on wood"
+      },
+      {
+        "seconds": 5,
+        "narration": "Selling it is illegal, yet an estimated hundred tonnes are still made yearly.",
+        "imagePrompt": "A secret stack of cheese wheels hidden in a dim stone cellar, a single lamp lighting them Photorealistic, shot on a 50mm lens with shallow depth of field, warm natural light, rich food photography detail, vertical framing, no text, no logos, no people's faces.",
+        "motionPrompt": "Slow reveal pan across the hidden wheels.",
+        "sound": "Low suspense drone"
+      },
+      {
+        "seconds": 5,
+        "narration": "Would you try one bite? Comment yes or no.",
+        "imagePrompt": "A small piece of soft cheese on a slice of flatbread on a wooden table, hand reaching toward it, shallow depth of field Photorealistic, shot on a 50mm lens with shallow depth of field, warm natural light, rich food photography detail, vertical framing, no text, no logos, no people's faces.",
+        "motionPrompt": "Slow push in as the hand hovers.",
+        "sound": "Warm room tone"
+      }
+    ],
+    "claimsToCheck": [
+      "Wikipedia (Casu martzu): Italian authorities banned its sale; first challenged in 1962 under laws against selling infested food; illegal production estimated at 100 tonnes a year (2019 estimate)."
+    ]
+  }
+}

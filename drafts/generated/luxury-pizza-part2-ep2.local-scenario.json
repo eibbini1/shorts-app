@@ -1,0 +1,104 @@
+{
+ "status": "review-required",
+ "settings": {
+  "brand": "Billionaire Bites",
+  "format": "short",
+  "seconds": 30,
+  "voice": "eleven:brian"
+ },
+ "model": "gemma-local",
+ "topic": "The $9,250 Louis XIII pizza from Salerno (Part 2)",
+ "style": "Photorealistic luxury food look, dark and rich with gold accents",
+ "requestedEnding": "Asks the viewer whether they would pay it, then promises part three",
+ "totalSeconds": 30,
+ "storyArc": {
+  "protagonist": "A tiny pizza with lobster and three caviars",
+  "setting": "dark luxury restaurant counters and an Italian wood oven",
+  "goal": "Show the pizza that costs over three times the record pizza from Part 1.",
+  "obstacle": "Why does a pizza under eight inches cost about $9,250?",
+  "turn": "Lobster, three caviars, 72-hour dough, and Louis XIII cognac with Krug champagne.",
+  "visualBible": "Dark marble, candlelight, gold and amber accents, photorealistic food photography, no people faces."
+ },
+ "qualityChecks": {
+  "exactTiming": true,
+  "uniquePromptText": true,
+  "narrationFits": true,
+  "rewrites": 0,
+  "fieldsNeedingRepair": 0
+ },
+ "plan": {
+  "ideas": [
+   {
+    "title": "The price",
+    "angle": "A tiny caviar and lobster pizza, about $9,250."
+   },
+   {
+    "title": "The callback",
+    "angle": "Triple the Part 1 record pizza, made in Salerno."
+   },
+   {
+    "title": "The toppings",
+    "angle": "Lobster, prawns, mozzarella, three caviars."
+   },
+   {
+    "title": "The dough",
+    "angle": "72 hours, under eight inches, feeds two."
+   },
+   {
+    "title": "The pairing and question",
+    "angle": "Louis XIII cognac and Krug 1995, then would you pay it."
+   }
+  ],
+  "title": "Part 2: The $9,250 Pizza vs the $2,700 Pizza",
+  "hook": "This pizza costs over nine thousand dollars, yet feeds only two.",
+  "payoff": "Would you pay nine thousand dollars for pizza? Follow for part three!",
+  "claimsToCheck": [
+   "Tasting Table: Louis XIII pizza by Renato Viola, Salerno, EUR 8,300 (about $9,250), under eight inches, serves two; three types of rare caviar, fresh lobster, prawns, buffalo mozzarella; dough proofed 72 hours; served with Remy Martin Louis XIII cognac and Krug Clos du Mesnil 1995 champagne (tastingtable.com/749277/this-is-the-most-expensive-pizza-in-the-world). Checked 9 Nov 2026",
+   "Guinness World Records: $2,700 Industry Kitchen pizza, 24 April 2017 (from Part 1, already verified)"
+  ],
+  "shots": [
+   {
+    "seconds": 4,
+    "narration": "This pizza costs over nine thousand dollars, yet feeds only two.",
+    "imagePrompt": "A small round pizza topped with dark caviar and a pink lobster tail on a white plate, beside a tall crystal decanter of amber cognac and two champagne flutes, candlelight behind. Photorealistic high-end product photograph. A dark marble counter in a warm candlelit restaurant. Vertical 9:16 frame, the food centred with generous negative space above and below. Shot on an 85mm macro lens, shallow depth of field, razor-sharp focus on the subject. Warm key light with specular highlights and gold accents. The subject sits fully visible, the backdrop stays dark and uncluttered, no people, no faces, no text, no logos.",
+    "motionPrompt": "The camera glides smoothly to the right past the champagne flutes and decanter, revealing the caviar pizza as candle flames flicker and steam rises.",
+    "sound": "Soft sizzle, whoosh as the camera glides, glass chime"
+   },
+   {
+    "seconds": 6,
+    "narration": "Triple last time's record pizza. Made by Renato Viola in Salerno, Italy.",
+    "imagePrompt": "A wood-fired pizza oven glowing orange inside a rustic Italian kitchen, a pizza peel sliding a small round pizza out of the fire, sparks and heat shimmer. Photorealistic high-end product photograph. A dark marble counter in a warm candlelit restaurant. Vertical 9:16 frame, the food centred with generous negative space above and below. Shot on an 85mm macro lens, shallow depth of field, razor-sharp focus on the subject. Warm key light with specular highlights and gold accents. The subject sits fully visible, the backdrop stays dark and uncluttered, no people, no faces, no text, no logos.",
+    "motionPrompt": "The pizza slides slowly out of the glowing oven on the peel as sparks drift and the camera pushes in.",
+    "sound": "Crackling wood fire and a soft whoosh"
+   },
+   {
+    "seconds": 5,
+    "narration": "Fresh lobster, prawns, buffalo mozzarella, and three kinds of rare caviar.",
+    "imagePrompt": "A close-up of a small pizza with creamy white buffalo mozzarella, a split pink lobster tail, two prawns and three small mounds of black caviar in different shades. Photorealistic high-end product photograph. A dark marble counter in a warm candlelit restaurant. Vertical 9:16 frame, the food centred with generous negative space above and below. Shot on an 85mm macro lens, shallow depth of field, razor-sharp focus on the subject. Warm key light with specular highlights and gold accents. The subject sits fully visible, the backdrop stays dark and uncluttered, no people, no faces, no text, no logos.",
+    "motionPrompt": "A spoon lowers a mound of caviar onto the pizza while the camera pushes in slowly and steam curls up from the mozzarella.",
+    "sound": "Soft kitchen ambience and a gentle spoon tap"
+   },
+   {
+    "seconds": 5,
+    "narration": "Dough rested seventy two hours. The pizza is under eight inches wide.",
+    "imagePrompt": "A ball of smooth pizza dough resting under a glass cloche on a floured marble counter, a second hand stretching it thin on a wooden board, flour dust in the air. Photorealistic high-end product photograph. A dark marble counter in a warm candlelit restaurant. Vertical 9:16 frame, the food centred with generous negative space above and below. Shot on an 85mm macro lens, shallow depth of field, razor-sharp focus on the subject. Warm key light with specular highlights and gold accents. The subject sits fully visible, the backdrop stays dark and uncluttered, no people, no faces, no text, no logos.",
+    "motionPrompt": "The camera glides slowly across the dough as the stretched edge lifts and flour dust drifts in the warm light.",
+    "sound": "Quiet kitchen ambience, soft flour pat"
+   },
+   {
+    "seconds": 5,
+    "narration": "Served with Louis the Thirteenth cognac and nineteen ninety five Krug champagne.",
+    "imagePrompt": "A heavy crystal decanter of deep amber cognac and a bottle of champagne in an ice bucket beside two filled glasses on a dark marble table, bubbles rising in a flute. Photorealistic high-end product photograph. A dark marble counter in a warm candlelit restaurant. Vertical 9:16 frame, the food centred with generous negative space above and below. Shot on an 85mm macro lens, shallow depth of field, razor-sharp focus on the subject. Warm key light with specular highlights and gold accents. The subject sits fully visible, the backdrop stays dark and uncluttered, no people, no faces, no text, no logos.",
+    "motionPrompt": "Bubbles rise in the champagne flute while the camera pushes in slowly on the amber decanter catching candlelight.",
+    "sound": "Champagne fizz and a soft glass clink"
+   },
+   {
+    "seconds": 5,
+    "narration": "Would you pay nine thousand dollars for pizza? Follow for part three!",
+    "imagePrompt": "A single slice of the caviar and lobster pizza lifted toward the camera on a stretch of melted mozzarella, the rest of the small pizza and two cognac glasses blurred behind in candlelight. Photorealistic high-end product photograph. A dark marble counter in a warm candlelit restaurant. Vertical 9:16 frame, the food centred with generous negative space above and below. Shot on an 85mm macro lens, shallow depth of field, razor-sharp focus on the subject. Warm key light with specular highlights and gold accents. The subject sits fully visible, the backdrop stays dark and uncluttered, no people, no faces, no text, no logos.",
+    "motionPrompt": "The slice lifts slowly toward the camera as the mozzarella stretches and steam curls upward.",
+    "sound": "Gentle room tone and a soft chime ending"
+   }
+  ]
+ }
+}

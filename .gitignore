@@ -31,3 +31,9 @@ Thumbs.db
 
 # OAuth client and refresh tokens
 secrets/
+
+# local artefacts (added by Phase 0)
+__pycache__/
+*.pyc
+D:/
+.vscode/
