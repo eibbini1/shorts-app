@@ -23,7 +23,7 @@ VISUALS = {
     'clue': ('Close detail of the textures and ingredients of {item}, a white-gloved hand pointing with a small spoon', 'The camera glides along {item} as a gloved hand lifts a small spoon over it'),
     'countdown': ('{item} on the slate under warm light, a gloved hand hovering just above it', 'The gloved hand lowers toward {item} and pauses; steam curls upward'),
     'reveal': ('Wide hero shot of the finished {item} centred on a black slate, copper pan behind', 'The camera pulls back slowly to reveal {item} fully, light glinting on its surface'),
-    'cta': ('A white-gloved hand presents {item} toward the camera on a black slate', 'The gloved hand slides {item} gently toward the camera and holds it still'),
+    'cta': ('A white-gloved hand presents {item} toward the camera on a black slate', 'The gloved hand slides {item} gently toward the camera and holds it still, inviting viewers to comment how close their guess was'),
 }
 DEFAULT_VISUAL = ('Macro close-up of {item}, white-gloved hand, copper pan, black slate', 'The camera pushes in slowly on {item} while a gloved hand moves it slightly')
 
@@ -32,7 +32,19 @@ def build(template_id, slots, seconds=None, allow_repeat=True):
     templates = T.load_all()
     if template_id not in templates:
         raise ValueError(f'unknown template {template_id!r}; choose from {sorted(templates)}')
+    slots = dict(slots)
+    hook_line = slots.pop('hook_line', None)   # optional override of the spoken hook beat (scored with preflight-short.py)
     filled = T.fill(templates[template_id], slots, allow_repeat)
+    if hook_line:
+        for beat in filled['beats']:
+            if beat['role'] == 'hook':
+                beat['text'] = hook_line.strip()
+        filled['hook'] = hook_line.strip()
+        first, rest = filled['beats'][0], filled['beats'][1:]
+        need = -(-len(hook_line.split()) * 2 // 5)   # ceil(words / 2.5 words per second), the story gate's limit
+        extra = max(0, need - (first['end'] - first['start']))
+        if extra and rest and rest[0]['end'] - rest[0]['start'] > extra + 2:   # borrow from the next beat, keep the runtime
+            first['end'] += extra; rest[0]['start'] += extra
     item = (slots.get('item') or slots.get('food') or slots.get('category') or slots.get('option_a') or 'the dish').strip()
     shots = []
     for beat in filled['beats']:
@@ -48,6 +60,8 @@ def build(template_id, slots, seconds=None, allow_repeat=True):
             'motionPrompt': f"{motion.format(item=item)}. One continuous take, no cuts."[:1000],
             'sound': 'soft kitchen ambience, gentle sizzle',
         })
+    for shot in shots:   # never leave more than ~1.5 s of silence: shrink a shot to its spoken line (the story gate's 2.5 words/s limit)
+        shot['seconds'] = max(2, min(shot['seconds'], -(-len(shot['narration'].split()) * 2 // 5)))
     total = sum(s['seconds'] for s in shots)
     seconds = seconds or max(10, total)
     others = [t for i, t in templates.items() if i != template_id]

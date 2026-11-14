@@ -17,8 +17,8 @@ class TemplateToScenario(unittest.TestCase):
             scenario = B.build(tid, slots_for(template))
             shots = scenario['plan']['shots']
             self.assertLessEqual(len(shots), len(template['beats']), tid)
-            self.assertEqual(sum(s['seconds'] for s in shots), template['beats'][-1]['end'], tid)
-            self.assertEqual(scenario['totalSeconds'], template['beats'][-1]['end'], tid)
+            self.assertLessEqual(sum(s['seconds'] for s in shots), template['beats'][-1]['end'], tid)
+            self.assertEqual(scenario['totalSeconds'], sum(s['seconds'] for s in shots), tid)
             self.assertEqual(len(scenario['plan']['ideas']), 5, tid)
             for shot in shots:
                 self.assertIn(B.CONTINUITY, shot['imagePrompt'], tid)
@@ -37,6 +37,12 @@ class TemplateToScenario(unittest.TestCase):
         bad = {**slots_for(template), 'price': '95 euros'}
         with self.assertRaises(ValueError):
             B.build('guess-the-price', bad)
+
+    def test_hook_line_overrides_hook_beat(self):
+        template = T.load_all()['guess-the-price']
+        scenario = B.build('guess-the-price', {**slots_for(template), 'hook_line': 'One hot dog, yet a world record. Guess the price?'})
+        self.assertEqual(scenario['plan']['shots'][0]['narration'], 'One hot dog, yet a world record. Guess the price?')
+        self.assertEqual(scenario['plan']['hook'], 'One hot dog, yet a world record. Guess the price?')
 
     def test_unknown_template(self):
         with self.assertRaises(ValueError):

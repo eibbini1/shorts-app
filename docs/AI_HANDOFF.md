@@ -22,5 +22,11 @@ Working tree: remaining untracked/modified entries are pyc, scratch scenarios, D
 - LTX-2.3 licence text unread. Linux VM cannot run macOS binaries or delete files.
 ## Phase 2/3 (VERIFIED)
 - Crumb 2D rig: mini-chef-studio/src/Crumb.tsx; render needs --browser-executable=Google Chrome (bundled chrome-headless-shell hangs on this Mac). Composite: scripts/composite-crumb.sh. Native 1024x1920 LTX benchmark in ROADMAP.
+## One-command pipeline + first real film (VERIFIED by running, 2026-11-14, Claude)
+- `bash scripts/make-film.sh TEMPLATE --slot k=v ...` = template -> scenario (`scripts/template_to_scenario.py`, optional `hook_line` slot overrides the hook; shot seconds shrink to the spoken line, 2.5 words/s) -> gates -> FLUX stills -> LTX motion -> Kokoro voice -> foley -> captions -> Crumb composite -> 1080 export -> optional brand effects (`scripts/brand-extras.py`).
+- Real item: Juuni Ban hot dog, $169, Guinness World Records (Tokyo Dog, Seattle, 23 Feb 2014; truck closed 2017). Hook "One hot dog, yet a world record. Guess the price?" (hook_score 80-85).
+- Result `storage/p5/juuni-ban2*.mp4` (git-ignored): 16.0 s, -16.0 LUFS, LRA 2.2, no silence >1 s, foie gras/truffle/caviar visible. Bug fixed: composite-crumb.sh used the 30 s Crumb clip length (now `overlay shortest=1`). Item slot must describe the ingredients or the image model invents a generic hot dog.
+- NOT verified: audio listened to (ASMR/foley quality), editorial score (0 until owner reviews), Crumb is a flat 2D cartoon, motion is mostly slow pushes. On-screen hook text still duplicates the first caption. Effects were applied post-hoc to the existing render, not through make-film.sh in one run.
+- Tests: `python3 -m unittest scripts.test_template_to_scenario` 6/6.
 ## Next action
-Owner: watch the film (storage/p2/phase3-1080.mp4), approve or redirect; decide -14 LUFS target, trend branch merge, native-res opt-in. Then Phase 4. Other assistant: run git status and read this file before editing.
+Owner: watch/listen to storage/p5/juuni-ban2-fx.mp4, approve or redirect; decide -14 LUFS target, native-res opt-in, 2D vs 3D Crumb. Then 3D Crumb spike (S3). Other assistant: run git status and read this file before editing.
