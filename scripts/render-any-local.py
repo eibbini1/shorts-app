@@ -129,7 +129,7 @@ def main():
     parser.add_argument('--chain-images', action='store_true', help='Edit previous still to preserve one subject')
     parser.add_argument('--allow-silence', action='store_true', help='Continue even when the voice track has gaps over 1.5 s')
     parser.add_argument('--allow-bad-first', action='store_true', help='Skip the first-picture and first-clip checks')
-    parser.add_argument('--stills', type=Path, help='Folder with your own stills named shot-01.png, shot-02.png ... (for example from Google Flow). Missing shots fall back to FLUX')
+    parser.add_argument('--stills', type=Path, default=os.environ.get('BB_STILLS') or None, help='Folder with your own stills named shot-01.png, shot-02.png ... (for example from Google Flow). Missing shots fall back to FLUX')
     parser.add_argument('--anchor-image', type=Path, default=os.environ.get('BB_ANCHOR_IMAGE') or None, help='Recurring character: edit this image into each shot so one face is reused across films (or set BB_ANCHOR_IMAGE)')
     parser.add_argument('--cache-only', action='store_true', help='Reuse existing FLUX/LTX assets; fail rather than start a model job on a cache miss')
     args = parser.parse_args()
