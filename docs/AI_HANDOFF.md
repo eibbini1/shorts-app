@@ -1,7 +1,7 @@
 # AI HANDOFF (read first, update last)
-Updated: 2026-11-14T11:16:57Z by Claude (Sonnet 5.5)
-Branch: feature/flux-prompt-builder  HEAD: 5fa269c781b5c9fc3af76f90d4ad3ca45a4d39c0
-Working tree: DIRTY (      79 entries; nothing committed or pushed by Claude this session)
+Updated: 2026-11-14 (UTC) by Claude (Sonnet 5.5)
+Branch: feature/phase1-shot-continuity  Commit: 55b6b3c (pushed)  Draft PR: https://github.com/eibbini1/shorts-app/pull/16 (base feature/flux-prompt-builder)
+Working tree: remaining untracked/modified entries are pyc, scratch scenarios, D:/, Dr. Tod stills, outputs, episodes/ai-tools-*, .vscode (deliberately not committed). Not merged: feature/trend-feed-templates.
 ## Verified
 - src/ vitest 21 files / 100 tests pass (Mac). tsc, eslint, node --test 6/6, Python 5/5 earlier.
 - Full-repo vitest shows 46 failed files, all zod tests in mini-chef-studio/node_modules (config gap: exclude it).
@@ -20,5 +20,7 @@ Working tree: DIRTY (      79 entries; nothing committed or pushed by Claude thi
 - ElevenLabs path in narrate-any-local.mjs (paid; needs ELEVENLABS_API_KEY), idea picker, caption/brand changes in finish-local-video.py.
 ## Blockers
 - LTX-2.3 licence text unread. Linux VM cannot run macOS binaries or delete files.
+## Phase 2/3 (VERIFIED)
+- Crumb 2D rig: mini-chef-studio/src/Crumb.tsx; render needs --browser-executable=Google Chrome (bundled chrome-headless-shell hangs on this Mac). Composite: scripts/composite-crumb.sh. Native 1024x1920 LTX benchmark in ROADMAP.
 ## Next action
-Phase 1 on a new branch off HEAD; do not touch dirty files without review. Other assistant: run git status and read this file before editing.
+Owner: watch the film (storage/p2/phase3-1080.mp4), approve or redirect; decide -14 LUFS target, trend branch merge, native-res opt-in. Then Phase 4. Other assistant: run git status and read this file before editing.
