@@ -43,6 +43,8 @@ def main():
     if source: command.extend(['--image-paths', source])
     output.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run([str(item) for item in command], cwd=ROOT, check=True)
+    if not output.is_file():
+        raise SystemExit('Image generator exited without creating an image. Check Mac power and Metal GPU access, then retry.')
     record = {'createdAt': datetime.now(timezone.utc).isoformat(),
               'model': 'mlx-community/flux2-klein-4b-4bit',
               'revision': '860e87183ceb29e39627c0612ebd66d8ea66e68c',

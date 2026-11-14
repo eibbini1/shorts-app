@@ -1,0 +1,105 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 30,
+    "voice": "am_adam"
+  },
+  "model": "gemma-local",
+  "topic": "The $214 record grilled cheese vs a $3 diner sandwich",
+  "style": "Photorealistic luxury food look, dark and rich with gold accents",
+  "requestedEnding": "Asks the viewer whether they would pay it, then promises part two",
+  "totalSeconds": 30,
+  "storyArc": {
+    "protagonist": "A gold-flecked grilled cheese sandwich",
+    "setting": "dark luxury restaurant counters",
+    "goal": "Show a $214 record sandwich next to a plain diner sandwich.",
+    "obstacle": "Why does it cost so much: champagne bread, rare cheese, gold.",
+    "turn": "The gold adds no flavor; the cheese is the star.",
+    "visualBible": "Dark marble, warm light, gold accents, photorealistic food photography, no people faces."
+  },
+  "qualityChecks": {
+    "exactTiming": true,
+    "uniquePromptText": true,
+    "narrationFits": true,
+    "rewrites": 0,
+    "fieldsNeedingRepair": 0
+  },
+  "plan": {
+    "ideas": [
+      {
+        "title": "The price",
+        "angle": "A gold-flecked grilled cheese next to a plain diner sandwich."
+      },
+      {
+        "title": "The record",
+        "angle": "Guinness record held by Serendipity 3 in New York since 2014."
+      },
+      {
+        "title": "The bread",
+        "angle": "Bread baked with champagne and edible gold flakes."
+      },
+      {
+        "title": "The cheese",
+        "angle": "Rare Italian cheese over fifty dollars a pound."
+      },
+      {
+        "title": "The twist and the question",
+        "angle": "Gold adds no flavor, then would you pay it."
+      }
+    ],
+    "title": "Same Grilled Cheese, Two Prices: $3 vs $214",
+    "hook": "Same grilled cheese, two prices: three dollars, or two hundred fourteen.",
+    "payoff": "Would you pay two hundred fourteen dollars for this? Follow for part two!",
+    "claimsToCheck": [
+      "Guinness World Records: most expensive sandwich, Quintessential Grilled Cheese, Serendipity 3, New York, US $214, 29 October 2014; French Pullman bread made with Dom Perignon champagne and edible gold flakes, white truffle butter, Caciocavallo Podolico (guinnessworldrecords.com/world-records/most-expensive-sandwich)",
+      "CNBC 11 Apr 2023: about half a pound of caciocavallo podolico, retails for over $50 per pound; reviewer found the gold adds no flavor and the cheese is the highlight; normally needs 48 hours notice (cnbc.com/2023/04/11/the-worlds-most-expensive-sandwich-is-a-gold-covered-grilled-cheese.html)",
+      "The $3 diner sandwich is an illustrative everyday price, not a sourced figure"
+    ],
+    "shots": [
+      {
+        "seconds": 5,
+        "narration": "Same grilled cheese, two prices: three dollars, or two hundred fourteen.",
+        "imagePrompt": "A golden-brown grilled cheese sandwich cut diagonally on a dark plate, one half pulled away on a long stretch of melted cheese, flakes of gold leaf on the cut edge, and a plain diner grilled cheese on a white paper plate at lower left. Photorealistic high-end product photograph. A dark marble counter in a warm restaurant. Vertical 9:16 frame, camera 30 degrees above the counter, sandwich centred, paper-plate sandwich at lower left. 50mm lens, shallow depth of field, sharp focus on the sandwich. Bright warm key light from the upper left with golden highlights. Crisp buttered crust, glossy melted cheese, gold leaf. Clear space around the cheese strand, steam can rise, simple background.",
+        "motionPrompt": "The camera glides smoothly to the right along the counter, revealing the gold-flecked sandwich as the cheese strand stretches and steam rises; the paper-plate sandwich stays in the lower left.",
+        "sound": "Soft sizzle, a gentle whoosh as the camera glides, and a gold shimmer"
+      },
+      {
+        "seconds": 5,
+        "narration": "A Guinness World Record, held by New York's Serendipity 3 since twenty fourteen.",
+        "imagePrompt": "A golden grilled cheese sandwich cut in half and leaning on a black plate, a sheet of gold leaf shining on the cut cheese face, steam rising. Photorealistic high-end product photograph. A dark marble counter in a warm restaurant. Vertical 9:16 frame, the food centred with generous negative space above and below. Shot on an 85mm macro lens, shallow depth of field, razor-sharp focus on the food. Warm key light with specular highlights on the gold. Crisp buttered crust, glossy melted cheese, gold leaf. The food sits fully visible, the backdrop stays dark and uncluttered.",
+        "motionPrompt": "Slow push in on the cut face of the sandwich as a thin cheese strand stretches and steam drifts upward.",
+        "sound": "Soft shimmer chime"
+      },
+      {
+        "seconds": 5,
+        "narration": "The bread is baked with Dom Perignon champagne and real edible gold flakes.",
+        "imagePrompt": "A golden-brown loaf of bread sliced open on marble, gold leaf flakes scattered on the soft crumb, beside a champagne bottle and a flute with rising bubbles. Photorealistic high-end product photograph. A dark marble counter in a warm restaurant. Vertical 9:16 frame, the food centred with generous negative space above and below. Shot on an 85mm macro lens, shallow depth of field, razor-sharp focus on the food. Warm key light with specular highlights on the gold. Crisp buttered crust, glossy melted cheese, gold leaf. The food sits fully visible, the backdrop stays dark and uncluttered.",
+        "motionPrompt": "Bubbles rise in the champagne flute while a flake of gold leaf drifts down onto the bread; the camera pushes in slowly.",
+        "sound": "Champagne fizz and a gold shimmer"
+      },
+      {
+        "seconds": 5,
+        "narration": "Inside: half a pound of rare Italian cheese, over fifty dollars a pound.",
+        "imagePrompt": "A wedge of rare aged Italian cheese on a wooden board beside a block of white truffle butter, thin white truffle shavings falling onto the cheese. Photorealistic high-end product photograph. A dark marble counter in a warm restaurant. Vertical 9:16 frame, the food centred with generous negative space above and below. Shot on an 85mm macro lens, shallow depth of field, razor-sharp focus on the food. Warm key light with specular highlights on the gold. Crisp buttered crust, glossy melted cheese, gold leaf. The food sits fully visible, the backdrop stays dark and uncluttered.",
+        "motionPrompt": "Truffle shavings fall slowly onto the cheese wedge as the camera pushes in; soft steam from a warm pan behind.",
+        "sound": "Quiet kitchen ambience"
+      },
+      {
+        "seconds": 5,
+        "narration": "One reviewer says the gold adds no flavor. The cheese is the star.",
+        "imagePrompt": "A macro close-up of a diagonal-cut grilled cheese, a thin sheet of gold leaf settling on the molten cheese face, melted cheese glistening. Photorealistic high-end product photograph. A dark marble counter in a warm restaurant. Vertical 9:16 frame, the food centred with generous negative space above and below. Shot on an 85mm macro lens, shallow depth of field, razor-sharp focus on the food. Warm key light with specular highlights on the gold. Crisp buttered crust, glossy melted cheese, gold leaf. The food sits fully visible, the backdrop stays dark and uncluttered.",
+        "motionPrompt": "A thin sheet of gold leaf drifts down and settles on the molten cheese while the camera glides slowly across the sandwich.",
+        "sound": "Soft shimmer chime"
+      },
+      {
+        "seconds": 5,
+        "narration": "Would you pay two hundred fourteen dollars for this? Follow for part two!",
+        "imagePrompt": "Two golden grilled cheese halves stacked on a black plate beside a small bowl of red tomato bisque, one half dipped and lifted toward the camera with a cheese stretch, steam rising. Photorealistic high-end product photograph. A dark marble counter in a warm restaurant. Vertical 9:16 frame, the food centred with generous negative space above and below. Shot on an 85mm macro lens, shallow depth of field, razor-sharp focus on the food. Warm key light with specular highlights on the gold. Crisp buttered crust, glossy melted cheese, gold leaf. The food sits fully visible, the backdrop stays dark and uncluttered.",
+        "motionPrompt": "The sandwich half lifts slowly out of the bisque toward the camera as the cheese stretches and steam curls upward.",
+        "sound": "Gentle room tone and a soft chime ending"
+      }
+    ]
+  }
+}

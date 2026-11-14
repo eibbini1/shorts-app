@@ -1,0 +1,109 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 32,
+    "voice": "af_heart"
+  },
+  "model": "hand-written",
+  "topic": "Byakuya ice cream: the $6,696 gelato",
+  "style": "photoreal cinematic food film, warm tungsten hotel kitchen, close macro detail, shallow depth of field, rich natural texture",
+  "requestedEnding": "Would you taste it? Comment your guess.",
+  "totalSeconds": 32,
+  "template": "story",
+  "plan": {
+    "ideas": [
+      {
+        "title": "Byakuya: angle 1",
+        "angle": "A year and a half to perfect"
+      },
+      {
+        "title": "Byakuya: angle 2",
+        "angle": "White truffle from Alba"
+      },
+      {
+        "title": "Byakuya: angle 3",
+        "angle": "Italy meets Japan"
+      },
+      {
+        "title": "Byakuya: angle 4",
+        "angle": "Guinness record ice cream"
+      },
+      {
+        "title": "Byakuya: angle 5",
+        "angle": "The tiny jar and metal spoon"
+      }
+    ],
+    "title": "Byakuya ice cream: the $6,696 gelato",
+    "hook": "One jar, yet 18 months to perfect. Guess the price?",
+    "payoff": "Would you taste it? Comment your guess.",
+    "shots": [
+      {
+        "seconds": 4,
+        "narration": "One jar, yet 18 months to perfect. Guess the price?",
+        "imagePrompt": "Macro hero close-up of a small glass jar of pale gelato dusted with shaved white truffle and edible gold leaf, a small metal spoon beside it, on a black slate beside a copper pan, cold mist drifting. Visual style: photoreal cinematic food film, warm tungsten hotel kitchen, close macro detail, shallow depth of field, rich natural texture. Continuity: one chef, one white-gloved hand, same copper pan and black slate, warm tungsten light.",
+        "motionPrompt": "The camera pushes in slowly on the jar while cold mist drifts and the gold leaf glints. One continuous take, no cuts.",
+        "sound": "soft kitchen ambience, gentle chime of glass"
+      },
+      {
+        "seconds": 6,
+        "narration": "It starts with white truffle from Alba, Italy, worth fifteen thousand dollars a kilo.",
+        "imagePrompt": "White-gloved hand shaves a pale white truffle over a small glass jar of pale gelato dusted with shaved white truffle and edible gold leaf, a small metal spoon beside it. Visual style: photoreal cinematic food film, warm tungsten hotel kitchen, close macro detail, shallow depth of field, rich natural texture. Continuity: one chef, one white-gloved hand, same copper pan and black slate, warm tungsten light.",
+        "motionPrompt": "The gloved hand pulls the truffle across a fine shaver and thin shavings drop. One continuous take, no cuts.",
+        "sound": "soft kitchen ambience, gentle chime of glass"
+      },
+      {
+        "seconds": 4,
+        "narration": "Then Parmigiano Reggiano, sake lees, and edible gold leaf.",
+        "imagePrompt": "Tweezers lay a flake of gold leaf beside a wedge of Parmigiano Reggiano next to a small glass jar of pale gelato dusted with shaved white truffle and edible gold leaf, a small metal spoon beside it. Visual style: photoreal cinematic food film, warm tungsten hotel kitchen, close macro detail, shallow depth of field, rich natural texture. Continuity: one chef, one white-gloved hand, same copper pan and black slate, warm tungsten light.",
+        "motionPrompt": "The tweezers lower the gold leaf flake slowly toward the gelato. One continuous take, no cuts.",
+        "sound": "soft kitchen ambience, gentle chime of glass"
+      },
+      {
+        "seconds": 4,
+        "narration": "A chef from Osaka helped blend Italy with Japan.",
+        "imagePrompt": "A small white sake cup and a white truffle sit beside a small glass jar of pale gelato dusted with shaved white truffle and edible gold leaf, a small metal spoon beside it on black slate. Visual style: photoreal cinematic food film, warm tungsten hotel kitchen, close macro detail, shallow depth of field, rich natural texture. Continuity: one chef, one white-gloved hand, same copper pan and black slate, warm tungsten light.",
+        "motionPrompt": "The camera glides sideways across the sake cup, the truffle and the jar. One continuous take, no cuts.",
+        "sound": "soft kitchen ambience, gentle chime of glass"
+      },
+      {
+        "seconds": 5,
+        "narration": "It arrives in a tiny glass jar, with a handcrafted metal spoon.",
+        "imagePrompt": "A handcrafted metal spoon rests beside a small glass jar of pale gelato dusted with shaved white truffle and edible gold leaf, a small metal spoon beside it on black slate. Visual style: photoreal cinematic food film, warm tungsten hotel kitchen, close macro detail, shallow depth of field, rich natural texture. Continuity: one chef, one white-gloved hand, same copper pan and black slate, warm tungsten light.",
+        "motionPrompt": "The camera glides slowly along the metal spoon toward the jar. One continuous take, no cuts.",
+        "sound": "soft kitchen ambience, gentle chime of glass"
+      },
+      {
+        "seconds": 2,
+        "narration": "Three. Two. One.",
+        "imagePrompt": "White-gloved hand holds a metal spoon just above a small glass jar of pale gelato dusted with shaved white truffle and edible gold leaf, a small metal spoon beside it. Visual style: photoreal cinematic food film, warm tungsten hotel kitchen, close macro detail, shallow depth of field, rich natural texture. Continuity: one chef, one white-gloved hand, same copper pan and black slate, warm tungsten light.",
+        "motionPrompt": "The spoon lowers slowly toward the gelato and stops just above it. One continuous take, no cuts.",
+        "sound": "soft kitchen ambience, gentle chime of glass"
+      },
+      {
+        "seconds": 4,
+        "narration": "Six thousand, six hundred ninety-six dollars. A Guinness record.",
+        "imagePrompt": "Hero shot of a small glass jar of pale gelato dusted with shaved white truffle and edible gold leaf, a small metal spoon beside it glowing with warm gold light, gold flakes sparkling. Visual style: photoreal cinematic food film, warm tungsten hotel kitchen, close macro detail, shallow depth of field, rich natural texture. Continuity: one chef, one white-gloved hand, same copper pan and black slate, warm tungsten light.",
+        "motionPrompt": "The camera pulls back slowly while the gold leaf sparkles in the warm light. One continuous take, no cuts.",
+        "sound": "soft kitchen ambience, gentle chime of glass"
+      },
+      {
+        "seconds": 3,
+        "narration": "Would you taste it? Comment your guess.",
+        "imagePrompt": "A white-gloved hand presents a small glass jar of pale gelato dusted with shaved white truffle and edible gold leaf, a small metal spoon beside it toward the camera on a black slate. Visual style: photoreal cinematic food film, warm tungsten hotel kitchen, close macro detail, shallow depth of field, rich natural texture. Continuity: one chef, one white-gloved hand, same copper pan and black slate, warm tungsten light.",
+        "motionPrompt": "The gloved hand pushes the jar gently toward the camera and holds it still, inviting viewers to comment their guess. One continuous take, no cuts.",
+        "sound": "soft kitchen ambience, gentle chime of glass"
+      }
+    ],
+    "claimsToCheck": [
+      "price JP 873,400 yen = about $6,696 (Guinness World Records, 18 May 2023; UPI; Fox)",
+      "over 1.5 years to develop (Cellato via Guinness)",
+      "Alba white truffle about $15,192/kg (Guinness)",
+      "Parmigiano Reggiano, sake lees, edible gold leaf (Guinness; UPI)",
+      "Osaka chef Tadayoshi Yamada of RiVi helped (Guinness; Mental Floss)",
+      "130 ml glass jar, handcrafted metal spoon (Fox/KTVU; Cellato)",
+      "record may have been beaten since 2023: re-check Guinness before upload"
+    ]
+  }
+}

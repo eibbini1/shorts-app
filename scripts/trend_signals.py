@@ -75,6 +75,10 @@ def load_lines(path):
     return [l.strip() for l in path.read_text().splitlines() if l.strip() and not l.startswith('#')]
 
 
+def markdown_cell(value):
+    return str(value).replace('|', '\\|').replace('\n', ' ')
+
+
 def covered(topic, published_titles, subject):
     """True when every subject word of the topic already appears in one published title."""
     words = subject(topic)
@@ -101,6 +105,21 @@ def score_topics(wiki, yt_videos, published_titles, subject):
             if any(PRICE_HINT.search(m['title']) for m in matches):
                 entry['score'] += 10
                 entry['why'].append('price-contrast titles')
+    # A video can surface a new topic before it appears on the fixed Wikipedia watchlist.
+    for video in yt_videos:
+        if any(article.replace('_', ' ').lower() in video['title'].lower() for article in wiki):
+            continue
+        name = video['title'].strip()[:100]
+        if not name or not top_velocity:
+            continue
+        entry = topics.setdefault(name, {'topic': name, 'score': 0.0, 'sources': [], 'why': []})
+        entry['score'] = max(entry['score'], video['velocity'] / top_velocity * 50)
+        if 'youtube' not in entry['sources']:
+            entry['sources'].append('youtube')
+        entry['why'] = [f'public video, {video["velocity"]:,.0f} lifetime views/h since publishing']
+        if PRICE_HINT.search(name):
+            entry['score'] += 10
+            entry['why'].append('price-contrast title')
     ranked = []
     for entry in topics.values():
         if not entry['sources']:
@@ -209,7 +228,7 @@ def main():
         sys.exit('Every source failed or was skipped: no trend list produced. Do not read this as "no trends".')
     lines = [f'# Topic feed {now:%Y-%m-%d}', '', 'Own calculation from free sources; a ranking aid, not a prediction.', '',
              '| # | Topic | Score | Sources | Why |', '|---|---|---|---|---|']
-    lines += [f'| {i} | {e["topic"]} | {e["score"]} | {"+".join(e["sources"])} | {"; ".join(e["why"])} |' for i, e in enumerate(ranked, 1)]
+    lines += [f'| {i} | {markdown_cell(e["topic"])} | {e["score"]} | {"+".join(e["sources"])} | {markdown_cell("; ".join(e["why"]))} |' for i, e in enumerate(ranked, 1)]
     lines += ['', 'Sources: ' + '; '.join(f'{s} {st}' for s, st, _ in health)]
     out = DB.parent / f'feed-{now:%Y%m%d}.md'
     out.write_text('\n'.join(lines) + '\n')
