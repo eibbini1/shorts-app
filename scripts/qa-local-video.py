@@ -24,7 +24,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--video', required=True, type=Path)
     parser.add_argument('--pack', type=Path)
+    parser.add_argument('--report', type=Path, help='Write QA results for this exact final file')
     parser.add_argument('--work-dir', type=Path)
+    parser.add_argument('--expected-seconds', type=float, help='Require the final duration to match the scenario, within 0.15 s')
     args = parser.parse_args()
     video = args.video.resolve()
     duration = float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', str(video)],
@@ -50,7 +52,10 @@ def main():
     silence = re.findall(r'silence_duration: ([\d.]+)', ffmpeg_log(['-i', str(video), '-af', 'silencedetect=n=-45dB:d=1.0', '-vn', '-f', 'null', '-']))
     longest_silence = max(map(float, silence), default=0)
     results['silence'] = {'longestSeconds': longest_silence, 'ok': longest_silence < 1.5}
-    results['length'] = {'seconds': round(duration, 1), 'ok': 20 <= duration <= 35}
+    expected = args.expected_seconds
+    results['length'] = ({'seconds': round(duration, 2), 'expectedSeconds': expected,
+                          'ok': abs(duration - expected) <= 0.15} if expected is not None else
+                         {'seconds': round(duration, 1), 'ok': 20 <= duration <= 35})
 
     work = args.work_dir
     if work is None:
@@ -64,7 +69,8 @@ def main():
         start = lines[0]['atSeconds'] if lines else None
         results['hookSpokenEarly'] = {'firstLineAtSeconds': start, 'ok': start is not None and start <= 1.0}
     else:
-        results['hookSpokenEarly'] = {'ok': True, 'note': 'voice timeline not found, skipped'}
+        results['hookSpokenEarly'] = {'ok': work is None,
+                                      'note': 'voice timeline not found; cannot verify hook' if work else 'voice timeline not supplied, skipped'}
 
     for name, item in results.items():
         status = 'ok' if item['ok'] else 'FAIL'
@@ -72,6 +78,10 @@ def main():
         print(f'{status:4} {name}: {detail}')
         if not item['ok']:
             failures.append(name)
+    if args.report:
+        args.report.parent.mkdir(parents=True, exist_ok=True)
+        args.report.write_text(json.dumps({'video': str(video), 'passed': not failures,
+                                           'failed': failures, 'checks': results}, indent=2) + '\n')
     pack = args.pack or (video.with_name(video.name.replace('.captioned.mp4', '.pack.json')) if '.captioned.mp4' in video.name else None)
     if pack and pack.is_file():
         data = json.loads(pack.read_text())
