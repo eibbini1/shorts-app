@@ -6,7 +6,7 @@
       Opening-frame price text (0 to 2.6 s, fades out) and the 'Genius Approved' seal that slams in at the last shot
       with a low thump. Run after the captioned video exists.
 """
-import argparse, json, subprocess, tempfile
+import argparse, textwrap, json, subprocess, tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -62,8 +62,9 @@ def seal(a):
         run(['python3', str(ROOT / 'scripts/make-stamp.py'), '--out', str(stamp)])
     with tempfile.TemporaryDirectory() as tmp:
         txt = Path(tmp) / 'open.txt'
-        txt.write_text(a.text, encoding='utf-8')
-        size = max(44, min(64, int(64 * 19 / max(len(a.text), 1))))  # keep the line inside the frame margins
+        lines = textwrap.wrap(a.text, 22) or ['']   # wrap long hooks onto several lines so they stay inside the frame
+        txt.write_text('\n'.join(lines), encoding='utf-8')
+        size = max(44, min(64, int(64 * 19 / max(max(len(l) for l in lines), 1))))  # keep the longest line inside the margins
         graph = (f"[0:v]drawtext=fontfile={FONT}:textfile={txt}:fontsize={size}:fontcolor=0xECC470:borderw=6:bordercolor=0x101010:"
                  f"x=(w-text_w)/2:y=190:enable='between(t,0,2.6)':alpha='if(lt(t,2.2),1,(2.6-t)/0.4)'[t];"
                  f"[1:v]scale=300:-1,format=rgba,fade=t=in:st=0:d=0.12:alpha=1,setpts=PTS+{last}/TB[s];"
