@@ -17,10 +17,10 @@
         "black-rooftop": "black cocktail dress, long straight dark hair, rooftop lounge (face holds well)",
         "emerald-updo": "emerald silk gown, dark updo, candlelit hotel restaurant (face holds well)",
         "white-terrace": "white linen dress, honey-blonde waves, sunlit terrace (face drifted: different woman)",
-        "navy-bob": "navy velvet dress, short bob, wine cellar bar (not reviewed yet)",
-        "gold-champagne": "gold sequin dress, auburn curls, champagne bar (not reviewed yet)"
+        "navy-bob": "navy velvet dress, short black bob, wine cellar bar (face holds well)",
+        "gold-champagne": "gold sequin dress, auburn curls, champagne bar (face drifts somewhat: lighter eyes, different face shape)"
       },
-      "rules": "Keep dark hair for best face consistency. Use the anchor on face shots only (BB_ANCHOR_SHOTS). Face is recognisable, not identical.",
+      "rules": "Keep dark hair for best face consistency (black/emerald/navy looks hold; blonde and auburn drift). Use the anchor on face shots only (BB_ANCHOR_SHOTS). Face is recognisable, not identical.",
       "use": "BB_ANCHOR_IMAGE=assets/muse/ruby/<look>.png BB_ANCHOR_SHOTS=3 bash scripts/make-film.sh story --scenario FILE --no-crumb --no-chain-images"
     }
   ]
