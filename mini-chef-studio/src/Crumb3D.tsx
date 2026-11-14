@@ -3,6 +3,7 @@ import {AbsoluteFill, useCurrentFrame, useVideoConfig} from 'remotion';
 import {ThreeCanvas} from '@remotion/three';
 import * as THREE from 'three';
 import {poseAt, Pose} from './Crumb';
+import {platePose} from './plates/juuni-ban';
 
 /**
  * Crumb 3D: same pose data as the 2D rig (poseAt), drawn as toon-shaded solids with ink outlines on a transparent canvas.
@@ -131,14 +132,14 @@ const Body: React.FC<{pose: Pose; t: number}> = ({pose, t}) => (
     </group>
 );
 
-const Scene: React.FC = () => {
+const Scene: React.FC<{plate?: boolean}> = ({plate}) => {
   const frame = useCurrentFrame();
   const {fps, height} = useVideoConfig();
   const t = frame / fps;
-  const pose = poseAt(t);
+  const pose = plate ? platePose(t) : poseAt(t);
   pose.blink = (t * 1000) % 3200 < 140 ? 0.15 : 1;
   pose.lean += 3; // slight elder's stoop
-  const s = pose.scale * 1.7;
+  const s = plate ? pose.scale : pose.scale * 1.7;
   return (
     <>
       <ambientLight intensity={1.5} color="#ffe2b8" />
@@ -157,7 +158,7 @@ const Scene: React.FC = () => {
   );
 };
 
-export const Crumb3D: React.FC = () => {
+export const Crumb3D: React.FC<{plate?: boolean}> = ({plate}) => {
   const {width, height} = useVideoConfig();
   const ramp = useToon();
   return (
@@ -171,8 +172,10 @@ export const Crumb3D: React.FC = () => {
         style={{background: 'transparent'}}
         onCreated={({gl, scene, camera}) => { camera.lookAt(width / 2, height / 2, 0); camera.updateProjectionMatrix(); gl.setClearColor(new THREE.Color(0, 0, 0), 0); scene.background = null; }}
       >
-        <ToonCtx.Provider value={ramp}><Scene /></ToonCtx.Provider>
+        <ToonCtx.Provider value={ramp}><Scene plate={plate} /></ToonCtx.Provider>
       </ThreeCanvas>
     </AbsoluteFill>
   );
 };
+
+export const CrumbPlate: React.FC = () => <Crumb3D plate />;
