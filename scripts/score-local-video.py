@@ -7,10 +7,11 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from presentation_mode import choose as choose_presentation
 
 ROOT = Path(__file__).resolve().parents[1]
 CATEGORIES = ('continuity', 'realism', 'story', 'audio', 'payoff')
-TECHNICAL = ('blackFrames', 'frozenPicture', 'loudness', 'silence', 'length', 'hookSpokenEarly')
+TECHNICAL = ('blackFrames', 'frozenPicture', 'loudness', 'silence', 'length')
 
 
 def main():
@@ -26,10 +27,12 @@ def main():
     p.add_argument('--history', type=Path, default=ROOT / 'storage/learning/quality-scores.jsonl')
     a = p.parse_args()
     scenario = json.loads(a.scenario.read_text(encoding='utf-8-sig'))
+    presentation = choose_presentation(scenario)
     pack = json.loads(a.pack.read_text(encoding='utf-8-sig'))
     qa = json.loads(a.qa_report.read_text()) if a.qa_report else pack.get('qa', {})
     checks = qa.get('checks', {})
-    technical = {name: bool(checks.get(name, {}).get('ok')) and 'skipped' not in str(checks.get(name, {}).get('note', '')).lower() for name in TECHNICAL}
+    hook_check = 'visualHookEarly' if presentation['mode'] == 'asmr' else 'hookSpokenEarly'
+    technical = {name: bool(checks.get(name, {}).get('ok')) and 'skipped' not in str(checks.get(name, {}).get('note', '')).lower() for name in (*TECHNICAL, hook_check)}
     technical_points = 5 * sum(technical.values())
     audit = subprocess.run([sys.executable, str(ROOT / 'scripts/audit-local-story.py'), str(a.scenario)], capture_output=True, text=True)
     preflight_cmd = [sys.executable, str(ROOT / 'scripts/preflight-short.py'), str(a.scenario), '--strict']
@@ -37,8 +40,9 @@ def main():
         preflight_cmd.append('--allow')
     preflight = subprocess.run(preflight_cmd, capture_output=True, text=True)
     hook = re.search(r'-> (\d+)/100', preflight.stdout)
-    hook_score = int(hook.group(1)) if hook else 0
-    story_points = (10 if audit.returncode == 0 else 0) + (5 if hook_score >= 70 else 0) + (5 if preflight.returncode == 0 else 0)
+    hook_score = int(hook.group(1)) if hook and presentation['voice'] else None
+    hook_evidence = (hook_score is not None and hook_score >= 70) if presentation['voice'] else technical[hook_check]
+    story_points = (10 if audit.returncode == 0 else 0) + (5 if hook_evidence else 0) + (5 if preflight.returncode == 0 else 0)
     scene_analysis = {'available': False}
     scene_python = ROOT / 'storage/tools/scenedetect/.venv/bin/python'
     video_name = pack.get('video')
@@ -61,7 +65,8 @@ def main():
         'checkedAt': datetime.now(timezone.utc).isoformat(), 'title': scenario['plan']['title'],
         'score': score, 'possible': 100, 'minimum': a.min_score, 'status': status,
         'technicalPoints': technical_points, 'storyPoints': story_points, 'editorialPoints': editorial_points,
-        'technicalChecks': technical, 'hookScore': hook_score, 'editorial': editorial,
+        'technicalChecks': technical, 'hookScore': hook_score, 'hookEvidence': 'narrated line' if presentation['voice'] else 'visible opening frame', 'editorial': editorial,
+        'presentation': presentation,
         'reviewedVideo': str(video_path) if video_path else None,
         'sceneAnalysis': scene_analysis,
         'criticalEditorialBelow4': critical,

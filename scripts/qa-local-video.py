@@ -14,6 +14,8 @@ import sys
 from pathlib import Path
 
 from first_checks import longest_freeze as measure_freeze
+from first_checks import picture_problem
+from presentation_mode import choose as choose_presentation
 
 
 def ffmpeg_log(args):
@@ -27,6 +29,7 @@ def main():
     parser.add_argument('--report', type=Path, help='Write QA results for this exact final file')
     parser.add_argument('--work-dir', type=Path)
     parser.add_argument('--expected-seconds', type=float, help='Require the final duration to match the scenario, within 0.15 s')
+    parser.add_argument('--scenario', type=Path, help='Use its presentation mode for voiced or visual hook QA')
     args = parser.parse_args()
     video = args.video.resolve()
     duration = float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', str(video)],
@@ -64,7 +67,12 @@ def main():
         stem = re.sub(r'-\d{8}-\d{6}$', '', stem)
         candidate = video.parent.parent / 'storage/any-local' / f'{stem}.local-scenario'
         work = candidate if candidate.is_dir() else None
-    if work and (work / 'voice-provenance.json').is_file():
+    presentation = choose_presentation(json.loads(args.scenario.read_text(encoding='utf-8-sig'))) if args.scenario else {'mode': 'voiced'}
+    if presentation['mode'] == 'asmr':
+        problem = picture_problem(video, at=0.2)
+        results['visualHookEarly'] = {'firstFrameAtSeconds': 0.2, 'ok': problem is None,
+                                      'note': problem or 'visible opening; speech intentionally absent'}
+    elif work and (work / 'voice-provenance.json').is_file():
         lines = json.loads((work / 'voice-provenance.json').read_text())['lines']
         start = lines[0]['atSeconds'] if lines else None
         results['hookSpokenEarly'] = {'firstLineAtSeconds': start, 'ok': start is not None and start <= 1.0}

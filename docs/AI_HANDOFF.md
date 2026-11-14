@@ -2,6 +2,8 @@
 
 Updated: 2026-11-14. Review branch: `feature/unified-shorts-pipeline`, based on `feature/phase4-trend-intelligence` at `2d7b162`. This branch lives in an isolated worktree under `/Users/eibbini/Documents/Codex/2026-11-06/python-3-12-is-already-installed/shorts-app-unify`. The original checkout is `/Users/eibbini/Documents/shorts-app`; do not switch it while other agents may use it.
 
+Draft pull request: [#17](https://github.com/eibbini1/shorts-app/pull/17). The branch includes commit `52a94a4`; the 10-second presentation-mode work is still local until its real render passes.
+
 ## Verified state
 
 - Juuni Ban 16-second local film and on-plate chef prototype exist in ignored `storage/p5` and `storage/p6`. The chef placement looked consistent in sampled frames. Technical QA of the plate film passed, but editorial review and listening to the audio are still required. Its score is 50/100 because the human editorial component has no verdict.
@@ -13,12 +15,14 @@ Updated: 2026-11-14. Review branch: `feature/unified-shorts-pipeline`, based on 
 - `--crumb-on-plate` is opt-in, restricted to the Juuni Ban shot anchors, and stops for a placement review. It is not a general food placement model.
 - Byakuya script claims were checked against [Guinness World Records' record](https://www.guinnessworldrecords.com/world-records/731181-most-expensive-of-ice-cream) and [its 2023 feature](https://www.guinnessworldrecords.com/news/2023/5/worlds-most-expensive-ice-cream-will-set-you-back-more-than-a-family-holiday-would): $6,696 was the recorded price on 25 March 2023, and the feature describes Alba truffle, Parmigiano Reggiano, sake lees, gold leaf, an Osaka chef and more than 1.5 years of development. The narration should be understood as the documented record, not a live 2026 menu price.
 - Byakuya and the hotel hot dog each have an exact 30-second final MP4 in this worktree's `outputs/`. Both final files pass all six technical QA checks, with 50/100 quality reports because editorial picture/sound review is not entered. Their revised scenarios are in `examples/local-scenarios/`.
-- The November trend-inspired film, `The Cinnamon Ribbon`, is rendering from `examples/local-scenarios/cinnamon-ribbon-nov2026.local-scenario.json`. It has a six-shot cause-and-effect story and a 30-second target. See [the ten-Short review](FOOD_SHORTS_REVIEW_20261114.md) for the sampled hook references and their limits.
+- The November trend-inspired film, `The Cinnamon Ribbon`, has three of six motion clips safely cached. It was paused to prioritize the user's 10-second cocoa prototype. See [the ten-Short review](FOOD_SHORTS_REVIEW_20261114.md) for the sampled hook references and their limits.
+- The user selected [a cozy movie-night cocoa Short](https://www.youtube.com/shorts/F3x5u2ntqtY) as a creative reference. An original two-shot chocolate-shell prototype is now rendering from `examples/local-scenarios/first-cold-night-10.local-scenario.json`. The presentation selector chooses ASMR without Kokoro or captions for a 10-second two-shot tactile reveal. Source footage, music and branding are not reused.
+- [A pomegranate-pineapple ASMR Short](https://www.youtube.com/shorts/CVRQZvbyFxM) is the next creative reference after cocoa: dark backdrop, one glass, close hand action, bright color change. No scenario is rendered yet.
 
 ## Active film and next actions
 
-1. Let the cinnamon film finish its six GPU motion clips. Do not start another model render on the 16 GB Mac meanwhile. Its current log is `/private/tmp/cinnamon-film-run.log`.
-2. Run final-file QA and inspect the complete cinnamon film's frames, soundtrack and narration. The technical gate cannot substitute for an editorial view/listen pass.
+1. Let the 10-second cocoa prototype finish. Its log is `/private/tmp/first-cold-night-10.log`. Run final-file QA and inspect the actual visual opening and sound. Confirm that no voice or captions were added.
+2. Resume cinnamon after cocoa, using its three cached clips and the remaining still. Do not run both GPU jobs at once. Its log is `/private/tmp/cinnamon-film-run.log`.
 3. Ask the owner to review the Byakuya and hot-dog final files and enter an editorial score before calling either ready for publication. Their reports deliberately say `review-needed`.
 4. Commit and push this branch, open a reviewable PR, and record its URL here. Do not commit generated media, model weights or credentials.
 

@@ -1,0 +1,142 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Local Studio",
+    "format": "short",
+    "seconds": 30,
+    "voice": "af_heart"
+  },
+  "model": "gemma-local",
+  "topic": "One original luxury hotel hot dog, same Wagyu sausage, toasted brioche bun, chef hands, copper pan, and warm kitchen throughout. Six moving actions in order: sausage touches hot pan; truffle cream spread inside toasted bun; same sausage turns to reveal crust in pan; sausage lifted into bun; one small caviar spoon added; guest takes one visible bite from that same hot dog. No gold leaf, no price claim, no extra dishes.",
+  "style": "photoreal cinematic food film, warm tungsten hotel kitchen, close macro detail, shallow depth of field, rich natural texture",
+  "requestedEnding": "A guest takes one clear bite of the finished Wagyu hot dog and reveals the crisp bun and juicy sausage.",
+  "totalSeconds": 30,
+  "storyArc": {
+    "protagonist": "The Wagyu sausage",
+    "setting": "Warm, tungsten-lit hotel kitchen",
+    "goal": "To create a perfectly executed luxury hotel hot dog, culminating in a satisfying bite for the guest.",
+    "obstacle": "Achieving the perfect crust on the sausage without drying it out.",
+    "turn": "The chef expertly turns the sausage, allowing even heat distribution and creating a beautiful, crispy crust.",
+    "visualBible": "Close-up macro photography, shallow depth of field, rich natural textures, warm tungsten lighting. Focus on the chef's hands and the transformation of the sausage. No gold leaf, no price claims, no extra dishes. The bun must be toasted, not burnt. Truffle cream must be visibly spread.",
+    "beats": [
+      {
+        "number": 1,
+        "label": "Hook",
+        "seconds": 5
+      },
+      {
+        "number": 2,
+        "label": "Preparation",
+        "seconds": 5
+      },
+      {
+        "number": 3,
+        "label": "Heat",
+        "seconds": 5
+      },
+      {
+        "number": 4,
+        "label": "Build",
+        "seconds": 5
+      },
+      {
+        "number": 5,
+        "label": "Finish",
+        "seconds": 5
+      },
+      {
+        "number": 6,
+        "label": "Payoff",
+        "seconds": 5
+      }
+    ]
+  },
+  "qualityChecks": {
+    "exactTiming": true,
+    "uniquePromptText": true,
+    "narrationFits": true,
+    "endingLockedFromUser": false,
+    "rewrites": 0,
+    "fieldsNeedingRepair": 0
+  },
+  "plan": {
+    "ideas": [
+      {
+        "title": "The Hotel Hot Dog: Precision",
+        "angle": "Focus on the chef's meticulous technique, highlighting the care taken in each step."
+      },
+      {
+        "title": "The Hotel Hot Dog: Texture",
+        "angle": "Emphasize the contrast between the crisp bun, juicy sausage, and creamy truffle."
+      },
+      {
+        "title": "The Hotel Hot Dog: The Moment",
+        "angle": "Build suspense to the final bite, focusing on the guest's anticipation."
+      },
+      {
+        "title": "The Hotel Hot Dog: Craft",
+        "angle": "Showcase the artistry of the chef, elevating a simple dish to a luxurious experience."
+      },
+      {
+        "title": "The Hotel Hot Dog: Simplicity",
+        "angle": "Highlight the elegance of using high-quality ingredients without unnecessary embellishments."
+      }
+    ],
+    "title": "The Hotel Hot Dog",
+    "hook": "One hot dog, yet fit for the finest five-star hotel dining table?",
+    "payoff": "A guest takes one clear bite of the finished Wagyu hot dog and reveals the crisp bun and juicy sausage.",
+    "shots": [
+      {
+        "seconds": 5,
+        "narration": "One hot dog, yet fit for the finest five-star hotel dining table?",
+        "imagePrompt": "Close-up, macro shot of a plump Wagyu sausage, glistening with fat, touching a hot, well-seasoned copper pan in a warm, tungsten-lit hotel kitchen. Shallow depth of field focuses on the sausage's surface, blurring the background slightly. The pan shows subtle signs of use, hinting at a history of expertly prepared dishes. Consistent subject: The Wagyu sausage. Visual style: photoreal cinematic food film, warm tungsten hotel kitchen, close macro detail, shallow depth of field, rich natural texture. Exactly one long cylindrical Wagyu frankfurter, never a round patty or meatball. The brioche hot-dog bun is long and split lengthwise, never a round roll; keep the same food identity across the film. Continuity: one chef, one white-gloved hand, same copper pan and black slate, warm tungsten light.",
+        "motionPrompt": "A plump Wagyu sausage is gently lowered from a chef's hand into a hot copper pan; the camera smoothly tracks downwards, maintaining focus on the sausage as it makes contact with the pan, showing the initial sizzle and slight color change on the sausage's surface; the sausage remains in the pan. One continuous take, no cuts. Keep the same long cylindrical frankfurter and elongated split bun; no shape change or extra sausage.",
+        "sound": "Sizzling fat hitting hot metal"
+      },
+      {
+        "seconds": 5,
+        "narration": "Truffle cream, silky and earthy, fills a freshly split brioche bun.",
+        "imagePrompt": "Photoreal cinematic fine-dining food film, warm tungsten hotel kitchen, close macro detail, natural texture, shallow depth of field. Vertical 9:16 composition. One EMPTY, elongated brioche hot-dog bun, 15 cm long, split along its full length and laid diagonally from lower left to upper right on a dark prep board. A chef hand spreads a thin white truffle cream inside the long slit with an offset spatula. The complete long bun is visible. No sausage, round roll, burger bun, patty, or other food. Continuity: one chef, one white-gloved hand, same copper pan and black slate, warm tungsten light.",
+        "motionPrompt": "Chef's hand, holding a small offset spatula, gently spreads truffle cream inside the toasted brioche bun; the camera slowly circles the bun, maintaining focus on the spreading action and the cream's texture as it fills the bun; the bun remains in place. One continuous take, no cuts. Keep the same long cylindrical frankfurter and elongated split bun; no shape change or extra sausage.",
+        "sound": "Soft, creamy pour, subtle spatula scrape against brioche."
+      },
+      {
+        "seconds": 5,
+        "narration": "Wagyu sizzles in a copper pan until the edges turn golden.",
+        "imagePrompt": "Close-up, macro shot of the Wagyu sausage in the copper pan, revealing a beautifully browned and slightly blistered crust on one side, while the other side remains glistening and uncooked in a warm, tungsten-lit hotel kitchen. Shallow depth of field focuses on the crust's texture, blurring the background slightly. Consistent subject: Wagyu sausage. Visual style: photoreal cinematic food film, warm tungsten hotel kitchen, close macro detail, shallow depth of field, rich natural texture. Visual style: photoreal cinematic food film, warm tungsten hotel kitchen, close macro detail, shallow depth of field, rich natural texture. Exactly one long cylindrical Wagyu frankfurter, never a round patty or meatball. The brioche hot-dog bun is long and split lengthwise, never a round roll; keep the same food identity across the film. Continuity: one chef, one white-gloved hand, same copper pan and black slate, warm tungsten light.",
+        "motionPrompt": "The chef's hand, wearing a pristine white glove, expertly turns the Wagyu sausage in the hot copper pan; the camera smoothly tracks the sausage's rotation, showcasing the transition from the raw, glistening side to the newly formed, browned crust; the sausage remains in the pan. One continuous take, no cuts. Keep the same long cylindrical frankfurter and elongated split bun; no shape change or extra sausage.",
+        "sound": "Sizzle"
+      },
+      {
+        "seconds": 5,
+        "narration": "Carefully, the glistening sausage settles into its warm, buttery bed.",
+        "imagePrompt": "Photoreal cinematic fine-dining food film, warm tungsten hotel kitchen, close macro detail, natural texture, shallow depth of field. Vertical 9:16 composition. The same browned 15 cm cylindrical Wagyu frankfurter is lifted from the copper pan by a chef hand toward the same long 15 cm brioche hot-dog bun, split lengthwise and laid diagonally on a dark prep board. Both long sausage and long bun are fully visible at the start of this assembly action. No round bread roll, burger bun, patty, or second sausage. Continuity: one chef, one white-gloved hand, same copper pan and black slate, warm tungsten light.",
+        "motionPrompt": "The chef's hand, wearing a pristine white glove, lifts the Wagyu sausage from the copper pan and lowers it into the toasted brioche bun; the camera smoothly tracks upwards, maintaining focus on the sausage as it settles into the bun, highlighting the contrast in textures; the bun remains in place. One continuous take, no cuts. Keep the same long cylindrical frankfurter and elongated split bun; no shape change or extra sausage.",
+        "sound": "Utensil clink"
+      },
+      {
+        "seconds": 5,
+        "narration": "A tiny spoon gently crowns it with glistening pearls of black caviar.",
+        "imagePrompt": "Photoreal cinematic fine-dining food film, warm tungsten hotel kitchen, close macro detail, natural texture, shallow depth of field. Vertical 9:16 composition. One assembled luxury hot dog: the same long 15 cm browned cylindrical sausage sits along the full length of the same elongated split-top brioche hot-dog bun, laid diagonally across a silver service tray. A chef hand holds one small spoon of black caviar just above the center. Full long hot-dog silhouette visible. No round roll, patty, meatball, or other dishes. Continuity: one chef, one white-gloved hand, same copper pan and black slate, warm tungsten light.",
+        "motionPrompt": "A chef's hand, holding a small silver spoon with black caviar, gently lowers the spoon towards the Wagyu sausage in the toasted brioche bun; the camera smoothly zooms in, maintaining focus on the spoon and caviar as it touches the sausage; the spoon remains in place, caviar visible. One continuous take, no cuts. Keep the same long cylindrical frankfurter and elongated split bun; no shape change or extra sausage.",
+        "sound": "Utensil clink"
+      },
+      {
+        "seconds": 5,
+        "narration": "Ready to serve: crisp bun, juicy Wagyu, and quiet luxury.",
+        "imagePrompt": "Photoreal cinematic fine-dining food film, warm tungsten hotel kitchen, close macro detail, natural texture, shallow depth of field. Vertical 9:16 composition. One guest holds the same long 15 cm brioche hot-dog bun with one browned cylindrical Wagyu sausage and a small caviar accent, angled diagonally toward the mouth. The guest begins one visible bite at the end of the sausage; a small bitten edge and juicy sausage center are visible. No round roll, hamburger, patty, or duplicate hot dog. Continuity: one chef, one white-gloved hand, same copper pan and black slate, warm tungsten light.",
+        "motionPrompt": "A guest's hand reaches forward and takes one bite from the Wagyu hot dog; the camera smoothly tracks the bite, maintaining focus on the bun and sausage as they are partially consumed; the hot dog remains partially consumed in the guest's hand. One continuous take, no cuts. Keep the same long cylindrical frankfurter and elongated split bun; no shape change or extra sausage.",
+        "sound": "Crisp crunch of the toasted bun combined with a soft, juicy sizzle."
+      }
+    ],
+    "claimsToCheck": []
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "broader luxury hot-dog trend, not a verified top worldwide trend",
+    "sources": [
+      "https://guide.michelin.com/en/article/dining-out/michelin-guide-hot-dogs",
+      "https://www.miaminewtimes.com/food-drink/miami-open-unveils-100-wagyu-hot-dog-topped-with-caviar-40531553/"
+    ]
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Local Studio",
+    "format": "short",
+    "seconds": 10,
+    "voice": "af_heart"
+  },
+  "model": "reference-inspired-local",
+  "topic": "The First Cold Night: chocolate shell movie-night mug",
+  "style": "Photorealistic cozy luxury chocolate commercial; warm November apartment, rain and fairy lights, one continuous red mug story.",
+  "requestedEnding": "The dark chocolate shell cracks open and tiny marshmallows rise in the red mug beside the rainy window.",
+  "totalSeconds": 10,
+  "storyArc": {
+    "protagonist": "the red mug and its chocolate shell",
+    "setting": "one warm apartment by a rainy November window",
+    "goal": "Turn a cold evening into a cozy chocolate surprise in one red mug.",
+    "obstacle": "The cocoa and marshmallows are hidden in a closed chocolate shell.",
+    "turn": "Hot milk cracks the shell and releases the marshmallows.",
+    "visualBible": "Same small apartment on a cold November evening, dark walnut table by a rain-specked window, muted red ceramic mug, cream linen napkin, brass spoon, warm fairy-light bokeh, one pair of adult hands with natural nails. No visible TV imagery, labels, text, brand marks or extra people. Photorealistic luxury food commercial, natural edible chocolate texture, shallow depth of field, cinematic warm highlights and cool blue window light. Same mug, shell, milk, spoon, window and hands in every shot. The finished drink in the first shot matches the final stir.",
+    "beats": [
+      {
+        "number": 1,
+        "label": "Question and hot pour",
+        "seconds": 5
+      },
+      {
+        "number": 2,
+        "label": "Shell opens and cozy payoff",
+        "seconds": 5
+      }
+    ]
+  },
+  "qualityChecks": {
+    "exactTiming": true,
+    "uniquePromptText": true,
+    "narrationFits": true,
+    "endingLockedFromUser": false,
+    "rewrites": 0,
+    "fieldsNeedingRepair": 0
+  },
+  "plan": {
+    "ideas": [
+      {
+        "title": "The First Cold Night",
+        "angle": "A chocolate shell breaks into a cozy red-mug drink."
+      },
+      {
+        "title": "The Hidden Marshmallows",
+        "angle": "A hot-milk pour reveals tiny marshmallows."
+      },
+      {
+        "title": "Rainy Window Cocoa",
+        "angle": "Warm chocolate contrasts with cool rain outside."
+      },
+      {
+        "title": "The Shell Crack",
+        "angle": "Let one physical crack carry the hook."
+      },
+      {
+        "title": "Ten Seconds to Cozy",
+        "angle": "A short tactile chocolate ritual for movie night."
+      }
+    ],
+    "title": "The First Cold Night",
+    "hook": "One chocolate shell. But what happens when hot milk hits?",
+    "payoff": "The dark chocolate shell cracks open and tiny marshmallows rise in the red mug beside the rainy window.",
+    "shots": [
+      {
+        "seconds": 5,
+        "narration": "One chocolate shell. But what happens when hot milk hits?",
+        "imagePrompt": "Macro view of hot milk just starting to stream from a small cream ceramic pitcher onto the dark chocolate sphere inside the red mug. Same small apartment on a cold November evening, dark walnut table by a rain-specked window, muted red ceramic mug, cream linen napkin, brass spoon, warm fairy-light bokeh, one pair of adult hands with natural nails. No visible TV imagery, labels, text, brand marks or extra people. Photorealistic luxury food commercial, natural edible chocolate texture, shallow depth of field, cinematic warm highlights and cool blue window light.",
+        "motionPrompt": "A hand pours one narrow stream of steaming milk onto the dark chocolate shell inside the red mug; a first fine crack appears, camera tracks the stream. One continuous physical action with stable mug and table, no cuts.",
+        "sound": "warm milk pour, first crack"
+      },
+      {
+        "seconds": 5,
+        "narration": "It cracks open, marshmallows rise, and the first cozy night begins.",
+        "imagePrompt": "Macro hero view of the same dark chocolate shell just cracked open in the muted red mug, tiny marshmallows rising through glossy hot cocoa, on the same walnut table beside the rainy November window, fairy-light bokeh, cream linen napkin and brass spoon. One pair of adult hands with natural nails. No visible TV imagery, labels, text, brand marks or extra people. Photorealistic luxury food commercial, natural edible texture, warm amber highlights and cool blue rain light.",
+        "motionPrompt": "The dark chocolate shell cracks open and folds inward once, releasing tiny marshmallows that rise in the red mug beside the rainy window; steam curls upward as camera pulls back slightly to reveal the warm fairy lights. One coherent physical action, no cuts.",
+        "sound": "soft chocolate crack, tiny marshmallow plop, rain and subtle original piano"
+      }
+    ],
+    "claimsToCheck": [
+      "Creative reference: https://www.youtube.com/shorts/F3x5u2ntqtY ; original visuals and audio required"
+    ]
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "creative reference, not evidence of a worldwide trend",
+    "sources": [
+      "https://www.youtube.com/shorts/F3x5u2ntqtY"
+    ]
+  },
+  "template": "hand-written-cozy-prototype"
+}

@@ -7,10 +7,12 @@ import math
 import os
 import subprocess
 import time
+import wave
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from local_video_progress import snapshot
 from first_checks import check_still, check_clip
+from presentation_mode import choose as choose_presentation
 
 ROOT = Path(__file__).resolve().parents[1]
 FPS = 24
@@ -138,6 +140,8 @@ def main():
     run('node', ROOT / 'scripts/bb-local-scenario.mjs', '--validate', scenario)
     source_data = json.loads(scenario.read_text(encoding='utf-8-sig'))
     plan, settings = source_data['plan'], source_data['settings']
+    presentation = choose_presentation(source_data)
+    print(f"Presentation: {presentation['mode']} ({presentation['reason']})", flush=True)
     actual_seconds = sum(shot['seconds'] for shot in plan['shots'])
     if actual_seconds != settings['seconds']:
         parser.error(f'Shot timings add to {actual_seconds}s; edit them to equal {settings["seconds"]}s before rendering')
@@ -157,14 +161,22 @@ def main():
     # running both model jobs together competes for unified memory.
     audio_started = time.monotonic()
     with ThreadPoolExecutor(max_workers=2) as pool:
-        voice_job = pool.submit(run, 'node', ROOT / 'scripts/narrate-any-local.mjs', scenario, work)
+        voice_job = (pool.submit(run, 'node', ROOT / 'scripts/narrate-any-local.mjs', scenario, work)
+                     if presentation['voice'] else None)
         sound_job = pool.submit(run, ROOT / 'storage/tools/ComfyUI/.venv/bin/python',
                                 ROOT / 'scripts/sound-any-local.py', scenario, work)
-        voice_job.result()
+        if voice_job:
+            voice_job.result()
         sound_job.result()
+    if not presentation['voice']:
+        with wave.open(str(work / 'voice-timeline.wav'), 'wb') as silent:
+            silent.setnchannels(2); silent.setsampwidth(2); silent.setframerate(48000)
+            silent.writeframes(b'\0' * settings['seconds'] * 48000 * 4)
+        (work / 'voice-provenance.json').write_text(json.dumps({'engine': 'none', 'voice': None,
+            'lines': [], 'presentation': presentation}, indent=2) + '\n')
     print(f'Parallel voice and soundtrack preparation: {time.monotonic() - audio_started:.1f}s', flush=True)
     # Fail-fast gate: voice exists now, clips do not. Stop here if shots would leave dead air.
-    gaps = voice_gaps(work / 'voice-timeline.wav')
+    gaps = voice_gaps(work / 'voice-timeline.wav') if presentation['voice'] else []
     if gaps and not args.allow_silence:
         lines = ', '.join(f'{a:.1f}-{b:.1f} s ({b - a:.1f} s)' for a, b in gaps)
         parser.error(f'Voice track has silence over 1.5 s at {lines}. Shorten those shots to the line length plus 0.6 s (total must stay equal to settings.seconds), or pass --allow-silence. Stopped before the 25-minute clip step')
@@ -219,8 +231,9 @@ def main():
     provenance = {'scenario': str(scenario), 'scenarioSha256': file_hash(scenario),
                   'output': str(output), 'outputSha256': file_hash(output),
                   'imageModel': 'user-supplied stills (FLUX for any missing shot)' if args.stills else 'FLUX.2 Klein 4B q4 via MFLUX', 'videoModel': model,
-                  'textEncoder': gemma, 'voice': 'Kokoro ONNX local',
+                  'textEncoder': gemma, 'voice': 'Kokoro ONNX local' if presentation['voice'] else 'none (ASMR)',
                   'sound': 'original local synthesis', 'chainImages': args.chain_images,
+                  'presentation': presentation,
                   'motionClips': len(segments), 'totalSeconds': settings['seconds']}
     output.with_suffix('.provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
     print(progress(), flush=True)

@@ -122,7 +122,7 @@ echo "Step 4/4  Shot-synced ASMR, captions, upload pack and quality check"
 storage/tools/ComfyUI/.venv/bin/python scripts/add-sfx.py --scenario "$scenario" --video "$output"
 finished_video="${output%.mp4}.sfx.mp4"
 python3 scripts/finish-local-video.py --scenario "$scenario" --video "$finished_video" && echo "Captioned ASMR video and upload pack are next to $finished_video"
-python3 scripts/qa-local-video.py --video "${finished_video%.mp4}.captioned.mp4" --work-dir "storage/any-local/$(basename "$scenario" .json)" || echo "QA found problems: read the qa block in ${finished_video%.mp4}.pack.json before uploading." >&2
+python3 scripts/qa-local-video.py --video "${finished_video%.mp4}.captioned.mp4" --scenario "$scenario" --work-dir "storage/any-local/$(basename "$scenario" .json)" || echo "QA found problems: read the qa block in ${finished_video%.mp4}.pack.json before uploading." >&2
 python3 scripts/log-local-run.py --scenario "$scenario" --video "${finished_video%.mp4}.captioned.mp4" --pack "${finished_video%.mp4}.pack.json"
 python3 scripts/score-local-video.py --scenario "$scenario" --pack "${finished_video%.mp4}.pack.json" || echo 'Editorial quality review is still required before release.' >&2
 t_end=$SECONDS

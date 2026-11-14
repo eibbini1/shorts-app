@@ -2,6 +2,8 @@
 
 Updated 2026-11-14. Read [AI_HANDOFF.md](AI_HANDOFF.md) for the active render and review branch. See [the food Short review](FOOD_SHORTS_REVIEW_20261114.md) for sampled hooks and their evidence limits.
 
+For tool choices, see [the local montage assessment](MONTAGE_TOOLS_20261114.md).
+
 | Phase | State | Evidence and next gate |
 | --- | --- | --- |
 | 0: inventory and baseline | Complete | 16-second Juuni Ban and 30-second hotel hot-dog baselines retained locally. |
@@ -20,6 +22,7 @@ On the 16 GB M1, a 25-frame 1024×1920 MLX LTX output took 657 seconds. A 97-fra
 1. Finish the cinnamon film, inspect its final picture/sound and compare its opening to the Byakuya and hot-dog cuts. Require final-file QA plus owner editorial review as the release gate.
 2. Integrate duration-preserving speed ramps and music ducking only after a measured test keeps narration and captions in sync.
 3. Improve action variety and reference consistency shot by shot. A new video model should first win a same-prompt benchmark on this Mac.
+4. Compare the automatic 10-second ASMR prototype against a voiced treatment. Keep captions off when there is no voice, and score a visible opening rather than a spoken hook.
 
 ## Faster runs without weaker gates
 

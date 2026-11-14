@@ -1,0 +1,112 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 30,
+    "voice": "af_heart",
+    "presentationMode": "voiced"
+  },
+  "model": "hand-written",
+  "topic": "Nine course tasting table: a guest, a host and a golden dessert",
+  "style": "photoreal cinematic fine-dining film, warm candlelit restaurant, shallow depth of field, natural skin and food texture, vertical framing",
+  "requestedEnding": "The woman takes one last bite of dessert and smiles at the camera.",
+  "totalSeconds": 30,
+  "template": "story",
+  "plan": {
+    "ideas": [
+      {
+        "title": "Nine course table: Could you finish nine courses",
+        "angle": "Could you finish nine courses"
+      },
+      {
+        "title": "Nine course table: The pour over pasta",
+        "angle": "The pour over pasta"
+      },
+      {
+        "title": "Nine course table: The quiet first bite",
+        "angle": "The quiet first bite"
+      },
+      {
+        "title": "Nine course table: Wagyu sliced at the table",
+        "angle": "Wagyu sliced at the table"
+      },
+      {
+        "title": "Nine course table: The golden dessert crack",
+        "angle": "The golden dessert crack"
+      }
+    ],
+    "title": "The Nine Course Tasting Table",
+    "hook": "One table, yet nine courses tonight. Could you finish?",
+    "payoff": "The woman takes one last bite of dessert and smiles at the camera.",
+    "shots": [
+      {
+        "seconds": 4,
+        "narration": "One table, yet nine courses tonight. Could you finish?",
+        "imagePrompt": "Medium shot of the same woman guest in her thirties with dark hair in a low bun, wearing an elegant black long-sleeved dress seated at a round white-clothed table by a window at dusk, one candle, an empty white plate in front of her, she looks toward the camera with a small smile. Visual style: photoreal cinematic fine-dining film, warm candlelit restaurant, shallow depth of field, natural skin and food texture, vertical framing. Continuity: the same woman guest in her thirties with dark hair in a low bun, wearing an elegant black long-sleeved dress; same round white-clothed table, same candle and window at dusk; one server with white shirt sleeves. No text, logos or labels.",
+        "motionPrompt": "She lifts her napkin and opens it across her lap while the camera pushes in slowly. One continuous take, no cuts.",
+        "sound": "soft restaurant murmur, cloth rustle"
+      },
+      {
+        "seconds": 5,
+        "narration": "Our host brings the first plate: seared scallop in brown butter.",
+        "imagePrompt": "Over-the-shoulder shot: a woman server in a white shirt and black apron lowers a white plate with one seared scallop in brown butter onto the table in front of the same woman guest in her thirties with dark hair in a low bun, wearing an elegant black long-sleeved dress. Visual style: photoreal cinematic fine-dining film, warm candlelit restaurant, shallow depth of field, natural skin and food texture, vertical framing. Continuity: the same woman guest in her thirties with dark hair in a low bun, wearing an elegant black long-sleeved dress; same round white-clothed table, same candle and window at dusk; one server with white shirt sleeves. No text, logos or labels.",
+        "motionPrompt": "The server lowers the plate onto the table and steps back while the guest leans closer. One continuous take, no cuts.",
+        "sound": "plate set on cloth, soft sizzle"
+      },
+      {
+        "seconds": 4,
+        "narration": "Then warm truffle sauce pours slowly over handmade pasta.",
+        "imagePrompt": "Macro close-up of a small silver jug held by a hand in a white shirt sleeve above a nest of handmade tagliolini on a white plate, candlelight, same white-clothed table. Visual style: photoreal cinematic fine-dining film, warm candlelit restaurant, shallow depth of field, natural skin and food texture, vertical framing. Continuity: the same woman guest in her thirties with dark hair in a low bun, wearing an elegant black long-sleeved dress; same round white-clothed table, same candle and window at dusk; one server with white shirt sleeves. No text, logos or labels.",
+        "motionPrompt": "Creamy truffle sauce pours in one slow stream over the pasta and spreads across it. One continuous take, no cuts.",
+        "sound": "slow sauce pour, quiet clink"
+      },
+      {
+        "seconds": 4,
+        "narration": "She lifts one bite, and the room goes quiet.",
+        "imagePrompt": "Close-up of the same woman guest in her thirties with dark hair in a low bun, wearing an elegant black long-sleeved dress holding a fork with a twirl of sauced pasta near her lips, eyes on the fork, candle glow on her face. Visual style: photoreal cinematic fine-dining film, warm candlelit restaurant, shallow depth of field, natural skin and food texture, vertical framing. Continuity: the same woman guest in her thirties with dark hair in a low bun, wearing an elegant black long-sleeved dress; same round white-clothed table, same candle and window at dusk; one server with white shirt sleeves. No text, logos or labels.",
+        "motionPrompt": "She lifts the fork to her mouth, takes one bite and closes her eyes briefly. One continuous take, no cuts.",
+        "sound": "fork on plate, soft bite"
+      },
+      {
+        "seconds": 3,
+        "narration": "Wagyu arrives next, sliced at the table.",
+        "imagePrompt": "Macro close-up of a seared Wagyu steak on a dark board on the same white-clothed table, a hand in a white shirt sleeve holding a slim knife. Visual style: photoreal cinematic fine-dining film, warm candlelit restaurant, shallow depth of field, natural skin and food texture, vertical framing. Continuity: the same woman guest in her thirties with dark hair in a low bun, wearing an elegant black long-sleeved dress; same round white-clothed table, same candle and window at dusk; one server with white shirt sleeves. No text, logos or labels.",
+        "motionPrompt": "The knife slices once through the steak and the slice drops open to show a pink centre. One continuous take, no cuts.",
+        "sound": "knife slice, gentle sizzle"
+      },
+      {
+        "seconds": 4,
+        "narration": "A golden dessert cracks open under her spoon.",
+        "imagePrompt": "Close-up of a glossy golden chocolate sphere dessert on a white plate, the hand of the same woman guest in her thirties with dark hair in a low bun, wearing an elegant black long-sleeved dress holding a small spoon just above it. Visual style: photoreal cinematic fine-dining film, warm candlelit restaurant, shallow depth of field, natural skin and food texture, vertical framing. Continuity: the same woman guest in her thirties with dark hair in a low bun, wearing an elegant black long-sleeved dress; same round white-clothed table, same candle and window at dusk; one server with white shirt sleeves. No text, logos or labels.",
+        "motionPrompt": "The spoon cracks the golden shell and it breaks open to reveal cream inside. One continuous take, no cuts.",
+        "sound": "crisp shell crack, spoon tap"
+      },
+      {
+        "seconds": 3,
+        "narration": "One last bite, one big smile.",
+        "imagePrompt": "Close-up of the same woman guest in her thirties with dark hair in a low bun, wearing an elegant black long-sleeved dress holding a spoon of dessert cream, smiling, candle glow, window at dusk behind. Visual style: photoreal cinematic fine-dining film, warm candlelit restaurant, shallow depth of field, natural skin and food texture, vertical framing. Continuity: the same woman guest in her thirties with dark hair in a low bun, wearing an elegant black long-sleeved dress; same round white-clothed table, same candle and window at dusk; one server with white shirt sleeves. No text, logos or labels.",
+        "motionPrompt": "She lifts the spoon, takes a bite of dessert and smiles. One continuous take, no cuts.",
+        "sound": "soft spoon clink"
+      },
+      {
+        "seconds": 3,
+        "narration": "Which course would you pick? Comment below.",
+        "imagePrompt": "Medium shot of the same woman guest in her thirties with dark hair in a low bun, wearing an elegant black long-sleeved dress at the same table with the cracked golden dessert in front of her, smiling at the camera, holding her spoon. Visual style: photoreal cinematic fine-dining film, warm candlelit restaurant, shallow depth of field, natural skin and food texture, vertical framing. Continuity: the same woman guest in her thirties with dark hair in a low bun, wearing an elegant black long-sleeved dress; same round white-clothed table, same candle and window at dusk; one server with white shirt sleeves. No text, logos or labels.",
+        "motionPrompt": "The woman takes one last bite of dessert, then smiles at the camera and lifts her spoon in a small toast. One continuous take, no cuts.",
+        "sound": "warm room tone, soft clink"
+      }
+    ],
+    "claimsToCheck": [
+      "Fictional restaurant visit: no real venue, price, award or person is named or implied",
+      "All people are AI-generated originals; no reference footage, audio or branding reused"
+    ]
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "creative reference chosen by owner, not a verified trend",
+    "sources": [
+      "https://www.youtube.com/watch?v=LWu1mpcZrQc"
+    ]
+  }
+}

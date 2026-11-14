@@ -10,7 +10,9 @@ import argparse
 import json
 import re
 import subprocess
+import shutil
 from pathlib import Path
+from presentation_mode import choose as choose_presentation
 
 ROOT = Path(__file__).resolve().parents[1]
 WORDS_PER_SECOND = 2.6   # Kokoro speed 1 reads about this fast; only used to split one line into short captions
@@ -117,31 +119,38 @@ def main():
     work = (args.work_dir or ROOT / 'storage/any-local' / scenario.stem).resolve()
     data = json.loads(scenario.read_text(encoding='utf-8-sig'))
     plan, settings = data['plan'], data['settings']
-    timeline = json.loads((work / 'voice-provenance.json').read_text())['lines']
-    cues = captions(timeline, settings['seconds'], work)
-    srt = video.with_suffix('.srt')
-    srt.write_text(''.join(f'{i}\n{stamp(a)} --> {stamp(b)}\n{t}\n\n' for i, (a, b, t) in enumerate(cues, 1)))
+    presentation = choose_presentation(data)
     out = video.with_name(video.stem + '.captioned.mp4')
-    if args.style == 'brand':
-        ass = video.with_suffix('.ass')
-        ass.write_text(brand_ass(cues), encoding='utf-8')
-        esc = lambda path: str(path).replace('\\', '\\\\').replace(':', '\\:').replace("'", "\\'")
-        vf = f"subtitles='{esc(ass)}':fontsdir='{esc(ROOT / 'assets/fonts')}'"
+    if presentation['captions']:
+        timeline = json.loads((work / 'voice-provenance.json').read_text())['lines']
+        cues = captions(timeline, settings['seconds'], work)
+        srt = video.with_suffix('.srt')
+        srt.write_text(''.join(f'{i}\n{stamp(a)} --> {stamp(b)}\n{t}\n\n' for i, (a, b, t) in enumerate(cues, 1)))
+        if args.style == 'brand':
+            ass = video.with_suffix('.ass')
+            ass.write_text(brand_ass(cues), encoding='utf-8')
+            esc = lambda path: str(path).replace('\\', '\\\\').replace(':', '\\:').replace("'", "\\'")
+            vf = f"subtitles='{esc(ass)}':fontsdir='{esc(ROOT / 'assets/fonts')}'"
+        else:
+            style = 'FontName=Arial,FontSize=18,Bold=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=3,Shadow=0,Alignment=2,MarginV=55'
+            escaped = str(srt).replace('\\', '\\\\').replace(':', '\\:').replace("'", "\\'")
+            vf = f"subtitles='{escaped}':force_style='{style}'"
+        subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(video), '-vf', vf,
+                        '-c:v', 'libx264', '-crf', '18', '-preset', 'veryfast', '-c:a', 'copy', str(out)], check=True)
+        caption_name = srt.name
     else:
-        style = 'FontName=Arial,FontSize=18,Bold=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=3,Shadow=0,Alignment=2,MarginV=55'
-        escaped = str(srt).replace('\\', '\\\\').replace(':', '\\:').replace("'", "\\'")
-        vf = f"subtitles='{escaped}':force_style='{style}'"
-    subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(video), '-vf', vf,
-                    '-c:v', 'libx264', '-crf', '18', '-preset', 'veryfast', '-c:a', 'copy', str(out)], check=True)
+        shutil.copy2(video, out)  # Keep the stable pipeline filename; no text is burned in.
+        caption_name = None
     topic_words = [w for w in re.findall(r'[a-z]{4,}', (data.get('topic', '') + ' ' + plan['title']).lower())]
     tags = list(dict.fromkeys(topic_words))[:10] + ['shorts', 'animated']
     pack = {'title': plan['title'][:100],
             'description': f"{plan['hook']}\n\n{plan['payoff']}\n\n#shorts #animated",
             'tags': tags, 'claimsToCheck': plan.get('claimsToCheck', []),
-            'video': out.name, 'captions': srt.name, 'seconds': settings['seconds'],
+            'video': out.name, 'captions': caption_name, 'presentationMode': presentation['mode'],
+            'presentationReason': presentation['reason'], 'seconds': settings['seconds'],
             'note': 'Review before upload. Nothing is uploaded by this script.'}
     video.with_name(video.stem + '.pack.json').write_text(json.dumps(pack, indent=2) + '\n')
-    print(f'Wrote {out.name}, {srt.name} and {video.stem}.pack.json')
+    print(f"Wrote {out.name} ({presentation['mode']}), {video.stem}.pack.json" + (f' and {caption_name}' if caption_name else ''))
 
 
 if __name__ == '__main__':

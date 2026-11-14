@@ -41,13 +41,14 @@ if [ "$on_plate" = 1 ]; then
   crumb=1
 fi
 node scripts/bb-local-scenario.mjs --validate "$scenario"
+presentation_mode="$(python3 -c "import json,sys; sys.path.insert(0,'scripts'); from presentation_mode import choose; print(choose(json.load(open(sys.argv[1])))['mode'])" "$scenario")"
 [ "$draft" = 1 ] && { echo "Draft only: review $scenario, then run again without --draft-only."; exit 0; }
 expected_seconds="$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['settings']['seconds'])" "$scenario")"
 [ -n "$qa_work_dir" ] || qa_work_dir="storage/any-local/$(basename "$scenario" .json)"
 qa_stage() {
   echo "Technical QA: $1"
   python3 scripts/qa-local-video.py --video "$1" --expected-seconds "$expected_seconds" \
-    --work-dir "$qa_work_dir" --report "$1.qa.json"
+    --scenario "$scenario" --work-dir "$qa_work_dir" --report "$1.qa.json"
 }
 
 if [ -n "$source_video" ]; then
@@ -100,7 +101,11 @@ if [ "$effects" = 1 ]; then
   qa_stage "$fx.1.mp4"
   cur="$fx.1.mp4"
   if [ "$punch" = 1 ]; then python3 scripts/brand-extras.py punch --scenario "$scenario" --video "$cur" --out "$fx.2.mp4"; cur="$fx.2.mp4"; qa_stage "$cur"; fi
-  python3 scripts/brand-extras.py seal --scenario "$scenario" --video "$cur" --out "${out%.mp4}.final.mp4" --text "$hook" --no-opening-text
+  if [ "$presentation_mode" = asmr ]; then
+    cp "$cur" "${out%.mp4}.final.mp4"
+  else
+    python3 scripts/brand-extras.py seal --scenario "$scenario" --video "$cur" --out "${out%.mp4}.final.mp4" --text "$hook" --no-opening-text
+  fi
   qa_stage "${out%.mp4}.final.mp4"
   rm -f "$fx".*.mp4
   out="${out%.mp4}.final.mp4"
