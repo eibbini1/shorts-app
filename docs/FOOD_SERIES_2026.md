@@ -4,6 +4,19 @@ Checked 2026-11-15. These are editorial experiments, not a measured global ranki
 
 Run `npm run ideas:series:food` for all five series and `npm run ideas:recipes:2026` for ten candidate recipes. Both commands are read-only and require no model or GPU. Series definitions live in `data/food-series.json`.
 
+For your own 30–60 second story, use the guided command after this branch is merged. The draft asks for subject, visual style, the change at the end, duration and orientation. Give it a concrete ending, such as “the chef cracks the crust and serves one steaming slice,” to keep the middle shots connected.
+
+```bash
+cd /Users/eibbini/Documents/shorts-app
+bash scripts/make-local-video.sh --draft-only --model gemma-local
+# Review the printed drafts/generated/ID.local-scenario.json: title, all shot actions, props and ending.
+bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json --best-of-3-stills
+# In another Terminal while it renders:
+bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json --watch
+```
+
+Replace `ID` with the actual filename printed by the draft command. `--best-of-3-stills` is optional and slower. The current interactive builder supports **10–60 seconds**; wide format currently requires 60 seconds. Beyond one minute, plan separate connected chapters and edit them together; there is no verified one-command feature-length story path. A passing technical gate still requires watching the final footage and listening to its mix.
+
 ## Evidence used
 
 - vidIQ reviewed the [user's garlic bread reference](https://www.youtube.com/shorts/LV3mChwupF8) on 2026-11-15: about 20 seconds, five visual beats, no voice and no background music reported, with natural kitchen sounds prominent. This is a reference for pacing and sound, not footage to copy.
