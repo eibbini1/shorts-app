@@ -23,5 +23,6 @@
       "rules": "Keep dark hair for best face consistency (black/emerald/navy looks hold; blonde and auburn drift). Use the anchor on face shots only (BB_ANCHOR_SHOTS). Face is recognisable, not identical.",
       "use": "BB_ANCHOR_IMAGE=assets/muse/ruby/<look>.png BB_ANCHOR_SHOTS=3 bash scripts/make-film.sh story --scenario FILE --no-crumb --no-chain-images"
     }
-  ]
+  ],
+  "house-rule": "Food is always the main subject and focus of every shot. Characters (Ruby, Crumb) are supporting: soft-focus, partial or brief, never the hero of a shot."
 }
