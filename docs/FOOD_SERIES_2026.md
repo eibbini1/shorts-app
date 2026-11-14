@@ -62,3 +62,5 @@ Use the branch containing this work after the PR is merged; the original checkou
 - [Beat This](https://github.com/CPJKU/beat_this): MIT beat tracking could align licensed music to cuts. The garlic reference has no reported music, so this is optional for other formats.
 
 The next quality jump is measured continuity and final-cut review, including hand/tool contact, food state changes, sound placement and exact final duration. A numerical quality score cannot prove those by itself. No local film's audio has been heard by this assistant.
+
+The current `add-sfx.py` renderer makes original synthesized Foley approximations. Its cue mapping now separates spoon scraping/spreading from an actual plate clink, and uses the explicit shot sound line before fallback prompt text. This was smoke-tested on the garlic-bread scenario. It has **not** been auditioned as natural kitchen audio. Prefer original or properly licensed real recordings where available, then listen to the finished mix and compare voice/no-voice versions using the channel's own retention data before calling either the best performer.

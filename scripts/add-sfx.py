@@ -5,7 +5,7 @@
 Writes outputs/ID.sfx.mp4 (picture copied, audio remixed) and ID.sfx.wav. Everything is generated here from
 noise and sine tones, so there is nothing to license. Effects sit low and are ducked under the narration
 (the voice track in the work folder is the ducking key), then the mix is loudness-normalised again.
-Cue words in a shot's `sound` or action prompts: sizzle, crunch/bite, chew, pour, slice, spoon/plate clink,
+Cue words in a shot's `sound` or action prompts: sizzle, crunch/bite, chew, pour, slice, scrape/spread, plate clink,
 chime/shimmer, pat, bubble/pop, squeak, fizz and room tone. These are original synthesized Foley approximations.
 """
 import argparse
@@ -132,14 +132,23 @@ def slice_food(seconds, rng):
     return highpass(noise(seconds, rng), 0.82) * np.exp(-7 * t) * 0.7
 
 
+def scrape_food(seconds, rng):
+    """Soft friction for a spoon or knife spreading food across a surface."""
+    t = t_axis(seconds)
+    friction = lowpass(highpass(noise(seconds, rng), 0.91), 0.18)
+    pressure = np.sin(np.pi * np.minimum(1, t / seconds)) ** 2
+    return friction * pressure * 2.0
+
+
 CUES = [(r'\bsizzl', 'sizzle'), (r'\b(crunch|crispy|crisp|bite|biting|crack|snap)\b', 'crunch'),
         (r'\b(chew\w*|munch\w*)\b', 'chew'), (r'\b(pour\w*|drizzl\w*|stream of sauce)\b', 'pour'),
         (r'\b(slice|slicing|chop|chopping|knife cut)\b', 'slice'),
-        (r'\b(spoon|fork|utensil|plate|ceramic|glass clink)\b', 'clink'),
+        (r'\b(scrap\w*|spread\w*|drag\w*)\b', 'scrape'),
+        (r'\b(clink\w*|plate tap|glass tap|utensil tap)\b', 'clink'),
         (r'\b(shimmer|sparkl)', 'shimmer'), (r'\bchime', 'chime'), (r'\b(flour|pat|patting)\b', 'pat'),
         (r'\bsqueak', 'squeak'), (r'\b(whoosh|glide|sweep)', 'whoosh'), (r'\b(pop|popped|popping)\b', 'pop'), (r'\b(fizz|champagne)', 'fizz'),
         (r'\b(ambience|ambient|room tone|hum)\b', 'room')]
-GAIN = {'sizzle': 0.15, 'crunch': 0.16, 'chew': 0.08, 'pour': 0.13, 'slice': 0.12, 'clink': 0.10,
+GAIN = {'sizzle': 0.15, 'crunch': 0.16, 'chew': 0.08, 'pour': 0.13, 'slice': 0.12, 'scrape': 0.10, 'clink': 0.10,
         'shimmer': 0.16, 'chime': 0.18, 'pat': 0.18, 'squeak': 0.12, 'pop': 0.18, 'whoosh': 0.06, 'fizz': 0.13, 'room': 0.08}
 
 
@@ -165,10 +174,10 @@ def build(shots, total, seed=311):
     at = 0.0
     for number, shot in enumerate(shots, 1):
         length = shot['seconds']
-        names = cues_for(shot.get('sound', '') + ' ' + shot.get('motionPrompt', ''))
+        names = cues_for(shot.get('sound', ''))
         if not names:
-            names = cues_for(shot.get('imagePrompt', ''))
-        if name_hint(shot) and 'fizz' not in names:
+            names = cues_for(shot.get('motionPrompt', '') + ' ' + shot.get('imagePrompt', ''))
+        if not shot.get('sound', '').strip() and name_hint(shot) and 'fizz' not in names:
             names.append('fizz')
         for name in names:
             if name == 'sizzle': put(sizzle(min(length, 3.5), rng), at + 0.2, GAIN[name])
@@ -176,6 +185,7 @@ def build(shots, total, seed=311):
             elif name == 'chew': put(pat(min(length, 2.5), rng), at + 0.5, GAIN[name])
             elif name == 'pour': put(pour(min(length, 3.0), rng), at + 0.4, GAIN[name])
             elif name == 'slice': put(slice_food(min(length, 0.7), rng), at + 0.6, GAIN[name])
+            elif name == 'scrape': put(scrape_food(min(length, 0.9), rng), at + 0.5, GAIN[name])
             elif name == 'clink': put(chime(1300, 0.35), at + 0.5, GAIN[name])
             elif name == 'shimmer': put(shimmer(length - 0.3, rng), at + 0.3, GAIN[name])
             elif name == 'chime': put(chime(), at + (length - 1.8 if number == len(shots) else 0.4), GAIN[name])
