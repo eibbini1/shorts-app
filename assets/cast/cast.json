@@ -1,0 +1,27 @@
+{
+  "note": "Recurring on-screen characters for Billionaire Bites. Images live in assets/muse/<id>/ (not committed: generated media). All characters are original AI-generated and fictional.",
+  "characters": [
+    {
+      "id": "crumb",
+      "name": "Crumb",
+      "role": "tiny elderly chef mascot (trademark)",
+      "assets": "mini-chef-studio/src/Crumb3D.tsx, scripts/add-mini-chef.sh, scripts/composite-crumb.sh",
+      "use": "bash scripts/make-film.sh story --scenario FILE --crumb3d"
+    },
+    {
+      "id": "ruby",
+      "name": "Ruby",
+      "role": "elegant hostess / drink maker in a red dress",
+      "anchor": "assets/muse/ruby/anchor.png",
+      "looks": {
+        "black-rooftop": "black cocktail dress, long straight dark hair, rooftop lounge (face holds well)",
+        "emerald-updo": "emerald silk gown, dark updo, candlelit hotel restaurant (face holds well)",
+        "white-terrace": "white linen dress, honey-blonde waves, sunlit terrace (face drifted: different woman)",
+        "navy-bob": "navy velvet dress, short bob, wine cellar bar (not reviewed yet)",
+        "gold-champagne": "gold sequin dress, auburn curls, champagne bar (not reviewed yet)"
+      },
+      "rules": "Keep dark hair for best face consistency. Use the anchor on face shots only (BB_ANCHOR_SHOTS). Face is recognisable, not identical.",
+      "use": "BB_ANCHOR_IMAGE=assets/muse/ruby/<look>.png BB_ANCHOR_SHOTS=3 bash scripts/make-film.sh story --scenario FILE --no-crumb --no-chain-images"
+    }
+  ]
+}

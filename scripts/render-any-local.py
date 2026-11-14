@@ -136,6 +136,7 @@ def main():
     scenario = args.scenario.expanduser().resolve()
     muse = Path(args.anchor_image).expanduser().resolve() if args.anchor_image else None
     if muse and not muse.is_file(): parser.error(f'Missing anchor image: {muse}')
+    muse_shots = {int(n) for n in os.environ['BB_ANCHOR_SHOTS'].split(',')} if os.environ.get('BB_ANCHOR_SHOTS') else None  # e.g. BB_ANCHOR_SHOTS=3 limits the anchor to shot 3
     output = args.output.expanduser().resolve()
     work = (args.work_dir or ROOT / 'storage/any-local' / scenario.stem).expanduser().resolve()
     if output.exists(): parser.error(f'Output already exists: {output}')
@@ -200,7 +201,7 @@ def main():
         reference = own_still(args.stills.expanduser().resolve(), work, index, width, height) if args.stills else None
         if reference is None:
             reference = still(work, index, shot, 1200 + index,
-                              (previous if args.chain_images and previous else muse), width, height, args.cache_only)
+                              (previous if args.chain_images and previous else (muse if muse_shots is None or index + 1 in muse_shots else None)), width, height, args.cache_only)
         if gate and index == 0:
             problem = check_still(reference)
             if problem:
