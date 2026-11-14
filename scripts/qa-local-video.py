@@ -55,6 +55,7 @@ def main():
     work = args.work_dir
     if work is None:
         stem = video.name.split('.captioned')[0]
+        stem = stem.removesuffix('.sfx')
         stem = re.sub(r'-\d{8}-\d{6}$', '', stem)
         candidate = video.parent.parent / 'storage/any-local' / f'{stem}.local-scenario'
         work = candidate if candidate.is_dir() else None

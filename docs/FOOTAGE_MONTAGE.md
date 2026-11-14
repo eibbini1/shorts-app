@@ -4,10 +4,12 @@ This route edits **existing moving footage**. It can finish in minutes because i
 
 ## Prepare and check first
 
-Put at least three clips in one folder, named in story order: `01-hook.mp4`, `02-goal.mp4`, `03-obstacle.mp4`, `04-solution.mp4`, `05-payoff.mp4`. Use original footage or clips you have permission to edit. Include more than 30 seconds of distinct moving footage if you want soft fades. The preflight checks the files, duration and cut plan before encoding; it refuses to silently repeat or freeze footage.
+Put at least three clips in one folder, named in story order: `01-hook.mp4`, `02-goal.mp4`, `03-obstacle.mp4`, `04-solution.mp4`, `05-payoff.mp4`. `assets/my-footage` below is an example folder **you must create and fill with your clips**. Use original footage or clips you have permission to edit. Include more than 30 seconds of distinct moving footage if you want soft fades. The preflight checks the files, duration and cut plan before encoding; it refuses to silently repeat or freeze footage.
 
 ```sh
 cd /Users/eibbini/Documents/shorts-app
+mkdir -p assets/my-footage
+# Copy or move your actual MP4/MOV clips into assets/my-footage before continuing.
 npm run montage:footage:mac -- --footage assets/my-footage --seconds 30 --check
 npm run montage:footage:mac -- --footage assets/my-footage --seconds 30 \
   --title 'The First Bite' \
@@ -15,6 +17,14 @@ npm run montage:footage:mac -- --footage assets/my-footage --seconds 30 \
   --music assets/my-licensed-music.wav --voice assets/my-narration.wav \
   --output outputs/the-first-bite.mp4
 ```
+
+To check the clips already generated on this Mac without creating a folder first:
+
+```sh
+npm run montage:footage:mac -- --footage storage/any-local/luxury-pizza-part2-ep2.local-scenario/motion --seconds 20 --check
+```
+
+That existing folder contains enough unique moving footage for 20 seconds. A 30-second montage needs more footage; add your own clips or combine related existing clips in story order.
 
 `--format wide` makes a 1280×720 export; vertical is 720×1280. Music and voice are optional. The export keeps source ambience, uses short crossfades when enough footage exists, otherwise clean cuts, gently grades the picture, shows the title over the opening, ducks ambience and music under narration, and normalizes the audio. A `.montage.json` file records the title, story, cut order, sources, and timing. Read the cut plan before the encode; the script cannot determine whether unrelated clips tell a coherent story.
 

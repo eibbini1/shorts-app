@@ -68,6 +68,8 @@ if [[ ! -f storage/tools/kokoro/package.json ]]; then
 fi
 npm install --prefix storage/tools/kokoro --save-exact kokoro-js@1.2.1
 node scripts/setup-kokoro.mjs
+if [[ ! -x storage/tools/scenedetect/.venv/bin/python ]]; then uv venv --python 3.12 storage/tools/scenedetect/.venv; fi
+uv pip install --python storage/tools/scenedetect/.venv/bin/python 'scenedetect-headless==0.7.3'
 uv pip freeze --python storage/tools/ComfyUI/.venv/bin/python > storage/setup/comfy-python.txt
 node scripts/local-media.mjs doctor > storage/setup/mac-diagnostics.json
 echo "Installation steps completed. Model generation quality and performance still require the Mac smoke test."

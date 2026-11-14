@@ -13,6 +13,16 @@ from pathlib import Path
 
 DATA = Path(__file__).resolve().parents[1] / 'episodes' / 'channel-performance.json'
 FORMAT_WORDS = set('would you pay worth it guess the price of this that for and with from costs cost sold one two million thousand dollars yen who why what how which more most world worlds same cut and are is a an to in on your only can'.split())
+DISH_FORMS = {
+    'hot dog': r'\bhot[ -]?dogs?\b|\bfrankfurters?\b',
+    'burger': r'\bburgers?\b', 'steak': r'\bsteaks?\b', 'pizza': r'\bpizzas?\b',
+    'cupcake': r'\bcupcakes?\b', 'coffee': r'\bcoffee\b', 'scallop': r'\bscallops?\b',
+    'ice cream': r'\bice[ -]?cream\b', 'melon': r'\bmelons?\b',
+}
+
+
+def dish_forms(text):
+    return {name for name, pattern in DISH_FORMS.items() if re.search(pattern, text, re.I)}
 
 
 def subject(text):
@@ -26,8 +36,12 @@ def main():
     if not args:
         sys.exit(__doc__)
     new = subject(args[0])
+    new_forms = dish_forms(args[0])
     best = (0.0, None)
     for item in json.loads(DATA.read_text())['shorts']:
+        old_forms = dish_forms(item['title'] + ' ' + item.get('keywords', ''))
+        if new_forms and old_forms and new_forms.isdisjoint(old_forms):
+            continue
         old = subject(item['title'] + ' ' + item.get('keywords', ''))
         if not old or not new:
             continue
