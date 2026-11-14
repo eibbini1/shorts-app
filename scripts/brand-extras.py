@@ -77,16 +77,55 @@ def seal(a):
     print(f'Text + seal at {last}s -> {a.out}')
 
 
+def cut_times(a):
+    cuts, at = [], 0
+    for s in shots(a.scenario)[:-1]:
+        at += s['seconds']
+        cuts.append(at)
+    return cuts
+
+
+def dissolve(a):
+    """Real transitions on every cut without changing the length (audio stays in sync): each shot holds its edge frame for half a
+    transition, then xfade overlaps the two. Styles rotate so the film does not feel mechanical."""
+    cuts, d = cut_times(a), a.duration
+    total = float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', str(a.video)], capture_output=True, text=True, check=True).stdout)
+    fps = subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=r_frame_rate', '-of', 'csv=p=0', str(a.video)], capture_output=True, text=True, check=True).stdout.strip()
+    cuts = [c for c in cuts if d < c < total - d]
+    styles = ['fade', 'smoothleft', 'fade', 'zoomin', 'fade', 'smoothup']
+    edges = [0] + cuts + [total]
+    graph = []
+    for i in range(len(edges) - 1):   # both sides of a cut come from one file, so each side holds its edge frame for half a transition to give xfade real overlap
+        pad = ':'.join(([f'start_mode=clone:start_duration={d / 2}'] if i else []) + ([f'stop_mode=clone:stop_duration={d / 2}'] if i < len(edges) - 2 else []))
+        graph.append(f'[0:v]trim={edges[i]:.3f}:{edges[i + 1]:.3f},setpts=PTS-STARTPTS,fps={fps}' + (f',tpad={pad}' if pad else '') + f',format=yuv420p[s{i}]')
+    last = '[s0]'
+    for i, c in enumerate(cuts):
+        graph.append(f'{last}[s{i + 1}]xfade=transition={styles[i % len(styles)]}:duration={d}:offset={c - d / 2:.3f}[x{i}]')
+        last = f'[x{i}]'
+    run(['ffmpeg', '-y', '-v', 'error', '-i', str(a.video), '-filter_complex', ';'.join(graph), '-map', last, '-map', '0:a', '-c:v', 'libx264', '-crf', '17',
+         '-preset', 'veryfast', '-pix_fmt', 'yuv420p', '-c:a', 'copy', str(a.out)])
+    print(f'Dissolve ({d}s) at cuts {cuts} -> {a.out}')
+
+
+def grade(a):
+    """One film look across every shot: gentle S-curve, warm highlights / cool shadows, soft vignette, fine grain."""
+    vf = ("curves=master='0/0 0.25/0.21 0.5/0.5 0.75/0.8 1/1',colorbalance=rs=-0.03:bs=0.04:rh=0.04:bh=-0.05,"
+          "eq=saturation=1.08,vignette=PI/5.5,noise=c0s=5:c0f=t+u")
+    run(['ffmpeg', '-y', '-v', 'error', '-i', str(a.video), '-vf', vf, '-c:v', 'libx264', '-crf', '17', '-preset', 'veryfast', '-pix_fmt', 'yuv420p', '-c:a', 'copy', str(a.out)])
+    print(f'Graded -> {a.out}')
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('mode', choices=['flash', 'punch', 'seal'])
+    p.add_argument('mode', choices=['flash', 'punch', 'seal', 'dissolve', 'grade'])
     p.add_argument('--scenario', required=True, type=Path)
     p.add_argument('--video', required=True, type=Path)
     p.add_argument('--out', required=True, type=Path)
     p.add_argument('--text', default='')
     p.add_argument('--stamp', type=Path)
+    p.add_argument('--duration', type=float, default=0.3)
     a = p.parse_args()
-    {'flash': flash, 'punch': punch, 'seal': seal}[a.mode](a)
+    {'flash': flash, 'punch': punch, 'seal': seal, 'dissolve': dissolve, 'grade': grade}[a.mode](a)
 
 
 if __name__ == '__main__':
