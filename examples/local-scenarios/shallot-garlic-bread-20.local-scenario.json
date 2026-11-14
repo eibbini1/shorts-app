@@ -1,0 +1,87 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 20,
+    "voice": "af_heart",
+    "presentationMode": "asmr"
+  },
+  "model": "reference-inspired-local",
+  "promptPackVersion": "2026-11-15",
+  "topic": "Shallot and roasted garlic bread in a luxury kitchen",
+  "style": "Photoreal food film in one elegant working kitchen. Brown butter, slow-softened shallots, roasted garlic, thyme and Gruyere make a balanced savory filling. Copper pans, brushed steel knife, dark walnut board, cream stone counter, warm under-cabinet light and window rim light. Realistic food, hands and tools; no floating objects or invented labels.",
+  "requestedEnding": "The finished shallot and roasted garlic bread is torn open at the counter and served warm with a visible cheese stretch.",
+  "totalSeconds": 20,
+  "creativeSignature": {
+    "format": "tactile-recipe-reveal",
+    "set": "warm-walnut-copper-kitchen",
+    "hookPattern": "finished-food-tear-first"
+  },
+  "storyArc": {
+    "protagonist": "one crusty loaf of shallot and roasted garlic bread",
+    "setting": "one elegant warm kitchen with copper pans, dark walnut board and cream stone counter",
+    "goal": "Turn sweet shallots, roasted garlic and a crusty loaf into warm savory bread with a crisp edge and soft center.",
+    "obstacle": "The loaf starts plain and the aromatics are not yet cooked.",
+    "turn": "Brown butter, softened shallots, roasted garlic and thyme are worked into the cuts before Gruyere melts.",
+    "visualBible": "The same oblong crusty loaf, dark walnut board, cream stone counter, copper skillet, brushed steel knife, small brass butter bowl, and one pair of adult hands with natural nails recur. Camera stays close to real food actions. Golden brown crust, visible shallot flecks and thyme, soft roasted garlic, moderate melted Gruyere. No gloves, faces, text, packaging, logos, extra hands, dramatic smoke or impossible cheese stretch.",
+    "beats": [
+      {"number": 1, "label": "Finished-food hook", "seconds": 5},
+      {"number": 2, "label": "Aromatics cook", "seconds": 5},
+      {"number": 3, "label": "Bread is dressed", "seconds": 5},
+      {"number": 4, "label": "Warm serving payoff", "seconds": 5}
+    ]
+  },
+  "qualityChecks": {"exactTiming": true, "uniquePromptText": true, "narrationFits": true, "endingLockedFromUser": true, "rewrites": 0, "fieldsNeedingRepair": 0},
+  "plan": {
+    "ideas": [
+      {"title": "Shallot and Roasted Garlic Bread", "angle": "A finished-food tear invites viewers into the small kitchen ritual that made it."},
+      {"title": "Brown Butter Bread", "angle": "Lead with the sizzling shallot and browned-butter pan."},
+      {"title": "The Garlic Squeeze", "angle": "Roasted garlic drops into the pan as a visual hook."},
+      {"title": "The Bread Pull", "angle": "A short believable cheese pull closes the recipe."},
+      {"title": "One Loaf, Four Textures", "angle": "Show crisp crust, soft crumb, sweet shallot and melted cheese."}
+    ],
+    "title": "Shallot and Roasted Garlic Bread",
+    "hook": "A warm loaf tears open, showing glossy brown butter, sweet shallots and melted Gruyere.",
+    "payoff": "The finished shallot and roasted garlic bread is torn open at the counter and served warm with a visible cheese stretch.",
+    "shots": [
+      {
+        "seconds": 5,
+        "narration": "Warm bread tears open, and the cheese pulls apart.",
+        "imagePrompt": "Macro finished-food hook: two hands begin tearing one warm oblong shallot and roasted garlic bread on a dark walnut board, blistered golden crust, glossy browned-butter flecks and a little melted Gruyere visible. Elegant real kitchen: cream stone counter, copper skillet in background, brushed steel knife and brass butter bowl, warm under-cabinet light with soft window rim light. One continuous loaf and one pair of natural-nailed adult hands, photoreal food commercial, shallow depth of field, no text, no extra fingers.",
+        "motionPrompt": "The hands pull one pre-cut section of the hot loaf apart slowly; the crust flexes and a short natural cheese strand stretches, then breaks. Camera makes a gentle handheld push toward the crumb while the board, tools and kitchen remain stable. One continuous physical action, no cuts.",
+        "sound": "close crisp crust tear, brief soft cheese pull, quiet kitchen room tone"
+      },
+      {
+        "seconds": 5,
+        "narration": "Roasted garlic joins sweet shallots in brown butter.",
+        "imagePrompt": "Same elegant kitchen and copper skillet on the cream stone counter. Finely diced shallots soften in foaming browned butter with a few thyme leaves while a hand squeezes one soft roasted garlic clove from its papery skin into the pan. The same walnut board, loaf, brushed steel knife and brass bowl sit behind in soft focus. Golden practical light, real food textures and plausible hand anatomy, no text or packaging.",
+        "motionPrompt": "A hand squeezes one roasted garlic clove into the copper skillet; a wooden spoon stirs it through softened shallots, thyme and foaming browned butter in one coherent motion. Butter bubbles lightly and coats the spoon. Locked close camera follows the spoon tip without changing the pan or countertop.",
+        "sound": "small butter sizzle, roasted garlic squeeze, wooden spoon scraping copper pan"
+      },
+      {
+        "seconds": 5,
+        "narration": "The aromatic butter fills every cut in the loaf.",
+        "imagePrompt": "Same oblong loaf now scored in a regular crosshatch on the dark walnut board. A hand uses a small brass spoon to spread visible browned butter, shallots, roasted garlic and thyme into the cuts, then adds a restrained layer of grated Gruyere. Copper skillet, steel knife and cream stone counter stay in their established positions. Photoreal, warm kitchen light, appetizing gloss without excessive oil, no text.",
+        "motionPrompt": "The brass spoon presses the browned-butter shallot garlic mixture into two connected bread cuts, then the hand drops a small pinch of grated Gruyere between them. The camera tracks the spoon along the same loaf. Ingredients remain on the bread; no instant baking or teleporting tools.",
+        "sound": "spoon on crust, soft buttery spread, light cheese scatter"
+      },
+      {
+        "seconds": 5,
+        "narration": "A crisp piece is served warm with melted Gruyere.",
+        "imagePrompt": "Finished shallot and roasted garlic bread, baked golden with melted Gruyere, sweet shallot pieces and tiny thyme flecks, on the same dark walnut board in the same elegant copper-and-stone kitchen. Two hands lift and tear one warm piece from the scored loaf; the brass bowl and steel knife remain nearby. A few flaky sea-salt crystals, short plausible cheese stretch, crisp blistered edge, steaming soft crumb, shallow depth of field, no text or labels.",
+        "motionPrompt": "The hands tear one warm piece from the finished shallot and roasted garlic loaf, revealing steaming soft crumb and a short cheese stretch, then set it on a small ceramic serving plate beside the walnut board. Camera tracks the piece and settles on the served bread. Real continuous hand action, no cuts.",
+        "sound": "crisp crust crackle, soft bread tear, ceramic plate tap, subtle kitchen ambience"
+      }
+    ],
+    "claimsToCheck": ["Creative structure reference only: https://www.youtube.com/shorts/LV3mChwupF8 ; all imagery and audio must be original"]
+  },
+  "recipe": {
+    "status": "creative kitchen formulation; cook and taste before publishing as a tested recipe",
+    "ingredients": ["1 small crusty oblong loaf", "2 shallots, finely diced", "1 roasted garlic head", "85 g unsalted butter, browned gently", "1 tsp fresh thyme leaves", "75 g grated Gruyere", "pinch of flaky sea salt"],
+    "method": ["Soften the shallots in gently browned butter with thyme; stir in squeezed roasted garlic.", "Score the loaf without cutting through the base and spoon the aromatic butter into the cuts.", "Add Gruyere, bake until the crust is crisp and cheese bubbles, then finish with flaky salt and serve warm."]
+  },
+  "audioPlan": {"music": "Optional low instrumental bed licensed from YouTube Studio Audio Library, chosen and credited by the channel owner; preserve food sounds as the lead.", "foley": "Original or licensed close kitchen recordings preferred over synthetic effects. No reference audio reused.", "voice": "none", "subtitles": "none"},
+  "sourceReview": {"checkedAt": "2026-11-15", "trendLabel": "creative reference, not proof of a top-10 recipe ranking", "sources": ["https://www.youtube.com/shorts/LV3mChwupF8"]},
+  "template": "hand-written-recipe-asmr"
+}

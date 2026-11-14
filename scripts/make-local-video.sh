@@ -7,7 +7,7 @@ usage() {
 Usage:
   bash scripts/make-local-video.sh
   bash scripts/make-local-video.sh --draft-only [--model gemma-local]
-  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--chain-images] [--cache-only] [--stills FOLDER] [--allow-repeat] [--allow-silence] [--allow-bad-first]
+  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--chain-images] [--best-of-3-stills] [--cache-only] [--stills FOLDER] [--allow-repeat] [--allow-silence] [--allow-bad-first]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json [--watch]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json --preview
 
@@ -18,7 +18,7 @@ USAGE
 
 default_model='qwen3:1.7b'
 [[ -s storage/setup/gemma-model-dir.txt ]] && default_model='gemma-local'
-scenario=''; status=''; chain=''; stills=''; allow_repeat=''; cache_only=''; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
+scenario=''; status=''; chain=''; stills=''; allow_repeat=''; cache_only=''; best_of_3=''; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
 while (($#)); do
   case "$1" in
     --scenario) scenario="${2:?Missing scenario path}"; shift 2 ;;
@@ -27,6 +27,7 @@ while (($#)); do
     --preview) preview=1; shift ;;
     --chain-images) chain='--chain-images'; shift ;;
     --cache-only) cache_only='--cache-only'; shift ;;
+    --best-of-3-stills) best_of_3='--best-of-3-stills'; shift ;;
     --stills) stills="$2"; shift 2 ;;
     --allow-repeat) allow_repeat='--allow'; shift ;;
     --allow-silence) allow_silence='--allow-silence'; shift ;;
@@ -113,16 +114,17 @@ python3 scripts/check-env.py || { echo "Fix the FAIL lines above, then run this 
 echo "Step 2/4  Pre-render check (topic, hook, length, currency, claims)"
 python3 scripts/preflight-short.py "$scenario" --strict ${allow_repeat:+$allow_repeat} || { echo "Preflight blocked this scenario. Fix the listed problems before rendering." >&2; exit 3; }
 python3 scripts/audit-local-story.py "$scenario" || { echo 'Story gate blocked this scenario. Edit the plan before rendering.' >&2; exit 3; }
+python3 scripts/evidence_gate.py "$scenario" || { echo 'Evidence gate blocked this scenario. Correct claims, prices or variety before rendering.' >&2; exit 3; }
 t_checks=$SECONDS
 echo "Step 3/4  Rendering local video to $output (about 5 min per shot on an M1: still, motion, voice, assembly)"
-python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" ${chain:+$chain} ${cache_only:+$cache_only} ${allow_silence:+$allow_silence} ${allow_bad_first:+$allow_bad_first} ${stills:+--stills "$stills"}
+python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" ${chain:+$chain} ${cache_only:+$cache_only} ${best_of_3:+$best_of_3} ${allow_silence:+$allow_silence} ${allow_bad_first:+$allow_bad_first} ${stills:+--stills "$stills"}
 t_render=$SECONDS
 echo "Video ready: $output"
 echo "Step 4/4  Shot-synced ASMR, captions, upload pack and quality check"
 storage/tools/ComfyUI/.venv/bin/python scripts/add-sfx.py --scenario "$scenario" --video "$output"
 finished_video="${output%.mp4}.sfx.mp4"
 python3 scripts/finish-local-video.py --scenario "$scenario" --video "$finished_video" && echo "Captioned ASMR video and upload pack are next to $finished_video"
-python3 scripts/qa-local-video.py --video "${finished_video%.mp4}.captioned.mp4" --scenario "$scenario" --work-dir "storage/any-local/$(basename "$scenario" .json)" || echo "QA found problems: read the qa block in ${finished_video%.mp4}.pack.json before uploading." >&2
+python3 scripts/qa-local-video.py --video "${finished_video%.mp4}.captioned.mp4" --scenario "$scenario" --expected-seconds "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["settings"]["seconds"])' "$scenario")" --work-dir "storage/any-local/$(basename "$scenario" .json)" || { echo "Technical QA failed: read ${finished_video%.mp4}.pack.json before uploading." >&2; exit 5; }
 python3 scripts/log-local-run.py --scenario "$scenario" --video "${finished_video%.mp4}.captioned.mp4" --pack "${finished_video%.mp4}.pack.json"
 python3 scripts/score-local-video.py --scenario "$scenario" --pack "${finished_video%.mp4}.pack.json" || echo 'Editorial quality review is still required before release.' >&2
 t_end=$SECONDS

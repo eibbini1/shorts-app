@@ -1,0 +1,12 @@
+{
+  "checkedAt": "2026-11-15",
+  "policy": "Retail package prices, before tax and shipping. These are examples from the named US online stores, not a restaurant menu price or a per-serving cost. Recheck before publication.",
+  "items": [
+    {"id": "ground-lamb-1lb", "item": "Marketside ground lamb 80/20", "unit": "1 lb package", "market": "Walmart online, US", "currency": "USD", "packagePrice": "10.96", "date": "2026-11-15", "sourceUrl": "https://www.walmart.com/c/kp/ground-lamb-meat"},
+    {"id": "saffron-1g", "item": "Saffron hex jar", "unit": "1 g jar", "market": "World Spice online, US", "currency": "USD", "packagePrice": "23.99", "date": "2026-11-15", "sourceUrl": "https://worldspice.com/products/saffron"},
+    {"id": "a5-ribeye-16oz", "item": "Kagoshima Japanese A5 Wagyu ribeye", "unit": "approximately 16 oz steak", "market": "Holy Grail Steak Co. online, US", "currency": "USD", "packagePrice": "199.00", "date": "2026-11-15", "sourceUrl": "https://holygrailsteak.com/collections/ribeye-steaks"},
+    {"id": "gold-leaf-sheet", "item": "24K edible gold leaf", "unit": "1 sheet from 25-sheet case", "market": "WebstaurantStore online, US", "currency": "USD", "packagePrice": "4.8996", "date": "2026-11-15", "sourceUrl": "https://www.webstaurantstore.com/24k-edible-gold-leaf-sheet-3-3-8-case/725GOLDLEAF.html", "packageNote": "$122.49 per 25 sheets; one-sheet allocation"},
+    {"id": "osetra-caviar-30g", "item": "Osetra caviar", "unit": "30 g tin", "market": "Cavi online, US", "currency": "USD", "packagePrice": "98.00", "date": "2026-11-15", "sourceUrl": "https://eatcavi.com/products/osetra-caviar"},
+    {"id": "white-truffle-28g", "item": "Alba white truffle", "unit": "28 g", "market": "Alma Gourmet online, US", "currency": "USD", "packagePrice": "375.00", "date": "2026-11-15", "sourceUrl": "https://almagourmet.com/products/alba-white-truffles-100-certified-1"}
+  ]
+}

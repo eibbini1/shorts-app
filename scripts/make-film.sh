@@ -44,6 +44,7 @@ node scripts/bb-local-scenario.mjs --validate "$scenario"
 presentation_mode="$(python3 -c "import json,sys; sys.path.insert(0,'scripts'); from presentation_mode import choose; print(choose(json.load(open(sys.argv[1])))['mode'])" "$scenario")"
 [ "$draft" = 1 ] && { echo "Draft only: review $scenario, then run again without --draft-only."; exit 0; }
 expected_seconds="$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['settings']['seconds'])" "$scenario")"
+python3 scripts/evidence_gate.py "$scenario" || { echo 'Evidence gate blocked this film.' >&2; exit 3; }
 [ -n "$qa_work_dir" ] || qa_work_dir="storage/any-local/$(basename "$scenario" .json)"
 qa_stage() {
   echo "Technical QA: $1"

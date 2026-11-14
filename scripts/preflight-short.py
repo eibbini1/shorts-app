@@ -74,7 +74,10 @@ def main():
         (problems if '--strict' in sys.argv else warnings).append(message)
     seconds = settings['seconds']
     words = sum(len(s['narration'].split()) for s in plan['shots'])
-    print(f'Length: {seconds} s, {words} narrated words ({words / seconds:.1f} per second)')
+    if presentation['voice']:
+        print(f'Length: {seconds} s, {words} narrated words ({words / seconds:.1f} per second)')
+    else:
+        print(f'Length: {seconds} s, no narration in {presentation["mode"]} mode; shot text is for planning only')
     if not 10 <= seconds <= 35:
         warnings.append('length outside the 10-35 s local Short band')
     if presentation['voice'] and words / seconds > 3.2:

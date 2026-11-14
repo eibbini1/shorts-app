@@ -8,6 +8,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from presentation_mode import choose as choose_presentation
+from evidence_gate import check as check_evidence
 
 ROOT = Path(__file__).resolve().parents[1]
 CATEGORIES = ('continuity', 'realism', 'story', 'audio', 'payoff')
@@ -29,6 +30,11 @@ def main():
     scenario = json.loads(a.scenario.read_text(encoding='utf-8-sig'))
     presentation = choose_presentation(scenario)
     pack = json.loads(a.pack.read_text(encoding='utf-8-sig'))
+    evidence_problems, evidence_notes, _ = check_evidence(
+        scenario, json.loads((ROOT / 'data/prices.json').read_text()),
+        json.loads((ROOT / 'data/published-signatures.json').read_text()))
+    release_problems = evidence_problems + [note for note in evidence_notes if
+        'history is empty' in note or 'signature missing' in note or 'outside the four-format' in note]
     qa = json.loads(a.qa_report.read_text()) if a.qa_report else pack.get('qa', {})
     checks = qa.get('checks', {})
     hook_check = 'visualHookEarly' if presentation['mode'] == 'asmr' else 'hookSpokenEarly'
@@ -60,7 +66,8 @@ def main():
     editorial_points = sum(editorial.values()) * 2 if editorial else 0
     score = technical_points + story_points + editorial_points
     critical = [key for key in CATEGORIES if editorial and editorial[key] < 4]
-    status = 'review-needed' if editorial is None else 'pass' if score >= a.min_score and not critical and all(technical.values()) else 'revise'
+    status = ('blocked' if release_problems else 'review-needed' if editorial is None else
+              'pass' if score >= a.min_score and not critical and all(technical.values()) else 'revise')
     report = {
         'checkedAt': datetime.now(timezone.utc).isoformat(), 'title': scenario['plan']['title'],
         'score': score, 'possible': 100, 'minimum': a.min_score, 'status': status,
@@ -70,6 +77,7 @@ def main():
         'reviewedVideo': str(video_path) if video_path else None,
         'sceneAnalysis': scene_analysis,
         'criticalEditorialBelow4': critical,
+        'evidenceReleaseProblems': release_problems, 'evidenceReviewNotes': evidence_notes,
         'note': 'A 90+ score is a release gate, not a prediction of views. Editorial scores require actual viewing and listening; missing review cannot pass.',
     }
     output = a.output or a.pack.with_suffix('.quality.json')
@@ -87,6 +95,7 @@ def main():
     print(f'{status.upper()}: {score:.0f}/100 (technical {technical_points}/30, story {story_points}/20, editorial {editorial_points:.0f}/50)')
     if editorial is None: print('Watch and listen, then supply five editorial scores to reach a final result.')
     if critical: print('Revise critical categories below 4/5:', ', '.join(critical))
+    if release_problems: print('Release blocked:', '; '.join(release_problems))
     print(f'Report: {output}')
     return 0 if status == 'pass' else 1
 
