@@ -18,6 +18,7 @@ def main():
     p.add_argument('--scenario', required=True, type=Path)
     p.add_argument('--pack', required=True, type=Path)
     p.add_argument('--qa-report', type=Path, help='QA for the exact exported film; overrides the earlier pack QA')
+    p.add_argument('--allow-repeat', action='store_true', help='Treat a deliberate rerender of a previously used topic as allowed in preflight')
     p.add_argument('--video', type=Path, help='Exact exported film for scene-cut analysis')
     p.add_argument('--editorial', type=Path, help='JSON with 0–5 scores for continuity, realism, story, audio, payoff')
     p.add_argument('--output', type=Path)
@@ -31,7 +32,10 @@ def main():
     technical = {name: bool(checks.get(name, {}).get('ok')) and 'skipped' not in str(checks.get(name, {}).get('note', '')).lower() for name in TECHNICAL}
     technical_points = 5 * sum(technical.values())
     audit = subprocess.run([sys.executable, str(ROOT / 'scripts/audit-local-story.py'), str(a.scenario)], capture_output=True, text=True)
-    preflight = subprocess.run([sys.executable, str(ROOT / 'scripts/preflight-short.py'), str(a.scenario), '--strict'], capture_output=True, text=True)
+    preflight_cmd = [sys.executable, str(ROOT / 'scripts/preflight-short.py'), str(a.scenario), '--strict']
+    if a.allow_repeat:
+        preflight_cmd.append('--allow')
+    preflight = subprocess.run(preflight_cmd, capture_output=True, text=True)
     hook = re.search(r'-> (\d+)/100', preflight.stdout)
     hook_score = int(hook.group(1)) if hook else 0
     story_points = (10 if audit.returncode == 0 else 0) + (5 if hook_score >= 70 else 0) + (5 if preflight.returncode == 0 else 0)

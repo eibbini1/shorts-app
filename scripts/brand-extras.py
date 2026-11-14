@@ -6,7 +6,7 @@
       Opening-frame price text (0 to 2.6 s, fades out) and the 'Genius Approved' seal that slams in at the last shot
       with a low thump. Run after the captioned video exists.
 """
-import argparse, textwrap, json, subprocess, tempfile
+import argparse, textwrap, json, subprocess, tempfile, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -59,7 +59,10 @@ def seal(a):
     last = sum(s['seconds'] for s in sh[:-1])
     stamp = a.stamp or ROOT / 'outputs/_check/stamp.png'
     if not stamp.exists():
-        run(['python3', str(ROOT / 'scripts/make-stamp.py'), '--out', str(stamp)])
+        stamp.parent.mkdir(parents=True, exist_ok=True)
+        local_python = ROOT / 'storage/tools/ComfyUI/.venv/bin/python'
+        run([str(local_python if local_python.is_file() else sys.executable),
+             str(ROOT / 'scripts/make-stamp.py'), '--out', str(stamp)])
     with tempfile.TemporaryDirectory() as tmp:
         txt = Path(tmp) / 'open.txt'
         lines = textwrap.wrap(a.text, 22) or ['']   # wrap long hooks onto several lines so they stay inside the frame

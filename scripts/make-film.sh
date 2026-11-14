@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # One command: template -> scenario -> local render -> Crumb composite -> 1080x1920 export.
 #   bash scripts/make-film.sh guess-the-price --slot item="..." --slot price='$95' --slot rarity_fact="..." --slot source="..."
-# Options: --scenario FILE (story film)  --from-video FILE (finish an existing captioned render)  --pack FILE  --qa-work-dir DIR  --crumb3d  --crumb-on-plate (Juuni Ban only; requires placement review)  --draft-only  --no-crumb  --no-effects  --punch  --id NAME
+# Options: --scenario FILE (story film)  --from-video FILE (finish an existing captioned render)  --cache-only (reuse stills and clips)  --no-chain-images (for chronological reversals)  --pack FILE  --qa-work-dir DIR  --crumb3d  --crumb-on-plate (Juuni Ban only; requires placement review)  --draft-only  --no-crumb  --no-effects  --punch  --id NAME
 # Effects (after the 1080p export): real dissolves/wipes on every cut (length unchanged), one film grade, opening hook text, end seal; --punch adds a zoom-punch with a low hit on each cut.
 # Local only, no paid services. A render takes about 5 min per shot on an M1 16 GB.
 set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"; cd "$root"
 template="${1:?usage: make-film.sh TEMPLATE --slot key=value ... [--draft-only] [--no-crumb] [--id NAME]}"; shift
-slots=(); given=""; rep=""; draft=0; crumb=1; effects=1; punch=0; id=""; on_plate=0; source_video=""; pack_override=""; qa_work_dir=""
+slots=(); given=""; rep=""; draft=0; crumb=1; effects=1; punch=0; id=""; on_plate=0; source_video=""; pack_override=""; qa_work_dir=""; cache_only=0; chain_images=1
 while [ $# -gt 0 ]; do case "$1" in
   --slot) slots+=(--slot "$2"); shift 2 ;;
   --draft-only) draft=1; shift ;;
@@ -19,6 +19,8 @@ while [ $# -gt 0 ]; do case "$1" in
   --id) id="$2"; shift 2 ;;
   --scenario) given="$2"; shift 2 ;;
   --from-video) source_video="$2"; shift 2 ;;
+  --cache-only) cache_only=1; shift ;;
+  --no-chain-images) chain_images=0; shift ;;
   --pack) pack_override="$2"; shift 2 ;;
   --qa-work-dir) qa_work_dir="$2"; shift 2 ;;
   --allow-repeat) rep="--allow-repeat"; shift ;;
@@ -53,7 +55,9 @@ if [ -n "$source_video" ]; then
   film="$source_video"
 else
   echo "2/6 Render locally (stills, motion, voice, captions)"
-  bash scripts/make-local-video.sh --scenario "$scenario" --chain-images $rep
+  cache_arg=""; [ "$cache_only" = 0 ] || cache_arg="--cache-only"
+  chain_arg=""; [ "$chain_images" = 0 ] || chain_arg="--chain-images"
+  bash scripts/make-local-video.sh --scenario "$scenario" $chain_arg $rep $cache_arg
   film="$(ls -t outputs/"$id"-*.sfx.captioned.mp4 | head -1)"
 fi
 [ -f "$film" ] || { echo "No rendered film found: $film" >&2; exit 1; }
@@ -104,6 +108,6 @@ fi
 pack="${pack_override:-${film%.captioned.mp4}.pack.json}"
 if [ -f "$pack" ]; then
   python3 scripts/score-local-video.py --scenario "$scenario" --pack "$pack" --video "$out" \
-    --qa-report "$out.qa.json" --output "$out.quality.json" || echo 'Editorial review remains required before release.' >&2
+    --qa-report "$out.qa.json" --output "$out.quality.json" ${rep:+--allow-repeat} || echo 'Editorial review remains required before release.' >&2
 fi
 echo "Done: $out"

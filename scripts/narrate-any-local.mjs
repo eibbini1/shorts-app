@@ -58,9 +58,12 @@ for (let i=0;i<shots.length;i++) {
   const space=shot.seconds-0.3;
   const tempo=Math.max(useEleven?0.9:1,duration/space); // ElevenLabs lines may be slowed up to 10% to avoid dead air
   if (tempo>1.5) throw new Error(`Shot ${i+1} narration is too long (${duration.toFixed(1)}s for ${shot.seconds}s). Edit its narration and rerun.`);
+  const lead=Number(shot.voiceLeadSeconds ?? 0);
+  if (!Number.isFinite(lead) || lead<0 || lead>0.75 || (i===0 && lead>0)) throw new Error(`Shot ${i+1} voiceLeadSeconds must be 0–0.75 (and 0 for the first shot)`);
+  const voiceAt=at+0.15-lead;
   args.push('-i',output);
-  filters.push(`[${i+1}:a]aresample=48000,atempo=${tempo.toFixed(4)},adelay=${Math.round((at+0.15)*1000)}:all=1[v${i}]`);
-  lines.push({shot:i+1,atSeconds:at+0.15,text,voice,tempo});
+  filters.push(`[${i+1}:a]aresample=48000,atempo=${tempo.toFixed(4)},adelay=${Math.round(voiceAt*1000)}:all=1[v${i}]`);
+  lines.push({shot:i+1,atSeconds:voiceAt,text,voice,tempo,voiceLeadSeconds:lead});
   at+=shot.seconds;
   console.log(`Narrated shot ${i+1}/${shots.length} locally`);
 }
