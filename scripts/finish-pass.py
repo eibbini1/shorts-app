@@ -80,7 +80,8 @@ def main():
                 pf.write_text('$%{eif:' + f'{int(prev)}+({int(price)}-{int(prev)})*min((t-{t0:.2f})/0.9,1)' + ':d}')
                 en = f"enable='between(t,{t0:.2f},{t0 + sec:.2f})'"
                 ff = tmp / f'hudf{k}.txt'; ff.write_text('$' + (format(int(price), ',') if float(price) == int(price) else format(float(price), ',.2f')))   # settled price with thousands comma
-                ticking = f"enable='between(t,{t0:.2f},{t0 + 0.9:.2f})'"; settled = f"enable='between(t,{t0 + 0.9:.2f},{t0 + sec:.2f})'"
+                tick = 0.0 if float(price) == float(prev) else 0.9   # no re-count when the total does not change
+                ticking = f"enable='between(t,{t0:.2f},{t0 + tick:.2f})*gt({tick},0)'"; settled = f"enable='between(t,{t0 + tick:.2f},{t0 + sec:.2f})'"
                 pstyle = f"fontfile={a.steps_font}:fontcolor=0xF2C448:fontsize=h*0.064:x=(w-text_w)/2:y=h*0.775:borderw=7:bordercolor=black@0.9"
                 wm += (f",drawtext=textfile={lf}:fontfile={a.steps_font}:fontcolor=white:fontsize=h*0.030:x=(w-text_w)/2:y=h*0.735:borderw=5:bordercolor=black@0.9:{en}"
                        f",drawtext=textfile={pf}:{pstyle}:{ticking},drawtext=textfile={ff}:{pstyle}:{settled}")
