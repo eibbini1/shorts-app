@@ -9,6 +9,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FORMATS = json.loads((ROOT / 'data/format-rotation.json').read_text())['formats']
 MONEY = re.compile(r'(?<!\w)(?:\$\s?\d[\d,]*(?:\.\d{1,2})?|€\s?\d[\d,]*(?:\.\d{1,2})?|(?:\d[\d,]*\s?(?:dollars?|euros?)))', re.I)
+NUM = r'(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|and|a)'
+WORD_MONEY = re.compile(rf'\b{NUM}(?:[\s-]+{NUM})*[\s-]+(?:dollars?|euros?|bucks)\b', re.I)
 MOST = re.compile(r"world[’']?s\s+most\s+expensive", re.I)
 RECORDS = (
     {'dish': 'pizza', 'price': re.compile(r'\$\s?2,?700\b'), 'year': '2017', 'url': 'https://www.guinnessworldrecords.com/world-records/most-expensive-pizza'},
@@ -95,6 +97,8 @@ def check(data, prices, history):
             normalized = normalized[0] + str(cents(normalized[1:]))
         if normalized not in {a[0] + str(cents(a[1:])) for a in allowed_amounts}:
             problems.append(f'visible price {claim} is not a sourced basket total or documented record')
+    for spoken in WORD_MONEY.findall(text):
+        problems.append(f'price written in words ({spoken.strip()}) cannot be checked; write the sourced amount in digits')
     if claims and basket and basket.get('label') == 'illustrative':
         notes.append('illustrative price must be visibly marked illustrative in the film and description')
     signature = data.get('creativeSignature')

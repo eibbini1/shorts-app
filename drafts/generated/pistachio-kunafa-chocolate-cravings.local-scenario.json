@@ -108,5 +108,10 @@
     "sources": [
       "https://www.youtube.com/shorts/bkUpOMCZ9GQ"
     ]
+  },
+  "creativeSignature": {
+    "format": "food-process-story",
+    "set": "white-marble-topdown",
+    "hookPattern": "mid-action-start"
   }
 }

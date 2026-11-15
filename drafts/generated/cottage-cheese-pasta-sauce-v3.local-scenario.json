@@ -44,35 +44,35 @@
         "seconds": 3,
         "narration": "Silky pasta sauce, yet no cream?",
         "imagePrompt": "Creamy Cottage Cheese Pasta: an emerald enamel bowl of pasta coated in a smooth pale cream sauce with cracked black pepper and grated parmesan, a gold fork twirling a neat nest of pasta. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro food photograph from a low side angle at counter height, 100mm macro lens at f/2.8, shallow depth of field, creamy bokeh, the food filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
-        "motionPrompt": "Extreme close-up on the emerald enamel bowl of creamy pasta. The pasta sits still, then the gold fork twirls the creamy pasta slowly as the smooth sauce coats every strand and stretches. The camera makes one slow push in toward the twirl until the fork holds still.",
+        "motionPrompt": "Extreme close-up on the emerald enamel bowl of creamy pasta. The pasta sits still, then the gold fork twirls the creamy pasta slowly as the smooth sauce coats every strand and stretches. The camera makes one very slight, slow push in toward the twirl, keeping the whole dish in frame, until the fork holds still.",
         "sound": "fork twirl, soft pasta rustle"
       },
       {
         "seconds": 3,
         "narration": "Cottage cheese, garlic, parmesan, pepper, pasta.",
         "imagePrompt": "Creamy Cottage Cheese Pasta: five small copper bowls arranged in a neat circle holding white cottage cheese, peeled garlic cloves, grated parmesan, cracked black pepper and a nest of dry pasta. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic overhead food photograph, the camera pointing straight down at the counter in a true top-down flat lay, 50mm lens at f/4, everything in sharp focus, the food centred and filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
-        "motionPrompt": "Top-down view of the small copper bowls on the marble counter. The bowls sit still, then a hand sets the bowl of grated parmesan gently into place as the cottage cheese glistens. The camera makes one slow push in toward the bowls until the hand lifts away.",
+        "motionPrompt": "Top-down view of the small copper bowls on the marble counter. The bowls sit still, then a hand sets the bowl of grated parmesan gently into place as the cottage cheese glistens. The camera makes one very slight, slow push in toward the bowls, keeping the whole dish in frame, until the hand lifts away.",
         "sound": "small bowls set on marble, soft kitchen tone"
       },
       {
         "seconds": 3,
         "narration": "Blend it until smooth and glossy.",
         "imagePrompt": "Creamy Cottage Cheese Pasta: a rose-gold blender jar seen from directly above filled with smooth pale cream sauce, a glossy swirl on its surface. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic overhead food photograph, the camera pointing straight down at the counter in a true top-down flat lay, 50mm lens at f/4, everything in sharp focus, the food centred and filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
-        "motionPrompt": "Top-down view of the rose-gold blender jar. The cream sits still, then the cottage cheese sauce turns slowly in the jar as a glossy swirl folds over itself in soft waves. The camera makes one slow push in toward the swirl until the turning stops.",
+        "motionPrompt": "Top-down view of the rose-gold blender jar. The cream sits still, then the cottage cheese sauce turns slowly in the jar as a glossy swirl folds over itself in soft waves. The camera makes one very slight, slow push in toward the swirl, keeping the whole dish in frame, until the turning stops.",
         "sound": "blender whirr, creamy blend"
       },
       {
         "seconds": 3,
         "narration": "Toss with hot pasta until coated.",
         "imagePrompt": "Creamy Cottage Cheese Pasta: hot pasta in a copper skillet with smooth pale cream sauce poured over it, gold tongs resting in the pasta, steam rising. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic food photograph from a 45-degree angle, 85mm lens at f/2.8, shallow depth of field, the food filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
-        "motionPrompt": "Close-up on the hot pasta in the copper skillet. The pasta sits still, then the gold tongs lift and toss the pasta gently as the creamy sauce coats every strand and steam rises. The camera makes one slow push in toward the pasta until the tongs rest.",
+        "motionPrompt": "Close-up on the hot pasta in the copper skillet. The pasta sits still, then the gold tongs lift and toss the pasta gently as the creamy sauce coats every strand and steam rises. The camera makes one very slight, slow push in toward the pasta, keeping the whole dish in frame, until the tongs rest.",
         "sound": "tongs toss, soft sauce"
       },
       {
         "seconds": 3,
         "narration": "Creamy and ready fast. Save it tonight.",
         "imagePrompt": "Creamy Cottage Cheese Pasta: an emerald enamel bowl of creamy pasta with cracked black pepper and grated parmesan, a gold fork lifting a twirl of pasta. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro food photograph from a low side angle at counter height, 100mm macro lens at f/2.8, shallow depth of field, creamy bokeh, the food filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
-        "motionPrompt": "Extreme close-up on the emerald enamel bowl of creamy pasta. The pasta sits still, then a fork twirls the creamy pasta and lifts it slowly as the smooth sauce coats every strand. The camera makes one slow push in toward the lifted pasta until the fork holds still.",
+        "motionPrompt": "Extreme close-up on the emerald enamel bowl of creamy pasta. The pasta sits still, then a fork twirls the creamy pasta and lifts it slowly as the smooth sauce coats every strand. The camera makes one very slight, slow push in toward the lifted pasta, keeping the whole dish in frame, until the fork holds still.",
         "sound": "fork twirl, soft steam"
       }
     ],
@@ -87,5 +87,10 @@
     "sources": [
       "https://www.youtube.com/shorts/bkUpOMCZ9GQ"
     ]
+  },
+  "creativeSignature": {
+    "format": "tactile-recipe-reveal",
+    "set": "navy-brass-kitchen",
+    "hookPattern": "payoff-tease-question"
   }
 }

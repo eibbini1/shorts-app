@@ -37,47 +37,47 @@
       }
     ],
     "title": "Lamb Kebab Level Up",
-    "hook": "Five dollars, yet watch it level up.",
+    "hook": "Plain lamb, yet watch it level up.",
     "payoff": "A hand lifts the gold wagyu kebab toward the camera and it shines.",
     "shots": [
       {
         "seconds": 3,
-        "narration": "Five dollars, yet watch it level up.",
+        "narration": "Plain lamb, yet watch it level up.",
         "imagePrompt": "Lamb Kebab Level Up: a plain charred minced lamb kebab on a gold skewer resting on a simple flatbread on a white paper plate. It sits on a polished black marble counter against a dark background with soft warm bokeh lights far behind, in low-key candle-warm light. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic cinematic food photograph from one fixed front view, the camera looking down at about 40 degrees, 85mm macro lens at f/2.8, shallow depth of field, razor-sharp focus on the food, the plate centred and large, filling the frame from edge to edge. Only one hand enters the frame, holding at most one tool, and every surface is clean and unmarked.",
         "motionPrompt": "Close fixed view of the lamb kebab on the paper plate. A hand sets the gold skewer down gently as the kebab settles on the flatbread and thin steam rises from the meat. Static camera, locked in the same close fixed view.",
         "sound": "paper plate tap, soft sizzle"
       },
       {
         "seconds": 3,
-        "narration": "Level two: saffron butter. Fifty dollars.",
+        "narration": "Level two: a gram of saffron butter.",
         "imagePrompt": "Lamb Kebab Level Up: the same charred lamb kebab on flatbread, now on a matte black plate, brushed with glossy golden saffron butter, a small gold brush touching it. It sits on a polished black marble counter against a dark background with soft warm bokeh lights far behind, in low-key candle-warm light. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic cinematic food photograph from one fixed front view, the camera looking down at about 40 degrees, 85mm macro lens at f/2.8, shallow depth of field, razor-sharp focus on the food, the plate centred and large, filling the frame from edge to edge. Only one hand enters the frame, holding at most one tool, and every surface is clean and unmarked.",
         "motionPrompt": "Close fixed view of the lamb kebab on the black plate. A hand brushes glossy saffron butter slowly along the kebab with the small gold brush as the butter melts and shines. Static camera, locked in the same close fixed view.",
         "sound": "soft brush stroke, butter sizzle"
       },
       {
         "seconds": 3,
-        "narration": "Level three: wagyu beef. Five hundred.",
+        "narration": "Level three: marbled A5 wagyu beef.",
         "imagePrompt": "Lamb Kebab Level Up: two thick, visibly larger marbled wagyu beef kebabs on gold skewers on flatbread on the matte black plate, deep red-brown and glossy with saffron butter, flaky salt crystals on top. It sits on a polished black marble counter against a dark background with soft warm bokeh lights far behind, in low-key candle-warm light. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic cinematic food photograph from one fixed front view, the camera looking down at about 40 degrees, 85mm macro lens at f/2.8, shallow depth of field, razor-sharp focus on the food, the plate centred and large, filling the frame from edge to edge. Only one hand enters the frame, holding at most one tool, and every surface is clean and unmarked.",
         "motionPrompt": "Close fixed view of the wagyu kebab on the black plate. A hand sprinkles flaky salt slowly over the wagyu kebab as the crystals fall and the juices glisten. Static camera, locked in the same close fixed view.",
         "sound": "salt sprinkle, soft sizzle"
       },
       {
         "seconds": 3,
-        "narration": "Level ninety-nine: gold leaf. Five thousand?",
+        "narration": "Level ninety-nine: one sheet of gold.",
         "imagePrompt": "Lamb Kebab Level Up: the wagyu kebab on a gold-rimmed black plate half covered with delicate sheets of gold leaf, gold tweezers holding one more sheet just above it. It sits on a polished black marble counter against a dark background with soft warm bokeh lights far behind, in low-key candle-warm light. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic cinematic food photograph from one fixed front view, the camera looking down at about 40 degrees, 85mm macro lens at f/2.8, shallow depth of field, razor-sharp focus on the food, the plate centred and large, filling the frame from edge to edge. Only one hand enters the frame, holding at most one tool, and every surface is clean and unmarked.",
         "motionPrompt": "Close fixed view of the wagyu kebab on the gold-rimmed plate. A hand lowers the gold tweezers slowly as the sheet of gold leaf settles on the wagyu kebab and it shines in the warm light. Static camera, locked in the same close fixed view.",
         "sound": "soft shimmer, quiet room tone"
       },
       {
         "seconds": 3,
-        "narration": "Which level would you pay for?",
+        "narration": "Which ingredient would you actually keep?",
         "imagePrompt": "Lamb Kebab Level Up: one cut half of the gold-leaf wagyu kebab held up close to the camera in one hand, its juicy pink centre facing the viewer, the empty gold-rimmed black plate softly blurred below. It sits on a polished black marble counter against a dark background with soft warm bokeh lights far behind, in low-key candle-warm light. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic cinematic food photograph from one fixed front view, the camera looking down at about 40 degrees, 85mm macro lens at f/2.8, shallow depth of field, razor-sharp focus on the food, the plate centred and large, filling the frame from edge to edge. Only one hand enters the frame, holding at most one tool, and every surface is clean and unmarked.",
         "motionPrompt": "Close fixed view of the gold wagyu kebab. A hand lifts one half of the gold wagyu kebab toward the camera as the cut face glistens and it shines, until it holds still. Static camera, locked in the same close fixed view.",
         "sound": "soft lift, gentle steam"
       }
     ],
     "claimsToCheck": [
-      "Prices on screen are illustrative level prices, not quotes for a real menu; say so in the description",
+      "On-screen totals are retail package baskets from data/prices.json, not a menu price or per-serving cost; list the sources in the description",
       "AI-generated original footage"
     ]
   },
@@ -86,6 +86,107 @@
     "trendLabel": "format modelled on common recipe-Short structure (hook, top-down steps, payoff); not a verified view trend",
     "sources": [
       "https://www.youtube.com/shorts/bkUpOMCZ9GQ"
+    ]
+  },
+  "creativeSignature": {
+    "format": "ingredient-basket-level-up",
+    "set": "black-marble-candle",
+    "hookPattern": "plain-to-premium-counter"
+  },
+  "priceLevels": [
+    {
+      "label": "LEVEL 1",
+      "lines": [
+        {
+          "id": "ground-lamb-1lb",
+          "quantity": 1
+        }
+      ],
+      "displayTotal": "10.96"
+    },
+    {
+      "label": "LEVEL 2",
+      "lines": [
+        {
+          "id": "ground-lamb-1lb",
+          "quantity": 1
+        },
+        {
+          "id": "saffron-1g",
+          "quantity": 1
+        }
+      ],
+      "displayTotal": "34.95"
+    },
+    {
+      "label": "LEVEL 3",
+      "lines": [
+        {
+          "id": "ground-lamb-1lb",
+          "quantity": 1
+        },
+        {
+          "id": "saffron-1g",
+          "quantity": 1
+        },
+        {
+          "id": "a5-ribeye-16oz",
+          "quantity": 1
+        }
+      ],
+      "displayTotal": "233.95"
+    },
+    {
+      "label": "LEVEL 99",
+      "lines": [
+        {
+          "id": "ground-lamb-1lb",
+          "quantity": 1
+        },
+        {
+          "id": "saffron-1g",
+          "quantity": 1
+        },
+        {
+          "id": "a5-ribeye-16oz",
+          "quantity": 1
+        },
+        {
+          "id": "gold-leaf-sheet",
+          "quantity": 1
+        }
+      ],
+      "displayTotal": "238.85"
+    }
+  ],
+  "priceBasket": {
+    "currency": "USD",
+    "label": "retail package basket",
+    "lines": [
+      {
+        "id": "ground-lamb-1lb",
+        "quantity": 1
+      },
+      {
+        "id": "saffron-1g",
+        "quantity": 1
+      },
+      {
+        "id": "a5-ribeye-16oz",
+        "quantity": 1
+      },
+      {
+        "id": "gold-leaf-sheet",
+        "quantity": 1
+      }
+    ],
+    "displayTotal": "238.85",
+    "excludes": [
+      "flatbread",
+      "butter",
+      "labour",
+      "tax",
+      "shipping"
     ]
   }
 }

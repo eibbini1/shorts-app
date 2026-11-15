@@ -49,3 +49,20 @@ class EvidenceGateTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class SpokenPriceTest(unittest.TestCase):
+    """A price written in words used to slip past the digit-only matcher (the $5,000 kebab draft did)."""
+
+    def scenario(self, line):
+        return {'plan': {'title': 'Kebab', 'hook': line, 'payoff': 'It shines.', 'shots': [{'narration': line}]}}
+
+    def test_price_in_words_is_blocked(self):
+        from evidence_gate import check
+        problems, _, _ = check(self.scenario('Level ninety-nine: gold leaf. Five thousand dollars?'), {'items': []}, {'films': []})
+        self.assertTrue(any('written in words' in p for p in problems))
+
+    def test_plain_words_without_money_pass(self):
+        from evidence_gate import check
+        problems, _, _ = check(self.scenario('Level ninety-nine: one sheet of gold.'), {'items': []}, {'films': []})
+        self.assertEqual(problems, [])

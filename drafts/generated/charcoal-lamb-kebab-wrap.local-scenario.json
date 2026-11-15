@@ -101,5 +101,10 @@
     "sources": [
       "https://www.youtube.com/shorts/bkUpOMCZ9GQ"
     ]
+  },
+  "creativeSignature": {
+    "format": "food-process-story",
+    "set": "charcoal-grill-station",
+    "hookPattern": "mid-action-start"
   }
 }

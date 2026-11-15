@@ -44,35 +44,35 @@
         "seconds": 3,
         "narration": "Juicy charcoal kebab, yet only five ingredients?",
         "imagePrompt": "Charcoal Lamb Kebab: two long minced lamb kebabs on wide flat gold skewers resting over glowing orange charcoal in a brass grill, the meat charred at the edges and glistening with juices, thin smoke rising. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro food photograph from a low side angle at counter height, 100mm macro lens at f/2.8, shallow depth of field, creamy bokeh, the food filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
-        "motionPrompt": "Extreme close-up on the lamb kebabs over the glowing charcoal. The skewers sit still, then a hand turns one skewer slowly as the juices glisten and thin smoke rises and drifts. The camera makes one slow push in toward the charred kebab until the skewer rests.",
+        "motionPrompt": "Extreme close-up on the lamb kebabs over the glowing charcoal. The skewers sit still, then a hand turns one skewer slowly as the juices glisten and thin smoke rises and drifts. The camera makes one very slight, slow push in toward the charred kebab, keeping the whole dish in frame, until the skewer rests.",
         "sound": "charcoal crackle, meat sizzle"
       },
       {
         "seconds": 3,
         "narration": "Lamb, onion, parsley, sumac and chili.",
         "imagePrompt": "Charcoal Lamb Kebab: a copper bowl of fresh minced lamb in the centre with four small copper bowls around it holding grated onion, chopped parsley, deep red sumac and chili flakes. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic overhead food photograph, the camera pointing straight down at the counter in a true top-down flat lay, 50mm lens at f/4, everything in sharp focus, the food centred and filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
-        "motionPrompt": "Top-down view of the copper bowl of minced lamb and the small bowls around it. The bowls sit still, then a hand sprinkles deep red sumac over the minced lamb as the spice falls softly and settles. The camera makes one slow push in toward the lamb until the hand lifts away.",
+        "motionPrompt": "Top-down view of the copper bowl of minced lamb and the small bowls around it. The bowls sit still, then a hand sprinkles deep red sumac over the minced lamb as the spice falls softly and settles. The camera makes one very slight, slow push in toward the lamb, keeping the whole dish in frame, until the hand lifts away.",
         "sound": "spice sprinkle, soft kitchen tone"
       },
       {
         "seconds": 3,
         "narration": "Knead it well, then press onto skewers.",
         "imagePrompt": "Charcoal Lamb Kebab: a wide flat gold skewer lying on the marble counter with seasoned minced lamb pressed along it in an even kebab shape with finger ridges, flecks of parsley and chili visible. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic overhead food photograph, the camera pointing straight down at the counter in a true top-down flat lay, 50mm lens at f/4, everything in sharp focus, the food centred and filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
-        "motionPrompt": "Top-down view of the gold skewer on the marble counter. The kebab sits still, then a hand presses the seasoned minced lamb gently along the skewer as soft finger ridges form in the meat. The camera makes one slow push in toward the kebab until the hand lifts away.",
+        "motionPrompt": "Top-down view of the gold skewer on the marble counter. The kebab sits still, then a hand presses the seasoned minced lamb gently along the skewer as soft finger ridges form in the meat. The camera makes one very slight, slow push in toward the kebab, keeping the whole dish in frame, until the hand lifts away.",
         "sound": "soft meat press, light tap on marble"
       },
       {
         "seconds": 3,
         "narration": "Grill over hot charcoal, turning until charred.",
         "imagePrompt": "Charcoal Lamb Kebab: three minced lamb kebabs on gold skewers lined across a brass charcoal grill with glowing orange coals beneath, the meat browning with dark char marks, thin smoke rising. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic food photograph from a 45-degree angle, 85mm lens at f/2.8, shallow depth of field, the food filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
-        "motionPrompt": "Close-up on the lamb kebabs across the brass charcoal grill. The skewers sit still, then a hand turns the middle skewer slowly as the meat browns and sizzles over the glowing coals and thin smoke rises. The camera makes one slow push in toward the browning kebab until the skewer rests.",
+        "motionPrompt": "Close-up on the lamb kebabs across the brass charcoal grill. The skewers sit still, then a hand turns the middle skewer slowly as the meat browns and sizzles over the glowing coals and thin smoke rises. The camera makes one very slight, slow push in toward the browning kebab, keeping the whole dish in frame, until the skewer rests.",
         "sound": "steady sizzle, charcoal crackle"
       },
       {
         "seconds": 3,
         "narration": "Slide onto warm bread. Save this one.",
         "imagePrompt": "Charcoal Lamb Kebab: a charred minced lamb kebab on a gold skewer laid across warm flatbread on a gold-rimmed plate with a grilled tomato and sumac onions beside it, juices glistening. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro food photograph from a low side angle at counter height, 100mm macro lens at f/2.8, shallow depth of field, creamy bokeh, the food filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
-        "motionPrompt": "Extreme close-up on the charred lamb kebab over the warm flatbread. The kebab sits still, then a hand slides the charred lamb kebab off the skewer onto the warm flatbread as the juices glisten and steam rises. The camera makes one slow push in toward the kebab until the skewer lifts away.",
+        "motionPrompt": "Extreme close-up on the charred lamb kebab over the warm flatbread. The kebab sits still, then a hand slides the charred lamb kebab off the skewer onto the warm flatbread as the juices glisten and steam rises. The camera makes one very slight, slow push in toward the kebab, keeping the whole dish in frame, until the skewer lifts away.",
         "sound": "skewer slide, soft steam"
       }
     ],
@@ -87,5 +87,10 @@
     "sources": [
       "https://www.youtube.com/shorts/bkUpOMCZ9GQ"
     ]
+  },
+  "creativeSignature": {
+    "format": "tactile-recipe-reveal",
+    "set": "navy-brass-kitchen",
+    "hookPattern": "payoff-tease-question"
   }
 }

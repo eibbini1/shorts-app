@@ -5,6 +5,7 @@ utensil, positive wording, one slow push in. Writes drafts/generated/<slug>-v3.l
 Usage: python3 scripts/story.py [slug ...]   (no slug = all dishes)   |   python3 scripts/story.py --list
 Add a dish: append one entry to DISHES (title, ending, five shots of: line, angle, still scene, motion paragraph, sound)."""
 import json, sys
+from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 base = json.load(open(ROOT / 'drafts/generated/nine-course-table.local-scenario.json'))
@@ -250,27 +251,32 @@ DISHES = {
     'Top-down close view of the cut kebab wrap. At once the gloved hand lifts the cut kebab wrap toward the camera and turns it slowly as the cut face shows the charred lamb and the juices glisten, until it holds still. ' + TOPLOCK,
     'knife cut, soft steam')]),
  'charcoal-lamb-kebab-levels': dict(title='Lamb Kebab Level Up', suffix='', view=LEVELS_VIEW, hands=LEVELS_HANDS, setting=LEVELS_SETTING,
-  hud=[('LEVEL 1', 5), ('LEVEL 2', 50), ('LEVEL 3', 500), ('LEVEL 99', 5000), ('WHICH LEVEL?', 5000)],
-  claims=['Prices on screen are illustrative level prices, not quotes for a real menu; say so in the description', 'AI-generated original footage'],
+  # Real retail basket from data/prices.json (same levels as examples/local-scenarios/charcoal-lamb-kebab-levels-priced); the gate re-adds every total.
+  levels=[('LEVEL 1', ['ground-lamb-1lb']), ('LEVEL 2', ['ground-lamb-1lb', 'saffron-1g']),
+          ('LEVEL 3', ['ground-lamb-1lb', 'saffron-1g', 'a5-ribeye-16oz']),
+          ('LEVEL 99', ['ground-lamb-1lb', 'saffron-1g', 'a5-ribeye-16oz', 'gold-leaf-sheet'])],
+  last_label='WHICH ONE?', excludes=['flatbread', 'butter', 'labour', 'tax', 'shipping'],
+  signature=dict(format='ingredient-basket-level-up', set='black-marble-candle', hookPattern='plain-to-premium-counter'),
+  claims=['On-screen totals are retail package baskets from data/prices.json, not a menu price or per-serving cost; list the sources in the description', 'AI-generated original footage'],
   ending='A hand lifts the gold wagyu kebab toward the camera and it shines.',
   shots=[
-   ('Five dollars, yet watch it level up.', None,
+   ('Plain lamb, yet watch it level up.', None,
     'a plain charred minced lamb kebab on a gold skewer resting on a simple flatbread on a white paper plate',
     'Close fixed view of the lamb kebab on the paper plate. A hand sets the gold skewer down gently as the kebab settles on the flatbread and thin steam rises from the meat. ' + FIXED,
     'paper plate tap, soft sizzle'),
-   ('Level two: saffron butter. Fifty dollars.', None,
+   ('Level two: a gram of saffron butter.', None,
     'the same charred lamb kebab on flatbread, now on a matte black plate, brushed with glossy golden saffron butter, a small gold brush touching it',
     'Close fixed view of the lamb kebab on the black plate. A hand brushes glossy saffron butter slowly along the kebab with the small gold brush as the butter melts and shines. ' + FIXED,
     'soft brush stroke, butter sizzle'),
-   ('Level three: wagyu beef. Five hundred.', None,
+   ('Level three: marbled A5 wagyu beef.', None,
     'two thick, visibly larger marbled wagyu beef kebabs on gold skewers on flatbread on the matte black plate, deep red-brown and glossy with saffron butter, flaky salt crystals on top',
     'Close fixed view of the wagyu kebab on the black plate. A hand sprinkles flaky salt slowly over the wagyu kebab as the crystals fall and the juices glisten. ' + FIXED,
     'salt sprinkle, soft sizzle'),
-   ('Level ninety-nine: gold leaf. Five thousand?', None,
+   ('Level ninety-nine: one sheet of gold.', None,
     'the wagyu kebab on a gold-rimmed black plate half covered with delicate sheets of gold leaf, gold tweezers holding one more sheet just above it',
     'Close fixed view of the wagyu kebab on the gold-rimmed plate. A hand lowers the gold tweezers slowly as the sheet of gold leaf settles on the wagyu kebab and it shines in the warm light. ' + FIXED,
     'soft shimmer, quiet room tone'),
-   ('Which level would you pay for?', None,
+   ('Which ingredient would you actually keep?', None,
     'one cut half of the gold-leaf wagyu kebab held up close to the camera in one hand, its juicy pink centre facing the viewer, the empty gold-rimmed black plate softly blurred below',
     'Close fixed view of the gold wagyu kebab. A hand lifts one half of the gold wagyu kebab toward the camera as the cut face glistens and it shines, until it holds still. ' + FIXED,
     'soft lift, gentle steam')]),
@@ -324,13 +330,24 @@ for slug in (sys.argv[1:] or DISHES):
              ideas=[{'title': d['title'] if k == 0 else f"{d['title']} idea {k+1}", 'angle': a} for k, a in enumerate(ANGLE_IDEAS)])
     for k in ('storyArc', 'qualityChecks'):
         s.pop(k, None)
+    fmt = 'ingredient-basket-level-up' if d.get('levels') else ('food-process-story' if d.get('mode') == 'asmr' else 'tactile-recipe-reveal')
+    s['creativeSignature'] = d.get('signature') or dict(format=fmt, set='white-marble-topdown' if d.get('light') else ('charcoal-grill-station' if 'grill' in d.get('setting', '') else 'navy-brass-kitchen'),
+                                                    hookPattern='mid-action-start' if d.get('mode') == 'asmr' else 'payoff-tease-question')
+    hud = d.get('hud')
+    if d.get('levels'):   # sourced totals only: every level is re-added from data/prices.json
+        table = {i['id']: Decimal(i['packagePrice']) for i in json.load(open(ROOT / 'data/prices.json'))['items']}
+        tot = lambda ids: str(sum((table[i] for i in ids), Decimal('0')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
+        s['priceLevels'] = [{'label': lab, 'lines': [{'id': i, 'quantity': 1} for i in ids], 'displayTotal': tot(ids)} for lab, ids in d['levels']]
+        top = d['levels'][-1][1]
+        s['priceBasket'] = {'currency': 'USD', 'label': 'retail package basket', 'lines': [{'id': i, 'quantity': 1} for i in top], 'displayTotal': tot(top), 'excludes': d.get('excludes', [])}
+        hud = [[lab, float(tot(ids))] for lab, ids in d['levels']] + [[d.get('last_label', ''), float(tot(top))]]
     out = ROOT / f"drafts/generated/{slug}{d.get('suffix', '-v3')}.local-scenario.json"
     out.write_text(json.dumps(s, indent=2, ensure_ascii=False))
     print(out.name, [len(x[0].split()) for x in d['shots']])
     made.append(str(out))
     hudf = out.with_name(out.name.replace('.local-scenario.json', '.hud.json'))
-    if d.get('hud'):
-        hudf.write_text(json.dumps(d['hud']))
+    if hud:
+        hudf.write_text(json.dumps(hud))
     elif hudf.exists():
         hudf.unlink()
 import subprocess
