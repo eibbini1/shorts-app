@@ -4,6 +4,8 @@ Checked 2026-11-15. These are editorial experiments, not a measured global ranki
 
 Run `npm run ideas:series:food` for all five series and `npm run ideas:recipes:2026` for ten candidate recipes. Both commands are read-only and require no model or GPU. Series definitions live in `data/food-series.json`.
 
+`npm run ideas:bank` now lists evidence-tagged hooks, montage and sound patterns from a bounded vidIQ scan, plus ten original production ideas. See `docs/CREATIVE_BANK.md` for source depth and limits. `npm run brief:local -- --idea miso-butter-potato-pave` preloads one bank idea into the director questions; you can change every answer before Gemma drafts the story.
+
 For your own 30–60 second story, use the guided command after this branch is merged. The new director brief asks for the exact dish, style, one set, first visible hook, must-show action, obstacle, technique, ending, sound mode, duration and orientation. Optional answers may be left blank for the local model. Give it a concrete ending, such as “the chef cracks the crust and serves one steaming slice,” to keep the middle shots connected.
 
 ```bash
@@ -95,3 +97,13 @@ bash scripts/make-local-video.sh --scenario examples/local-scenarios/smoky-jalap
 ```
 
 The first `qwen3-vl:4b` still review ran out of response tokens without returning JSON. The selector now marks that choice unverified and keeps rendering with a candidate that passed only the blank/dark check. Human frame review is essential; this fallback is not a best-of-three quality verdict.
+
+For a repeatable burger render, use the nine visually selected local FLUX stills saved outside Git:
+
+```bash
+bash scripts/make-local-video.sh \
+  --scenario examples/local-scenarios/smoky-jalapeno-double-smash-burger-35.local-scenario.json \
+  --stills storage/approved-stills/smoky-jalapeno-double-smash-burger-35
+```
+
+The 2026-11-15 revised run produced `outputs/smoky-jalapeno-double-smash-burger-35-20261115-125551.sfx.captioned.mp4`. Final-file technical QA passed at 35.0 seconds, no detected long silence, no black or frozen picture, and measured loudness −16.94 LUFS. The sound path now writes an exact silent music bed when the scenario says `none`, adds continuous low kitchen room tone between action cues, and audits ASMR coverage before GPU rendering. This is a **review copy**: the assistant inspected sampled frames but has not heard the audio. A brief patty morph during shot three and the final cross-section's fused-looking meat layers remain visual concerns. The editorial release gate remains blocked because there is no recorded full-video/full-audio review and the published-signatures history is empty. Do not treat the provisional 50/100 as a quality rating.

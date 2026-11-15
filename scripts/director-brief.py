@@ -25,9 +25,21 @@ QUESTIONS = (
 )
 
 
-def collect():
+def idea_defaults(idea_id):
+    bank = json.loads((ROOT / 'data/creative-evidence-bank.json').read_text())
+    idea = next((item for item in bank['originalProductionIdeas'] if item['id'] == idea_id), None)
+    if idea is None:
+        raise ValueError(f'Unknown bank idea: {idea_id}. Run npm run ideas:bank to list choices.')
+    sound = 'asmr' if idea['soundMode'].lower().startswith('asmr') else 'auto'
+    return {'topic': idea['recipe'], 'hook': idea['hook'], 'mustShow': idea['payoff'],
+            'ending': idea['payoff'], 'audio': sound}
+
+
+def collect(initial=None):
+    initial = initial or {}
     answers = {}
     for key, label, default in QUESTIONS:
+        default = initial.get(key, default)
         suffix = f' [{default}]' if default else ' [model chooses]' if key not in ('topic',) else ''
         print(f'{label}{suffix}: ', end='', file=sys.stderr, flush=True)
         line = sys.stdin.readline()
@@ -70,22 +82,24 @@ def draft_command(brief, identifier, model):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--model', help='Local story model (defaults to installed Gemma, else qwen3:1.7b)')
+    p.add_argument('--idea', help='Prefill the director questions from an original idea in npm run ideas:bank')
     p.add_argument('--answers', type=Path, help='Use saved answer JSON instead of interactive questions')
     p.add_argument('--dry-run', action='store_true', help='Validate and show the brief without calling a model')
     args = p.parse_args()
     try:
-        brief = validate(json.loads(args.answers.read_text()) if args.answers else collect())
+        defaults = idea_defaults(args.idea) if args.idea else {}
+        brief = validate({**defaults, **json.loads(args.answers.read_text())} if args.answers else collect(defaults))
     except (ValueError, json.JSONDecodeError) as error:
         p.error(str(error))
     model = args.model or ('gemma-local' if (ROOT / 'storage/setup/gemma-model-dir.txt').is_file() else 'qwen3:1.7b')
     identifier = f'guided-{datetime.now().strftime("%Y%m%d-%H%M%S")}-{uuid4().hex[:6]}'
     command = draft_command(brief, identifier, model)
     if args.dry_run:
-        print(json.dumps({'brief': brief, 'model': model, 'draftCommand': command}, indent=2))
+        print(json.dumps({'brief': brief, 'bankIdeaId': args.idea, 'model': model, 'draftCommand': command}, indent=2))
         return
     brief_path = ROOT / 'drafts/generated' / f'{identifier}.brief.json'
     brief_path.parent.mkdir(parents=True, exist_ok=True)
-    brief_path.write_text(json.dumps({'model': model, 'answers': brief}, indent=2) + '\n')
+    brief_path.write_text(json.dumps({'model': model, 'bankIdeaId': args.idea, 'answers': brief}, indent=2) + '\n')
     print(f'Saved director brief: {brief_path.relative_to(ROOT)}', file=sys.stderr)
     subprocess.run(command, cwd=ROOT, stdout=sys.stderr, stderr=sys.stderr, check=True)
     scenario = ROOT / 'drafts/generated' / f'{identifier}.local-scenario.json'

@@ -57,6 +57,7 @@
     "ideas:mac": "python3 scripts/idea-picker-local.py",
     "ideas:recipes:2026": "python3 scripts/recipe-ideas-2026.py",
     "ideas:series:food": "python3 scripts/food-series.py",
+    "ideas:bank": "node scripts/creative-bank.mjs",
     "brief:local": "python3 scripts/director-brief.py",
     "story:audit:mac": "python3 scripts/audit-local-story.py",
     "learn:run:mac": "python3 scripts/log-local-run.py",

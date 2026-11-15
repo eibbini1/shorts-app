@@ -1,9 +1,9 @@
-"""Add synthesized sound effects to a finished local video, driven by each shot's `sound` line.
+"""Add shot-synced local sound effects to a finished video.
 
   python3 scripts/add-sfx.py --scenario drafts/generated/ID.local-scenario.json --video outputs/ID.mp4 [--work-dir DIR]
 
-Writes outputs/ID.sfx.mp4 (picture copied, audio remixed) and ID.sfx.wav. Everything is generated here from
-noise and sine tones, so there is nothing to license. Effects sit low and are ducked under the narration
+Writes outputs/ID.sfx.mp4 (picture copied, audio remixed) and ID.sfx.wav. Effects are synthesized unless
+the scenario declares a local field recording, whose source and licence must be documented. Effects sit low and are ducked under the narration
 (the voice track in the work folder is the ducking key), then the mix is loudness-normalised again.
 Cue words in a shot's `sound` or action prompts: sizzle, crunch/bite, chew, pour, slice, scrape/spread, plate clink,
 chime/shimmer, pat, bubble/pop, squeak, fizz and room tone. These are original synthesized Foley approximations.
@@ -184,11 +184,26 @@ def audit_cues(data):
         file = ROOT / str(source.get('file', ''))
         if name not in GAIN or not file.is_file() or file.suffix.lower() not in ('.ogg', '.wav', '.mp3'):
             problems.append(f'foley sample {name}: supported local audio file is missing')
+    if mode == 'asmr' and not problems:
+        shots = data['plan']['shots']
+        total = sum(shot['seconds'] for shot in shots)
+        preview, _ = build(shots, total, foley_samples=(data.get('audioPlan') or {}).get('foleySamples'),
+                           continuous_room=True)
+        window = RATE // 5
+        floor = max(0.001, float(np.max(np.abs(preview))) * 0.02)
+        quiet = 0
+        for start in range(0, len(preview), window):
+            segment = preview[start:start + window]
+            rms = float(np.sqrt(np.mean(segment * segment))) if len(segment) else 0
+            quiet = quiet + 1 if rms < floor else 0
+            if quiet * window / RATE >= 1.5:
+                problems.append('ASMR sound plan has a gap of at least 1.5 s before rendering')
+                break
     if problems:
         for problem in problems:
             print('BLOCKED:', problem)
     else:
-        print('Sound cue plan passed. Listen to the finished mix before release.')
+        print('Sound cue and ASMR coverage plan passed. Listen to the finished mix before release.')
     return problems
 
 
@@ -212,7 +227,7 @@ def recording_slice(source, seconds):
     return signal / peak * float(source.get('gain', 0.7))
 
 
-def build(shots, total, seed=311, foley_samples=None):
+def build(shots, total, seed=311, foley_samples=None, continuous_room=False):
     rng = np.random.default_rng(seed)
     mix = np.zeros(round(total * RATE), dtype=np.float32)
     plan = []
@@ -222,6 +237,11 @@ def build(shots, total, seed=311, foley_samples=None):
         count = min(len(signal), len(mix) - start)
         if count > 0:
             mix[start:start + count] += signal[:count] * gain
+
+    if continuous_room:
+        # An ASMR film still has an acoustic floor between discrete actions.
+        # This is quiet kitchen ambience, not a music bed.
+        put(room(total, rng), 0, GAIN['room'] * 0.6)
 
     at = 0.0
     for number, shot in enumerate(shots, 1):
@@ -284,7 +304,9 @@ def main():
     work = (args.work_dir or ROOT / 'storage/any-local' / scenario.stem).resolve()
     shots = data['plan']['shots']
     total = sum(shot['seconds'] for shot in shots)
-    mix, plan = build(shots, total, foley_samples=(data.get('audioPlan') or {}).get('foleySamples'))
+    from presentation_mode import choose
+    mix, plan = build(shots, total, foley_samples=(data.get('audioPlan') or {}).get('foleySamples'),
+                      continuous_room=choose(data)['mode'] == 'asmr')
     sfx = video.with_suffix('.sfx.wav')
     write_wav(sfx, mix)
     out = video.with_suffix('.sfx.mp4')

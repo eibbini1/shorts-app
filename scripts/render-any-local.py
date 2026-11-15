@@ -85,6 +85,7 @@ def clip(work, index, part, shot, seed, reference, width, height, model, gemma, 
     target = work / 'motion' / f'shot-{index:02d}-part-{part:02d}-{key}.mp4'
     if valid_video(target):
         print(f'Reusing motion {index + 1}.{part + 1}: {target.name}', flush=True)
+        progress.mark_complete(index, part)
         print(progress(), flush=True)
         return target
     if cache_only:
@@ -110,6 +111,7 @@ def clip(work, index, part, shot, seed, reference, width, height, model, gemma, 
     if code: raise subprocess.CalledProcessError(code, command)
     if not valid_video(target): raise RuntimeError(f'Motion failed verification: {target}')
     progress.observed.append(time.monotonic()-started)
+    progress.mark_complete(index, part)
     print(progress(), flush=True)
     return target
 
@@ -190,11 +192,21 @@ def main():
     gemma = (ROOT / 'storage/setup/gemma-model-dir.txt').read_text().strip()
     expected = sum(math.ceil(shot['seconds'] / 5) for shot in plan['shots'])
     print(f'{len(plan["shots"])} shots require {expected} new motion clips; allow several minutes per uncached clip.', flush=True)
+    progress_state = work / 'progress-run.json'
     class Progress:
         observed = []
+        completed = []
+        def mark_complete(self, index, part):
+            pair = [index, part]
+            if pair not in self.completed:
+                self.completed.append(pair)
+            progress_state.write_text(json.dumps({'scenarioSha256': file_hash(scenario),
+                'output': str(output.resolve()), 'completed': self.completed}) + '\n')
         def __call__(self, active=None, elapsed=0):
             return snapshot(scenario, work, output, active, elapsed, self.observed)
     progress = Progress()
+    progress_state.write_text(json.dumps({'scenarioSha256': file_hash(scenario),
+        'output': str(output.resolve()), 'completed': []}) + '\n')
     print(progress(), flush=True)
     segments = []
     previous = None

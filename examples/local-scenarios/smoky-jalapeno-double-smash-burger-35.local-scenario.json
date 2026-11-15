@@ -71,21 +71,21 @@
       {
         "seconds": 4,
         "narration": "The second patty makes two lacy crisp edges.",
-        "imagePrompt": "Same matte black griddle and warm side light. First thin beef patty now has a lacy browned rim. A second raw beef ball sits beside it under the same brushed steel spatula and same adult hand. Two patties only, both clearly separate, no cheese yet. Dark charcoal counter and waiting brioche in the same background.",
-        "motionPrompt": "The hand smashes the second beef ball beside the first; the spatula scrapes free, then flips the first thin patty once to reveal a dark golden crisp crust. Oil bubbles at both edges. Close quick tracking move along the griddle, no cut within the shot.",
+        "imagePrompt": "Same square matte black griddle, warm side light, hand and steel spatula. Exactly two separate thin browned beef smash patties lie side by side, with lacy crisping edges and no cheese yet. The spatula touches the left patty edge; two brioche halves wait at the near counter edge. No raw meatball or extra patty.",
+        "motionPrompt": "Both of the two thin patties sizzle in place and their lacy edges darken. The same steel spatula gently lifts the near edge of the left patty then lowers it onto the same spot. A close camera drift follows the spatula; exactly two patties remain visible throughout, no flipping, splitting or extra meat.",
         "sound": "second sharp sizzle, spatula scrape on hot griddle"
       },
       {
         "seconds": 4,
         "narration": "Cheddar melts while the brioche toasts.",
-        "imagePrompt": "Same griddle and kitchen. Two distinct thin browned beef patties each carry one slice of cheddar beginning to melt. The two cut brioche halves toast cut-side down on a clean griddle area beside the beef. Same steel spatula and adult hand, amber side light catching the cheese gloss and brioche crust, realistic mild steam.",
-        "motionPrompt": "The hand places cheddar onto each of the two browned patties; cheese softens and folds over their edges as the hand lifts and turns one brioche half to show its toasted cut face. One continuous griddle action with a short camera slide from cheese to bun, no cut.",
+        "imagePrompt": "Same square matte black griddle and warm kitchen as the previous shot. Two distinct thin browned beef patties each carry one slice of cheddar beginning to melt. Two cut brioche halves wait at the near edge of the same griddle, ready to toast. Same steel spatula and adult hand, amber side light catching the cheese gloss and brioche crust, realistic mild steam. Keep exactly two patties and one bun cut into two halves.",
+        "motionPrompt": "The two cheddar-covered patties stay in their places on the same square griddle. Cheese slowly softens and folds over both edges as fine steam rises. The same hand steadies the spatula near the left patty while the camera drifts toward the waiting brioche halves at the griddle edge. Subtle real cooking motion; exactly two patties and one split bun throughout, no new food or cut.",
         "sound": "gentle cheese sizzle, brioche toast scrape, steel spatula tap"
       },
       {
         "seconds": 5,
         "narration": "Chipotle mayo anchors the first cheddar patty.",
-        "imagePrompt": "Same charcoal counter, matte black griddle behind, warm amber side light. One toasted bottom brioche bun sits on a small dark ceramic serving plate. Same adult hand spreads a restrained spiral of smoky chipotle mayo from the black bowl; one of the two cheddar-covered patties is lifted on the steel spatula above the sauced bun. Jalapeño and onion bowls remain in place. Food looks edible and stable.",
+        "imagePrompt": "Same amber-lit warm kitchen and dark charcoal counter as the griddle shots. In the foreground, in front of the square griddle, a small dark ceramic serving plate holds one toasted bottom brioche bun. A pale orange-peach smoky chipotle mayo spiral is spread on the bun from a small black bowl. The same adult hand lifts exactly one cheddar-covered thin beef patty on the same steel spatula above the sauced bun; the second patty remains on the griddle in the background. No mustard-colored sauce, no plate on the hot griddle, no extra meat.",
         "motionPrompt": "The hand spreads chipotle mayo across the toasted bottom bun in one slow spiral, then slides the first cheddar-covered patty from the spatula onto the center of the bun. The camera follows the patty down and stops at the first layer; no cut or teleporting food.",
         "sound": "thick mayo spread, spatula scrape, soft patty landing on bun"
       },
@@ -99,7 +99,7 @@
       {
         "seconds": 4,
         "narration": "Crispy onions crown the open double stack.",
-        "imagePrompt": "Same burger on the same dark plate. The two cheddar-covered patties and three jalapeño rings are visible above the sauced bottom brioche bun. Same adult hand holds a small generous tuft of golden crispy onion strands from the ceramic bowl over the open stack. Top brioche bun waits beside the plate. Warm amber side light makes onion edges crisp, dark soft background, no duplicate food.",
+        "imagePrompt": "Edit the prior frame of this same burger on the same dark plate in the warm kitchen. The bottom brioche bun supports two cheddar-covered beef patties with green pickled jalapeño rings on the exposed upper patty. This upper patty is still OPEN, with no bread on it. The same adult hand drops golden crispy fried onion strands directly onto the exposed jalapeños and upper beef. One top brioche bun half waits to the right of the plate, separate from the burger until the next action. Exactly one bottom bun and one top bun, no bread layer between patties and onions.",
         "motionPrompt": "The hand drops one controlled pile of crispy onion strands onto the jalapeños, pauses a beat on the full open stack, then lifts the glossy toasted top bun and settles it gently over the onions. Camera makes a slight side push to reveal the height; one continuous action, no cut.",
         "sound": "dry crispy onion crunch, gentle top bun press, quiet kitchen ambience"
       },
@@ -113,7 +113,7 @@
       {
         "seconds": 4,
         "narration": "Two halves pull apart to reveal the juicy cross-section.",
-        "imagePrompt": "Same just-sliced double smash burger on the same dark ceramic plate and charcoal counter under warm amber side light. Two halves still touch at the cut, showing top glossy brioche, crispy onions, green pickled jalapeños, two separate cheddar-coated thin beef patties, chipotle mayo and bottom toasted bun. Same pair of natural-nailed adult hands reaches to separate the halves. Realistic juicy cut surface, restrained grease, dark background, no extra food.",
+        "imagePrompt": "Edit the prior image into a tight side macro of the exact same burger just sliced in half on the exact same black plate and dark counter. Two adult hands gently grip one half each at the cut. The newly exposed cross-sections clearly show two separate browned thin beef patties with a glossy melted yellow cheddar layer between them, a few green pickled jalapeño rings and golden crispy onion shreds above the meat, a restrained pale orange chipotle mayo seam, and the toasted brioche top and bottom. The halves are almost touching and ready to pull apart. Warm amber light from the same side; no pale raw onion strips and no missing cheese.",
         "motionPrompt": "The hands pull the two freshly sliced burger halves apart by a few centimeters, revealing the complete crisp juicy cross-section. Hold steady on the exposed layers and let a small real bead of juice move; camera eases closer and stops. Same plate and kitchen, one continuous pull, no bite or new cut.",
         "sound": "last crisp onion crunch, soft bun tear, quiet kitchen room tone"
       }
