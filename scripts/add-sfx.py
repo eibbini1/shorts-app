@@ -160,7 +160,59 @@ def cues_for(text):
     return found
 
 
-def build(shots, total, seed=311):
+def planned_cues(shot):
+    names = cues_for(shot.get('sound', ''))
+    if not names:
+        names = cues_for(shot.get('motionPrompt', '') + ' ' + shot.get('imagePrompt', ''))
+    if not shot.get('sound', '').strip() and name_hint(shot) and 'fizz' not in names:
+        names.append('fizz')
+    return names
+
+
+def audit_cues(data):
+    """Fail before GPU use when an ASMR sound plan cannot create its stated cues."""
+    from presentation_mode import choose
+    mode = choose(data)['mode']
+    problems = []
+    for number, shot in enumerate(data['plan']['shots'], 1):
+        explicit = shot.get('sound', '').strip()
+        names = planned_cues(shot)
+        print(f'Shot {number} sound: {", ".join(names) or "none"}')
+        if mode == 'asmr' and (not explicit or not cues_for(explicit)):
+            problems.append(f'shot {number}: ASMR sound line is empty or has no supported Foley cue')
+    for name, source in (data.get('audioPlan') or {}).get('foleySamples', {}).items():
+        file = ROOT / str(source.get('file', ''))
+        if name not in GAIN or not file.is_file() or file.suffix.lower() not in ('.ogg', '.wav', '.mp3'):
+            problems.append(f'foley sample {name}: supported local audio file is missing')
+    if problems:
+        for problem in problems:
+            print('BLOCKED:', problem)
+    else:
+        print('Sound cue plan passed. Listen to the finished mix before release.')
+    return problems
+
+
+def recording_slice(source, seconds):
+    """Decode a declared local field recording and take a short, faded cue."""
+    file = (ROOT / source['file']).resolve()
+    if not file.is_relative_to(ROOT.resolve()) or not file.is_file():
+        raise ValueError(f'Unsafe or missing Foley recording: {file}')
+    start = max(0, float(source.get('offsetSeconds', 0)))
+    raw = subprocess.check_output(['ffmpeg', '-v', 'error', '-ss', str(start), '-t', str(seconds),
+                                   '-i', str(file), '-ac', '1', '-ar', str(RATE), '-f', 'f32le', '-'])
+    signal = np.frombuffer(raw, dtype='<f4').copy()
+    if len(signal) < RATE // 10:
+        raise ValueError(f'Foley recording is too short at offset {start}: {file}')
+    peak = float(np.max(np.abs(signal)))
+    if peak < 1e-5:
+        raise ValueError(f'Foley recording is silent at offset {start}: {file}')
+    fade = min(RATE // 20, len(signal) // 4)
+    signal[:fade] *= np.linspace(0, 1, fade)
+    signal[-fade:] *= np.linspace(1, 0, fade)
+    return signal / peak * float(source.get('gain', 0.7))
+
+
+def build(shots, total, seed=311, foley_samples=None):
     rng = np.random.default_rng(seed)
     mix = np.zeros(round(total * RATE), dtype=np.float32)
     plan = []
@@ -174,13 +226,12 @@ def build(shots, total, seed=311):
     at = 0.0
     for number, shot in enumerate(shots, 1):
         length = shot['seconds']
-        names = cues_for(shot.get('sound', ''))
-        if not names:
-            names = cues_for(shot.get('motionPrompt', '') + ' ' + shot.get('imagePrompt', ''))
-        if not shot.get('sound', '').strip() and name_hint(shot) and 'fizz' not in names:
-            names.append('fizz')
+        names = planned_cues(shot)
         for name in names:
-            if name == 'sizzle': put(sizzle(min(length, 3.5), rng), at + 0.2, GAIN[name])
+            if name in (foley_samples or {}):
+                duration = min(length - 0.4, 3.5 if name == 'sizzle' else 1.1)
+                put(recording_slice(foley_samples[name], duration), at + 0.2, GAIN[name])
+            elif name == 'sizzle': put(sizzle(min(length, 3.5), rng), at + 0.2, GAIN[name])
             elif name == 'crunch': put(crunch(min(length, 1.2), rng), at + min(0.7, length / 4), GAIN[name])
             elif name == 'chew': put(pat(min(length, 2.5), rng), at + 0.5, GAIN[name])
             elif name == 'pour': put(pour(min(length, 3.0), rng), at + 0.4, GAIN[name])
@@ -219,14 +270,21 @@ def write_wav(path, mono, peak_target=0.45):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--scenario', required=True, type=Path)
-    parser.add_argument('--video', required=True, type=Path)
+    parser.add_argument('--video', type=Path)
+    parser.add_argument('--audit', action='store_true', help='Check the planned Foley cues before spending GPU time')
     parser.add_argument('--work-dir', type=Path)
     args = parser.parse_args()
-    scenario, video = args.scenario.resolve(), args.video.resolve()
+    scenario = args.scenario.resolve()
+    data = json.loads(scenario.read_text(encoding='utf-8-sig'))
+    if args.audit:
+        raise SystemExit(1 if audit_cues(data) else 0)
+    if not args.video:
+        parser.error('--video is required unless --audit is used')
+    video = args.video.resolve()
     work = (args.work_dir or ROOT / 'storage/any-local' / scenario.stem).resolve()
-    shots = json.loads(scenario.read_text(encoding='utf-8-sig'))['plan']['shots']
+    shots = data['plan']['shots']
     total = sum(shot['seconds'] for shot in shots)
-    mix, plan = build(shots, total)
+    mix, plan = build(shots, total, foley_samples=(data.get('audioPlan') or {}).get('foleySamples'))
     sfx = video.with_suffix('.sfx.wav')
     write_wav(sfx, mix)
     out = video.with_suffix('.sfx.mp4')

@@ -4,19 +4,35 @@
   python3 scripts/template_to_scenario.py guess-the-price --slot item="Gold-leaf wagyu hot dog" --slot price='$95' \
       --slot rarity_fact="Wagyu, truffle cream and caviar on one bun." --slot source="https://example.com/menu" --out drafts/generated/x.local-scenario.json
 
-One shot per template beat, narration = the beat text, no model call. Prompts are role-based and carry the continuity clause so the
-same hand, pan and slate appear in every shot. Validate with: node scripts/bb-local-scenario.mjs --validate FILE
+One shot per template beat, narration = the beat text. A single local Ollama pass refines visuals and sound by default;
+--offline-template uses deterministic prompts for troubleshooting. Validate with: node scripts/bb-local-scenario.mjs --validate FILE
 """
 import argparse
 import json
+import re
 import sys
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import shorts_templates as T  # noqa: E402
 
-CONTINUITY = 'Continuity: one chef, one white-gloved hand, same copper pan and black slate, warm tungsten light.'
+CONTINUITY = 'Continuity: keep the same dish, serving surface, tools, hands and lighting across shots unless a visible action changes them.'
 STYLE = 'photoreal cinematic food film, warm tungsten hotel kitchen, close macro detail, shallow depth of field, rich natural texture'
+DEFAULT_SETS = {
+    'guess-the-price': ('dark restaurant pass', 'black slate', 'copper pan', 'white-gloved hand'),
+    'process-reveal': ('sunlit home kitchen', 'walnut board', 'cast-iron pan', 'bare hand'),
+    'countdown': ('bright tasting counter', 'cream stone counter', 'steel pan', 'chef hand'),
+    'same-item-two-prices': ('warm hotel service kitchen', 'marble service counter', 'steel pan', 'chef hand'),
+    'would-you-rather-menu': ('modern restaurant table', 'ceramic serving board', 'steel pan', 'chef hand'),
+    'banned-foods': ('food-history studio kitchen', 'wooden display board', 'steel pan', 'chef hand'),
+}
+FORMAT_FAMILY = {
+    'guess-the-price': 'guess-the-price', 'process-reveal': 'food-process-story',
+    'countdown': 'food-process-story', 'same-item-two-prices': 'ingredient-basket-level-up',
+    'would-you-rather-menu': 'guess-the-price', 'banned-foods': 'food-process-story',
+}
 # role -> (image direction, motion direction); {item} is filled from the template slots
 VISUALS = {
     'hook': ('Macro hero close-up of {item} on a black slate beside a copper pan, steam rising', 'The camera slowly pushes in on {item} while steam drifts; a gloved hand enters and adjusts it slightly'),
@@ -46,6 +62,18 @@ def build(template_id, slots, seconds=None, allow_repeat=False):
     if template_id not in templates:
         raise ValueError(f'unknown template {template_id!r}; choose from {sorted(templates)}')
     slots = dict(slots)
+    default_set, default_surface, default_pan, default_hand = DEFAULT_SETS[template_id]
+    setting = slots.pop('visual_set', default_set).strip()
+    surface = slots.pop('surface', default_surface).strip()
+    pan = slots.pop('pan', default_pan).strip()
+    hand = slots.pop('hand', default_hand).strip()
+    visual_style = slots.pop('visual_style', STYLE).strip()
+    if not all((setting, surface, pan, hand, visual_style)):
+        raise ValueError('visual set, surface, pan, hand and style must be nonempty')
+    def contextualize(text):
+        text = re.sub(r'\b(?:white-)?gloved hand\b', hand, text)
+        text = re.sub(r'\b(?:black )?slate\b', surface, text)
+        return text.replace('copper pan', pan)
     focal = slots.get('item') or slots.get('food') or slots.get('category') or slots.get('option_a') or 'the dish'
     defaults = {'twist': f'The chef turns {focal} to reveal another side.',
                 'detail_a': 'one carefully finished surface', 'detail_b': 'one simpler finish',
@@ -72,12 +100,16 @@ def build(template_id, slots, seconds=None, allow_repeat=False):
         image, motion = VISUALS.get(beat['role'], DEFAULT_VISUAL)
         role_item = {'third': slots.get('item_1'), 'second': slots.get('item_2'), 'first': slots.get('item_3'),
                      'option A': slots.get('option_a'), 'option B': slots.get('option_b'), 'option C': slots.get('option_c')}.get(beat['role']) or item
+        image_text = contextualize(image.format(item=role_item))
+        motion_text = contextualize(motion.format(item=role_item))
+        sound = ('soft plate tap' if any(word in motion_text.lower() for word in ('places', 'sets', 'slides', 'presents'))
+                 else 'quiet kitchen room tone')
         shots.append({
             'seconds': beat['end'] - beat['start'],
             'narration': beat['text'],
-            'imagePrompt': f"{image.format(item=role_item)}. Visual style: {STYLE}. {CONTINUITY}"[:1000],
-            'motionPrompt': f"{motion.format(item=role_item)}. One continuous take, no cuts."[:1000],
-            'sound': 'soft kitchen ambience, gentle sizzle',
+            'imagePrompt': f"{image_text}. Set: {setting}. Visual style: {visual_style}. {CONTINUITY}"[:1000],
+            'motionPrompt': f"{motion_text}. One continuous take, no cuts."[:1000],
+            'sound': sound,
         })
     for shot in shots:   # keep narration speakable; a long hook may need longer than its template slot
         spoken = -(-len(shot['narration'].split()) * 2 // 5)
@@ -92,13 +124,76 @@ def build(template_id, slots, seconds=None, allow_repeat=False):
         ideas.append({'title': f'{item}: {templates[template_id]["name"]} variant {len(ideas)}', 'angle': filled['hook']})
     claims = [f'{k} = {v} (source required before upload)' for k, v in slots.items() if T.is_price_slot(k)]
     claims += [f'source: {slots["source"]}'] if slots.get('source') else []
-    visible_ending = f'A gloved hand presents {item} toward the camera on the same black slate.'
-    shots[-1]['motionPrompt'] = f'The gloved hand presents {item} toward the camera on the same black slate. One continuous take, no cuts.'
+    visible_ending = f'A {hand} presents {item} toward the camera on the same {surface}.'
+    shots[-1]['motionPrompt'] = f'The {hand} presents {item} toward the camera on the same {surface}. One continuous take, no cuts.'
     plan = {'ideas': ideas, 'title': f'{templates[template_id]["name"]}: {item}'[:200], 'hook': filled['hook'],
             'payoff': visible_ending, 'shots': shots, 'claimsToCheck': claims}
     return {'status': 'review-required', 'settings': {'brand': 'Billionaire Bites', 'format': 'short', 'seconds': seconds, 'voice': 'af_heart'},
-            'model': 'template', 'topic': f'{templates[template_id]["name"]}: {item}', 'style': STYLE,
+            'model': 'template', 'topic': f'{templates[template_id]["name"]}: {item}', 'style': visual_style,
+            'templateItem': item,
+            'storyArc': {'protagonist': item, 'setting': setting,
+                         'visualBible': f'{item}; {setting}; {surface}; {pan}; {hand}; {visual_style}'},
+            'creativeSignature': {'format': FORMAT_FAMILY[template_id], 'set': setting, 'hookPattern': template_id},
             'requestedEnding': visible_ending, 'totalSeconds': total, 'template': template_id, 'plan': plan}
+
+
+def refine_with_ollama(scenario, model='qwen3:8b'):
+    """One local model pass to vary physical shots; preserve fixed template facts and timing."""
+    if model.endswith(':cloud'):
+        raise ValueError('template refinement requires an installed local Ollama model')
+    shots = scenario['plan']['shots']
+    count = len(shots)
+    shape = {'type': 'object', 'properties': {'shots': {'type': 'array', 'minItems': count,
+             'maxItems': count, 'items': {'type': 'object', 'properties': {
+                 'imagePrompt': {'type': 'string'}, 'motionPrompt': {'type': 'string'},
+                 'sound': {'type': 'string'}},
+                 'required': ['imagePrompt', 'motionPrompt', 'sound'], 'additionalProperties': False}}},
+             'required': ['shots'], 'additionalProperties': False}
+    fixed = [{'shot': i + 1, 'seconds': shot['seconds'], 'narration': shot['narration'],
+              'startingImage': shot['imagePrompt'], 'startingMotion': shot['motionPrompt']}
+             for i, shot in enumerate(shots)]
+    system = ('You are a food-film director improving one template into a coherent local video. '
+              'Return exactly one visual shot plan per supplied shot, in the same order. '
+              'Keep the exact dish, ingredient identity, kitchen set, serving surface, hand and tools continuous. '
+              'Each image is the beginning of a distinct physical action, each motion is one continuous take '
+              'with a visible changed end state, and each sound is caused by that visible action. '
+              'Vary shot scale and camera motivation without inventing a new dish, extra hands, floating tools, '
+              'magic cooking, unsupported prices, facts, a different ending or a second location. '
+              'Do not rewrite narration, timing, titles, claims or price text. Output JSON only.')
+    payload = {'title': scenario['plan']['title'], 'hook': scenario['plan']['hook'],
+               'payoff': scenario['plan']['payoff'], 'setting': scenario['creativeSignature']['set'],
+               'shots': fixed}
+    body = {'model': model, 'stream': False, 'think': False, 'format': shape,
+            'options': {'temperature': 0.25, 'num_predict': 3200, 'num_ctx': 8192},
+            'messages': [{'role': 'system', 'content': system},
+                         {'role': 'user', 'content': json.dumps(payload)}]}
+    request = urllib.request.Request('http://127.0.0.1:11434/api/chat',
+                                     data=json.dumps(body).encode(), headers={'Content-Type': 'application/json'})
+    with urllib.request.urlopen(request, timeout=240) as response:
+        raw = json.loads(response.read())['message']['content']
+    revised = json.loads(raw[raw.find('{'):raw.rfind('}') + 1])['shots']
+    if len(revised) != count:
+        raise ValueError(f'local model returned {len(revised)} shots; expected {count}')
+    for i, row in enumerate(revised):
+        for field in ('imagePrompt', 'motionPrompt', 'sound'):
+            if not isinstance(row.get(field), str) or not 12 <= len(row[field].strip()) <= 1000:
+                raise ValueError(f'local model returned an invalid {field} for shot {i + 1}')
+        if re.search(r'\b(cut to|quick cut|montage|transition to)\b', row['motionPrompt'], re.I):
+            raise ValueError(f'local model put an edit inside shot {i + 1}')
+    if len({re.sub(r'\s+', ' ', row['motionPrompt']).lower() for row in revised}) != count:
+        raise ValueError('local model repeated a motion prompt')
+    anchor = f"Same {scenario['templateItem']} in {scenario['creativeSignature']['set']}. "
+    if len(anchor) >= 1000:
+        raise ValueError('template dish and set are too long for a shot prompt')
+    for shot, row in zip(shots, revised):
+        shot['imagePrompt'] = (anchor + row['imagePrompt'].strip())[:1000]
+        shot['motionPrompt'] = row['motionPrompt'].strip()
+        shot['sound'] = row['sound'].strip()
+    scenario['model'] = f'template+ollama/{model}'
+    scenario['templateRefinement'] = {'model': model, 'shotCount': count,
+                                      'fixedNarrationAndTiming': True,
+                                      'reviewRequired': 'Run story, evidence, sound and frame gates; local model text is not visual proof.'}
+    return scenario
 
 
 def main():
@@ -106,11 +201,17 @@ def main():
     parser.add_argument('template'); parser.add_argument('--slot', action='append', default=[])
     parser.add_argument('--allow-repeat', action='store_true')
     parser.add_argument('--seconds', type=int); parser.add_argument('--out', required=True)
+    parser.set_defaults(smart=True)
+    parser.add_argument('--smart', action='store_true', help='Refine shot visuals and sound with installed local Ollama (default)')
+    parser.add_argument('--offline-template', dest='smart', action='store_false', help='Use deterministic prompts without a model call')
+    parser.add_argument('--model', default='qwen3:8b', help='Installed local Ollama model for --smart')
     args = parser.parse_args()
     try:
         scenario = build(args.template, dict(s.split('=', 1) for s in args.slot), args.seconds, args.allow_repeat)
-    except (ValueError, KeyError) as error:
-        sys.exit(f'Cannot build: {error}')
+        if args.smart:
+            scenario = refine_with_ollama(scenario, args.model)
+    except (ValueError, KeyError, urllib.error.URLError, TimeoutError, json.JSONDecodeError) as error:
+        sys.exit(f'Cannot build locally: {error}. Check Ollama and the selected model; --smart never calls a paid API.')
     Path(args.out).write_text(json.dumps(scenario, indent=2))
     print(f'Wrote {args.out}: {len(scenario["plan"]["shots"])} shots, {scenario["totalSeconds"]} s')
 

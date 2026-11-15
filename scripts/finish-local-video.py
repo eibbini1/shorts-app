@@ -11,6 +11,7 @@ import json
 import re
 import subprocess
 import shutil
+import tempfile
 from pathlib import Path
 from presentation_mode import choose as choose_presentation
 from evidence_gate import check as check_evidence
@@ -143,7 +144,25 @@ def main():
                         '-c:v', 'libx264', '-crf', '18', '-preset', 'veryfast', '-c:a', 'copy', str(out)], check=True)
         caption_name = srt.name
     else:
-        shutil.copy2(video, out)  # Keep the stable pipeline filename; no text is burned in.
+        hook_overlay = data.get('hookOverlay') or {}
+        hook_text = str(hook_overlay.get('text', '')).strip()
+        if hook_text:
+            start = float(hook_overlay.get('startSeconds', 0))
+            end = float(hook_overlay.get('endSeconds', 2))
+            if not (0 <= start < end <= settings['seconds'] and len(hook_text) <= 80):
+                raise ValueError('hookOverlay needs text up to 80 characters and a valid time range')
+            with tempfile.TemporaryDirectory() as temp_dir:
+                textfile = Path(temp_dir) / 'hook.txt'
+                textfile.write_text(hook_text, encoding='utf-8')
+                font = ROOT / 'assets/fonts/Poppins-Bold.ttf'
+                vf = (f"drawtext=fontfile='{font}':textfile='{textfile}':fontsize=54:"
+                      f"fontcolor=0xECC470:borderw=4:bordercolor=0x101010:"
+                      f"x=(w-text_w)/2:y=h*0.16:enable='between(t,{start},{end})'")
+                subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(video), '-vf', vf,
+                                '-c:v', 'libx264', '-crf', '18', '-preset', 'veryfast',
+                                '-c:a', 'copy', str(out)], check=True)
+        else:
+            shutil.copy2(video, out)  # Keep the stable pipeline filename; no text is burned in.
         caption_name = None
     topic_words = [w for w in re.findall(r'[a-z]{4,}', (data.get('topic', '') + ' ' + plan['title']).lower())]
     tags = list(dict.fromkeys(topic_words))[:10] + ['shorts']
@@ -167,7 +186,9 @@ def main():
                 'aiUse': 'Yes',
                 'aiDisclosureReason': 'Photoreal AI food depicts a realistic scene that did not occur.',
                 'priceSourcesForDescription': evidence_sources,
-                'music': 'Use an appropriately licensed YouTube Studio Audio Library track; record track, license and required attribution before upload.',
+                'music': ('No music requested; verify the final mix has none.' if
+                          str((data.get('audioPlan') or {}).get('music', '')).lower() == 'none' else
+                          'Use an appropriately licensed YouTube Studio Audio Library track; record track, license and required attribution before upload.'),
                 'voiceAndSubtitles': ('No voice or subtitles' if not presentation['voice'] else
                                       'Listen to narration and check caption timing.' if presentation['captions'] else
                                       'Listen to narration; this film has no captions.'),

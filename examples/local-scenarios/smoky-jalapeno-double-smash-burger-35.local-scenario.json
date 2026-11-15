@@ -1,0 +1,140 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 35,
+    "voice": "af_heart",
+    "presentationMode": "asmr"
+  },
+  "model": "director-brief+local-model-review",
+  "promptPackVersion": "2026-11-15",
+  "topic": "Smoky Jalapeño Double Smash Burger",
+  "style": "Photoreal macro food film, 9:16 vertical. One warm luxury working kitchen, matte black griddle, dark charcoal counter, brushed steel spatula, warm amber side light, dark soft background. The same glossy brioche bun, two thin beef patties, cheddar, smoky chipotle mayo, pickled jalapeños and crisp onions form one physically plausible burger. Shallow depth of field, real grease sheen and steam, no plastic-looking cheese or impossible food motion.",
+  "requestedEnding": "The same finished double smash burger is sliced, its halves pulled apart, and its crisp, juicy cross-section held in view.",
+  "creativeSignature": {
+    "format": "tactile-recipe-reveal",
+    "set": "amber-side-lit-charcoal-griddle-kitchen",
+    "hookPattern": "finished-bun-press-cheddar-spill"
+  },
+  "creativeBrief": {
+    "hookImage": "A hand presses the finished burger bun and melted cheddar spills over the edge",
+    "mustShow": "Two beef patties smash on the griddle, then the finished burger is sliced and its halves pulled apart"
+  },
+  "hookOverlay": {"text": "Can you bite this?", "startSeconds": 0, "endSeconds": 2},
+  "storyArc": {
+    "protagonist": "one smoky jalapeño double smash burger",
+    "setting": "one dark charcoal counter with matte black griddle and warm amber side lighting",
+    "goal": "Build a tall, biteable double smash burger with crisp beef edges and a balanced smoky, tangy, crunchy finish.",
+    "obstacle": "The patties must brown quickly while the cheddar melts and the brioche toasts without drying out.",
+    "turn": "Smash thin patties hard for lacy edges, melt cheddar on both, then layer chipotle mayo, pickled jalapeños and crisp onions in a stable stack.",
+    "visualBible": "One burger, one pair of adult cook hands with short natural nails, no gloves, no face. Same matte black griddle, dark charcoal counter, brushed steel spatula, black small bowl of chipotle mayo, glass bowl of pickled jalapeños, ceramic bowl of crisp onions, warm amber light from camera left. Two beef patties only. Cheddar stays on the patties. Bottom bun, sauce, two patties, jalapeños, onions, top bun in that order. No extra food, duplicate burgers, text in generated imagery, logos, or set changes.",
+    "beats": [
+      {"number": 1, "label": "Finished burger hook", "seconds": 2},
+      {"number": 2, "label": "First smash", "seconds": 4},
+      {"number": 3, "label": "Second smash and crisp edges", "seconds": 4},
+      {"number": 4, "label": "Cheddar melts and bun toasts", "seconds": 4},
+      {"number": 5, "label": "Mayo and first patty", "seconds": 5},
+      {"number": 6, "label": "Second patty and jalapeños", "seconds": 4},
+      {"number": 7, "label": "Crispy onions and full stack", "seconds": 4},
+      {"number": 8, "label": "Slice the finished burger", "seconds": 4},
+      {"number": 9, "label": "Pull-apart cross-section", "seconds": 4}
+    ]
+  },
+  "qualityChecks": {"exactTiming": true, "uniquePromptText": true, "narrationFits": true, "endingLockedFromUser": true, "rewrites": 0, "fieldsNeedingRepair": 0},
+  "plan": {
+    "ideas": [
+      {"title": "Smoky Jalapeño Double Smash Burger", "angle": "The pressed finished bun reveals the promise; every later action earns the final cross-section."},
+      {"title": "The Double Smash", "angle": "Lead with the two griddle smashes and their lacy edges."},
+      {"title": "The Cheddar Spill", "angle": "A close bun press reveals the molten cheese before the recipe rewinds."},
+      {"title": "The Jalapeño Stack", "angle": "Show how a tangy layer balances beef and chipotle mayo."},
+      {"title": "The Audible Cut", "angle": "Finish on the slice, onion crunch and readable cross-section."}
+    ],
+    "title": "Smoky Jalapeño Double Smash Burger",
+    "hook": "A thumb presses the glossy bun and molten cheddar moves over the edge. Can you bite this?",
+    "payoff": "The same finished double smash burger is sliced, its halves pulled apart, and its crisp, juicy cross-section held in view.",
+    "shots": [
+      {
+        "seconds": 2,
+        "narration": "Finished burger bun press; cheddar spills over the edge.",
+        "imagePrompt": "Tight side macro of the one finished smoky jalapeño double smash burger on the dark charcoal counter. Same warm amber light from camera left and matte black griddle blurred behind. Glossy brioche top bun, two separate cheddar-covered thin patties, a few green pickled jalapeños and crisp onion strands visible at the edge. One adult hand with short natural nails touches the bun from above. Frame leaves clear dark space above the burger for a separately added text overlay. Photoreal food texture, no generated text.",
+        "motionPrompt": "The one hand presses the glossy top bun once; it compresses slightly and warm melted cheddar spills naturally over the near edge. Hold a low side angle on the same burger, with a small forward camera push. No cut, no extra hand, no new ingredients.",
+        "sound": "soft bun press, faint cheddar sizzle, quiet kitchen room tone"
+      },
+      {
+        "seconds": 4,
+        "narration": "First patty smashes into the hot griddle.",
+        "imagePrompt": "Same amber-lit dark kitchen. Close overhead side angle on the matte black griddle. One raw beef ball has just landed, the brushed steel spatula held by the same natural-nailed adult hand directly above it. The brioche halves and small bowls wait in their established positions on the charcoal counter. Fine realistic heat shimmer and tiny oil droplets, no flames or second kitchen.",
+        "motionPrompt": "The hand drives the steel spatula down on the first beef ball and holds pressure, spreading it into a thin round patty on the hot griddle. The edges begin to sizzle and brown in one continuous physical action. Camera stays near griddle height; no cut.",
+        "sound": "loud beef sizzle, metal spatula scrape on griddle, low kitchen room tone"
+      },
+      {
+        "seconds": 4,
+        "narration": "The second patty makes two lacy crisp edges.",
+        "imagePrompt": "Same matte black griddle and warm side light. First thin beef patty now has a lacy browned rim. A second raw beef ball sits beside it under the same brushed steel spatula and same adult hand. Two patties only, both clearly separate, no cheese yet. Dark charcoal counter and waiting brioche in the same background.",
+        "motionPrompt": "The hand smashes the second beef ball beside the first; the spatula scrapes free, then flips the first thin patty once to reveal a dark golden crisp crust. Oil bubbles at both edges. Close quick tracking move along the griddle, no cut within the shot.",
+        "sound": "second sharp sizzle, spatula scrape on hot griddle"
+      },
+      {
+        "seconds": 4,
+        "narration": "Cheddar melts while the brioche toasts.",
+        "imagePrompt": "Same griddle and kitchen. Two distinct thin browned beef patties each carry one slice of cheddar beginning to melt. The two cut brioche halves toast cut-side down on a clean griddle area beside the beef. Same steel spatula and adult hand, amber side light catching the cheese gloss and brioche crust, realistic mild steam.",
+        "motionPrompt": "The hand places cheddar onto each of the two browned patties; cheese softens and folds over their edges as the hand lifts and turns one brioche half to show its toasted cut face. One continuous griddle action with a short camera slide from cheese to bun, no cut.",
+        "sound": "gentle cheese sizzle, brioche toast scrape, steel spatula tap"
+      },
+      {
+        "seconds": 5,
+        "narration": "Chipotle mayo anchors the first cheddar patty.",
+        "imagePrompt": "Same charcoal counter, matte black griddle behind, warm amber side light. One toasted bottom brioche bun sits on a small dark ceramic serving plate. Same adult hand spreads a restrained spiral of smoky chipotle mayo from the black bowl; one of the two cheddar-covered patties is lifted on the steel spatula above the sauced bun. Jalapeño and onion bowls remain in place. Food looks edible and stable.",
+        "motionPrompt": "The hand spreads chipotle mayo across the toasted bottom bun in one slow spiral, then slides the first cheddar-covered patty from the spatula onto the center of the bun. The camera follows the patty down and stops at the first layer; no cut or teleporting food.",
+        "sound": "thick mayo spread, spatula scrape, soft patty landing on bun"
+      },
+      {
+        "seconds": 4,
+        "narration": "Second patty and pickled jalapeños make the stack.",
+        "imagePrompt": "Same single burger on the same dark plate and charcoal counter. Bottom toasted brioche bun, chipotle mayo, first cheddar-covered patty already in place. Same hand lowers the second cheddar-covered patty onto the first, then brings three glistening green pickled jalapeño rings from the glass bowl. Griddle and amber side light remain where established. No top bun yet, no extra patty.",
+        "motionPrompt": "The hand lowers the second cheddar-covered patty precisely onto the first, then places three pickled jalapeño rings in a small overlapping row on the melted cheese. Camera tilts up with the growing stack in one shot; ingredients stay stable, no cut.",
+        "sound": "soft beef landing, wet jalapeño placement, quiet kitchen room tone"
+      },
+      {
+        "seconds": 4,
+        "narration": "Crispy onions crown the open double stack.",
+        "imagePrompt": "Same burger on the same dark plate. The two cheddar-covered patties and three jalapeño rings are visible above the sauced bottom brioche bun. Same adult hand holds a small generous tuft of golden crispy onion strands from the ceramic bowl over the open stack. Top brioche bun waits beside the plate. Warm amber side light makes onion edges crisp, dark soft background, no duplicate food.",
+        "motionPrompt": "The hand drops one controlled pile of crispy onion strands onto the jalapeños, pauses a beat on the full open stack, then lifts the glossy toasted top bun and settles it gently over the onions. Camera makes a slight side push to reveal the height; one continuous action, no cut.",
+        "sound": "dry crispy onion crunch, gentle top bun press, quiet kitchen ambience"
+      },
+      {
+        "seconds": 4,
+        "narration": "The finished burger is sliced cleanly in half.",
+        "imagePrompt": "Same completed one double smash burger centered on the same dark ceramic plate and charcoal counter, amber light from camera left. Glossy top brioche bun, onion, jalapeños, two cheddar-covered patties, chipotle mayo and bottom bun in correct order. Same hand steadies the burger while a brushed steel chef knife touches its center. No bite mark, no second burger, no exaggerated sauce eruption.",
+        "motionPrompt": "The same hand steadies the top bun as the steel knife slices vertically once through the center of the finished burger to the plate. The halves remain touching. Tight low side angle tracks the blade, capturing a believable crisp onion and toasted bun crackle; no cut.",
+        "sound": "audible crisp bun crunch, knife slice, ceramic plate tap"
+      },
+      {
+        "seconds": 4,
+        "narration": "Two halves pull apart to reveal the juicy cross-section.",
+        "imagePrompt": "Same just-sliced double smash burger on the same dark ceramic plate and charcoal counter under warm amber side light. Two halves still touch at the cut, showing top glossy brioche, crispy onions, green pickled jalapeños, two separate cheddar-coated thin beef patties, chipotle mayo and bottom toasted bun. Same pair of natural-nailed adult hands reaches to separate the halves. Realistic juicy cut surface, restrained grease, dark background, no extra food.",
+        "motionPrompt": "The hands pull the two freshly sliced burger halves apart by a few centimeters, revealing the complete crisp juicy cross-section. Hold steady on the exposed layers and let a small real bead of juice move; camera eases closer and stops. Same plate and kitchen, one continuous pull, no bite or new cut.",
+        "sound": "last crisp onion crunch, soft bun tear, quiet kitchen room tone"
+      }
+    ],
+    "claimsToCheck": ["Creative food film; the recipe and imagery require human cooking and visual review before publication"]
+  },
+  "recipe": {
+    "status": "creative kitchen formulation; cook and taste before publishing as a tested recipe",
+    "ingredients": ["2 thin beef patties from freshly ground beef", "2 cheddar slices", "1 brioche burger bun", "smoky chipotle mayo", "pickled jalapeño rings", "crispy onion strands"],
+    "method": ["Smash two beef balls thin on a hot griddle and cook thoroughly; add cheddar and let it melt.", "Toast both brioche halves. Spread chipotle mayo on the bottom bun, stack the two cheddar patties, add pickled jalapeños and crispy onions, then close with the top bun.", "Slice once, pull the halves apart, and serve immediately."]
+  },
+  "audioPlan": {
+    "music": "none",
+    "foley": "Use public-domain recorded frying and crunch cues for the visible griddle and crisp food actions; other cues are local synthesized approximations. Listen to the full mix before release.",
+    "voice": "none",
+    "subtitles": "none",
+    "foleySamples": {
+      "sizzle": {"file": "assets/foley/public-domain/frying-fries.ogg", "offsetSeconds": 2, "gain": 0.7},
+      "crunch": {"file": "assets/foley/public-domain/crunching.ogg", "offsetSeconds": 9, "gain": 0.6}
+    }
+  },
+  "sourceReview": {"checkedAt": "2026-11-15", "trendLabel": "original burger film brief; no virality claim", "sources": []},
+  "template": "hand-directed-asmr-burger"
+}

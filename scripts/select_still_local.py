@@ -3,18 +3,29 @@
 import argparse
 import base64
 import json
+import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
 from first_checks import check_still
 
+VISION_UNAVAILABLE = False
+
+
+def provisional_selection(reason):
+    return 1, {'status': 'unverified', 'reason': reason,
+               'note': 'Candidate 1 passed only the blank/dark image check. Inspect all candidates and the rendered shot manually before release.'}
+
 
 def select(images, image_prompt, model='qwen3-vl:4b'):
+    global VISION_UNAVAILABLE
     if len(images) != 3:
         raise ValueError('exactly three stills are required')
     if any(check_still(path) for path in images):
         raise ValueError('at least one candidate is blank or too dark; regenerate it')
+    if VISION_UNAVAILABLE:
+        return provisional_selection('Vision model was unavailable earlier in this render')
     schema = {'type': 'object', 'properties': {
         'selectedIndex': {'type': 'integer', 'minimum': 1, 'maximum': 3},
         'candidates': {'type': 'array', 'minItems': 3, 'maxItems': 3, 'items': {
@@ -36,9 +47,16 @@ def select(images, image_prompt, model='qwen3-vl:4b'):
                                   'images': [base64.b64encode(path.read_bytes()).decode() for path in images]}]}
     request = urllib.request.Request('http://127.0.0.1:11434/api/chat',
                                      data=json.dumps(request_body).encode(), headers={'Content-Type': 'application/json'})
-    with urllib.request.urlopen(request, timeout=240) as response:
-        raw = json.loads(response.read())['message']['content']
-    review = json.loads(raw[raw.find('{'):raw.rfind('}') + 1])
+    try:
+        with urllib.request.urlopen(request, timeout=240) as response:
+            result = json.loads(response.read())
+        raw = result.get('message', {}).get('content', '').strip()
+        if not raw or result.get('done_reason') == 'length':
+            raise ValueError('empty or token-limited vision response')
+        review = json.loads(raw[raw.find('{'):raw.rfind('}') + 1])
+    except (ValueError, KeyError, urllib.error.URLError) as error:
+        VISION_UNAVAILABLE = True
+        return provisional_selection(f'Vision review unavailable: {error}')
     rows = review['candidates']
     if len(rows) != 3 or sorted(row['index'] for row in rows) != [1, 2, 3]:
         raise ValueError('vision model did not assess all three candidates')

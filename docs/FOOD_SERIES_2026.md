@@ -4,11 +4,11 @@ Checked 2026-11-15. These are editorial experiments, not a measured global ranki
 
 Run `npm run ideas:series:food` for all five series and `npm run ideas:recipes:2026` for ten candidate recipes. Both commands are read-only and require no model or GPU. Series definitions live in `data/food-series.json`.
 
-For your own 30–60 second story, use the guided command after this branch is merged. The draft asks for subject, visual style, the change at the end, duration and orientation. Give it a concrete ending, such as “the chef cracks the crust and serves one steaming slice,” to keep the middle shots connected.
+For your own 30–60 second story, use the guided command after this branch is merged. The new director brief asks for the exact dish, style, one set, first visible hook, must-show action, obstacle, technique, ending, sound mode, duration and orientation. Optional answers may be left blank for the local model. Give it a concrete ending, such as “the chef cracks the crust and serves one steaming slice,” to keep the middle shots connected.
 
 ```bash
 cd /Users/eibbini/Documents/shorts-app
-bash scripts/make-local-video.sh --draft-only --model gemma-local
+npm run brief:local -- --model gemma-local
 # Review the printed drafts/generated/ID.local-scenario.json: title, all shot actions, props and ending.
 bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json --best-of-3-stills
 # In another Terminal while it renders:
@@ -16,6 +16,21 @@ bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.jso
 ```
 
 Replace `ID` with the actual filename printed by the draft command. `--best-of-3-stills` is optional and slower. The current interactive builder supports **10–60 seconds**; wide format currently requires 60 seconds. Beyond one minute, plan separate connected chapters and edit them together; there is no verified one-command feature-length story path. A passing technical gate still requires watching the final footage and listening to its mix.
+
+`npm run make:any:mac -- --draft-only` uses the same director brief and prints the shot plan. The brief is saved as `drafts/generated/ID.brief.json` next to the scenario, so you can see exactly which answers the local model received. For repeatable smoke tests, `python3 scripts/director-brief.py --answers my-answers.json --dry-run` validates an answer file without calling Gemma or using the GPU.
+
+The six template formats also accept a local Ollama visual refinement in the one-command film path. A single `qwen3:8b` call revises each shot's still prompt, moving action and sound while keeping the template's narration, duration, prices and ending fixed. `--offline-template` selects deterministic prompts for troubleshooting. The template may take `--slot visual_set='sunlit walnut kitchen'`, `--slot surface='wooden board'`, `--slot pan='cast-iron skillet'`, `--slot hand='bare hand'`, and `--slot visual_style='warm realistic food film'`. The model refinement is code-tested with a mocked local response; a real model call and rendered comparison remain pending.
+
+```bash
+bash scripts/make-film.sh process-reveal \
+  --slot 'item=roasted garlic bread' \
+  --slot 'time_or_effort=one hour' \
+  --slot 'source=your checked recipe source' \
+  --slot 'visual_set=sunlit walnut kitchen' \
+  --draft-only
+```
+
+Review the saved scenario and source any stated time, price or record before rendering. Four price-driven templates intentionally fail the evidence gate if they contain only a placeholder amount; a number needs a sourced basket or documented record.
 
 ## Evidence used
 
@@ -64,3 +79,19 @@ Use the branch containing this work after the PR is merged; the original checkou
 The next quality jump is measured continuity and final-cut review, including hand/tool contact, food state changes, sound placement and exact final duration. A numerical quality score cannot prove those by itself. No local film's audio has been heard by this assistant.
 
 The current `add-sfx.py` renderer makes original synthesized Foley approximations. Its cue mapping now separates spoon scraping/spreading from an actual plate clink, and uses the explicit shot sound line before fallback prompt text. This was smoke-tested on the garlic-bread scenario. It has **not** been auditioned as natural kitchen audio. Prefer original or properly licensed real recordings where available, then listen to the finished mix and compare voice/no-voice versions using the channel's own retention data before calling either the best performer.
+
+## Smoky Jalapeño Double Smash Burger, 35 seconds
+
+The user's nine-shot ASMR brief is in `examples/local-scenarios/smoky-jalapeno-double-smash-burger-35.local-scenario.json`. It locks the finished-food bun press at 0–2 seconds, griddle actions at 2–14, assembly at 14–27, and cut/cross-section at 27–35. The only on-screen text is the two-second `Can you bite this?` hook. Music, voice and subtitles are disabled. Local Qwen3 8B reviewed the shot plan against the master food, shot and montage prompts; its comments are advisory, and the final pixels still need inspection. vidIQ's free script guidance was consulted; no vidIQ click or performance score is claimed for this burger.
+
+The audio plan uses two declared public-domain field recordings for frying and dry crunch, documented in `assets/foley/public-domain/SOURCES.md`. Other sound cues remain local synthesized approximations. A technical sound audit and a buffer smoke test passed; no assistant has heard the finished mix.
+
+```bash
+cd /Users/eibbini/Documents/Codex/2026-11-06/python-3-12-is-already-installed/shorts-app-evidence
+node --input-type=module -e 'import fs from "node:fs"; import {verifyScenario,scenarioSettings} from "./scripts/scenario-schema.mjs"; const s=JSON.parse(fs.readFileSync("examples/local-scenarios/smoky-jalapeno-double-smash-burger-35.local-scenario.json")); verifyScenario(s.plan,scenarioSettings(s.settings)); console.log("schema passed")'
+python3 scripts/preflight-short.py examples/local-scenarios/smoky-jalapeno-double-smash-burger-35.local-scenario.json --strict
+python3 scripts/audit-local-story.py examples/local-scenarios/smoky-jalapeno-double-smash-burger-35.local-scenario.json
+bash scripts/make-local-video.sh --scenario examples/local-scenarios/smoky-jalapeno-double-smash-burger-35.local-scenario.json --best-of-3-stills
+```
+
+The first `qwen3-vl:4b` still review ran out of response tokens without returning JSON. The selector now marks that choice unverified and keeps rendering with a candidate that passed only the blank/dark check. Human frame review is essential; this fallback is not a best-of-three quality verdict.

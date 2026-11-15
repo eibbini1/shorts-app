@@ -6,6 +6,7 @@ import math
 import re
 import sys
 from pathlib import Path
+from presentation_mode import choose as choose_presentation
 
 STOP = {'the','and','with','from','into','that','this','one','same','scene','shot','film','video','warm','cinematic','real','local'}
 ACTION = re.compile(r'\b(pat|place|drop|sear|bast|pour|squeeze|lift|plate|cut|slice|bite|take|stir|chop|melt|sizzle|open|close|pull|push|run|walk|jump|turn|catch|serve|mix|roll|spin|crack|break|assemble|brown|cook|garnish)\w*\b', re.I)
@@ -16,14 +17,49 @@ def words(value):
     return {w for w in re.findall(r'[a-z]{4,}', str(value).lower()) if w not in STOP}
 
 
+def concepts(value):
+    """A small culinary vocabulary for comparing concrete brief actions to prompts."""
+    normal = {}
+    for word in words(value):
+        if word.startswith(('tear', 'torn', 'pull')): word = 'tear'
+        elif word.startswith(('sizzl', 'bubbl', 'foam', 'hiss')): word = 'sizzle'
+        elif word.startswith(('crisp', 'crunch', 'crust', 'blister')): word = 'crisp'
+        elif word.startswith(('melt', 'stretch', 'strand')): word = 'melt'
+        elif word.startswith(('pour', 'drizzl', 'stream')): word = 'pour'
+        normal[word] = True
+    return set(normal)
+
+
+def creative_brief_problems(data):
+    """Check that a drafted shot plan actually uses the viewer's concrete directions."""
+    brief = data.get('creativeBrief') or {}
+    if not brief:
+        return []
+    shots = data['plan']['shots']
+    problems = []
+    hook_words = concepts(brief.get('hookImage', ''))
+    if hook_words:
+        opening = concepts(shots[0]['imagePrompt'] + ' ' + shots[0]['motionPrompt'])
+        if len(hook_words & opening) < min(2, len(hook_words)):
+            problems.append('first shot does not depict the requested visual hook')
+    action_words = concepts(brief.get('mustShow', ''))
+    if action_words:
+        motions = concepts(' '.join(shot['motionPrompt'] for shot in shots))
+        if len(action_words & motions) < min(2, len(action_words)):
+            problems.append('no moving shot depicts the required physical action')
+    return problems
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('scenario', type=Path)
     a = p.parse_args()
     data = json.loads(a.scenario.read_text(encoding='utf-8-sig'))
     plan, settings = data['plan'], data['settings']
+    presentation = choose_presentation(data)
     shots = plan['shots']
     problems, notes = [], []
+    problems.extend(creative_brief_problems(data))
     seconds = settings['seconds']
     if sum(s['seconds'] for s in shots) != seconds: problems.append('shot timings do not equal the requested runtime')
     if len(shots) < math.ceil(seconds / 6): problems.append('too few distinct shots; motion would repeat or stretch')
@@ -45,7 +81,8 @@ def main():
     for i, shot in enumerate(shots, 1):
         if not ACTION.search(shot['motionPrompt']): problems.append(f'shot {i} has no recognizable physical action')
         if CAMERA_ONLY.search(shot['motionPrompt']) and not ACTION.search(shot['motionPrompt']): problems.append(f'shot {i} is camera movement over a still')
-        if len(shot['narration'].split()) > math.ceil(shot['seconds'] * 2.5): problems.append(f'shot {i} narration cannot fit')
+        if presentation['voice'] and len(shot['narration'].split()) > math.ceil(shot['seconds'] * 2.5):
+            problems.append(f'shot {i} narration cannot fit')
         if not shot.get('sound', '').strip(): notes.append(f'shot {i} has no localized sound cue')
         shot_words = words(shot['imagePrompt'] + ' ' + shot['motionPrompt'])
         if protagonist_words and not protagonist_words.intersection(shot_words):
