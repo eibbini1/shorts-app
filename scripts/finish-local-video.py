@@ -11,8 +11,10 @@ import json
 import re
 import subprocess
 import shutil
+import tempfile
 from pathlib import Path
 from presentation_mode import choose as choose_presentation
+from evidence_gate import check as check_evidence
 
 ROOT = Path(__file__).resolve().parents[1]
 WORDS_PER_SECOND = 2.6   # Kokoro speed 1 reads about this fast; only used to split one line into short captions
@@ -120,6 +122,9 @@ def main():
     data = json.loads(scenario.read_text(encoding='utf-8-sig'))
     plan, settings = data['plan'], data['settings']
     presentation = choose_presentation(data)
+    evidence_problems, evidence_notes, evidence_sources = check_evidence(
+        data, json.loads((ROOT / 'data/prices.json').read_text()),
+        json.loads((ROOT / 'data/published-signatures.json').read_text()))
     out = video.with_name(video.stem + '.captioned.mp4')
     if presentation['captions']:
         timeline = json.loads((work / 'voice-provenance.json').read_text())['lines']
@@ -139,16 +144,72 @@ def main():
                         '-c:v', 'libx264', '-crf', '18', '-preset', 'veryfast', '-c:a', 'copy', str(out)], check=True)
         caption_name = srt.name
     else:
-        shutil.copy2(video, out)  # Keep the stable pipeline filename; no text is burned in.
+        hook_overlay = data.get('hookOverlay') or {}
+        hook_text = str(hook_overlay.get('text', '')).strip()
+        if hook_text:
+            start = float(hook_overlay.get('startSeconds', 0))
+            end = float(hook_overlay.get('endSeconds', 2))
+            if not (0 <= start < end <= settings['seconds'] and len(hook_text) <= 80):
+                raise ValueError('hookOverlay needs text up to 80 characters and a valid time range')
+            with tempfile.TemporaryDirectory() as temp_dir:
+                textfile = Path(temp_dir) / 'hook.txt'
+                textfile.write_text(hook_text, encoding='utf-8')
+                font = ROOT / 'assets/fonts/Poppins-Bold.ttf'
+                vf = (f"drawtext=fontfile='{font}':textfile='{textfile}':fontsize=54:"
+                      f"fontcolor=0xECC470:borderw=4:bordercolor=0x101010:"
+                      f"x=(w-text_w)/2:y=h*0.16:enable='between(t,{start},{end})'")
+                subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(video), '-vf', vf,
+                                '-c:v', 'libx264', '-crf', '18', '-preset', 'veryfast',
+                                '-c:a', 'copy', str(out)], check=True)
+        else:
+            shutil.copy2(video, out)  # Keep the stable pipeline filename; no text is burned in.
         caption_name = None
     topic_words = [w for w in re.findall(r'[a-z]{4,}', (data.get('topic', '') + ' ' + plan['title']).lower())]
-    tags = list(dict.fromkeys(topic_words))[:10] + ['shorts', 'animated']
+    tags = list(dict.fromkeys(topic_words))[:10] + ['shorts']
+    price_note = ''
+    if data.get('priceBasket'):
+        basket = data['priceBasket']
+        price_note = (f"\n\nPrice context: {basket.get('label', 'illustrative')}; "
+                      f"{basket.get('currency', 'USD')} retail packages checked in data/prices.json. "
+                      f"Excludes: {', '.join(basket.get('excludes', [])) or 'not specified'}."
+                      f"\nSources:\n" + '\n'.join(evidence_sources))
+    recipe_note = ''
+    recipe = data.get('recipe') or {}
+    if recipe.get('ingredients') and recipe.get('method'):
+        recipe_note = ('\n\nRecipe (' + str(recipe.get('servings', 'servings not specified')) + ' servings):\n' +
+                       '\n'.join('• ' + item for item in recipe['ingredients']) +
+                       '\n\nMethod:\n' + '\n'.join(f'{i}. {step}' for i, step in enumerate(recipe['method'], 1)))
+        if recipe.get('inspirationSource'):
+            recipe_note += '\nRecipe inspiration: ' + recipe['inspirationSource']
+        if recipe.get('status'):
+            recipe_note += '\nReview status: ' + recipe['status']
+    audio_plan = data.get('audioPlan') or {}
+    music_credit = audio_plan.get('musicCredit', '') if audio_plan.get('music') == 'licensed-track' else ''
+    music_note = '\n\nMusic: ' + music_credit if music_credit else ''
+    release_problems = evidence_problems + [note for note in evidence_notes if
+        'history is empty' in note or 'signature missing' in note or 'outside the four-format' in note]
     pack = {'title': plan['title'][:100],
-            'description': f"{plan['hook']}\n\n{plan['payoff']}\n\n#shorts #animated",
+            'description': f"{plan['hook']}\n\n{plan['payoff']}{price_note}{recipe_note}{music_note}\n\n#shorts",
             'tags': tags, 'claimsToCheck': plan.get('claimsToCheck', []),
             'video': out.name, 'captions': caption_name, 'presentationMode': presentation['mode'],
             'presentationReason': presentation['reason'], 'seconds': settings['seconds'],
-            'note': 'Review before upload. Nothing is uploaded by this script.'}
+            'note': 'Review before upload. Nothing is uploaded by this script.',
+            'evidenceGate': {'passed': not evidence_problems, 'problems': evidence_problems, 'reviewNotes': evidence_notes},
+            'uploadChecklist': {
+                'aiUse': 'Yes',
+                'aiDisclosureReason': 'Photoreal AI food depicts a realistic scene that did not occur.',
+                'priceSourcesForDescription': evidence_sources,
+                'music': (f'Included licensed track: {music_credit}. Listen to the final mix.' if music_credit else
+                          'No music requested; verify the final mix has none.' if
+                          str(audio_plan.get('music', '')).lower() == 'none' else
+                          'Record the chosen music track, license and required attribution before upload.'),
+                'voiceAndSubtitles': ('No voice or subtitles' if not presentation['voice'] else
+                                      'Listen to narration and check caption timing.' if presentation['captions'] else
+                                      'Listen to narration; this film has no captions.'),
+                'humanReview': 'Watch all final frames and listen to the full mix before publishing.',
+                'publicationStatus': 'blocked' if release_problems else 'review-required',
+                'releaseProblems': release_problems
+            }}
     video.with_name(video.stem + '.pack.json').write_text(json.dumps(pack, indent=2) + '\n')
     print(f"Wrote {out.name} ({presentation['mode']}), {video.stem}.pack.json" + (f' and {caption_name}' if caption_name else ''))
 

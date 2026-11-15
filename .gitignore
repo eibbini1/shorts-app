@@ -9,11 +9,13 @@ oauth*.json
 
 # deps / build
 node_modules/
+node_modules
 dist/
 
 # generated media and caches (large, reproducible)
 out/
 storage/
+storage
 *.mp4
 *.mp3
 *.wav

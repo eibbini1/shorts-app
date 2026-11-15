@@ -1,0 +1,254 @@
+{
+  "checkedAt": "2026-11-15",
+  "method": "Editorial series concepts informed by a vidIQ snapshot, one reference breakdown, and cited 2026 forecast sources. These are hypotheses to test, not a ranked viral list or a promise of views.",
+  "channelData": "BB channel was not connected to vidIQ at review time; no audience-specific performance claim is possible.",
+  "series": [
+    {
+      "id": "crave-lab",
+      "name": "The Crave Lab",
+      "format": "tactile-recipe-reveal",
+      "set": "warm copper-and-walnut kitchen",
+      "hookPattern": "finished texture first, then reveal how it was made",
+      "lengthSeconds": [
+        10,
+        20
+      ],
+      "storyRule": "Start with an edible payoff, reverse to preparation, end with a distinct bite or tear. Show one ingredient changing state in every middle shot.",
+      "visualRule": "Macro food action, real contact between hands and tools, motivated pushes only; keep one hero dish and physical continuity.",
+      "soundRule": "Natural kitchen ASMR leads: crust, knife, pan, spread, tear. No voice or captions unless a factual explanation is essential. Music is optional and must be licensed.",
+      "evidence": [
+        "vidIQ breakdown of https://www.youtube.com/shorts/LV3mChwupF8: five scenes over about 20 seconds; no voice or background music reported",
+        "vidIQ garlic-bread outlier snapshot on 2026-11-15 found multiple short cheese/garlic-bread examples with strong channel-relative performance; this does not predict BB performance"
+      ],
+      "episodes": [
+        {
+          "id": "shallot-garlic-bread",
+          "title": "Brown-Butter Shallot & Roasted Garlic Bread",
+          "hook": "Tear the finished loaf for a short cheese pull",
+          "payoff": "One hot bite with flaky salt",
+          "scenario": "examples/local-scenarios/shallot-garlic-bread-20.local-scenario.json",
+          "status": "drafted and preflighted; render pending"
+        },
+        {
+          "id": "crispy-cabbage-dumplings",
+          "title": "Crispy Cabbage Dumplings",
+          "hook": "Crack the lacy skirt",
+          "payoff": "Steam escapes from one dumpling",
+          "status": "concept"
+        },
+        {
+          "id": "freezer-arancini",
+          "title": "Freezer-to-Fine-Dining Arancini",
+          "hook": "Open the crisp shell",
+          "payoff": "Warm center and a bright herb finish",
+          "status": "concept"
+        }
+      ]
+    },
+    {
+      "id": "one-pan-transformation",
+      "name": "One Pan, One Transformation",
+      "format": "food-process-story",
+      "set": "clean stone home kitchen",
+      "hookPattern": "raw ingredient enters the pan with an obvious question",
+      "lengthSeconds": [
+        20,
+        30
+      ],
+      "storyRule": "Pose a visible culinary problem, show a technique that changes the ingredient, reveal the final texture. No unrelated insert shots.",
+      "visualRule": "One pan and one stable orientation; use heat, steam, glaze, and hand action as actual motion.",
+      "soundRule": "Sizzle and utensil contact carry cuts; one brief voice line only if technique cannot be shown clearly.",
+      "evidence": [
+        "Pinterest Predicts 2026 Cabbage Crush and Whole Foods Market 2026 vinegar and freezer forecasts are broad signals, not proof for these exact recipes"
+      ],
+      "episodes": [
+        {
+          "id": "charred-cabbage-alfredo",
+          "title": "Charred Cabbage Alfredo",
+          "hook": "Can a cabbage edge hold a silky sauce?",
+          "payoff": "Glossy fork lift",
+          "status": "concept"
+        },
+        {
+          "id": "vinegar-glazed-carrots",
+          "title": "Sticky Fruit-Vinegar Glazed Carrots",
+          "hook": "Carrot hits a hot copper pan",
+          "payoff": "One glossy turn and plating",
+          "status": "concept"
+        },
+        {
+          "id": "frozen-dumpling-finish",
+          "title": "Restaurant-Finish Crispy Dumplings",
+          "hook": "Frozen dumpling meets oil",
+          "payoff": "Lacy pan crisp breaks audibly",
+          "status": "concept"
+        }
+      ]
+    },
+    {
+      "id": "honest-luxury-levels",
+      "name": "Honest Luxury Levels",
+      "format": "ingredient-basket-level-up",
+      "set": "dark restaurant pass",
+      "hookPattern": "same dish, one visible upgrade at each price step",
+      "lengthSeconds": [
+        20,
+        30
+      ],
+      "storyRule": "Each level must add an ingredient and visible cooking or plating action. Show a sourced ingredient basket, not a restaurant menu price.",
+      "visualRule": "Lock plate angle and serving size across levels so the visual difference is legible.",
+      "soundRule": "Use a distinct real kitchen sound for each upgrade; duck optional licensed music under it.",
+      "evidence": [
+        "Original app format. No vidIQ evidence currently establishes this format as trending for BB."
+      ],
+      "episodes": [
+        {
+          "id": "charcoal-lamb-kebab-levels",
+          "title": "Charcoal Lamb Kebab, Four Levels",
+          "hook": "One kebab, four ingredient baskets",
+          "payoff": "Final plated wrap",
+          "scenario": "examples/local-scenarios/charcoal-lamb-kebab-levels-priced.local-scenario.json",
+          "status": "repriced draft; render pending"
+        },
+        {
+          "id": "garlic-toast-levels",
+          "title": "Garlic Toast, Four Levels",
+          "hook": "Start with garlic and bread",
+          "payoff": "A distinct luxury finish",
+          "status": "concept; source price basket before drafting"
+        },
+        {
+          "id": "cafe-drink-levels",
+          "title": "Pistachio Caf\u00e9 Drink, Four Levels",
+          "hook": "One glass, four finishes",
+          "payoff": "Cold layered pour",
+          "status": "concept; source price basket before drafting"
+        }
+      ]
+    },
+    {
+      "id": "guess-the-basket",
+      "name": "Guess the Basket",
+      "format": "guess-the-price",
+      "set": "bright ingredient counter",
+      "hookPattern": "show finished plate, ask for the sourced ingredient basket total",
+      "lengthSeconds": [
+        10,
+        20
+      ],
+      "storyRule": "Reveal ingredients one by one; give viewers a fair visual clue before the sourced basket total. Never imply the total is a menu price.",
+      "visualRule": "Close product inserts and a final wide plate; use an unambiguous readable counter.",
+      "soundRule": "Quiet tactile sounds with a restrained reveal sting; captions only for the numeric question and answer.",
+      "evidence": [
+        "Original app format; performance and preferred hook timing require BB upload data."
+      ],
+      "episodes": [
+        {
+          "id": "caviar-toast-basket",
+          "title": "Guess the Caviar Toast Basket",
+          "hook": "What do these ingredients cost together?",
+          "payoff": "Sourced retail basket total",
+          "status": "concept; source all shown ingredients"
+        },
+        {
+          "id": "truffle-pasta-basket",
+          "title": "Guess the Truffle Pasta Basket",
+          "hook": "One plate, three price clues",
+          "payoff": "Dated retail basket total",
+          "status": "concept; source all shown ingredients"
+        },
+        {
+          "id": "wagyu-sandwich-basket",
+          "title": "Guess the Wagyu Sandwich Basket",
+          "hook": "Can you price this build?",
+          "payoff": "Dated retail basket total",
+          "status": "concept; source all shown ingredients"
+        }
+      ]
+    },
+    {
+      "id": "tiny-technique-big-result",
+      "name": "Tiny Technique, Big Result",
+      "format": "food-process-story",
+      "subgenre": "single-technique-explainer",
+      "set": "sunlit teaching kitchen",
+      "hookPattern": "show a food failure, then one small correction",
+      "lengthSeconds": [
+        20,
+        30
+      ],
+      "storyRule": "One practical technique with an observable before/after; verify factual cooking claims before narration. Avoid inventing a result the video cannot show.",
+      "visualRule": "Locked comparison framing, one overhead demonstration, macro final texture; warm realistic grade.",
+      "soundRule": "Short natural voice only when it adds instruction, otherwise text labels and process sound. Keep captions aligned to spoken words.",
+      "evidence": [
+        "TikTok Next 2026 mentions #cookinghacks as a broad discovery signal; no specific technique here is a measured trend."
+      ],
+      "episodes": [
+        {
+          "id": "crisp-dumpling-skirt",
+          "title": "The Dumpling Skirt Fix",
+          "hook": "Why is this bottom soggy?",
+          "payoff": "A visibly crisp skirt",
+          "status": "concept; technique test needed"
+        },
+        {
+          "id": "glossy-carrot-glaze",
+          "title": "The Glaze That Clings",
+          "hook": "Why does this glaze slide off?",
+          "payoff": "Coating holds on a turned carrot",
+          "status": "concept; technique test needed"
+        },
+        {
+          "id": "cheese-pull-control",
+          "title": "The Short Cheese Pull",
+          "hook": "Why does the cheese break?",
+          "payoff": "A plausible, brief melt pull",
+          "status": "concept; technique test needed"
+        }
+      ]
+    },
+    {
+      "id": "close-up-recipe-guide",
+      "name": "Close-Up Recipe Guide",
+      "format": "food-process-story",
+      "subgenre": "subtitled-step-by-step",
+      "set": "one warm working home kitchen",
+      "hookPattern": "finished spoonful then clear ingredient-by-ingredient rewind",
+      "lengthSeconds": [
+        25,
+        35
+      ],
+      "storyRule": "Show one hero dish in one vessel. Each close-up advances the recipe with a visible ingredient or cooking state. Put usable quantities and a complete method in the pack; end with the cooked dish served.",
+      "visualRule": "Stable pan and countertop orientation, same hands and tools, macro focus on each ingredient entering the same dish. Keep the food state and ingredient count continuous. Cut across real cooking time; never imply raw food instantly cooks.",
+      "soundRule": "Kokoro voice and aligned subtitles for ingredient amounts and instructions, with low, action-matched recorded kitchen sound. Music only when licensed and useful.",
+      "evidence": [
+        "Marion\u2019s Kitchen one-pan red curry dumplings provides a recipe reference, not proof of an upload trend",
+        "vidIQ outlier snapshot on 2026-11-15 found several one-pan dumpling Shorts outperforming their channels; no BB performance forecast"
+      ],
+      "episodes": [
+        {
+          "id": "red-curry-dumpling-bake",
+          "title": "One-Pan Red Curry Dumpling Bake",
+          "hook": "Lift one sauce-coated dumpling from the finished pan",
+          "payoff": "A hot spoonful with dumpling, greens and glossy red coconut sauce",
+          "scenario": "examples/local-scenarios/red-curry-dumpling-bake-30.local-scenario.json",
+          "status": "drafted; render and review pending"
+        },
+        {
+          "id": "crispy-potato-nests",
+          "title": "Crispy Potato and Cheese Nests",
+          "hook": "Crack a golden nest open",
+          "payoff": "Melted center and crisp potato rim",
+          "status": "concept; kitchen test needed"
+        },
+        {
+          "id": "mason-jar-noodles",
+          "title": "Layered Mason Jar Noodles",
+          "hook": "Hot broth transforms a layered jar",
+          "payoff": "One noodle lift from the same jar",
+          "status": "concept; kitchen test needed"
+        }
+      ]
+    }
+  ]
+}

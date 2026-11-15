@@ -23,7 +23,7 @@ CONTRAST = re.compile(r'\b(vs\.?|versus|same|instead|but|only|yet)\b', re.I)
 BANNED = re.compile(r'\b(illegal|banned|ban|forbidden|outlawed)\b', re.I)
 NUMBER = re.compile(r'\d|\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion)\b', re.I)
 VAGUE_OPEN = re.compile(r'^(this|these|the|a|an)\b', re.I)
-VISIBLE_ACTION = re.compile(r'\b(lift\w*|lower\w*|spread\w*|pull\w*|push\w*|pour\w*|drip\w*|jump\w*|run\w*|walk\w*|roll\w*|spin\w*|bite\w*|chew\w*|slic\w*|chop\w*|stir\w*|grab\w*|reach\w*|open\w*|clos\w*|arrang\w*|melt\w*|bubbl\w*|rac\w*|carry\w*|drop\w*|catch\w*|cross\w*|serv\w*|eat\w*|driv\w*|pedal\w*|sprinkl\w*|squeez\w*|sear\w*|bast\w*|plat\w*|flip\w*|toss\w*|fold\w*|trac\w*|step\w*|climb\w*|break\w*|crack\w*|glid\w*)\b', re.I)
+VISIBLE_ACTION = re.compile(r'\b(lift\w*|lower\w*|spread\w*|pull\w*|push\w*|pour\w*|drip\w*|jump\w*|run\w*|walk\w*|roll\w*|spin\w*|bite\w*|chew\w*|slic\w*|chop\w*|stir\w*|grab\w*|reach\w*|open\w*|clos\w*|arrang\w*|melt\w*|bubbl\w*|rac\w*|carry\w*|drop\w*|catch\w*|cross\w*|serv\w*|eat\w*|driv\w*|pedal\w*|sprinkl\w*|squeez\w*|sear\w*|bast\w*|plat\w*|flip\w*|toss\w*|fold\w*|trac\w*|step\w*|climb\w*|break\w*|crack\w*|glid\w*|add\w*|present\w*|adjust\w*|smash\w*|press\w*|toast\w*|stack\w*)\b', re.I)
 
 
 def hook_score(line):
@@ -74,7 +74,10 @@ def main():
         (problems if '--strict' in sys.argv else warnings).append(message)
     seconds = settings['seconds']
     words = sum(len(s['narration'].split()) for s in plan['shots'])
-    print(f'Length: {seconds} s, {words} narrated words ({words / seconds:.1f} per second)')
+    if presentation['voice']:
+        print(f'Length: {seconds} s, {words} narrated words ({words / seconds:.1f} per second)')
+    else:
+        print(f'Length: {seconds} s, no narration in {presentation["mode"]} mode; shot text is for planning only')
     if not 10 <= seconds <= 35:
         warnings.append('length outside the 10-35 s local Short band')
     if presentation['voice'] and words / seconds > 3.2:

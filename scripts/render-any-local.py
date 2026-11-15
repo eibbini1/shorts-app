@@ -13,6 +13,7 @@ from pathlib import Path
 from local_video_progress import snapshot
 from first_checks import check_still, check_clip
 from presentation_mode import choose as choose_presentation
+from select_still_local import select as select_still_local
 
 ROOT = Path(__file__).resolve().parents[1]
 FPS = 24
@@ -84,6 +85,7 @@ def clip(work, index, part, shot, seed, reference, width, height, model, gemma, 
     target = work / 'motion' / f'shot-{index:02d}-part-{part:02d}-{key}.mp4'
     if valid_video(target):
         print(f'Reusing motion {index + 1}.{part + 1}: {target.name}', flush=True)
+        progress.mark_complete(index, part)
         print(progress(), flush=True)
         return target
     if cache_only:
@@ -109,6 +111,7 @@ def clip(work, index, part, shot, seed, reference, width, height, model, gemma, 
     if code: raise subprocess.CalledProcessError(code, command)
     if not valid_video(target): raise RuntimeError(f'Motion failed verification: {target}')
     progress.observed.append(time.monotonic()-started)
+    progress.mark_complete(index, part)
     print(progress(), flush=True)
     return target
 
@@ -132,6 +135,7 @@ def main():
     parser.add_argument('--stills', type=Path, default=os.environ.get('BB_STILLS') or None, help='Folder with your own stills named shot-01.png, shot-02.png ... (for example from Google Flow). Missing shots fall back to FLUX')
     parser.add_argument('--anchor-image', type=Path, default=os.environ.get('BB_ANCHOR_IMAGE') or None, help='Recurring character: edit this image into each shot so one face is reused across films (or set BB_ANCHOR_IMAGE)')
     parser.add_argument('--cache-only', action='store_true', help='Reuse existing FLUX/LTX assets; fail rather than start a model job on a cache miss')
+    parser.add_argument('--best-of-3-stills', action='store_true', help='Generate three stills per shot and require local Qwen hand/utensil review before motion')
     args = parser.parse_args()
     scenario = args.scenario.expanduser().resolve()
     muse = Path(args.anchor_image).expanduser().resolve() if args.anchor_image else None
@@ -188,11 +192,21 @@ def main():
     gemma = (ROOT / 'storage/setup/gemma-model-dir.txt').read_text().strip()
     expected = sum(math.ceil(shot['seconds'] / 5) for shot in plan['shots'])
     print(f'{len(plan["shots"])} shots require {expected} new motion clips; allow several minutes per uncached clip.', flush=True)
+    progress_state = work / 'progress-run.json'
     class Progress:
         observed = []
+        completed = []
+        def mark_complete(self, index, part):
+            pair = [index, part]
+            if pair not in self.completed:
+                self.completed.append(pair)
+            progress_state.write_text(json.dumps({'scenarioSha256': file_hash(scenario),
+                'output': str(output.resolve()), 'completed': self.completed}) + '\n')
         def __call__(self, active=None, elapsed=0):
             return snapshot(scenario, work, output, active, elapsed, self.observed)
     progress = Progress()
+    progress_state.write_text(json.dumps({'scenarioSha256': file_hash(scenario),
+        'output': str(output.resolve()), 'completed': []}) + '\n')
     print(progress(), flush=True)
     segments = []
     previous = None
@@ -200,8 +214,18 @@ def main():
     for index, shot in enumerate(plan['shots']):
         reference = own_still(args.stills.expanduser().resolve(), work, index, width, height) if args.stills else None
         if reference is None:
-            reference = still(work, index, shot, 1200 + index,
-                              (previous if args.chain_images and previous else (muse if muse_shots is None or index + 1 in muse_shots else None)), width, height, args.cache_only)
+            source = previous if args.chain_images and previous else (muse if muse_shots is None or index + 1 in muse_shots else None)
+            if args.best_of_3_stills:
+                candidates = [still(work, index, shot, 1200 + index + variation * 100,
+                                    source, width, height, args.cache_only) for variation in range(3)]
+                selected, review = select_still_local(candidates, shot['imagePrompt'])
+                reference = candidates[selected - 1]
+                (work / 'refs' / f'shot-{index:02d}-best-of-3.json').write_text(
+                    json.dumps({'images': [str(path) for path in candidates], 'selectedIndex': selected,
+                                'review': review, 'note': 'Advisory vision check; human inspection required.'}, indent=2) + '\n')
+                print(f'Best of 3 stills for shot {index + 1}: candidate {selected}', flush=True)
+            else:
+                reference = still(work, index, shot, 1200 + index, source, width, height, args.cache_only)
         if gate and index == 0:
             problem = check_still(reference)
             if problem:
@@ -236,7 +260,10 @@ def main():
                   'output': str(output), 'outputSha256': file_hash(output),
                   'imageModel': 'user-supplied stills (FLUX for any missing shot)' if args.stills else 'FLUX.2 Klein 4B q4 via MFLUX', 'videoModel': model,
                   'textEncoder': gemma, 'voice': 'Kokoro ONNX local' if presentation['voice'] else 'none (ASMR)',
-                  'sound': 'original local synthesis', 'chainImages': args.chain_images,
+                  'sound': ('licensed recording: ' + source_data['audioPlan']['musicCredit']
+                            if (source_data.get('audioPlan') or {}).get('music') == 'licensed-track'
+                            else 'none' if (source_data.get('audioPlan') or {}).get('music') == 'none'
+                            else 'original local synthesis'), 'chainImages': args.chain_images,
                   'presentation': presentation,
                   'motionClips': len(segments), 'totalSeconds': settings['seconds']}
     output.with_suffix('.provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')

@@ -1,11 +1,11 @@
-"""Add synthesized sound effects to a finished local video, driven by each shot's `sound` line.
+"""Add shot-synced local sound effects to a finished video.
 
   python3 scripts/add-sfx.py --scenario drafts/generated/ID.local-scenario.json --video outputs/ID.mp4 [--work-dir DIR]
 
-Writes outputs/ID.sfx.mp4 (picture copied, audio remixed) and ID.sfx.wav. Everything is generated here from
-noise and sine tones, so there is nothing to license. Effects sit low and are ducked under the narration
+Writes outputs/ID.sfx.mp4 (picture copied, audio remixed) and ID.sfx.wav. Effects are synthesized unless
+the scenario declares a local field recording, whose source and licence must be documented. Effects sit low and are ducked under the narration
 (the voice track in the work folder is the ducking key), then the mix is loudness-normalised again.
-Cue words in a shot's `sound` or action prompts: sizzle, crunch/bite, chew, pour, slice, spoon/plate clink,
+Cue words in a shot's `sound` or action prompts: sizzle, crunch/bite, chew, pour, slice, scrape/spread, plate clink,
 chime/shimmer, pat, bubble/pop, squeak, fizz and room tone. These are original synthesized Foley approximations.
 """
 import argparse
@@ -132,14 +132,23 @@ def slice_food(seconds, rng):
     return highpass(noise(seconds, rng), 0.82) * np.exp(-7 * t) * 0.7
 
 
+def scrape_food(seconds, rng):
+    """Soft friction for a spoon or knife spreading food across a surface."""
+    t = t_axis(seconds)
+    friction = lowpass(highpass(noise(seconds, rng), 0.91), 0.18)
+    pressure = np.sin(np.pi * np.minimum(1, t / seconds)) ** 2
+    return friction * pressure * 2.0
+
+
 CUES = [(r'\bsizzl', 'sizzle'), (r'\b(crunch|crispy|crisp|bite|biting|crack|snap)\b', 'crunch'),
         (r'\b(chew\w*|munch\w*)\b', 'chew'), (r'\b(pour\w*|drizzl\w*|stream of sauce)\b', 'pour'),
         (r'\b(slice|slicing|chop|chopping|knife cut)\b', 'slice'),
-        (r'\b(spoon|fork|utensil|plate|ceramic|glass clink)\b', 'clink'),
+        (r'\b(scrap\w*|spread\w*|drag\w*)\b', 'scrape'),
+        (r'\b(clink\w*|plate tap|glass tap|utensil tap)\b', 'clink'),
         (r'\b(shimmer|sparkl)', 'shimmer'), (r'\bchime', 'chime'), (r'\b(flour|pat|patting)\b', 'pat'),
         (r'\bsqueak', 'squeak'), (r'\b(whoosh|glide|sweep)', 'whoosh'), (r'\b(pop|popped|popping)\b', 'pop'), (r'\b(fizz|champagne)', 'fizz'),
         (r'\b(ambience|ambient|room tone|hum)\b', 'room')]
-GAIN = {'sizzle': 0.15, 'crunch': 0.16, 'chew': 0.08, 'pour': 0.13, 'slice': 0.12, 'clink': 0.10,
+GAIN = {'sizzle': 0.15, 'crunch': 0.16, 'chew': 0.08, 'pour': 0.13, 'slice': 0.12, 'scrape': 0.10, 'clink': 0.10,
         'shimmer': 0.16, 'chime': 0.18, 'pat': 0.18, 'squeak': 0.12, 'pop': 0.18, 'whoosh': 0.06, 'fizz': 0.13, 'room': 0.08}
 
 
@@ -151,7 +160,93 @@ def cues_for(text):
     return found
 
 
-def build(shots, total, seed=311):
+def planned_cues(shot):
+    names = cues_for(shot.get('sound', ''))
+    if not names:
+        names = cues_for(shot.get('motionPrompt', '') + ' ' + shot.get('imagePrompt', ''))
+    if not shot.get('sound', '').strip() and name_hint(shot) and 'fizz' not in names:
+        names.append('fizz')
+    return names
+
+
+def audit_cues(data):
+    """Fail before GPU use when an ASMR sound plan cannot create its stated cues."""
+    from presentation_mode import choose
+    mode = choose(data)['mode']
+    problems = []
+    audio_plan = data.get('audioPlan') or {}
+    samples = audio_plan.get('foleySamples') or {}
+    recordings_only = audio_plan.get('sfxPolicy') == 'recordings-only'
+    required = audio_plan.get('requiredCues') or []
+    for number, shot in enumerate(data['plan']['shots'], 1):
+        explicit = shot.get('sound', '').strip()
+        names = planned_cues(shot)
+        print(f'Shot {number} sound: {", ".join(names) or "none"}')
+        if mode == 'asmr' and (not explicit or not cues_for(explicit)):
+            problems.append(f'shot {number}: ASMR sound line is empty or has no supported Foley cue')
+        if recordings_only:
+            for name in names:
+                if name not in samples:
+                    problems.append(f'shot {number}: {name} needs a matching field recording; synthesized Foley is disabled')
+    if recordings_only and 'room' not in samples:
+        problems.append('recordings-only mix needs a real room ambience recording')
+    for name in required:
+        if name not in GAIN:
+            problems.append(f'required sound cue {name}: unsupported cue name')
+        elif name not in samples:
+            problems.append(f'required sound cue {name}: matching field recording is missing')
+        elif not any(name in planned_cues(shot) for shot in data['plan']['shots']):
+            problems.append(f'required sound cue {name}: no shot schedules the cue')
+    for name, source in samples.items():
+        file = ROOT / str(source.get('file', ''))
+        if name not in GAIN or not file.is_file() or file.suffix.lower() not in ('.ogg', '.wav', '.mp3'):
+            problems.append(f'foley sample {name}: supported local audio file is missing')
+        if recordings_only and not all(str(source.get(key, '')).strip() for key in ('recordedAction', 'sourceUrl', 'license')):
+            problems.append(f'foley sample {name}: recordedAction, sourceUrl and license are required')
+    if mode == 'asmr' and not problems:
+        shots = data['plan']['shots']
+        total = sum(shot['seconds'] for shot in shots)
+        preview, _ = build(shots, total, foley_samples=samples,
+                           continuous_room=True, recordings_only=recordings_only)
+        window = RATE // 5
+        floor = max(0.001, float(np.max(np.abs(preview))) * 0.02)
+        quiet = 0
+        for start in range(0, len(preview), window):
+            segment = preview[start:start + window]
+            rms = float(np.sqrt(np.mean(segment * segment))) if len(segment) else 0
+            quiet = quiet + 1 if rms < floor else 0
+            if quiet * window / RATE >= 1.5:
+                problems.append('ASMR sound plan has a gap of at least 1.5 s before rendering')
+                break
+    if problems:
+        for problem in problems:
+            print('BLOCKED:', problem)
+    else:
+        print('Sound cue and ASMR coverage plan passed. Listen to the finished mix before release.')
+    return problems
+
+
+def recording_slice(source, seconds):
+    """Decode a declared local field recording and take a short, faded cue."""
+    file = (ROOT / source['file']).resolve()
+    if not file.is_relative_to(ROOT.resolve()) or not file.is_file():
+        raise ValueError(f'Unsafe or missing Foley recording: {file}')
+    start = max(0, float(source.get('offsetSeconds', 0)))
+    raw = subprocess.check_output(['ffmpeg', '-v', 'error', '-ss', str(start), '-t', str(seconds),
+                                   '-i', str(file), '-ac', '1', '-ar', str(RATE), '-f', 'f32le', '-'])
+    signal = np.frombuffer(raw, dtype='<f4').copy()
+    if len(signal) < RATE // 10:
+        raise ValueError(f'Foley recording is too short at offset {start}: {file}')
+    peak = float(np.max(np.abs(signal)))
+    if peak < 1e-5:
+        raise ValueError(f'Foley recording is silent at offset {start}: {file}')
+    fade = min(RATE // 20, len(signal) // 4)
+    signal[:fade] *= np.linspace(0, 1, fade)
+    signal[-fade:] *= np.linspace(1, 0, fade)
+    return signal / peak * float(source.get('gain', 0.7))
+
+
+def build(shots, total, seed=311, foley_samples=None, continuous_room=False, recordings_only=False):
     rng = np.random.default_rng(seed)
     mix = np.zeros(round(total * RATE), dtype=np.float32)
     plan = []
@@ -162,20 +257,35 @@ def build(shots, total, seed=311):
         if count > 0:
             mix[start:start + count] += signal[:count] * gain
 
+    if continuous_room:
+        # An ASMR film still has an acoustic floor between discrete actions.
+        # This is quiet kitchen ambience, not a music bed.
+        if recordings_only:
+            if not foley_samples or 'room' not in foley_samples:
+                raise ValueError('recordings-only ASMR needs recorded room ambience')
+            put(recording_slice(foley_samples['room'], total), 0, GAIN['room'] * 0.6)
+        else:
+            put(room(total, rng), 0, GAIN['room'] * 0.6)
+
     at = 0.0
     for number, shot in enumerate(shots, 1):
         length = shot['seconds']
-        names = cues_for(shot.get('sound', '') + ' ' + shot.get('motionPrompt', ''))
-        if not names:
-            names = cues_for(shot.get('imagePrompt', ''))
-        if name_hint(shot) and 'fizz' not in names:
-            names.append('fizz')
+        names = planned_cues(shot)
         for name in names:
-            if name == 'sizzle': put(sizzle(min(length, 3.5), rng), at + 0.2, GAIN[name])
+            if name == 'room' and continuous_room:
+                plan.append((number, name))
+                continue
+            if name in (foley_samples or {}):
+                duration = min(length - 0.4, 3.5 if name == 'sizzle' else 1.1)
+                put(recording_slice(foley_samples[name], duration), at + 0.2, GAIN[name])
+            elif recordings_only:
+                raise ValueError(f'Shot {number} needs a recording for {name}')
+            elif name == 'sizzle': put(sizzle(min(length, 3.5), rng), at + 0.2, GAIN[name])
             elif name == 'crunch': put(crunch(min(length, 1.2), rng), at + min(0.7, length / 4), GAIN[name])
             elif name == 'chew': put(pat(min(length, 2.5), rng), at + 0.5, GAIN[name])
             elif name == 'pour': put(pour(min(length, 3.0), rng), at + 0.4, GAIN[name])
             elif name == 'slice': put(slice_food(min(length, 0.7), rng), at + 0.6, GAIN[name])
+            elif name == 'scrape': put(scrape_food(min(length, 0.9), rng), at + 0.5, GAIN[name])
             elif name == 'clink': put(chime(1300, 0.35), at + 0.5, GAIN[name])
             elif name == 'shimmer': put(shimmer(length - 0.3, rng), at + 0.3, GAIN[name])
             elif name == 'chime': put(chime(), at + (length - 1.8 if number == len(shots) else 0.4), GAIN[name])
@@ -209,14 +319,27 @@ def write_wav(path, mono, peak_target=0.45):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--scenario', required=True, type=Path)
-    parser.add_argument('--video', required=True, type=Path)
+    parser.add_argument('--video', type=Path)
+    parser.add_argument('--audit', action='store_true', help='Check the planned Foley cues before spending GPU time')
     parser.add_argument('--work-dir', type=Path)
     args = parser.parse_args()
-    scenario, video = args.scenario.resolve(), args.video.resolve()
+    scenario = args.scenario.resolve()
+    data = json.loads(scenario.read_text(encoding='utf-8-sig'))
+    if args.audit:
+        raise SystemExit(1 if audit_cues(data) else 0)
+    if audit_cues(data):
+        raise SystemExit('Sound cue gate failed; refusing to mix unsupported cues')
+    if not args.video:
+        parser.error('--video is required unless --audit is used')
+    video = args.video.resolve()
     work = (args.work_dir or ROOT / 'storage/any-local' / scenario.stem).resolve()
-    shots = json.loads(scenario.read_text(encoding='utf-8-sig'))['plan']['shots']
+    shots = data['plan']['shots']
     total = sum(shot['seconds'] for shot in shots)
-    mix, plan = build(shots, total)
+    from presentation_mode import choose
+    recordings_only = (data.get('audioPlan') or {}).get('sfxPolicy') == 'recordings-only'
+    mix, plan = build(shots, total, foley_samples=(data.get('audioPlan') or {}).get('foleySamples'),
+                      continuous_room=choose(data)['mode'] == 'asmr' or recordings_only,
+                      recordings_only=recordings_only)
     sfx = video.with_suffix('.sfx.wav')
     write_wav(sfx, mix)
     out = video.with_suffix('.sfx.mp4')
