@@ -45,6 +45,15 @@ CRAVE_VIEW = ('Photorealistic overhead food photograph, the camera pointing stra
 CRAVE_SETTING = 'It sits on a clean white marble worktop with soft grey veins, the surface otherwise empty.'
 CRAVE_LIGHT = 'Bright diffused daylight from above with gentle soft shadows and crisp natural colour.'
 CRAVE_HANDS = 'Two hands in black chef gloves enter from the bottom edge of the frame, and every surface is clean and unmarked.'
+# "glass" format (owner reference 1mf8STa1tR8, an AI glass-fruit cutting ASMR Short): one jewel-like glass item per shot in a macro side view,
+# a knife already halfway through it in the still so the clip only has to finish the cut and tip the half over. No voice, no subtitles.
+GLASS_VIEW = ('Photorealistic macro photograph from a low side angle at board height, 100mm macro lens at f/4, the glass fruit large and centred, filling most of the frame, '
+              'with crisp reflections and light refracting through it.')
+GLASS_SETTING = 'It sits on a polished black marble board against a dark, softly blurred background.'
+GLASS_HANDS = 'Only one hand enters the frame, holding a gold-bladed chef knife, and every surface is clean and unmarked.'
+def glass_cut(name, interior):
+    return (f'Macro side view of the glass {name}. At once the hand presses the knife slowly down through the glass {name} as the two halves part '
+            f'and the front half tips gently onto the board, showing its {interior}. ' + FIXED)
 
 DISHES = {
  'spicy-peanut-noodles': dict(title='Spicy Peanut Noodles',
@@ -302,6 +311,22 @@ DISHES = {
     'Top-down close view of the finished chocolate bar. At once two gloved hands slide in and lift the glossy bar slightly as the light runs across its surface. ' + TOPLOCK, 'soft tap on marble'),
    ('Snap.', None, 'the chocolate bar held in two black-gloved hands, snapped in half, its cut faces showing thick green pistachio kunafa filling stretching between the halves',
     'Top-down close view of the chocolate bar in the gloved hands. At once the hands snap the chocolate bar in half and pull the halves apart slowly as the green pistachio kunafa filling stretches, until they hold still. ' + TOPLOCK, 'loud chocolate snap, crunch')]),
+ 'glass-fruit-cutting': dict(title='Glass Fruit Cutting', suffix='', mode='asmr', seconds=[4, 4, 4, 4],
+  view=GLASS_VIEW, hands=GLASS_HANDS, setting=GLASS_SETTING,
+  signature=dict(format='food-process-story', set='black-marble-glass-macro', hookPattern='mid-action-start'),
+  hook='Glass fruit, yet it cuts like butter?',
+  claims=['Stylised AI footage of glass objects, not real food; set AI use to Yes', 'Original fruits and set; no reference footage reused'],
+  ending='The knife slices the glass dragon fruit and the half tips toward the camera showing its crystal interior.',
+  shots=[
+   ('Strawberry.', None, 'a large strawberry made of clear ruby-red glass with tiny gold seeds, a gold-bladed knife pressed halfway down through it, the cut showing a solid crystal-clear red interior',
+    glass_cut('strawberry', 'clear red crystal interior'), 'glass tap, crisp glass slice, soft clink'),
+   ('Kiwi.', None, 'a kiwi made of translucent green glass with a frosted brown glass skin, a gold-bladed knife pressed halfway down through it, the cut showing a glowing green crystal interior with tiny black glass seeds',
+    glass_cut('kiwi', 'glowing green crystal interior'), 'crisp glass slice, soft clink'),
+   ('Fig.', None, 'a fig made of deep purple glass, a gold-bladed knife pressed halfway down through it, the cut showing an interior of tiny pink and ruby glass beads',
+    glass_cut('fig', 'pink and ruby glass bead interior'), 'crisp glass slice, tiny beads settling'),
+   ('Dragon fruit.', None, 'a dragon fruit made of bright pink glass with green glass tips, a gold-bladed knife pressed halfway down through it, the cut showing a white crystal interior with tiny black glass seeds',
+    'Macro side view of the glass dragon fruit. At once the hand guides the knife as it slices slowly down through the glass dragon fruit and the two halves part and the front half tips toward the camera, showing its white crystal interior, until it holds still. ' + FIXED,
+    'crisp glass slice, soft clink, quiet room tone')]),
 }
 
 ANGLE_IDEAS = ['payoff tease as the hook', 'top-down ingredients', 'top-down prep', 'cooking close-up', 'side-macro payoff']

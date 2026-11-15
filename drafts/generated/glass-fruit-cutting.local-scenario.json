@@ -1,0 +1,89 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 16,
+    "voice": "af_heart",
+    "presentationMode": "asmr"
+  },
+  "model": "hand-written",
+  "topic": "Glass Fruit Cutting: a quick recipe in five fast shots",
+  "style": "photoreal luxury designer kitchen, navy cabinetry with brass fixtures, polished black and gold marble counter, copper cookware, gold utensils, one emerald green enamel accent, warm key light with bright rim light, macro food close-ups, hands only, vertical framing",
+  "requestedEnding": "The knife slices the glass dragon fruit and the half tips toward the camera showing its crystal interior.",
+  "totalSeconds": 16,
+  "template": "story",
+  "plan": {
+    "ideas": [
+      {
+        "title": "Glass Fruit Cutting",
+        "angle": "payoff tease as the hook"
+      },
+      {
+        "title": "Glass Fruit Cutting idea 2",
+        "angle": "top-down ingredients"
+      },
+      {
+        "title": "Glass Fruit Cutting idea 3",
+        "angle": "top-down prep"
+      },
+      {
+        "title": "Glass Fruit Cutting idea 4",
+        "angle": "cooking close-up"
+      },
+      {
+        "title": "Glass Fruit Cutting idea 5",
+        "angle": "side-macro payoff"
+      }
+    ],
+    "title": "Glass Fruit Cutting",
+    "hook": "Glass fruit, yet it cuts like butter?",
+    "payoff": "The knife slices the glass dragon fruit and the half tips toward the camera showing its crystal interior.",
+    "shots": [
+      {
+        "seconds": 4,
+        "narration": "Strawberry.",
+        "imagePrompt": "Glass Fruit Cutting: a large strawberry made of clear ruby-red glass with tiny gold seeds, a gold-bladed knife pressed halfway down through it, the cut showing a solid crystal-clear red interior. It sits on a polished black marble board against a dark, softly blurred background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro photograph from a low side angle at board height, 100mm macro lens at f/4, the glass fruit large and centred, filling most of the frame, with crisp reflections and light refracting through it. Only one hand enters the frame, holding a gold-bladed chef knife, and every surface is clean and unmarked.",
+        "motionPrompt": "Macro side view of the glass strawberry. At once the hand presses the knife slowly down through the glass strawberry as the two halves part and the front half tips gently onto the board, showing its clear red crystal interior. Static camera, locked in the same close fixed view.",
+        "sound": "glass tap, crisp glass slice, soft clink"
+      },
+      {
+        "seconds": 4,
+        "narration": "Kiwi.",
+        "imagePrompt": "Glass Fruit Cutting: a kiwi made of translucent green glass with a frosted brown glass skin, a gold-bladed knife pressed halfway down through it, the cut showing a glowing green crystal interior with tiny black glass seeds. It sits on a polished black marble board against a dark, softly blurred background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro photograph from a low side angle at board height, 100mm macro lens at f/4, the glass fruit large and centred, filling most of the frame, with crisp reflections and light refracting through it. Only one hand enters the frame, holding a gold-bladed chef knife, and every surface is clean and unmarked.",
+        "motionPrompt": "Macro side view of the glass kiwi. At once the hand presses the knife slowly down through the glass kiwi as the two halves part and the front half tips gently onto the board, showing its glowing green crystal interior. Static camera, locked in the same close fixed view.",
+        "sound": "crisp glass slice, soft clink"
+      },
+      {
+        "seconds": 4,
+        "narration": "Fig.",
+        "imagePrompt": "Glass Fruit Cutting: a fig made of deep purple glass, a gold-bladed knife pressed halfway down through it, the cut showing an interior of tiny pink and ruby glass beads. It sits on a polished black marble board against a dark, softly blurred background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro photograph from a low side angle at board height, 100mm macro lens at f/4, the glass fruit large and centred, filling most of the frame, with crisp reflections and light refracting through it. Only one hand enters the frame, holding a gold-bladed chef knife, and every surface is clean and unmarked.",
+        "motionPrompt": "Macro side view of the glass fig. At once the hand presses the knife slowly down through the glass fig as the two halves part and the front half tips gently onto the board, showing its pink and ruby glass bead interior. Static camera, locked in the same close fixed view.",
+        "sound": "crisp glass slice, tiny beads settling"
+      },
+      {
+        "seconds": 4,
+        "narration": "Dragon fruit.",
+        "imagePrompt": "Glass Fruit Cutting: a dragon fruit made of bright pink glass with green glass tips, a gold-bladed knife pressed halfway down through it, the cut showing a white crystal interior with tiny black glass seeds. It sits on a polished black marble board against a dark, softly blurred background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro photograph from a low side angle at board height, 100mm macro lens at f/4, the glass fruit large and centred, filling most of the frame, with crisp reflections and light refracting through it. Only one hand enters the frame, holding a gold-bladed chef knife, and every surface is clean and unmarked.",
+        "motionPrompt": "Macro side view of the glass dragon fruit. At once the hand guides the knife as it slices slowly down through the glass dragon fruit and the two halves part and the front half tips toward the camera, showing its white crystal interior, until it holds still. Static camera, locked in the same close fixed view.",
+        "sound": "crisp glass slice, soft clink, quiet room tone"
+      }
+    ],
+    "claimsToCheck": [
+      "Stylised AI footage of glass objects, not real food; set AI use to Yes",
+      "Original fruits and set; no reference footage reused"
+    ]
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "format modelled on common recipe-Short structure (hook, top-down steps, payoff); not a verified view trend",
+    "sources": [
+      "https://www.youtube.com/shorts/bkUpOMCZ9GQ"
+    ]
+  },
+  "creativeSignature": {
+    "format": "food-process-story",
+    "set": "black-marble-glass-macro",
+    "hookPattern": "mid-action-start"
+  }
+}
