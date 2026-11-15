@@ -38,7 +38,7 @@ VISUALS = {
     'hook': ('Macro hero close-up of {item} on a black slate beside a copper pan, steam rising', 'The camera slowly pushes in on {item} while steam drifts; a gloved hand enters and adjusts it slightly'),
     'clue': ('Close detail of the textures and ingredients of {item}, a white-gloved hand pointing with a small spoon', 'The camera glides along {item} as a gloved hand lifts a small spoon over it'),
     'countdown': ('{item} on the slate under warm light, a gloved hand hovering just above it', 'The gloved hand lowers toward {item} and pauses; steam curls upward'),
-    'reveal': ('Wide hero shot of the finished {item} centred on a black slate, copper pan behind', 'The camera pulls back slowly to reveal {item} fully, light glinting on its surface'),
+    'reveal': ('Wide hero shot of the finished {item} centred on a black slate, copper pan behind', 'A hand rotates the serving surface a quarter turn to reveal {item} fully as the camera pulls back slightly'),
     'cta': ('A white-gloved hand presents {item} toward the camera on a black slate', 'The gloved hand slides {item} gently toward the camera and holds it still, inviting viewers to comment how close their guess was'),
     'why': ('A chef points to one visible detail of {item} on the black slate', 'The chef lifts {item} slightly and points to its surface in one continuous take'),
     'twist': ('A chef turns {item} on the black slate to reveal another side', 'The gloved hand turns {item} once, revealing its other side'),

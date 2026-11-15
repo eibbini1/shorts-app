@@ -9,8 +9,14 @@ from pathlib import Path
 from presentation_mode import choose as choose_presentation
 
 STOP = {'the','and','with','from','into','that','this','one','same','scene','shot','film','video','warm','cinematic','real','local'}
-ACTION = re.compile(r'\b(pat|place|drop|sear|bast|pour|squeeze|lift|plate|cut|slice|bite|take|stir|chop|melt|sizzle|open|close|pull|push|run|walk|jump|turn|catch|serve|mix|roll|spin|crack|break|assemble|brown|cook|garnish)\w*\b', re.I)
+ACTION = re.compile(r'\b(place|drop|sear|bast|pour|squeeze|lift|lower|slide|sets|arrange|rotate|cut|slice|bite|stir|chop|melt|sizzle|open|close|pull|push|run|walk|jump|turn|catch|serve|mix|roll|spin|crack|break|assemble|brown|cook|garnish|add|present|adjust|smash|press|toast|stack)\w*\b', re.I)
 CAMERA_ONLY = re.compile(r'^(?:the )?camera (?:slowly )?(?:pan|tilt|zoom|track)', re.I)
+
+
+def physical_action(motion):
+    """Editing instructions such as 'no cuts' are not food or character actions."""
+    action_text = re.sub(r'\b(?:no|without) (?:internal )?cuts?\b', '', motion, flags=re.I)
+    return bool(ACTION.search(action_text))
 
 
 def words(value):
@@ -79,8 +85,8 @@ def main():
     protagonist_words = words(data.get('storyArc', {}).get('protagonist', ''))
     setting_words = words(data.get('storyArc', {}).get('setting', ''))
     for i, shot in enumerate(shots, 1):
-        if not ACTION.search(shot['motionPrompt']): problems.append(f'shot {i} has no recognizable physical action')
-        if CAMERA_ONLY.search(shot['motionPrompt']) and not ACTION.search(shot['motionPrompt']): problems.append(f'shot {i} is camera movement over a still')
+        if not physical_action(shot['motionPrompt']): problems.append(f'shot {i} has no recognizable physical action')
+        if CAMERA_ONLY.search(shot['motionPrompt']) and not physical_action(shot['motionPrompt']): problems.append(f'shot {i} is camera movement over a still')
         if presentation['voice'] and len(shot['narration'].split()) > math.ceil(shot['seconds'] * 2.5):
             problems.append(f'shot {i} narration cannot fit')
         if not shot.get('sound', '').strip(): notes.append(f'shot {i} has no localized sound cue')
