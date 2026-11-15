@@ -56,6 +56,34 @@ def creative_brief_problems(data):
     return problems
 
 
+def recipe_sequence_problems(data):
+    """Check structured ingredient order before model work; visual truth still needs review."""
+    sequence = data.get('recipeSequence')
+    if sequence is None:
+        return []
+    shots = data['plan']['shots']
+    if len(sequence) != len(shots):
+        return ['recipeSequence must have one entry per shot']
+    problems = []
+    phases = [step.get('phase') for step in sequence]
+    if phases[0] != 'teaser' or phases[-1] != 'serve':
+        problems.append('recipe sequence must open with a finished-food teaser and end with serving')
+    if 'bake' not in phases:
+        problems.append('recipe sequence needs an explicit cooking-time cut')
+    order = {'teaser': 0, 'prep': 1, 'bake': 2, 'serve': 3}
+    if any(phase not in order for phase in phases) or any(order[a] > order[b] for a, b in zip(phases, phases[1:])):
+        problems.append('recipe sequence phases must progress from teaser through prep and bake to serving')
+    vessel = sequence[0].get('vessel')
+    if not vessel or any(step.get('vessel') != vessel for step in sequence):
+        problems.append('recipe sequence changes or omits the hero vessel')
+    for number, (shot, step) in enumerate(zip(shots, sequence), 1):
+        prompt = (shot.get('imagePrompt', '') + ' ' + shot.get('motionPrompt', '')).lower()
+        for item in step.get('adds', []):
+            if str(item).lower() not in prompt:
+                problems.append(f'shot {number} does not visibly add {item}')
+    return problems
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('scenario', type=Path)
@@ -66,6 +94,7 @@ def main():
     shots = plan['shots']
     problems, notes = [], []
     problems.extend(creative_brief_problems(data))
+    problems.extend(recipe_sequence_problems(data))
     seconds = settings['seconds']
     if sum(s['seconds'] for s in shots) != seconds: problems.append('shot timings do not equal the requested runtime')
     if len(shots) < math.ceil(seconds / 6): problems.append('too few distinct shots; motion would repeat or stretch')
@@ -104,9 +133,9 @@ def main():
         notes.append('generated stills and clips must be reviewed for continuity after generation')
     cached = list((Path('storage/any-local') / a.scenario.stem / 'motion').glob('shot-*-part-*.mp4'))
     clips = sum(math.ceil(s['seconds']/5) for s in shots)
-    remaining = max(0, clips - len(cached))
-    print(f'Story gate: {plan["title"]} | {len(shots)} shots | {seconds}s | {clips} motion clips ({remaining} uncached)')
-    print(f'Estimated new motion time: about {math.ceil(remaining * 4.5)} minutes on this Mac, plus stills and finishing. Estimate varies with load.')
+    print(f'Story gate: {plan["title"]} | {len(shots)} shots | {seconds}s | {clips} motion clips')
+    print(f'Potential new motion time: up to about {math.ceil(clips * 4.5)} minutes on this Mac, plus stills and finishing. '
+          f'{len(cached)} prior clip files may be reused only if prompt and reference hashes still match.')
     for item in notes: print('REVIEW:', item)
     for item in problems: print('BLOCKED:', item)
     if problems: return 1

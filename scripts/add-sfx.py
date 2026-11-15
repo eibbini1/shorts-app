@@ -174,21 +174,40 @@ def audit_cues(data):
     from presentation_mode import choose
     mode = choose(data)['mode']
     problems = []
+    audio_plan = data.get('audioPlan') or {}
+    samples = audio_plan.get('foleySamples') or {}
+    recordings_only = audio_plan.get('sfxPolicy') == 'recordings-only'
+    required = audio_plan.get('requiredCues') or []
     for number, shot in enumerate(data['plan']['shots'], 1):
         explicit = shot.get('sound', '').strip()
         names = planned_cues(shot)
         print(f'Shot {number} sound: {", ".join(names) or "none"}')
         if mode == 'asmr' and (not explicit or not cues_for(explicit)):
             problems.append(f'shot {number}: ASMR sound line is empty or has no supported Foley cue')
-    for name, source in (data.get('audioPlan') or {}).get('foleySamples', {}).items():
+        if recordings_only:
+            for name in names:
+                if name not in samples:
+                    problems.append(f'shot {number}: {name} needs a matching field recording; synthesized Foley is disabled')
+    if recordings_only and 'room' not in samples:
+        problems.append('recordings-only mix needs a real room ambience recording')
+    for name in required:
+        if name not in GAIN:
+            problems.append(f'required sound cue {name}: unsupported cue name')
+        elif name not in samples:
+            problems.append(f'required sound cue {name}: matching field recording is missing')
+        elif not any(name in planned_cues(shot) for shot in data['plan']['shots']):
+            problems.append(f'required sound cue {name}: no shot schedules the cue')
+    for name, source in samples.items():
         file = ROOT / str(source.get('file', ''))
         if name not in GAIN or not file.is_file() or file.suffix.lower() not in ('.ogg', '.wav', '.mp3'):
             problems.append(f'foley sample {name}: supported local audio file is missing')
+        if recordings_only and not all(str(source.get(key, '')).strip() for key in ('recordedAction', 'sourceUrl', 'license')):
+            problems.append(f'foley sample {name}: recordedAction, sourceUrl and license are required')
     if mode == 'asmr' and not problems:
         shots = data['plan']['shots']
         total = sum(shot['seconds'] for shot in shots)
-        preview, _ = build(shots, total, foley_samples=(data.get('audioPlan') or {}).get('foleySamples'),
-                           continuous_room=True)
+        preview, _ = build(shots, total, foley_samples=samples,
+                           continuous_room=True, recordings_only=recordings_only)
         window = RATE // 5
         floor = max(0.001, float(np.max(np.abs(preview))) * 0.02)
         quiet = 0
@@ -227,7 +246,7 @@ def recording_slice(source, seconds):
     return signal / peak * float(source.get('gain', 0.7))
 
 
-def build(shots, total, seed=311, foley_samples=None, continuous_room=False):
+def build(shots, total, seed=311, foley_samples=None, continuous_room=False, recordings_only=False):
     rng = np.random.default_rng(seed)
     mix = np.zeros(round(total * RATE), dtype=np.float32)
     plan = []
@@ -241,16 +260,26 @@ def build(shots, total, seed=311, foley_samples=None, continuous_room=False):
     if continuous_room:
         # An ASMR film still has an acoustic floor between discrete actions.
         # This is quiet kitchen ambience, not a music bed.
-        put(room(total, rng), 0, GAIN['room'] * 0.6)
+        if recordings_only:
+            if not foley_samples or 'room' not in foley_samples:
+                raise ValueError('recordings-only ASMR needs recorded room ambience')
+            put(recording_slice(foley_samples['room'], total), 0, GAIN['room'] * 0.6)
+        else:
+            put(room(total, rng), 0, GAIN['room'] * 0.6)
 
     at = 0.0
     for number, shot in enumerate(shots, 1):
         length = shot['seconds']
         names = planned_cues(shot)
         for name in names:
+            if name == 'room' and continuous_room:
+                plan.append((number, name))
+                continue
             if name in (foley_samples or {}):
                 duration = min(length - 0.4, 3.5 if name == 'sizzle' else 1.1)
                 put(recording_slice(foley_samples[name], duration), at + 0.2, GAIN[name])
+            elif recordings_only:
+                raise ValueError(f'Shot {number} needs a recording for {name}')
             elif name == 'sizzle': put(sizzle(min(length, 3.5), rng), at + 0.2, GAIN[name])
             elif name == 'crunch': put(crunch(min(length, 1.2), rng), at + min(0.7, length / 4), GAIN[name])
             elif name == 'chew': put(pat(min(length, 2.5), rng), at + 0.5, GAIN[name])
@@ -298,6 +327,8 @@ def main():
     data = json.loads(scenario.read_text(encoding='utf-8-sig'))
     if args.audit:
         raise SystemExit(1 if audit_cues(data) else 0)
+    if audit_cues(data):
+        raise SystemExit('Sound cue gate failed; refusing to mix unsupported cues')
     if not args.video:
         parser.error('--video is required unless --audit is used')
     video = args.video.resolve()
@@ -305,8 +336,10 @@ def main():
     shots = data['plan']['shots']
     total = sum(shot['seconds'] for shot in shots)
     from presentation_mode import choose
+    recordings_only = (data.get('audioPlan') or {}).get('sfxPolicy') == 'recordings-only'
     mix, plan = build(shots, total, foley_samples=(data.get('audioPlan') or {}).get('foleySamples'),
-                      continuous_room=choose(data)['mode'] == 'asmr')
+                      continuous_room=choose(data)['mode'] == 'asmr' or recordings_only,
+                      recordings_only=recordings_only)
     sfx = video.with_suffix('.sfx.wav')
     write_wav(sfx, mix)
     out = video.with_suffix('.sfx.mp4')

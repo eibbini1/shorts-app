@@ -260,7 +260,10 @@ def main():
                   'output': str(output), 'outputSha256': file_hash(output),
                   'imageModel': 'user-supplied stills (FLUX for any missing shot)' if args.stills else 'FLUX.2 Klein 4B q4 via MFLUX', 'videoModel': model,
                   'textEncoder': gemma, 'voice': 'Kokoro ONNX local' if presentation['voice'] else 'none (ASMR)',
-                  'sound': 'original local synthesis', 'chainImages': args.chain_images,
+                  'sound': ('licensed recording: ' + source_data['audioPlan']['musicCredit']
+                            if (source_data.get('audioPlan') or {}).get('music') == 'licensed-track'
+                            else 'none' if (source_data.get('audioPlan') or {}).get('music') == 'none'
+                            else 'original local synthesis'), 'chainImages': args.chain_images,
                   'presentation': presentation,
                   'motionClips': len(segments), 'totalSeconds': settings['seconds']}
     output.with_suffix('.provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')

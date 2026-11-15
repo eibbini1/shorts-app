@@ -1,8 +1,8 @@
-# Five food series and the current creation path
+# Six food series and the current creation path
 
 Checked 2026-11-15. These are editorial experiments, not a measured global ranking or a guarantee of views. The BB channel was not connected to vidIQ when this brief was prepared, so the app has no channel-specific retention or audience data.
 
-Run `npm run ideas:series:food` for all five series and `npm run ideas:recipes:2026` for ten candidate recipes. Both commands are read-only and require no model or GPU. Series definitions live in `data/food-series.json`.
+Run `npm run ideas:series:food` for all six series and `npm run ideas:recipes:2026` for ten candidate recipes. Both commands are read-only and require no model or GPU. Series definitions live in `data/food-series.json`.
 
 `npm run ideas:bank` now lists evidence-tagged hooks, montage and sound patterns from a bounded vidIQ scan, plus ten original production ideas. See `docs/CREATIVE_BANK.md` for source depth and limits. `npm run brief:local -- --idea miso-butter-potato-pave` preloads one bank idea into the director questions; you can change every answer before Gemma drafts the story.
 
@@ -40,7 +40,7 @@ Review the saved scenario and source any stated time, price or record before ren
 - vidIQ's recent garlic bread outlier search returned several independent 16–21 second examples with high channel-relative performance. Outlier status does not predict performance on BB. Its recent VPH snapshot lacked a comparable historical baseline, so trend acceleration is unconfirmed.
 - [Pinterest Predicts 2026](https://business.pinterest.com/en-ca/pdf/pinterest-predicts/2026-trend-report/), [TikTok Next 2026](https://ads.tiktok.com/business/en-US/next), and [Whole Foods Market's 2026 forecast](https://www.wholefoodsmarket.com/company-info/newsroom/news-releases/whole-foods-market-forecasts-the-top-food-and-beverage-trends-for-2026) support broad ingredient and format leads. They do not verify the exact recipes or forecast views.
 
-## Five series
+## Six series
 
 | Series | Story engine | Default presentation |
 | --- | --- | --- |
@@ -49,8 +49,9 @@ Review the saved scenario and source any stated time, price or record before ren
 | Honest Luxury Levels | Same dish → sourced ingredient upgrades → final plate | Kitchen sound, readable price labels; optional licensed music |
 | Guess the Basket | Finished dish → ingredient clues → sourced retail basket reveal | Tactile sound; text for question and amount |
 | Tiny Technique, Big Result | Food failure → small correction → observable improvement | Brief voice with matched captions when instruction adds value |
+| Close-Up Recipe Guide | Finished spoonful → measured ingredients entering one dish → cooking-time cut → serving | Kokoro voice, aligned subtitles, and low recorded kitchen ambience |
 
-These five concepts use four editorial format families. A change of dish, set, hook, actions and pacing is still required for variety. YouTube's [inauthentic content policy](https://support.google.com/youtube/answer/1311392?hl=en) does not prescribe a particular number of formats.
+These six concepts use four editorial format families. A change of dish, set, hook, actions and pacing is still required for variety. YouTube's [inauthentic content policy](https://support.google.com/youtube/answer/1311392?hl=en) does not prescribe a particular number of formats.
 
 ## First film
 
@@ -107,3 +108,11 @@ bash scripts/make-local-video.sh \
 ```
 
 The 2026-11-15 revised run produced `outputs/smoky-jalapeno-double-smash-burger-35-20261115-125551.sfx.captioned.mp4`. Final-file technical QA passed at 35.0 seconds, no detected long silence, no black or frozen picture, and measured loudness −16.94 LUFS. The sound path now writes an exact silent music bed when the scenario says `none`, adds continuous low kitchen room tone between action cues, and audits ASMR coverage before GPU rendering. This is a **review copy**: the assistant inspected sampled frames but has not heard the audio. A brief patty morph during shot three and the final cross-section's fused-looking meat layers remain visual concerns. The editorial release gate remains blocked because there is no recorded full-video/full-audio review and the published-signatures history is empty. Do not treat the provisional 50/100 as a quality rating.
+
+## One-Pan Red Curry Dumpling Bake preview (2026-11-15)
+
+The new 30-second, eight-shot subtitled recipe scenario is `examples/local-scenarios/red-curry-dumpling-bake-30.local-scenario.json`. Its structured `recipeSequence` gate checks the ordered ingredients, one vessel and cooking-time cut before model work. The pack builder now includes the measured ingredient list, method and recipe inspiration source so a viewer can cook the dish. The source is [Marion’s Kitchen red curry dumplings](https://www.marionskitchen.com/one-pan-red-curry-dumplings/); the film is an AI demonstration, not a cooked or tasted kitchen test. A small vidIQ outlier sample supported the one-pan dumpling topic but does not predict views.
+
+Two local FLUX 512×896 preview stills and one Nano Banana 2 768×1376 preview were compared. The Nano still showed a fuller pan of distinct dumplings and a more believable sauce surface. It came from the user’s Gemini app and was downloaded to `outputs/red-curry-dumpling-bake-nano-banana-2-preview-20261115.jpeg`. The Gemini app offers limited image creation, while the Gemini API image-generation pricing page lists no free tier for Nano Banana; do not assume the website can be used as a free automated backend. The current local renderer resizes supplied stills to 384×640 before LTX motion, so a better still is only a starting condition. A first two-second LTX pilot visibly morphed the lifted dumpling; a second pilot with a simpler upward spoon move preserved it across 49 sampled frames. The full 30-second render has now begun using the Nano still for shot one. Its remaining seven shots and final edit still need visual review.
+
+The first voice pass found two silence gaps over 1.5 seconds and stopped before GPU work. Narration was tightened and a second voice-gap check passed. A 60-second CC BY 4.0 excerpt of Kevin MacLeod's *Wholesome* is in `assets/music/`; its attribution is written into the upload pack. The licensed-track path now checks metadata, file existence and duration. A 30-second voice/music preview is in `outputs/red-curry-dumpling-voice-music-preview-20261115.mp3`. No assistant has listened to it; the owner should judge the balance before release. The burger review copy was reported by the owner to have fake-sounding effects and an inaccurate patty flip. The burger scenario now avoids the lifting action and uses `recordings-only` sound policy with required scrape, crunch and slice cues. Its pre-render sound audit correctly **blocks** until matching real recordings are sourced. Do not rerender or call it ready based on the old technical score.

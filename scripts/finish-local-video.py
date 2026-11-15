@@ -173,10 +173,23 @@ def main():
                       f"{basket.get('currency', 'USD')} retail packages checked in data/prices.json. "
                       f"Excludes: {', '.join(basket.get('excludes', [])) or 'not specified'}."
                       f"\nSources:\n" + '\n'.join(evidence_sources))
+    recipe_note = ''
+    recipe = data.get('recipe') or {}
+    if recipe.get('ingredients') and recipe.get('method'):
+        recipe_note = ('\n\nRecipe (' + str(recipe.get('servings', 'servings not specified')) + ' servings):\n' +
+                       '\n'.join('• ' + item for item in recipe['ingredients']) +
+                       '\n\nMethod:\n' + '\n'.join(f'{i}. {step}' for i, step in enumerate(recipe['method'], 1)))
+        if recipe.get('inspirationSource'):
+            recipe_note += '\nRecipe inspiration: ' + recipe['inspirationSource']
+        if recipe.get('status'):
+            recipe_note += '\nReview status: ' + recipe['status']
+    audio_plan = data.get('audioPlan') or {}
+    music_credit = audio_plan.get('musicCredit', '') if audio_plan.get('music') == 'licensed-track' else ''
+    music_note = '\n\nMusic: ' + music_credit if music_credit else ''
     release_problems = evidence_problems + [note for note in evidence_notes if
         'history is empty' in note or 'signature missing' in note or 'outside the four-format' in note]
     pack = {'title': plan['title'][:100],
-            'description': f"{plan['hook']}\n\n{plan['payoff']}{price_note}\n\n#shorts",
+            'description': f"{plan['hook']}\n\n{plan['payoff']}{price_note}{recipe_note}{music_note}\n\n#shorts",
             'tags': tags, 'claimsToCheck': plan.get('claimsToCheck', []),
             'video': out.name, 'captions': caption_name, 'presentationMode': presentation['mode'],
             'presentationReason': presentation['reason'], 'seconds': settings['seconds'],
@@ -186,9 +199,10 @@ def main():
                 'aiUse': 'Yes',
                 'aiDisclosureReason': 'Photoreal AI food depicts a realistic scene that did not occur.',
                 'priceSourcesForDescription': evidence_sources,
-                'music': ('No music requested; verify the final mix has none.' if
-                          str((data.get('audioPlan') or {}).get('music', '')).lower() == 'none' else
-                          'Use an appropriately licensed YouTube Studio Audio Library track; record track, license and required attribution before upload.'),
+                'music': (f'Included licensed track: {music_credit}. Listen to the final mix.' if music_credit else
+                          'No music requested; verify the final mix has none.' if
+                          str(audio_plan.get('music', '')).lower() == 'none' else
+                          'Record the chosen music track, license and required attribution before upload.'),
                 'voiceAndSubtitles': ('No voice or subtitles' if not presentation['voice'] else
                                       'Listen to narration and check caption timing.' if presentation['captions'] else
                                       'Listen to narration; this film has no captions.'),

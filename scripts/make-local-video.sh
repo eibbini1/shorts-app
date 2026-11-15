@@ -7,7 +7,7 @@ usage() {
 Usage:
   bash scripts/make-local-video.sh
   bash scripts/make-local-video.sh --draft-only [--model gemma-local]
-  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--chain-images] [--best-of-3-stills] [--cache-only] [--stills FOLDER] [--allow-repeat] [--allow-silence] [--allow-bad-first]
+  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--chain-images] [--best-of-3-stills] [--cache-only] [--stills FOLDER] [--anchor-image IMAGE] [--allow-repeat] [--allow-silence] [--allow-bad-first]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json [--watch]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json --preview
 
@@ -18,7 +18,7 @@ USAGE
 
 default_model='qwen3:1.7b'
 [[ -s storage/setup/gemma-model-dir.txt ]] && default_model='gemma-local'
-scenario=''; status=''; chain=''; stills=''; allow_repeat=''; cache_only=''; best_of_3=''; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
+scenario=''; status=''; chain=''; stills=''; anchor_image=''; allow_repeat=''; cache_only=''; best_of_3=''; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
 while (($#)); do
   case "$1" in
     --scenario) scenario="${2:?Missing scenario path}"; shift 2 ;;
@@ -29,6 +29,7 @@ while (($#)); do
     --cache-only) cache_only='--cache-only'; shift ;;
     --best-of-3-stills) best_of_3='--best-of-3-stills'; shift ;;
     --stills) stills="$2"; shift 2 ;;
+    --anchor-image) anchor_image="$2"; shift 2 ;;
     --allow-repeat) allow_repeat='--allow'; shift ;;
     --allow-silence) allow_silence='--allow-silence'; shift ;;
     --allow-bad-first) allow_bad_first='--allow-bad-first'; shift ;;
@@ -97,7 +98,7 @@ python3 scripts/evidence_gate.py "$scenario" || { echo 'Evidence gate blocked th
 storage/tools/ComfyUI/.venv/bin/python scripts/add-sfx.py --scenario "$scenario" --audit || { echo 'Sound cue gate blocked this scenario. Edit its shot sound lines before rendering.' >&2; exit 3; }
 t_checks=$SECONDS
 echo "Step 3/4  Rendering local video to $output (about 5 min per shot on an M1: still, motion, voice, assembly)"
-python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" ${chain:+$chain} ${cache_only:+$cache_only} ${best_of_3:+$best_of_3} ${allow_silence:+$allow_silence} ${allow_bad_first:+$allow_bad_first} ${stills:+--stills "$stills"}
+python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" ${chain:+$chain} ${cache_only:+$cache_only} ${best_of_3:+$best_of_3} ${allow_silence:+$allow_silence} ${allow_bad_first:+$allow_bad_first} ${stills:+--stills "$stills"} ${anchor_image:+--anchor-image "$anchor_image"}
 t_render=$SECONDS
 echo "Base render complete: $output (not release approved)"
 echo "Step 4/4  Shot-synced ASMR, captions, upload pack and quality check"
