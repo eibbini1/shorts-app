@@ -1,0 +1,112 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 16,
+    "voice": "af_heart",
+    "presentationMode": "asmr"
+  },
+  "model": "hand-written",
+  "topic": "Pistachio Kunafa Chocolate Bar: a quick recipe in five fast shots",
+  "style": "photoreal luxury designer kitchen, navy cabinetry with brass fixtures, polished black and gold marble counter, copper cookware, gold utensils, one emerald green enamel accent, warm key light with bright rim light, macro food close-ups, hands only, vertical framing",
+  "requestedEnding": "Gloved hands snap the chocolate bar in half and the green pistachio kunafa filling stretches.",
+  "totalSeconds": 16,
+  "template": "story",
+  "plan": {
+    "ideas": [
+      {
+        "title": "Pistachio Kunafa Chocolate Bar",
+        "angle": "payoff tease as the hook"
+      },
+      {
+        "title": "Pistachio Kunafa Chocolate Bar idea 2",
+        "angle": "top-down ingredients"
+      },
+      {
+        "title": "Pistachio Kunafa Chocolate Bar idea 3",
+        "angle": "top-down prep"
+      },
+      {
+        "title": "Pistachio Kunafa Chocolate Bar idea 4",
+        "angle": "cooking close-up"
+      },
+      {
+        "title": "Pistachio Kunafa Chocolate Bar idea 5",
+        "angle": "side-macro payoff"
+      }
+    ],
+    "title": "Pistachio Kunafa Chocolate Bar",
+    "hook": "Crunchy pistachio kunafa chocolate, yet made at home?",
+    "payoff": "Gloved hands snap the chocolate bar in half and the green pistachio kunafa filling stretches.",
+    "shots": [
+      {
+        "seconds": 2,
+        "narration": "Kunafa.",
+        "imagePrompt": "Pistachio Kunafa Chocolate Bar: a copper pan of fine golden toasted kunafa pastry shreds with a small gold spatula in it. It sits on a clean white marble worktop with soft grey veins, the surface otherwise empty. Bright diffused daylight from above with gentle soft shadows and crisp natural colour. Photorealistic overhead food photograph, the camera pointing straight down in a true top-down view, 50mm lens at f/5.6, everything in sharp focus, the single item centred, close and filling most of the frame, with clean empty marble around it. Two hands in black chef gloves enter from the bottom edge of the frame, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down close view of the copper pan. At once a gloved hand stirs the golden kunafa shreds with the gold spatula as they shift gently and turn crisp. Static camera, locked in the same close top-down view.",
+        "sound": "dry pastry rustle, soft sizzle"
+      },
+      {
+        "seconds": 2,
+        "narration": "Pistachio.",
+        "imagePrompt": "Pistachio Kunafa Chocolate Bar: a clear glass bowl of golden toasted kunafa shreds with thick bright green pistachio cream being poured over them from a small white jug. It sits on a clean white marble worktop with soft grey veins, the surface otherwise empty. Bright diffused daylight from above with gentle soft shadows and crisp natural colour. Photorealistic overhead food photograph, the camera pointing straight down in a true top-down view, 50mm lens at f/5.6, everything in sharp focus, the single item centred, close and filling most of the frame, with clean empty marble around it. Two hands in black chef gloves enter from the bottom edge of the frame, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down close view of the glass bowl. At once a gloved hand tilts the small jug as thick green pistachio cream pours slowly over the golden kunafa in a smooth ribbon. Static camera, locked in the same close top-down view.",
+        "sound": "thick cream pour"
+      },
+      {
+        "seconds": 2,
+        "narration": "Fold.",
+        "imagePrompt": "Pistachio Kunafa Chocolate Bar: the clear glass bowl now holding a thick green pistachio and kunafa mixture, a gold spoon folding it. It sits on a clean white marble worktop with soft grey veins, the surface otherwise empty. Bright diffused daylight from above with gentle soft shadows and crisp natural colour. Photorealistic overhead food photograph, the camera pointing straight down in a true top-down view, 50mm lens at f/5.6, everything in sharp focus, the single item centred, close and filling most of the frame, with clean empty marble around it. Two hands in black chef gloves enter from the bottom edge of the frame, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down close view of the glass bowl. At once a gloved hand folds the green pistachio kunafa mixture slowly with the gold spoon as the shreds turn evenly green. Static camera, locked in the same close top-down view.",
+        "sound": "crunchy fold, spoon on glass"
+      },
+      {
+        "seconds": 2,
+        "narration": "Chocolate.",
+        "imagePrompt": "Pistachio Kunafa Chocolate Bar: a rectangular chocolate bar mould being filled with glossy melted dark chocolate from a small copper pot. It sits on a clean white marble worktop with soft grey veins, the surface otherwise empty. Bright diffused daylight from above with gentle soft shadows and crisp natural colour. Photorealistic overhead food photograph, the camera pointing straight down in a true top-down view, 50mm lens at f/5.6, everything in sharp focus, the single item centred, close and filling most of the frame, with clean empty marble around it. Two hands in black chef gloves enter from the bottom edge of the frame, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down close view of the bar mould. At once a gloved hand tilts the copper pot as glossy melted dark chocolate pours slowly into the mould and levels out. Static camera, locked in the same close top-down view.",
+        "sound": "smooth chocolate pour"
+      },
+      {
+        "seconds": 2,
+        "narration": "Fill.",
+        "imagePrompt": "Pistachio Kunafa Chocolate Bar: the chocolate-lined bar mould with the green pistachio kunafa filling spread along it, a small gold spatula smoothing the filling. It sits on a clean white marble worktop with soft grey veins, the surface otherwise empty. Bright diffused daylight from above with gentle soft shadows and crisp natural colour. Photorealistic overhead food photograph, the camera pointing straight down in a true top-down view, 50mm lens at f/5.6, everything in sharp focus, the single item centred, close and filling most of the frame, with clean empty marble around it. Two hands in black chef gloves enter from the bottom edge of the frame, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down close view of the bar mould. At once a gloved hand smooths the green pistachio kunafa filling along the mould with the gold spatula as it spreads flat. Static camera, locked in the same close top-down view.",
+        "sound": "soft spread, light crunch"
+      },
+      {
+        "seconds": 2,
+        "narration": "Seal.",
+        "imagePrompt": "Pistachio Kunafa Chocolate Bar: the bar mould with green filling being covered by a final layer of glossy melted dark chocolate from the copper pot. It sits on a clean white marble worktop with soft grey veins, the surface otherwise empty. Bright diffused daylight from above with gentle soft shadows and crisp natural colour. Photorealistic overhead food photograph, the camera pointing straight down in a true top-down view, 50mm lens at f/5.6, everything in sharp focus, the single item centred, close and filling most of the frame, with clean empty marble around it. Two hands in black chef gloves enter from the bottom edge of the frame, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down close view of the bar mould. At once a gloved hand tilts the copper pot as melted dark chocolate pours slowly over the green filling and seals it. Static camera, locked in the same close top-down view.",
+        "sound": "smooth chocolate pour"
+      },
+      {
+        "seconds": 2,
+        "narration": "Set.",
+        "imagePrompt": "Pistachio Kunafa Chocolate Bar: one finished glossy dark chocolate bar with a ridged top lying alone in the centre of the marble. It sits on a clean white marble worktop with soft grey veins, the surface otherwise empty. Bright diffused daylight from above with gentle soft shadows and crisp natural colour. Photorealistic overhead food photograph, the camera pointing straight down in a true top-down view, 50mm lens at f/5.6, everything in sharp focus, the single item centred, close and filling most of the frame, with clean empty marble around it. Two hands in black chef gloves enter from the bottom edge of the frame, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down close view of the finished chocolate bar. At once two gloved hands slide in and lift the glossy bar slightly as the light runs across its surface. Static camera, locked in the same close top-down view.",
+        "sound": "soft tap on marble"
+      },
+      {
+        "seconds": 2,
+        "narration": "Snap.",
+        "imagePrompt": "Pistachio Kunafa Chocolate Bar: the chocolate bar held in two black-gloved hands, snapped in half, its cut faces showing thick green pistachio kunafa filling stretching between the halves. It sits on a clean white marble worktop with soft grey veins, the surface otherwise empty. Bright diffused daylight from above with gentle soft shadows and crisp natural colour. Photorealistic overhead food photograph, the camera pointing straight down in a true top-down view, 50mm lens at f/5.6, everything in sharp focus, the single item centred, close and filling most of the frame, with clean empty marble around it. Two hands in black chef gloves enter from the bottom edge of the frame, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down close view of the chocolate bar in the gloved hands. At once the hands snap the chocolate bar in half and pull the halves apart slowly as the green pistachio kunafa filling stretches, until they hold still. Static camera, locked in the same close top-down view.",
+        "sound": "loud chocolate snap, crunch"
+      }
+    ],
+    "claimsToCheck": [
+      "Recipe quantities belong in the description, not on screen",
+      "AI-generated original footage"
+    ]
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "format modelled on common recipe-Short structure (hook, top-down steps, payoff); not a verified view trend",
+    "sources": [
+      "https://www.youtube.com/shorts/bkUpOMCZ9GQ"
+    ]
+  }
+}

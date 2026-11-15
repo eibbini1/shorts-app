@@ -1,0 +1,91 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 15,
+    "voice": "af_heart",
+    "presentationMode": "voiced"
+  },
+  "model": "hand-written",
+  "topic": "Spicy Peanut Noodles: a quick recipe in five fast shots",
+  "style": "photoreal luxury designer kitchen, navy cabinetry with brass fixtures, polished black and gold marble counter, copper cookware, gold utensils, one emerald green enamel accent, warm key light with bright rim light, macro food close-ups, hands only, vertical framing",
+  "requestedEnding": "Chopsticks lift glossy peanut noodles and the sauce clings and shines.",
+  "totalSeconds": 15,
+  "template": "story",
+  "plan": {
+    "ideas": [
+      {
+        "title": "Spicy Peanut Noodles",
+        "angle": "payoff tease as the hook"
+      },
+      {
+        "title": "Spicy Peanut Noodles idea 2",
+        "angle": "top-down ingredients"
+      },
+      {
+        "title": "Spicy Peanut Noodles idea 3",
+        "angle": "top-down prep"
+      },
+      {
+        "title": "Spicy Peanut Noodles idea 4",
+        "angle": "cooking close-up"
+      },
+      {
+        "title": "Spicy Peanut Noodles idea 5",
+        "angle": "side-macro payoff"
+      }
+    ],
+    "title": "Spicy Peanut Noodles",
+    "hook": "Ten minutes, yet noodles this creamy?",
+    "payoff": "Chopsticks lift glossy peanut noodles and the sauce clings and shines.",
+    "shots": [
+      {
+        "seconds": 3,
+        "narration": "Ten minutes, yet noodles this creamy?",
+        "imagePrompt": "Spicy Peanut Noodles: gold chopsticks lifting a thick twirl of glossy spicy peanut noodles above an emerald enamel bowl, sauce clinging to every strand, scallions, sesame seeds and crushed peanuts on top. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro food photograph from a low side angle at counter height, 100mm macro lens at f/2.8, shallow depth of field, creamy bokeh, the food filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Extreme close-up on the emerald enamel bowl of peanut noodles. The noodles hang still on the gold chopsticks, then the chopsticks lift glossy peanut noodles higher as the sauce clings and shines and drips back in a thin ribbon. The camera makes one very slight, slow push in toward the lifted noodles, keeping the whole dish in frame, until they hold still.",
+        "sound": "chopstick lift, soft sauce drip"
+      },
+      {
+        "seconds": 3,
+        "narration": "Peanut butter, soy, garlic and chili oil.",
+        "imagePrompt": "Spicy Peanut Noodles: five small copper bowls arranged in a neat circle holding creamy peanut butter, dark soy sauce, minced garlic, red chili oil and a nest of fresh noodles. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic overhead food photograph, the camera pointing straight down at the counter in a true top-down flat lay, 50mm lens at f/4, everything in sharp focus, the food centred and filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down view of the small copper bowls on the marble counter. The bowls sit still, then a hand sets the bowl of red chili oil gently into place as the oil ripples and settles. The camera makes one very slight, slow push in toward the bowls, keeping the whole dish in frame, until the hand lifts away.",
+        "sound": "small bowls set on marble, soft kitchen tone"
+      },
+      {
+        "seconds": 3,
+        "narration": "Whisk it smooth with hot noodle water.",
+        "imagePrompt": "Spicy Peanut Noodles: one copper bowl of creamy peanut sauce seen from directly above, a gold spoon resting in it, red chili oil swirled in a spiral on the surface. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic overhead food photograph, the camera pointing straight down at the counter in a true top-down flat lay, 50mm lens at f/4, everything in sharp focus, the food centred and filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down view of the copper bowl of peanut sauce. The sauce sits still, then a hand stirs the peanut sauce slowly with the gold spoon as the red chili oil swirls into a spiral and the sauce turns glossy. The camera makes one very slight, slow push in toward the swirl, keeping the whole dish in frame, until the stirring slows to a stop.",
+        "sound": "spoon against bowl, thick sauce stir"
+      },
+      {
+        "seconds": 3,
+        "narration": "Toss the hot noodles until they shine.",
+        "imagePrompt": "Spicy Peanut Noodles: hot noodles held in gold tongs above an emerald enamel bowl of glossy dark peanut sauce, steam rising. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic food photograph from a 45-degree angle, 85mm lens at f/2.8, shallow depth of field, the food filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Close-up on the hot noodles above the emerald enamel bowl. The noodles hang still, then the gold tongs lower and toss the hot noodles gently in the glossy peanut sauce as the sauce coats every strand and steam rises. The camera makes one very slight, slow push in toward the noodles, keeping the whole dish in frame, until the tongs rest.",
+        "sound": "tongs toss, wet noodles, soft steam"
+      },
+      {
+        "seconds": 3,
+        "narration": "Scallions, peanuts, then slurp. Save this one.",
+        "imagePrompt": "Spicy Peanut Noodles: an emerald enamel bowl of glossy spicy peanut noodles topped with sliced scallions, sesame seeds and crushed peanuts, gold chopsticks lifting a twirl of noodles. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro food photograph from a low side angle at counter height, 100mm macro lens at f/2.8, shallow depth of field, creamy bokeh, the food filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Extreme close-up on the emerald enamel bowl of noodles topped with scallions and crushed peanuts. The bowl sits still, then chopsticks lift glossy peanut noodles slowly and the sauce clings and shines as steam rises. The camera makes one very slight, slow push in toward the glossy noodles, keeping the whole dish in frame, until they hold still.",
+        "sound": "chopstick lift, soft slurp, peanut crunch"
+      }
+    ],
+    "claimsToCheck": [
+      "Original recipe wording; confirm quantities before publishing a written recipe",
+      "AI-generated original footage; no reference footage, audio or branding reused"
+    ]
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "format modelled on common recipe-Short structure (hook, top-down steps, payoff); not a verified view trend",
+    "sources": [
+      "https://www.youtube.com/shorts/bkUpOMCZ9GQ"
+    ]
+  }
+}

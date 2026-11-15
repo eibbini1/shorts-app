@@ -1,0 +1,91 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 15,
+    "voice": "af_heart",
+    "presentationMode": "voiced"
+  },
+  "model": "hand-written",
+  "topic": "Hot Honey Glazed Salmon: a quick recipe in five fast shots",
+  "style": "photoreal luxury designer kitchen, navy cabinetry with brass fixtures, polished black and gold marble counter, copper cookware, gold utensils, one emerald green enamel accent, warm key light with bright rim light, macro food close-ups, hands only, vertical framing",
+  "requestedEnding": "Glossy hot honey glaze is spooned over the crisp salmon and it shines.",
+  "totalSeconds": 15,
+  "template": "story",
+  "plan": {
+    "ideas": [
+      {
+        "title": "Hot Honey Glazed Salmon",
+        "angle": "payoff tease as the hook"
+      },
+      {
+        "title": "Hot Honey Glazed Salmon idea 2",
+        "angle": "top-down ingredients"
+      },
+      {
+        "title": "Hot Honey Glazed Salmon idea 3",
+        "angle": "top-down prep"
+      },
+      {
+        "title": "Hot Honey Glazed Salmon idea 4",
+        "angle": "cooking close-up"
+      },
+      {
+        "title": "Hot Honey Glazed Salmon idea 5",
+        "angle": "side-macro payoff"
+      }
+    ],
+    "title": "Hot Honey Glazed Salmon",
+    "hook": "One skillet, yet salmon this glossy?",
+    "payoff": "Glossy hot honey glaze is spooned over the crisp salmon and it shines.",
+    "shots": [
+      {
+        "seconds": 3,
+        "narration": "One skillet, yet salmon this glossy?",
+        "imagePrompt": "Hot Honey Glazed Salmon: a crisp-skinned salmon fillet in a copper skillet coated in a thick glossy hot honey glaze with red chili flakes, a gold spoon above it with a ribbon of glaze falling. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro food photograph from a low side angle at counter height, 100mm macro lens at f/2.8, shallow depth of field, creamy bokeh, the food filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Extreme close-up on the crisp salmon fillet in the copper skillet. The fillet sits still, then the gold spoon tilts and a slow ribbon of glossy hot honey glaze pours over the crisp salmon as the glaze spreads and shines. The camera makes one slow push in toward the glaze until the pour ends.",
+        "sound": "glaze drizzle, light sizzle"
+      },
+      {
+        "seconds": 3,
+        "narration": "Salmon, honey, chili flakes, vinegar, lime.",
+        "imagePrompt": "Hot Honey Glazed Salmon: a raw salmon fillet on a gold-rimmed plate in the centre with small copper bowls of amber honey, red chili flakes and vinegar and two lime wedges around it. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic overhead food photograph, the camera pointing straight down at the counter in a true top-down flat lay, 50mm lens at f/4, everything in sharp focus, the food centred and filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down view of the salmon fillet and the small copper bowls. Everything sits still, then a hand sets a lime wedge gently beside the salmon as the honey in its bowl catches the light. The camera makes one slow push in toward the salmon until the hand lifts away.",
+        "sound": "small bowls set on marble, soft kitchen tone"
+      },
+      {
+        "seconds": 3,
+        "narration": "Sear it skin-side down until crisp.",
+        "imagePrompt": "Hot Honey Glazed Salmon: a salmon fillet skin-side down in a copper skillet seen from directly above, the edges turning golden with tiny bubbles of oil around it. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic overhead food photograph, the camera pointing straight down at the counter in a true top-down flat lay, 50mm lens at f/4, everything in sharp focus, the food centred and filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down view of the salmon fillet in the copper skillet. The fillet sits still, then a hand presses it gently with a gold spatula as the edges sizzle and turn golden and thin steam rises. The camera makes one slow push in toward the fillet until the spatula lifts away.",
+        "sound": "loud skillet sizzle"
+      },
+      {
+        "seconds": 3,
+        "narration": "Bubble honey and chili into a glaze.",
+        "imagePrompt": "Hot Honey Glazed Salmon: a small copper saucepan of bubbling amber hot honey with red chili flakes, a gold spoon resting in it. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic food photograph from a 45-degree angle, 85mm lens at f/2.8, shallow depth of field, the food filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Close-up on the small copper saucepan. The amber honey sits still, then a hand stirs it slowly with the gold spoon as the honey bubbles and the chili flakes swirl and melt in. The camera makes one slow push in toward the bubbling honey until the stirring slows to a stop.",
+        "sound": "honey bubbling, spoon on saucepan"
+      },
+      {
+        "seconds": 3,
+        "narration": "Spoon it over and shine. Save this.",
+        "imagePrompt": "Hot Honey Glazed Salmon: the crisp salmon fillet on a gold-rimmed plate with a thick glossy hot honey glaze, a lime wedge and chili flakes, a gold spoon above it. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro food photograph from a low side angle at counter height, 100mm macro lens at f/2.8, shallow depth of field, creamy bokeh, the food filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Extreme close-up on the crisp salmon fillet on the plate. The fillet sits still, then glossy hot honey glaze is spooned over the crisp salmon in a slow thick ribbon and it shines as steam rises. The camera makes one slow push in toward the shining glaze until the spoon lifts away.",
+        "sound": "spoon drizzle, soft steam"
+      }
+    ],
+    "claimsToCheck": [
+      "Original recipe wording; confirm quantities before publishing a written recipe",
+      "AI-generated original footage; no reference footage, audio or branding reused"
+    ]
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "format modelled on common recipe-Short structure (hook, top-down steps, payoff); not a verified view trend",
+    "sources": [
+      "https://www.youtube.com/shorts/bkUpOMCZ9GQ"
+    ]
+  }
+}

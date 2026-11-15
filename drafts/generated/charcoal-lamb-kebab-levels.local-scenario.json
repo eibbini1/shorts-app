@@ -1,0 +1,91 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 15,
+    "voice": "af_heart",
+    "presentationMode": "voiced"
+  },
+  "model": "hand-written",
+  "topic": "Lamb Kebab Level Up: a quick recipe in five fast shots",
+  "style": "photoreal luxury designer kitchen, navy cabinetry with brass fixtures, polished black and gold marble counter, copper cookware, gold utensils, one emerald green enamel accent, warm key light with bright rim light, macro food close-ups, hands only, vertical framing",
+  "requestedEnding": "A hand lifts the gold wagyu kebab toward the camera and it shines.",
+  "totalSeconds": 15,
+  "template": "story",
+  "plan": {
+    "ideas": [
+      {
+        "title": "Lamb Kebab Level Up",
+        "angle": "payoff tease as the hook"
+      },
+      {
+        "title": "Lamb Kebab Level Up idea 2",
+        "angle": "top-down ingredients"
+      },
+      {
+        "title": "Lamb Kebab Level Up idea 3",
+        "angle": "top-down prep"
+      },
+      {
+        "title": "Lamb Kebab Level Up idea 4",
+        "angle": "cooking close-up"
+      },
+      {
+        "title": "Lamb Kebab Level Up idea 5",
+        "angle": "side-macro payoff"
+      }
+    ],
+    "title": "Lamb Kebab Level Up",
+    "hook": "Five dollars, yet watch it level up.",
+    "payoff": "A hand lifts the gold wagyu kebab toward the camera and it shines.",
+    "shots": [
+      {
+        "seconds": 3,
+        "narration": "Five dollars, yet watch it level up.",
+        "imagePrompt": "Lamb Kebab Level Up: a plain charred minced lamb kebab on a gold skewer resting on a simple flatbread on a white paper plate. It sits on a polished black marble counter against a dark background with soft warm bokeh lights far behind, in low-key candle-warm light. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic cinematic food photograph from one fixed front view, the camera looking down at about 40 degrees, 85mm macro lens at f/2.8, shallow depth of field, razor-sharp focus on the food, the plate centred and large, filling the frame from edge to edge. Only one hand enters the frame, holding at most one tool, and every surface is clean and unmarked.",
+        "motionPrompt": "Close fixed view of the lamb kebab on the paper plate. A hand sets the gold skewer down gently as the kebab settles on the flatbread and thin steam rises from the meat. Static camera, locked in the same close fixed view.",
+        "sound": "paper plate tap, soft sizzle"
+      },
+      {
+        "seconds": 3,
+        "narration": "Level two: saffron butter. Fifty dollars.",
+        "imagePrompt": "Lamb Kebab Level Up: the same charred lamb kebab on flatbread, now on a matte black plate, brushed with glossy golden saffron butter, a small gold brush touching it. It sits on a polished black marble counter against a dark background with soft warm bokeh lights far behind, in low-key candle-warm light. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic cinematic food photograph from one fixed front view, the camera looking down at about 40 degrees, 85mm macro lens at f/2.8, shallow depth of field, razor-sharp focus on the food, the plate centred and large, filling the frame from edge to edge. Only one hand enters the frame, holding at most one tool, and every surface is clean and unmarked.",
+        "motionPrompt": "Close fixed view of the lamb kebab on the black plate. A hand brushes glossy saffron butter slowly along the kebab with the small gold brush as the butter melts and shines. Static camera, locked in the same close fixed view.",
+        "sound": "soft brush stroke, butter sizzle"
+      },
+      {
+        "seconds": 3,
+        "narration": "Level three: wagyu beef. Five hundred.",
+        "imagePrompt": "Lamb Kebab Level Up: two thick, visibly larger marbled wagyu beef kebabs on gold skewers on flatbread on the matte black plate, deep red-brown and glossy with saffron butter, flaky salt crystals on top. It sits on a polished black marble counter against a dark background with soft warm bokeh lights far behind, in low-key candle-warm light. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic cinematic food photograph from one fixed front view, the camera looking down at about 40 degrees, 85mm macro lens at f/2.8, shallow depth of field, razor-sharp focus on the food, the plate centred and large, filling the frame from edge to edge. Only one hand enters the frame, holding at most one tool, and every surface is clean and unmarked.",
+        "motionPrompt": "Close fixed view of the wagyu kebab on the black plate. A hand sprinkles flaky salt slowly over the wagyu kebab as the crystals fall and the juices glisten. Static camera, locked in the same close fixed view.",
+        "sound": "salt sprinkle, soft sizzle"
+      },
+      {
+        "seconds": 3,
+        "narration": "Level ninety-nine: gold leaf. Five thousand?",
+        "imagePrompt": "Lamb Kebab Level Up: the wagyu kebab on a gold-rimmed black plate half covered with delicate sheets of gold leaf, gold tweezers holding one more sheet just above it. It sits on a polished black marble counter against a dark background with soft warm bokeh lights far behind, in low-key candle-warm light. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic cinematic food photograph from one fixed front view, the camera looking down at about 40 degrees, 85mm macro lens at f/2.8, shallow depth of field, razor-sharp focus on the food, the plate centred and large, filling the frame from edge to edge. Only one hand enters the frame, holding at most one tool, and every surface is clean and unmarked.",
+        "motionPrompt": "Close fixed view of the wagyu kebab on the gold-rimmed plate. A hand lowers the gold tweezers slowly as the sheet of gold leaf settles on the wagyu kebab and it shines in the warm light. Static camera, locked in the same close fixed view.",
+        "sound": "soft shimmer, quiet room tone"
+      },
+      {
+        "seconds": 3,
+        "narration": "Which level would you pay for?",
+        "imagePrompt": "Lamb Kebab Level Up: one cut half of the gold-leaf wagyu kebab held up close to the camera in one hand, its juicy pink centre facing the viewer, the empty gold-rimmed black plate softly blurred below. It sits on a polished black marble counter against a dark background with soft warm bokeh lights far behind, in low-key candle-warm light. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic cinematic food photograph from one fixed front view, the camera looking down at about 40 degrees, 85mm macro lens at f/2.8, shallow depth of field, razor-sharp focus on the food, the plate centred and large, filling the frame from edge to edge. Only one hand enters the frame, holding at most one tool, and every surface is clean and unmarked.",
+        "motionPrompt": "Close fixed view of the gold wagyu kebab. A hand lifts one half of the gold wagyu kebab toward the camera as the cut face glistens and it shines, until it holds still. Static camera, locked in the same close fixed view.",
+        "sound": "soft lift, gentle steam"
+      }
+    ],
+    "claimsToCheck": [
+      "Prices on screen are illustrative level prices, not quotes for a real menu; say so in the description",
+      "AI-generated original footage"
+    ]
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "format modelled on common recipe-Short structure (hook, top-down steps, payoff); not a verified view trend",
+    "sources": [
+      "https://www.youtube.com/shorts/bkUpOMCZ9GQ"
+    ]
+  }
+}

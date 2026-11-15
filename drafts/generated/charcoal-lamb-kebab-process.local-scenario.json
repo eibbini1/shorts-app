@@ -1,0 +1,105 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 28,
+    "voice": "af_heart",
+    "presentationMode": "asmr"
+  },
+  "model": "hand-written",
+  "topic": "Charcoal Lamb Kebab: a quick recipe in five fast shots",
+  "style": "photoreal luxury designer kitchen, navy cabinetry with brass fixtures, polished black and gold marble counter, copper cookware, gold utensils, one emerald green enamel accent, warm key light with bright rim light, macro food close-ups, hands only, vertical framing",
+  "requestedEnding": "Gloved hands slide the charred lamb kebab off the skewer onto warm flatbread and the juices glisten.",
+  "totalSeconds": 28,
+  "template": "story",
+  "plan": {
+    "ideas": [
+      {
+        "title": "Charcoal Lamb Kebab",
+        "angle": "payoff tease as the hook"
+      },
+      {
+        "title": "Charcoal Lamb Kebab idea 2",
+        "angle": "top-down ingredients"
+      },
+      {
+        "title": "Charcoal Lamb Kebab idea 3",
+        "angle": "top-down prep"
+      },
+      {
+        "title": "Charcoal Lamb Kebab idea 4",
+        "angle": "cooking close-up"
+      },
+      {
+        "title": "Charcoal Lamb Kebab idea 5",
+        "angle": "side-macro payoff"
+      }
+    ],
+    "title": "Charcoal Lamb Kebab",
+    "hook": "Juicy charcoal kebab, yet only five ingredients?",
+    "payoff": "Gloved hands slide the charred lamb kebab off the skewer onto warm flatbread and the juices glisten.",
+    "shots": [
+      {
+        "seconds": 4,
+        "narration": "Lamb, onion, parsley.",
+        "imagePrompt": "Charcoal Lamb Kebab: a wide copper bowl of fresh minced lamb with grated onion, chopped parsley, deep red sumac and chili flakes on top, not yet mixed. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic food photograph from one fixed high front view, the camera looking down at about 50 degrees onto the same polished black and gold marble worktop, 50mm lens at f/4, the food centred, close and large in the frame, everything on the worktop in sharp focus. Two hands in black chef gloves work on the food from the top edge of the frame, and every surface is clean and unmarked.",
+        "motionPrompt": "Close fixed view of the copper bowl of minced lamb. The bowl sits still, then the gloved hands press and fold the minced lamb slowly as the onion, parsley and red sumac work into the meat. Static camera, locked in the same close fixed view the whole time.",
+        "sound": "soft meat knead, quiet kitchen tone"
+      },
+      {
+        "seconds": 4,
+        "narration": "Knead until sticky.",
+        "imagePrompt": "Charcoal Lamb Kebab: the same wide copper bowl now holding one smooth evenly mixed ball of seasoned minced lamb flecked with parsley and red chili. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic food photograph from one fixed high front view, the camera looking down at about 50 degrees onto the same polished black and gold marble worktop, 50mm lens at f/4, the food centred, close and large in the frame, everything on the worktop in sharp focus. Two hands in black chef gloves work on the food from the top edge of the frame, and every surface is clean and unmarked.",
+        "motionPrompt": "Close fixed view of the copper bowl. The ball of seasoned lamb sits still, then the gloved hands lift it and press it back down slowly as the meat turns smooth and sticky. Static camera, locked in the same close fixed view the whole time.",
+        "sound": "soft meat press, light slap"
+      },
+      {
+        "seconds": 4,
+        "narration": "Press onto the skewer.",
+        "imagePrompt": "Charcoal Lamb Kebab: a long wide flat gold skewer lying across the marble worktop with seasoned minced lamb pressed along half of its length. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic food photograph from one fixed high front view, the camera looking down at about 50 degrees onto the same polished black and gold marble worktop, 50mm lens at f/4, the food centred, close and large in the frame, everything on the worktop in sharp focus. Two hands in black chef gloves work on the food from the top edge of the frame, and every surface is clean and unmarked.",
+        "motionPrompt": "Close fixed view of the gold skewer on the worktop. The skewer sits still, then the gloved hands press the seasoned minced lamb gently along the skewer as the kebab grows longer and even. Static camera, locked in the same close fixed view the whole time.",
+        "sound": "soft meat press on metal"
+      },
+      {
+        "seconds": 4,
+        "narration": "Pinch the ridges.",
+        "imagePrompt": "Charcoal Lamb Kebab: the long gold skewer on the marble worktop fully covered in an even minced lamb kebab with a row of neat finger ridges along it. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic food photograph from one fixed high front view, the camera looking down at about 50 degrees onto the same polished black and gold marble worktop, 50mm lens at f/4, the food centred, close and large in the frame, everything on the worktop in sharp focus. Two hands in black chef gloves work on the food from the top edge of the frame, and every surface is clean and unmarked.",
+        "motionPrompt": "Close fixed view of the kebab on the gold skewer. The kebab sits still, then gloved fingers pinch the meat gently along its length as a neat row of ridges forms. Static camera, locked in the same close fixed view the whole time.",
+        "sound": "soft pinch, quiet kitchen tone"
+      },
+      {
+        "seconds": 4,
+        "narration": "Onto hot charcoal.",
+        "imagePrompt": "Charcoal Lamb Kebab: a low brass tabletop charcoal grill on the marble worktop with glowing orange coals, three raw ridged minced lamb kebabs on gold skewers resting across it. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic food photograph from one fixed high front view, the camera looking down at about 50 degrees onto the same polished black and gold marble worktop, 50mm lens at f/4, the food centred, close and large in the frame, everything on the worktop in sharp focus. Two hands in black chef gloves work on the food from the top edge of the frame, and every surface is clean and unmarked.",
+        "motionPrompt": "Close fixed view of the brass charcoal grill. The skewers sit still, then a gloved hand lowers one more lamb kebab gently onto the grill as the meat begins to sizzle and thin smoke rises. Static camera, locked in the same close fixed view the whole time.",
+        "sound": "first sizzle, charcoal crackle"
+      },
+      {
+        "seconds": 4,
+        "narration": "Turn until charred.",
+        "imagePrompt": "Charcoal Lamb Kebab: the same low brass charcoal grill with glowing coals, the three minced lamb kebabs on gold skewers now browned with dark char marks and glistening juices, thin smoke rising. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic food photograph from one fixed high front view, the camera looking down at about 50 degrees onto the same polished black and gold marble worktop, 50mm lens at f/4, the food centred, close and large in the frame, everything on the worktop in sharp focus. Two hands in black chef gloves work on the food from the top edge of the frame, and every surface is clean and unmarked.",
+        "motionPrompt": "Close fixed view of the brass charcoal grill. The kebabs sit still, then a gloved hand turns the middle skewer slowly as the charred side comes up glistening and thin smoke drifts. Static camera, locked in the same close fixed view the whole time.",
+        "sound": "steady sizzle, charcoal crackle"
+      },
+      {
+        "seconds": 4,
+        "narration": "Slide onto warm bread.",
+        "imagePrompt": "Charcoal Lamb Kebab: a charred minced lamb kebab on a gold skewer held just above warm flatbread on a gold-rimmed plate, a grilled tomato and sumac onions beside it, juices glistening. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic food photograph from one fixed high front view, the camera looking down at about 50 degrees onto the same polished black and gold marble worktop, 50mm lens at f/4, the food centred, close and large in the frame, everything on the worktop in sharp focus. Two hands in black chef gloves work on the food from the top edge of the frame, and every surface is clean and unmarked.",
+        "motionPrompt": "Close fixed view of the plate of warm flatbread. The kebab sits still on its skewer, then the gloved hands slide the charred lamb kebab off the skewer onto the warm flatbread as the juices glisten and steam rises. Static camera, locked in the same close fixed view the whole time.",
+        "sound": "skewer slide, soft steam"
+      }
+    ],
+    "claimsToCheck": [
+      "Original recipe wording; confirm quantities before publishing a written recipe",
+      "AI-generated original footage; no reference footage, audio or branding reused"
+    ]
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "format modelled on common recipe-Short structure (hook, top-down steps, payoff); not a verified view trend",
+    "sources": [
+      "https://www.youtube.com/shorts/bkUpOMCZ9GQ"
+    ]
+  }
+}
