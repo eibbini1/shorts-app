@@ -6,19 +6,19 @@ usage() {
   cat <<'USAGE'
 Usage:
   bash scripts/make-local-video.sh
-  bash scripts/make-local-video.sh --draft-only [--model gemma-local]
+  bash scripts/make-local-video.sh --draft-only [--model gemma-local] [--idea BANK_ID] [--answers brief.json]
   bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--chain-images] [--best-of-3-stills] [--cache-only] [--stills FOLDER] [--anchor-image IMAGE] [--allow-repeat] [--allow-silence] [--allow-bad-first]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json [--watch]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json --preview
 
 The interactive path asks for a subject, set, visible hook and action, sound mode, runtime, and orientation.
-It saves a local Ollama shot plan for review before expensive rendering.
+It saves a local Gemma or Ollama shot plan, then runs strict preflight before expensive rendering.
 USAGE
 }
 
 default_model='qwen3:1.7b'
 [[ -s storage/setup/gemma-model-dir.txt ]] && default_model='gemma-local'
-scenario=''; status=''; chain=''; stills=''; anchor_image=''; allow_repeat=''; cache_only=''; best_of_3=''; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
+scenario=''; status=''; chain=''; stills=''; anchor_image=''; allow_repeat=''; cache_only=''; best_of_3=''; idea=''; answers=''; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
 while (($#)); do
   case "$1" in
     --scenario) scenario="${2:?Missing scenario path}"; shift 2 ;;
@@ -35,6 +35,8 @@ while (($#)); do
     --allow-bad-first) allow_bad_first='--allow-bad-first'; shift ;;
     --draft-only) draft_only=1; shift ;;
     --model) model="${2:?Missing model name}"; shift 2 ;;
+    --idea) idea="${2:?Missing bank idea ID}"; shift 2 ;;
+    --answers) answers="${2:?Missing brief JSON path}"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) usage; exit 2 ;;
   esac
@@ -56,7 +58,10 @@ fi
 ((preview == 0)) || { echo '--preview requires --status.' >&2; exit 2; }
 
 if [[ -z "$scenario" ]]; then
-  scenario="$(python3 scripts/director-brief.py --model "$model")"
+  brief_args=(--model "$model")
+  [[ -z "$idea" ]] || brief_args+=(--idea "$idea")
+  [[ -z "$answers" ]] || brief_args+=(--answers "$answers")
+  scenario="$(python3 scripts/director-brief.py "${brief_args[@]}")"
   [[ -f "$scenario" ]] || { echo 'The director brief did not save a scenario.' >&2; exit 3; }
   echo "Review the shot plan: $scenario"
   python3 - "$scenario" <<'PY'
@@ -82,6 +87,7 @@ PY
   [[ "$proceed" == 'y' || "$proceed" == 'yes' ]] || { echo "Plan saved. Edit it, then run: bash scripts/make-local-video.sh --scenario '$scenario'"; exit 0; }
 else
   ((draft_only == 0)) || { echo '--draft-only cannot be combined with --scenario.' >&2; exit 2; }
+  [[ -z "$idea" && -z "$answers" ]] || { echo '--idea and --answers are for interactive drafting, not --scenario.' >&2; exit 2; }
 fi
 
 [[ -f "$scenario" ]] || { echo "Missing scenario: $scenario" >&2; exit 2; }

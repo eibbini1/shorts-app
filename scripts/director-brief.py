@@ -89,7 +89,7 @@ def main():
     try:
         defaults = idea_defaults(args.idea) if args.idea else {}
         brief = validate({**defaults, **json.loads(args.answers.read_text())} if args.answers else collect(defaults))
-    except (ValueError, json.JSONDecodeError) as error:
+    except (ValueError, json.JSONDecodeError, OSError) as error:
         p.error(str(error))
     model = args.model or ('gemma-local' if (ROOT / 'storage/setup/gemma-model-dir.txt').is_file() else 'qwen3:1.7b')
     identifier = f'guided-{datetime.now().strftime("%Y%m%d-%H%M%S")}-{uuid4().hex[:6]}'
@@ -105,6 +105,16 @@ def main():
     scenario = ROOT / 'drafts/generated' / f'{identifier}.local-scenario.json'
     if not scenario.is_file():
         raise RuntimeError('The local model returned without saving a scenario')
+    for script, extra in (('preflight-short.py', ['--strict']), ('audit-local-story.py', [])):
+        result = subprocess.run([sys.executable, str(ROOT / 'scripts' / script), str(scenario), *extra],
+                                cwd=ROOT, capture_output=True, text=True)
+        if result.stdout:
+            print(result.stdout, end='', file=sys.stderr)
+        if result.stderr:
+            print(result.stderr, end='', file=sys.stderr)
+        if result.returncode:
+            raise SystemExit(f'Draft saved at {scenario.relative_to(ROOT)}, but {script} blocked it. '
+                             'Edit the listed shot problems, then render with --scenario. No media render started.')
     print(scenario.relative_to(ROOT))
 
 

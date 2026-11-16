@@ -26,7 +26,7 @@ VAGUE_OPEN = re.compile(r'^(this|these|the|a|an)\b', re.I)
 VISIBLE_ACTION = re.compile(r'\b(lift\w*|lower\w*|spread\w*|pull\w*|push\w*|pour\w*|drip\w*|jump\w*|run\w*|walk\w*|roll\w*|spin\w*|bite\w*|chew\w*|slic\w*|chop\w*|stir\w*|grab\w*|reach\w*|open\w*|clos\w*|arrang\w*|melt\w*|bubbl\w*|rac\w*|carry\w*|drop\w*|catch\w*|cross\w*|serv\w*|eat\w*|driv\w*|pedal\w*|sprinkl\w*|squeez\w*|sear\w*|bast\w*|plat\w*|flip\w*|toss\w*|fold\w*|trac\w*|step\w*|climb\w*|break\w*|crack\w*|glid\w*|add\w*|present\w*|adjust\w*|smash\w*|press\w*|toast\w*|stack\w*)\b', re.I)
 
 
-def hook_score(line):
+def hook_score(line, topic=''):
     words = line.split()
     score, notes = 40, []
     if NUMBER.search(line):
@@ -47,6 +47,12 @@ def hook_score(line):
         score -= 10; notes.append('vague opening')
     if NON_USD.search(line):
         score -= 15; notes.append('non-USD currency')
+    subject_words = {word for word in re.findall(r'[a-z]{4,}', topic.lower())
+                     if word not in {'with', 'from', 'this', 'that', 'video', 'short', 'story', 'cooking'}}
+    if subject_words.intersection(re.findall(r'[a-z]{4,}', line.lower())):
+        score += 15; notes.append('names the subject')
+    if VISIBLE_ACTION.search(line):
+        score += 10; notes.append('visible action')
     return max(0, min(100, score)), notes
 
 
@@ -64,7 +70,7 @@ def main():
     if topic.stdout.startswith('Repeat'):
         problems.append('repeat topic')
     first = plan['shots'][0]['narration']
-    score, notes = hook_score(first)
+    score, notes = hook_score(first, data.get('topic', '') or plan.get('title', ''))
     if presentation['voice']:
         print(f'Hook: "{first}" -> {score}/100 ({"; ".join(notes)})')
     else:
