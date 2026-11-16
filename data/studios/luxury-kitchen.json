@@ -8,5 +8,9 @@
     "pan": "assets/studios/luxury-kitchen/pan.png",
     "prep": "assets/studios/luxury-kitchen/prep.png",
     "oven": "assets/studios/luxury-kitchen/oven.png"
-  }
+  },
+  "lighting": "Soft warm window light falls from the left side, catching the food with gentle highlights and soft shadows",
+  "camera": "Shot close on an 85mm macro lens with shallow depth of field, the food filling most of the frame",
+  "cameraMove": "The camera holds this close view and slowly pushes in toward the food",
+  "mood": "warm, tactile, appetising, quiet luxury"
 }

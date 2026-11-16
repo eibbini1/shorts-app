@@ -7,7 +7,7 @@ usage() {
 Usage:
   bash scripts/make-local-video.sh
   bash scripts/make-local-video.sh --draft-only [--model gemma-local] [--idea BANK_ID] [--studio luxury-kitchen] [--answers brief.json]
-  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--editor ffmpeg|artcraft|filmcraft|auto] [--title 'Optional film title'] [--chain-images] [--best-of-3-stills] [--cache-only] [--stills FOLDER] [--anchor-image IMAGE] [--allow-repeat] [--allow-silence] [--allow-bad-first]
+  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--editor ffmpeg|artcraft|filmcraft|auto] [--title 'Optional film title'] [--chain-images] [--best-of-3-stills] [--cache-only] [--stills FOLDER] [--anchor-image IMAGE] [--allow-repeat] [--allow-silence] [--allow-bad-first] [--skip-vision-gate]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json [--watch]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json --preview
 
@@ -18,7 +18,7 @@ USAGE
 
 default_model='qwen3:1.7b'
 [[ -s storage/setup/gemma-model-dir.txt ]] && default_model='gemma-local'
-scenario=''; status=''; chain=''; stills=''; anchor_image=''; allow_repeat=''; cache_only=''; best_of_3=''; idea=''; studio=''; answers=''; title=''; editor="${SHORTS_EDITOR:-auto}"; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
+scenario=''; status=''; chain=''; stills=''; anchor_image=''; allow_repeat=''; cache_only=''; best_of_3=''; skip_vision_gate=''; idea=''; studio=''; answers=''; title=''; editor="${SHORTS_EDITOR:-auto}"; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
 while (($#)); do
   case "$1" in
     --scenario) scenario="${2:?Missing scenario path}"; shift 2 ;;
@@ -28,6 +28,7 @@ while (($#)); do
     --chain-images) chain='--chain-images'; shift ;;
     --cache-only) cache_only='--cache-only'; shift ;;
     --best-of-3-stills) best_of_3='--best-of-3-stills'; shift ;;
+    --skip-vision-gate) skip_vision_gate='--skip-vision-gate'; shift ;;
     --stills) stills="$2"; shift 2 ;;
     --anchor-image) anchor_image="$2"; shift 2 ;;
     --editor) editor="${2:?Missing editor}"; shift 2 ;;
@@ -76,6 +77,10 @@ if [[ -z "$scenario" ]]; then
   [[ -z "$answers" ]] || brief_args+=(--answers "$answers")
   scenario="$(python3 scripts/director-brief.py "${brief_args[@]}")"
   [[ -f "$scenario" ]] || { echo 'The director brief did not save a scenario.' >&2; exit 3; }
+  if [[ -n "$studio" ]]; then
+    # Master-prompt pass: studio set, lighting, lens, camera move, mood and kitchen plate per shot (docs/MASTER_PROMPTS.md).
+    python3 scripts/refine-prompts.py "$scenario" --studio "$studio" --in-place || { echo 'Prompt refinement failed.' >&2; exit 3; }
+  fi
   echo "Review the shot plan: $scenario"
   python3 - "$scenario" <<'PY'
 import json,sys
@@ -113,15 +118,24 @@ echo "Finishing editor: $editor"
 if [[ "$editor" == artcraft ]]; then
   python3 scripts/check-artcraft-mac.py --require-cli || { echo 'ArtCraft version check failed before rendering.' >&2; exit 4; }
 fi
-python3 scripts/check-env.py || { echo "Fix the FAIL lines above, then run this again." >&2; exit 4; }
+env_args=()
+[[ -z "$cache_only" ]] || env_args+=(--skip-gpu)
+python3 scripts/check-env.py ${env_args[@]+"${env_args[@]}"} || { echo "Fix the FAIL lines above, then run this again." >&2; exit 4; }
 echo "Step 2/4  Pre-render check (topic, hook, length, currency, claims)"
+if [[ -z "$cache_only" ]]; then
+  python3 scripts/prompt-lint.py "$scenario" --min-prompts="${SHORTS_MIN_PROMPT_SCORE:-85}" || { echo "Prompt gate blocked this scenario before any FLUX/LTX time. Run: python3 scripts/refine-prompts.py '$scenario' --studio luxury-kitchen --in-place (or set SHORTS_MIN_PROMPT_SCORE)." >&2; exit 3; }
+fi
 python3 scripts/preflight-short.py "$scenario" --strict ${allow_repeat:+$allow_repeat} || { echo "Preflight blocked this scenario. Fix the listed problems before rendering." >&2; exit 3; }
 python3 scripts/audit-local-story.py "$scenario" || { echo 'Story gate blocked this scenario. Edit the plan before rendering.' >&2; exit 3; }
 python3 scripts/evidence_gate.py "$scenario" || { echo 'Evidence gate blocked this scenario. Correct claims, prices or variety before rendering.' >&2; exit 3; }
 storage/tools/ComfyUI/.venv/bin/python scripts/add-sfx.py --scenario "$scenario" --audit || { echo 'Sound cue gate blocked this scenario. Edit its shot sound lines before rendering.' >&2; exit 3; }
 t_checks=$SECONDS
-echo "Step 3/4  Rendering local video to $output (about 5 min per shot on an M1: still, motion, voice, assembly)"
-python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" $([[ "$editor" == artcraft ]] && echo --prep-stills) ${chain:+$chain} ${cache_only:+$cache_only} ${best_of_3:+$best_of_3} ${allow_silence:+$allow_silence} ${allow_bad_first:+$allow_bad_first} ${stills:+--stills "$stills"} ${anchor_image:+--anchor-image "$anchor_image"}
+if [[ -n "$cache_only" ]]; then
+  echo "Step 3/4  Reassembling cached local video to $output (no FLUX/LTX generation; missing cache stops the job)"
+else
+  echo "Step 3/4  Rendering local video to $output (about 5 min per shot on an M1: still, motion, voice, assembly)"
+fi
+python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" $([[ "$editor" == artcraft ]] && echo --prep-stills) ${chain:+$chain} ${cache_only:+$cache_only} ${best_of_3:+$best_of_3} ${skip_vision_gate:+$skip_vision_gate} ${allow_silence:+$allow_silence} ${allow_bad_first:+$allow_bad_first} ${stills:+--stills "$stills"} ${anchor_image:+--anchor-image "$anchor_image"}
 t_render=$SECONDS
 echo "Base render complete: $output (not release approved)"
 echo "Step 4/4  Shot-synced ASMR, captions, upload pack and quality check"

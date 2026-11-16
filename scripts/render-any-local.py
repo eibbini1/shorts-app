@@ -7,6 +7,7 @@ import math
 import os
 import subprocess
 import time
+import urllib.request
 import wave
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -74,6 +75,20 @@ def still(work, index, shot, seed, source, width, height, cache_only=False):
     if source: command.extend(['--source', source])
     run(*command)
     return target
+
+
+def studio_frames(studio_id):
+    """Reference plates of the scenario's kitchen studio (data/studios/ID.json), by name."""
+    if not studio_id:
+        return {}
+    path = ROOT / 'data/studios' / f'{studio_id}.json'
+    if not re.fullmatch(r'[a-z0-9-]+', str(studio_id)) or not path.is_file():
+        raise SystemExit(f'Unknown studio in scenario: {studio_id}')
+    frames = {name: ROOT / rel for name, rel in json.loads(path.read_text()).get('referenceFrames', {}).items()}
+    missing = [str(f) for f in frames.values() if not f.is_file()]
+    if missing:
+        raise SystemExit(f'Studio {studio_id} reference frames missing: {missing}')
+    return frames
 
 
 def own_still(folder, work, index, width, height):
@@ -156,6 +171,7 @@ def main():
     parser.add_argument('--prep-stills', action='store_true', help='PhotoCraft auto contrast + unsharp mask on each still before motion (changes the motion cache key)')
     parser.add_argument('--cache-only', action='store_true', help='Reuse existing FLUX/LTX assets; fail rather than start a model job on a cache miss')
     parser.add_argument('--best-of-3-stills', action='store_true', help='Generate three stills per shot and require local Qwen hand/utensil review before motion')
+    parser.add_argument('--skip-vision-gate', action='store_true', help='Explicitly skip local Qwen still review (release still needs human frame review)')
     args = parser.parse_args()
     scenario = args.scenario.expanduser().resolve()
     muse = Path(args.anchor_image).expanduser().resolve() if args.anchor_image else None
@@ -168,6 +184,27 @@ def main():
     run('node', ROOT / 'scripts/bb-local-scenario.mjs', '--validate', scenario)
     source_data = json.loads(scenario.read_text(encoding='utf-8-sig'))
     plan, settings = source_data['plan'], source_data['settings']
+    frames = studio_frames(source_data.get('studio'))
+    for number, shot in enumerate(plan['shots'], 1):
+        if shot.get('studioFrame') and shot['studioFrame'] not in frames:
+            parser.error(f"Shot {number} asks for studio frame {shot['studioFrame']!r}; studio has {sorted(frames)}")
+    visual_checks = source_data.get('visualChecks') or [{} for _ in plan['shots']]
+    if len(visual_checks) != len(plan['shots']):
+        parser.error('visualChecks must have one entry per shot')
+    for number, checks in enumerate(visual_checks, 1):
+        if not isinstance(checks, dict) or any(
+                not isinstance(checks.get(key, []), list) or
+                any(not isinstance(value, str) for value in checks.get(key, []))
+                for key in ('mustShow', 'mustNotShow', 'questions')):
+            parser.error(f'visualChecks shot {number} must contain string lists named mustShow, mustNotShow and questions')
+    if not args.skip_vision_gate:
+        try:
+            with urllib.request.urlopen('http://127.0.0.1:11434/api/tags', timeout=5) as response:
+                models = json.load(response).get('models', [])
+            if not any(item.get('name') == 'qwen3-vl:4b' for item in models):
+                parser.error('Local qwen3-vl:4b is needed for the pre-motion still gate; install it or explicitly pass --skip-vision-gate')
+        except OSError as error:
+            parser.error(f'Local Ollama vision gate is unavailable before rendering: {error}')
     presentation = choose_presentation(source_data)
     print(f"Presentation: {presentation['mode']} ({presentation['reason']})", flush=True)
     actual_seconds = sum(shot['seconds'] for shot in plan['shots'])
@@ -214,7 +251,10 @@ def main():
     model = (ROOT / 'storage/setup/ltx-model-dir.txt').read_text().strip()
     gemma = (ROOT / 'storage/setup/gemma-model-dir.txt').read_text().strip()
     expected = sum(math.ceil(shot['seconds'] / 5) for shot in plan['shots'])
-    print(f'{len(plan["shots"])} shots require {expected} new motion clips; allow several minutes per uncached clip.', flush=True)
+    if args.cache_only:
+        print(f'{len(plan["shots"])} shots require {expected} cached motion clips; a missing clip stops before LTX.', flush=True)
+    else:
+        print(f'{len(plan["shots"])} shots require {expected} motion clips; allow several minutes per uncached clip.', flush=True)
     progress_state = work / 'progress-run.json'
     class Progress:
         observed = []
@@ -238,6 +278,9 @@ def main():
         reference = own_still(args.stills.expanduser().resolve(), work, index, width, height) if args.stills else None
         if reference is None:
             source = previous if args.chain_images and previous else (muse if muse_shots is None or index + 1 in muse_shots else None)
+            if source is None and shot.get('studioFrame'):
+                source = frames[shot['studioFrame']]  # same kitchen plate every film; the food is the prompt's
+                print(f"Shot {index + 1} edits studio frame '{shot['studioFrame']}'", flush=True)
             if args.best_of_3_stills:
                 candidates = [still(work, index, shot, 1200 + index + variation * 100,
                                     source, width, height, args.cache_only) for variation in range(3)]
@@ -254,6 +297,21 @@ def main():
             if problem:
                 parser.error(f'First picture failed: {problem}. Stopped before the clip step (use --allow-bad-first to override)')
             print('First picture check passed', flush=True)
+        if not args.skip_vision_gate:
+            checks = visual_checks[index] or {}
+            command = ['python3', ROOT / 'scripts/check-still-vision.py', '--image', reference,
+                       '--prompt', shot['imagePrompt'], '--cache-dir', work / 'refs']
+            for value in checks.get('mustShow', []):
+                command.extend(['--must-show', value])
+            for value in checks.get('mustNotShow', []):
+                command.extend(['--must-not-show', value])
+            for value in checks.get('questions', []):
+                command.extend(['--question', value])
+            try:
+                run(*command)
+            except subprocess.CalledProcessError:
+                parser.error(f'Shot {index + 1} still failed local vision review before LTX. '
+                             f'Inspect {reference} and the vision report in {work / "refs"}; correct the still or prompt.')
         previous = reference
         if args.prep_stills:
             reference = prep_still(work, reference)
@@ -290,6 +348,7 @@ def main():
                             else 'none' if (source_data.get('audioPlan') or {}).get('music') == 'none'
                             else 'original local synthesis'), 'chainImages': args.chain_images,
                   'presentation': presentation,
+                  'stillVisionGate': 'skipped explicitly' if args.skip_vision_gate else 'local qwen3-vl:4b before motion',
                   'motionClips': len(segments), 'totalSeconds': settings['seconds']}
     output.with_suffix('.provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
     print(progress(), flush=True)

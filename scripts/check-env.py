@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check this Mac can run the local pipeline before a long render starts. Prints OK or FAIL with the fix.
 
-  python3 scripts/check-env.py [--min-disk-gb 15]
+  python3 scripts/check-env.py [--min-disk-gb 15] [--skip-gpu]
 
 Exit 1 when something required is missing. Takes about a second.
 """
@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--min-disk-gb', type=float, default=15)
+    parser.add_argument('--skip-gpu', action='store_true', help='Cache-only edit: no FLUX or LTX job will start')
     args = parser.parse_args()
     failures = 0
 
@@ -49,7 +50,7 @@ def main():
     for name, path in needed.items():
         report(path.exists(), name, f'missing {path.relative_to(ROOT)}; run the setup script for it (scripts/setup-*.sh)')
     mflux_python = ROOT / 'storage/tools/mflux/.venv/bin/python'
-    if mflux_python.exists():
+    if mflux_python.exists() and not args.skip_gpu:
         try:
             gpu = subprocess.run([str(mflux_python), '-c', 'import mlx.core as mx; mx.ones((1,))'],
                                  capture_output=True, text=True, timeout=15)
@@ -58,6 +59,8 @@ def main():
             gpu_ready = False
         report(gpu_ready, 'Metal GPU available to this shell',
                'run from a normal Mac Terminal with GPU access; this shell cannot run FLUX/LTX')
+    elif args.skip_gpu:
+        print('SKIP Metal GPU check (cache-only edit)')
     free_gb = shutil.disk_usage(ROOT).free / 1e9
     report(free_gb >= args.min_disk_gb, f'free disk {free_gb:.0f} GB (need {args.min_disk_gb:.0f})', 'free space: delete old storage/any-local work folders')
     sys.exit(1 if failures else 0)
