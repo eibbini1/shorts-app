@@ -1,0 +1,79 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 15,
+    "voice": "af_heart",
+    "presentationMode": "voiced"
+  },
+  "model": "hand-written",
+  "topic": "Hot honey glazed salmon master-prompt test: same dish, prompts rewritten to the official FLUX.2 and LTX-2.3 guides",
+  "style": "photoreal luxury designer kitchen, navy cabinetry with brass fixtures, polished black and gold marble counter, copper cookware, gold utensils, one emerald green enamel accent, warm key light with bright rim light, macro food close-ups, hands only, no faces, vertical framing",
+  "requestedEnding": "Glossy hot honey glaze is spooned over the crisp salmon and it shines.",
+  "totalSeconds": 15,
+  "template": "story",
+  "plan": {
+    "ideas": [
+      {
+        "title": "Hot Honey Glazed Salmon",
+        "angle": "three-beat quick recipe"
+      },
+      {
+        "title": "Hot Honey Glazed Salmon idea 2",
+        "angle": "macro hero close-up"
+      },
+      {
+        "title": "Hot Honey Glazed Salmon idea 3",
+        "angle": "steam and texture payoff"
+      },
+      {
+        "title": "Hot Honey Glazed Salmon idea 4",
+        "angle": "hands only, food first"
+      },
+      {
+        "title": "Hot Honey Glazed Salmon idea 5",
+        "angle": "save-for-later dinner"
+      }
+    ],
+    "title": "Hot Honey Glazed Salmon",
+    "hook": "Five minutes, one pan, yet this salmon looks restaurant glossy. Hungry?",
+    "payoff": "Glossy hot honey glaze is spooned over the crisp salmon and it shines.",
+    "shots": [
+      {
+        "seconds": 5,
+        "narration": "Five minutes, one pan, yet this salmon looks restaurant glossy. Hungry?",
+        "imagePrompt": "A crisp-skinned salmon fillet, skin-side up, sizzling in a hot copper skillet with a brass handle, coated in a thick glossy hot honey glaze with red chili flakes and a lime wedge beside it. The skillet sits on a polished black and gold marble counter in a luxury designer kitchen with navy cabinetry and brass fixtures, softly blurred behind. Tiny honey bubbles glisten on the caramelised surface and a thin curl of steam rises. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. One emerald green enamel accent glows far in the background. Photorealistic macro food photograph, low 30-degree angle, 85mm lens at f/2, shallow depth of field, creamy bokeh, sharp focus on the food. No faces, no text, no logos.",
+        "motionPrompt": "Medium close-up on the salmon in the copper skillet, camera locked on a tripod. The fillet sits still, then a hand lifts the skillet a few centimetres and the salmon sears and sizzles, the glaze bubbling gently in small glistening bubbles. A thin curl of steam rises and drifts left while the warm rim light slides across the glossy surface. The motion stays slow and steady until the pan settles.",
+        "sound": "loud pan sizzle, soft kitchen room tone"
+      },
+      {
+        "seconds": 5,
+        "narration": "Warm honey, chili flakes and a splash of vinegar bubble into glaze.",
+        "imagePrompt": "A small copper saucepan of bubbling amber hot honey with red chili flakes, a gold spoon resting in it. The saucepan sits on a polished black and gold marble counter in a luxury designer kitchen with navy cabinetry blurred behind. The honey is thick and translucent with tiny glistening bubbles, and soft steam rises from the surface. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. One emerald green enamel accent glows far in the background. Photorealistic macro food photograph, overhead 60-degree view, 85mm lens at f/2, shallow depth of field, creamy bokeh, sharp focus on the food. No faces, no text, no logos.",
+        "motionPrompt": "Overhead close-up of the copper saucepan, camera locked. The amber honey sits still, then a hand stirs it slowly with a gold spoon, round and round, as the honey bubbles and chili flakes swirl and melt in. Steam rises softly, the honey stretches and shines in the rim light, and the stirring slows to a gentle stop.",
+        "sound": "honey bubbling, wooden spoon on saucepan"
+      },
+      {
+        "seconds": 5,
+        "narration": "Spoon it over crisp salmon, and watch it shine. Save this dinner.",
+        "imagePrompt": "The crisp salmon fillet in the copper skillet with a thick glossy hot honey glaze, lime wedge and chili flakes, a gold spoon above it with a ribbon of honey falling. The luxury designer kitchen with navy cabinetry and brass fixtures is softly blurred behind, on a polished black and gold marble counter. The glaze shines like amber glass and a thin curl of steam rises. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. One emerald green enamel accent glows far in the background. Photorealistic macro food photograph, side angle at counter height, 85mm lens at f/2, shallow depth of field, creamy bokeh, sharp focus on the food. No faces, no text, no logos.",
+        "motionPrompt": "Close-up on the crisp salmon fillet in the copper skillet, camera locked. A hand lifts a gold spoon above it and tilts it, and a slow thick ribbon of glossy hot honey glaze pours over the crisp salmon, spreading across the surface as the glaze shines and drips. Steam rises gently and the warm light glints on the glaze until the pour ends.",
+        "sound": "spoon drizzle, glossy glaze, light sizzle"
+      }
+    ],
+    "claimsToCheck": [
+      "Dish named on a 2026 recipe list; confirm the original recipe credit before publishing",
+      "AI-generated original footage; no reference footage, audio or branding reused",
+      "Do not state protein or time figures as facts without a source"
+    ]
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "dish named on a 2026 recipe list (Bon Appetit gallery); pacing reference only, not a verified view trend",
+    "sources": [
+      "https://www.bonappetit.com/gallery/best-recipes-2026",
+      "https://www.youtube.com/shorts/bkUpOMCZ9GQ"
+    ]
+  }
+}

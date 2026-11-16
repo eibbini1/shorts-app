@@ -1,0 +1,110 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 15,
+    "voice": "af_heart",
+    "presentationMode": "asmr"
+  },
+  "model": "hand-written",
+  "topic": "Charcoal Lamb Kebab Wrap: a quick recipe in five fast shots",
+  "style": "photoreal luxury designer kitchen, navy cabinetry with brass fixtures, polished black and gold marble counter, copper cookware, gold utensils, one emerald green enamel accent, warm key light with bright rim light, macro food close-ups, hands only, vertical framing",
+  "requestedEnding": "A gloved hand lifts the cut kebab wrap toward the camera and the juices glisten.",
+  "totalSeconds": 15,
+  "template": "story",
+  "plan": {
+    "ideas": [
+      {
+        "title": "Charcoal Lamb Kebab Wrap",
+        "angle": "payoff tease as the hook"
+      },
+      {
+        "title": "Charcoal Lamb Kebab Wrap idea 2",
+        "angle": "top-down ingredients"
+      },
+      {
+        "title": "Charcoal Lamb Kebab Wrap idea 3",
+        "angle": "top-down prep"
+      },
+      {
+        "title": "Charcoal Lamb Kebab Wrap idea 4",
+        "angle": "cooking close-up"
+      },
+      {
+        "title": "Charcoal Lamb Kebab Wrap idea 5",
+        "angle": "side-macro payoff"
+      }
+    ],
+    "title": "Charcoal Lamb Kebab Wrap",
+    "hook": "Charcoal kebab wrap, yet this juicy?",
+    "payoff": "A gloved hand lifts the cut kebab wrap toward the camera and the juices glisten.",
+    "shots": [
+      {
+        "seconds": 2,
+        "narration": "Warm bread, garlic sauce.",
+        "imagePrompt": "Charcoal Lamb Kebab Wrap: a round warm flatbread resting open on a black-gloved palm with a thick stripe of white garlic sauce across its centre and a gold spoon touching the sauce. Beneath and behind it, softly out of focus, a brass charcoal grill glows orange with rows of lamb kebabs on gold skewers, at the edge of a polished black and gold marble counter. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic top-down point-of-view food photograph, the camera directly above and very close, 35mm lens at f/4, the food large and centred, filling most of the frame, in sharp focus. Hands in black chef gloves hold and work the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down close view of the warm flatbread on the gloved palm. At once the gold spoon drags white garlic sauce across the flatbread in one smooth stripe as the sauce spreads thick and glossy. Static camera, locked in the same close top-down view.",
+        "sound": "spoon spread, charcoal crackle"
+      },
+      {
+        "seconds": 2,
+        "narration": "Charred lamb kebab.",
+        "imagePrompt": "Charcoal Lamb Kebab Wrap: the open flatbread with garlic sauce on a black-gloved palm and a charred minced lamb kebab on a gold skewer laid along its centre. Beneath and behind it, softly out of focus, a brass charcoal grill glows orange with rows of lamb kebabs on gold skewers, at the edge of a polished black and gold marble counter. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic top-down point-of-view food photograph, the camera directly above and very close, 35mm lens at f/4, the food large and centred, filling most of the frame, in sharp focus. Hands in black chef gloves hold and work the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down close view of the kebab on the sauced flatbread. At once a gloved hand grips the kebab through the bread and the gold skewer slides out smoothly as the charred lamb kebab stays on the flatbread and its juices glisten. Static camera, locked in the same close top-down view.",
+        "sound": "skewer slide, meat sizzle"
+      },
+      {
+        "seconds": 2,
+        "narration": "Sumac onions, parsley.",
+        "imagePrompt": "Charcoal Lamb Kebab Wrap: the charred lamb kebab on the sauced flatbread on a black-gloved palm, topped with thin red sumac onions and chopped parsley. Beneath and behind it, softly out of focus, a brass charcoal grill glows orange with rows of lamb kebabs on gold skewers, at the edge of a polished black and gold marble counter. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic top-down point-of-view food photograph, the camera directly above and very close, 35mm lens at f/4, the food large and centred, filling most of the frame, in sharp focus. Hands in black chef gloves hold and work the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down close view of the kebab on the flatbread. At once gloved fingers scatter red sumac onions and chopped parsley over the charred lamb kebab as the pieces fall and settle along the meat. Static camera, locked in the same close top-down view.",
+        "sound": "soft sprinkle, charcoal crackle"
+      },
+      {
+        "seconds": 2,
+        "narration": "Grilled tomato.",
+        "imagePrompt": "Charcoal Lamb Kebab Wrap: the lamb kebab with sumac onions and parsley on the flatbread on a black-gloved palm, a blistered grilled tomato half pressed open beside the meat. Beneath and behind it, softly out of focus, a brass charcoal grill glows orange with rows of lamb kebabs on gold skewers, at the edge of a polished black and gold marble counter. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic top-down point-of-view food photograph, the camera directly above and very close, 35mm lens at f/4, the food large and centred, filling most of the frame, in sharp focus. Hands in black chef gloves hold and work the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down close view of the filled flatbread. At once gloved fingers press a blistered grilled tomato onto the lamb kebab as its juices run slowly into the bread. Static camera, locked in the same close top-down view.",
+        "sound": "soft squish, charcoal crackle"
+      },
+      {
+        "seconds": 2,
+        "narration": "Roll it tight.",
+        "imagePrompt": "Charcoal Lamb Kebab Wrap: the flatbread half rolled around the lamb kebab and its fillings, held in two black-gloved hands. Beneath and behind it, softly out of focus, a brass charcoal grill glows orange with rows of lamb kebabs on gold skewers, at the edge of a polished black and gold marble counter. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic top-down point-of-view food photograph, the camera directly above and very close, 35mm lens at f/4, the food large and centred, filling most of the frame, in sharp focus. Hands in black chef gloves hold and work the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down close view of the flatbread in the gloved hands. At once the hands roll the flatbread tightly around the lamb kebab as the wrap closes into a firm even roll. Static camera, locked in the same close top-down view.",
+        "sound": "bread fold, soft paper rustle"
+      },
+      {
+        "seconds": 2,
+        "narration": "Toast on the grill.",
+        "imagePrompt": "Charcoal Lamb Kebab Wrap: the rolled kebab wrap lying across brass grill bars above glowing charcoal with golden toasted marks on the bread, a black-gloved hand pressing it down. Beneath and behind it, softly out of focus, a brass charcoal grill glows orange with rows of lamb kebabs on gold skewers, at the edge of a polished black and gold marble counter. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic top-down point-of-view food photograph, the camera directly above and very close, 35mm lens at f/4, the food large and centred, filling most of the frame, in sharp focus. Hands in black chef gloves hold and work the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down close view of the rolled wrap on the grill bars. At once the gloved hand presses the kebab wrap onto the hot grill as the bread toasts golden and thin smoke rises. Static camera, locked in the same close top-down view.",
+        "sound": "toasting sizzle, charcoal crackle"
+      },
+      {
+        "seconds": 3,
+        "narration": "Cut. Hold. Bite.",
+        "imagePrompt": "Charcoal Lamb Kebab Wrap: one half of the toasted kebab wrap held up in a black-gloved hand toward the camera, its cut face showing charred lamb, sumac onions, parsley and white garlic sauce, juices glistening. Beneath and behind it, softly out of focus, a brass charcoal grill glows orange with rows of lamb kebabs on gold skewers, at the edge of a polished black and gold marble counter. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic top-down point-of-view food photograph, the camera directly above and very close, 35mm lens at f/4, the food large and centred, filling most of the frame, in sharp focus. Hands in black chef gloves hold and work the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down close view of the cut kebab wrap. At once the gloved hand lifts the cut kebab wrap toward the camera and turns it slowly as the cut face shows the charred lamb and the juices glisten, until it holds still. Static camera, locked in the same close top-down view.",
+        "sound": "knife cut, soft steam"
+      }
+    ],
+    "claimsToCheck": [
+      "Original recipe wording; confirm quantities before publishing a written recipe",
+      "AI-generated original footage; no reference footage, audio or branding reused"
+    ]
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "format modelled on common recipe-Short structure (hook, top-down steps, payoff); not a verified view trend",
+    "sources": [
+      "https://www.youtube.com/shorts/bkUpOMCZ9GQ"
+    ]
+  },
+  "creativeSignature": {
+    "format": "food-process-story",
+    "set": "charcoal-grill-station",
+    "hookPattern": "mid-action-start"
+  }
+}

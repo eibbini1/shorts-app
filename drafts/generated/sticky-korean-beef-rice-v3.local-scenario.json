@@ -1,0 +1,96 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 15,
+    "voice": "af_heart",
+    "presentationMode": "voiced"
+  },
+  "model": "hand-written",
+  "topic": "Sticky Korean Beef and Rice: a quick recipe in five fast shots",
+  "style": "photoreal luxury designer kitchen, navy cabinetry with brass fixtures, polished black and gold marble counter, copper cookware, gold utensils, one emerald green enamel accent, warm key light with bright rim light, macro food close-ups, hands only, vertical framing",
+  "requestedEnding": "A spoon lifts sticky Korean beef over the steaming rice and sauce glistens.",
+  "totalSeconds": 15,
+  "template": "story",
+  "plan": {
+    "ideas": [
+      {
+        "title": "Sticky Korean Beef and Rice",
+        "angle": "payoff tease as the hook"
+      },
+      {
+        "title": "Sticky Korean Beef and Rice idea 2",
+        "angle": "top-down ingredients"
+      },
+      {
+        "title": "Sticky Korean Beef and Rice idea 3",
+        "angle": "top-down prep"
+      },
+      {
+        "title": "Sticky Korean Beef and Rice idea 4",
+        "angle": "cooking close-up"
+      },
+      {
+        "title": "Sticky Korean Beef and Rice idea 5",
+        "angle": "side-macro payoff"
+      }
+    ],
+    "title": "Sticky Korean Beef and Rice",
+    "hook": "Sticky Korean beef, yet twenty minutes?",
+    "payoff": "A spoon lifts sticky Korean beef over the steaming rice and sauce glistens.",
+    "shots": [
+      {
+        "seconds": 3,
+        "narration": "Sticky Korean beef, yet twenty minutes?",
+        "imagePrompt": "Sticky Korean Beef and Rice: an emerald enamel bowl of steamed white rice topped with sticky dark glazed Korean-style ground beef, sesame seeds and sliced scallions, a gold spoon lifting a heap of the beef. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro food photograph from a low side angle at counter height, 100mm macro lens at f/2.8, shallow depth of field, creamy bokeh, the food filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Extreme close-up on the emerald enamel bowl of beef and rice. The bowl sits still, then the gold spoon lifts sticky Korean beef slowly as the sauce glistens and drips back in a thin ribbon and steam rises. The camera makes one very slight, slow push in toward the glistening beef, keeping the whole dish in frame, until the spoon holds still.",
+        "sound": "spoon lift, sauce drip"
+      },
+      {
+        "seconds": 3,
+        "narration": "Beef, soy, brown sugar, garlic, ginger.",
+        "imagePrompt": "Sticky Korean Beef and Rice: a copper bowl of fresh ground beef in the centre with four small copper bowls around it holding dark soy sauce, brown sugar, minced garlic and grated ginger. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic overhead food photograph, the camera pointing straight down at the counter in a true top-down flat lay, 50mm lens at f/4, everything in sharp focus, the food centred and filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down view of the copper bowl of ground beef and the small bowls around it. The bowls sit still, then a hand sets the bowl of brown sugar gently into place as the soy sauce ripples and settles. The camera makes one very slight, slow push in toward the bowls, keeping the whole dish in frame, until the hand lifts away.",
+        "sound": "small bowls set on marble, soft kitchen tone"
+      },
+      {
+        "seconds": 3,
+        "narration": "Brown the beef until it crumbles.",
+        "imagePrompt": "Sticky Korean Beef and Rice: ground beef browning and crumbling in a copper skillet seen from directly above, a gold spoon resting in it, thin steam rising. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic overhead food photograph, the camera pointing straight down at the counter in a true top-down flat lay, 50mm lens at f/4, everything in sharp focus, the food centred and filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down view of the copper skillet of ground beef. The beef sits still, then a hand breaks up the browning beef slowly with the gold spoon as it crumbles and sizzles and steam rises. The camera makes one very slight, slow push in toward the browning beef, keeping the whole dish in frame, until the spoon rests.",
+        "sound": "beef sizzle, spoon scrape"
+      },
+      {
+        "seconds": 3,
+        "narration": "Pour the sauce and bubble to glaze.",
+        "imagePrompt": "Sticky Korean Beef and Rice: dark glossy sauce bubbling around browned ground beef in a copper skillet, a gold spoon in the beef, steam rising. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic food photograph from a 45-degree angle, 85mm lens at f/2.8, shallow depth of field, the food filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Close-up on the copper skillet of beef. The beef sits still, then dark sticky sauce bubbles around it and a hand stirs it slowly so the glaze coats the beef as steam rises. The camera makes one very slight, slow push in toward the glossy glaze, keeping the whole dish in frame, until the stirring slows to a stop.",
+        "sound": "thick sauce bubbling, spoon stir"
+      },
+      {
+        "seconds": 3,
+        "narration": "Spoon over rice, add sesame. Save this.",
+        "imagePrompt": "Sticky Korean Beef and Rice: an emerald enamel bowl of steamed white rice with sticky glazed Korean beef on top, sesame seeds and sliced scallions, a gold spoon above it. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro food photograph from a low side angle at counter height, 100mm macro lens at f/2.8, shallow depth of field, creamy bokeh, the food filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Extreme close-up on the emerald enamel bowl of steamed rice. The rice sits still, then a spoon lifts sticky Korean beef over the steaming rice and lays it down gently as the sauce glistens. The camera makes one very slight, slow push in toward the glistening beef, keeping the whole dish in frame, until the spoon lifts away.",
+        "sound": "spoon into rice, soft steam"
+      }
+    ],
+    "claimsToCheck": [
+      "Original recipe wording; confirm quantities before publishing a written recipe",
+      "AI-generated original footage; no reference footage, audio or branding reused"
+    ]
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "format modelled on common recipe-Short structure (hook, top-down steps, payoff); not a verified view trend",
+    "sources": [
+      "https://www.youtube.com/shorts/bkUpOMCZ9GQ"
+    ]
+  },
+  "creativeSignature": {
+    "format": "tactile-recipe-reveal",
+    "set": "navy-brass-kitchen",
+    "hookPattern": "payoff-tease-question"
+  }
+}

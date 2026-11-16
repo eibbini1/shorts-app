@@ -1,0 +1,96 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 15,
+    "voice": "af_heart",
+    "presentationMode": "voiced"
+  },
+  "model": "hand-written",
+  "topic": "Bacon and Gruyere Egg Bites: a quick recipe in five fast shots",
+  "style": "photoreal luxury designer kitchen, navy cabinetry with brass fixtures, polished black and gold marble counter, copper cookware, gold utensils, one emerald green enamel accent, warm key light with bright rim light, macro food close-ups, hands only, vertical framing",
+  "requestedEnding": "A fork breaks open the soft egg bite and melted Gruyere cheese stretches.",
+  "totalSeconds": 15,
+  "template": "story",
+  "plan": {
+    "ideas": [
+      {
+        "title": "Bacon and Gruyere Egg Bites",
+        "angle": "payoff tease as the hook"
+      },
+      {
+        "title": "Bacon and Gruyere Egg Bites idea 2",
+        "angle": "top-down ingredients"
+      },
+      {
+        "title": "Bacon and Gruyere Egg Bites idea 3",
+        "angle": "top-down prep"
+      },
+      {
+        "title": "Bacon and Gruyere Egg Bites idea 4",
+        "angle": "cooking close-up"
+      },
+      {
+        "title": "Bacon and Gruyere Egg Bites idea 5",
+        "angle": "side-macro payoff"
+      }
+    ],
+    "title": "Bacon and Gruyere Egg Bites",
+    "hook": "Fluffy egg bites, yet one blender?",
+    "payoff": "A fork breaks open the soft egg bite and melted Gruyere cheese stretches.",
+    "shots": [
+      {
+        "seconds": 3,
+        "narration": "Fluffy egg bites, yet one blender?",
+        "imagePrompt": "Bacon and Gruyere Egg Bites: a round golden baked egg bite on a gold-rimmed plate, broken open to show soft yellow egg, crispy bacon pieces and melted Gruyere cheese stretching from a gold fork. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro food photograph from a low side angle at counter height, 100mm macro lens at f/2.8, shallow depth of field, creamy bokeh, the food filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Extreme close-up on the golden egg bite on the plate. The bite sits still, then the gold fork lifts one half of the soft egg bite and melted Gruyere cheese stretches in a long strand as steam rises. The camera makes one very slight, slow push in toward the stretching cheese, keeping the whole dish in frame, until the fork holds still.",
+        "sound": "fork lift, soft steam"
+      },
+      {
+        "seconds": 3,
+        "narration": "Eggs, cottage cheese, Gruyere and crispy bacon.",
+        "imagePrompt": "Bacon and Gruyere Egg Bites: four small copper bowls holding cracked eggs with bright yolks, white cottage cheese, grated Gruyere cheese and crispy bacon pieces arranged around a rose-gold blender jar. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic overhead food photograph, the camera pointing straight down at the counter in a true top-down flat lay, 50mm lens at f/4, everything in sharp focus, the food centred and filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down view of the small copper bowls around the blender jar. The bowls sit still, then a hand sets the bowl of crispy bacon pieces gently into place as the egg yolks glisten. The camera makes one very slight, slow push in toward the bowls, keeping the whole dish in frame, until the hand lifts away.",
+        "sound": "small bowls set on marble, soft kitchen tone"
+      },
+      {
+        "seconds": 3,
+        "narration": "Blend smooth, then pour into the tin.",
+        "imagePrompt": "Bacon and Gruyere Egg Bites: a gold-toned muffin tin seen from directly above with its round cups half filled with smooth pale yellow egg mixture. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic overhead food photograph, the camera pointing straight down at the counter in a true top-down flat lay, 50mm lens at f/4, everything in sharp focus, the food centred and filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Top-down view of the gold-toned muffin tin. The cups sit still, then pale egg mixture pours in a smooth steady stream into one cup as the surface rises and settles flat. The camera makes one very slight, slow push in toward the filling cup, keeping the whole dish in frame, until the pour ends.",
+        "sound": "liquid pour into tin"
+      },
+      {
+        "seconds": 3,
+        "narration": "Top with bacon and bake until golden.",
+        "imagePrompt": "Bacon and Gruyere Egg Bites: a gold-toned muffin tin of pale egg mixture with crispy bacon pieces and grated Gruyere cheese scattered on top of each cup. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic food photograph from a 45-degree angle, 85mm lens at f/2.8, shallow depth of field, the food filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Close-up on the egg cups in the gold-toned muffin tin. The mixture sits still, then a hand sprinkles crispy bacon pieces and grated Gruyere over the nearest cup as the pieces land softly. The camera makes one very slight, slow push in toward the nearest cup, keeping the whole dish in frame, until the hand lifts away.",
+        "sound": "bacon crumble, cheese sprinkle"
+      },
+      {
+        "seconds": 3,
+        "narration": "Soft, golden, cheesy. Save this recipe.",
+        "imagePrompt": "Bacon and Gruyere Egg Bites: three round golden baked egg bites on a gold-rimmed plate with crispy bacon on top, one broken open showing soft egg and melted Gruyere cheese, a gold fork beside it. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent in the background. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro food photograph from a low side angle at counter height, 100mm macro lens at f/2.8, shallow depth of field, creamy bokeh, the food filling most of the frame. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Extreme close-up on the golden egg bites on the plate. The bites sit still, then a fork breaks open the soft egg bite and melted Gruyere cheese stretches slowly as steam rises. The camera makes one very slight, slow push in toward the melted cheese, keeping the whole dish in frame, until the fork rests.",
+        "sound": "fork break, cheese stretch"
+      }
+    ],
+    "claimsToCheck": [
+      "Original recipe wording; confirm quantities before publishing a written recipe",
+      "AI-generated original footage; no reference footage, audio or branding reused"
+    ]
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "format modelled on common recipe-Short structure (hook, top-down steps, payoff); not a verified view trend",
+    "sources": [
+      "https://www.youtube.com/shorts/bkUpOMCZ9GQ"
+    ]
+  },
+  "creativeSignature": {
+    "format": "tactile-recipe-reveal",
+    "set": "navy-brass-kitchen",
+    "hookPattern": "payoff-tease-question"
+  }
+}
