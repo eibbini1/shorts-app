@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Build RTL Arabic captions from a reviewed recipe timing manifest.
 
-Draft cue times are suitable for typography preview only. Final rendering must
-use a manifest whose timing was checked against the recorded narration.
+Draft cue times are suitable for typography preview only. Final rendering
+requires timing checked against the picture, or the recorded voice when used.
 """
 import argparse
 import json
@@ -32,8 +32,10 @@ def build(spec, require_verified=False):
     seconds = spec.get('seconds')
     if not isinstance(seconds, (int, float)) or seconds <= 0:
         raise ValueError('Invalid film duration')
-    if require_verified and spec.get('captionTimingStatus') != 'verified-against-recorded-voice':
-        raise ValueError('Caption timing is not verified against recorded narration')
+    verified_status = ('verified-against-picture' if spec.get('presentationMode') == 'asmr'
+                       else 'verified-against-recorded-voice')
+    if require_verified and spec.get('captionTimingStatus') != verified_status:
+        raise ValueError(f'Caption timing is not {verified_status}')
     cues = spec.get('captionCues')
     if not isinstance(cues, list) or not cues:
         raise ValueError('Missing caption cues')

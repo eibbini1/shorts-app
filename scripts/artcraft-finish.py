@@ -6,6 +6,7 @@ render-any-local.py already wrote. Never overwrites an existing output.
 """
 import argparse
 import json
+import re
 import subprocess
 import tempfile
 import time
@@ -58,7 +59,9 @@ def soundcraft_mix(source, target, lufs=-16.0, peak=-1.0):
                       '"release":60,"knee":0,"makeup":0,"lookahead":2}}',
              '--bounce', target])
         got, tp = loudness(target)
-        best = {'gainDb': round(gain, 1), 'lufs': got, 'truePeakDb': tp}
+        best = {'gainDb': round(gain, 1), 'lufs': got, 'truePeakDb': tp,
+                'targetLufs': lufs, 'targetTruePeakDb': peak,
+                'passesTarget': abs(got - lufs) <= 0.6 and tp <= peak}
         if abs(got - lufs) <= 0.6 and tp <= peak:
             break
         gain += (lufs - got) if tp <= peak else -1.5
@@ -126,9 +129,11 @@ def effectcraft_title(text, target, work, seconds=3.0, fps=24):
 
 
 def captions_overlay(ass, target, seconds, fps=24):
-    """The pipeline's own Lora gold-word captions, drawn at 1080x1920 on a transparent layer (not upscaled)."""
+    """Draw ASS captions at 1080x1920 on an alpha layer for FilmCraft."""
     def esc(path):
         return str(path).replace('\\', '/').replace(':', '\\:').replace("'", "\\'")
+    # This alpha overlay is used for non-Arabic captions. Arabic captions are
+    # burned onto the finished FilmCraft export below to preserve shaping.
     vf = f"subtitles='{esc(ass)}':fontsdir='{esc(ROOT / 'assets/fonts')}':alpha=1"
     run(['ffmpeg', '-y', '-v', 'error', '-f', 'lavfi', '-i',
          f'color=c=0x00000000:s=1080x1920:r={fps}:d={seconds},format=rgba', '-vf', vf, '-c:v', 'prores_ks', '-profile:v', '4444', '-pix_fmt', 'yuva444p10le', target])
@@ -189,6 +194,8 @@ def main():
         p.error('Need segment-*.mp4 files and --sfx or --audio')
     if output.exists() or project.exists():
         p.error('Use a new output path; this tool never overwrites a film')
+    arabic_captions = bool(args.captions and args.captions.is_file() and
+                           re.search(r'[\u0600-\u06ff]', args.captions.read_text(encoding='utf-8-sig')))
     started = time.monotonic()
     with tempfile.TemporaryDirectory(prefix='artcraft-finish-') as tmp:
         work = Path(tmp)
@@ -205,7 +212,7 @@ def main():
                  '-c:a', 'pcm_s24le', raw])
         mixed = soundcraft_mix(raw, mix)
         overlays = []
-        if args.captions:
+        if args.captions and not arabic_captions:
             if not args.captions.is_file():
                 p.error(f'No captions file: {args.captions}')
             seconds = sum(float(subprocess.check_output(['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
@@ -217,11 +224,22 @@ def main():
             layer = output.with_suffix('.title.mov')
             effectcraft_title(args.title, layer, work, fps=args.fps)
             overlays.append(layer)
-        exported = filmcraft_edit(segments, mix, overlays, output, project, args.sharpen, args.fps)
+        filmcraft_output = work / 'filmcraft-base.mp4' if arabic_captions else output
+        exported = filmcraft_edit(segments, mix, overlays, filmcraft_output, project, args.sharpen, args.fps)
+        if arabic_captions:
+            def esc(path):
+                return str(path).replace('\\', '/').replace(':', '\\:').replace("'", "\\'")
+            # libass shapes Arabic correctly when burned on the edited picture.
+            # Its transparent ProRes overlay corrupted glyphs in the Mac pilot.
+            run(['ffmpeg', '-y', '-v', 'error', '-i', filmcraft_output,
+                 '-vf', f"ass='{esc(args.captions.resolve())}':fontsdir='{esc(ROOT / 'assets/fonts')}'",
+                 '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18', '-c:a', 'copy', output])
     if not output.is_file() or not output.stat().st_size:
         raise SystemExit(f'FilmCraft export failed: {exported}')
     report = {'output': str(output), 'project': str(project), 'segments': [s.name for s in segments],
-              'soundcraftMix': mixed, 'voice': voice_report, 'title': args.title, 'captions': str(args.captions) if args.captions else None, 'sharpen': args.sharpen, 'fps': args.fps,
+              'soundcraftMix': mixed, 'voice': voice_report, 'title': args.title, 'captions': str(args.captions) if args.captions else None,
+              'captionRender': 'post-filmcraft-ass' if arabic_captions else ('filmcraft-overlay' if args.captions else None),
+              'sharpen': args.sharpen, 'fps': args.fps,
               'elapsedSeconds': round(time.monotonic() - started, 1), 'export': exported.get('result')}
     output.with_suffix('.artcraft.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report, indent=2))

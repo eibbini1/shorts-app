@@ -20,24 +20,22 @@ class ArabicRecipeTest(unittest.TestCase):
                          [6, 12, 12, 12, 11, 7])
         self.assertTrue(any('missing media' in error for error in errors))
         self.assertTrue(any('Caption timing is not verified' in error for error in errors))
+        self.assertFalse(any('voice' in error.lower() for error in errors))
 
     def test_verified_manifest_with_matching_assets_is_ready(self):
         spec = copy.deepcopy(SPEC)
-        spec['voice']['approvalStatus'] = 'verified-by-listening-and-rights-review'
-        spec['captionTimingStatus'] = 'verified-against-recorded-voice'
+        spec['captionTimingStatus'] = 'verified-against-picture'
         spec['soundBed']['licenseStatus'] = 'verified-commercial-use'
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp)
             for scene in spec['scenes']:
-                for field in ('media', 'voiceFile'):
+                for field in ('media',):
                     path = base / scene[field]
                     path.parent.mkdir(parents=True, exist_ok=True)
                     path.touch()
             (base / spec['soundBed']['file']).touch()
 
             def media_probe(path):
-                if path.name.startswith('voice-'):
-                    return {'streams': [{'codec_type': 'audio'}], 'format': {'duration': '2'}}
                 if path.name.startswith('scene-'):
                     number = int(path.stem.split('-')[1]) - 1
                     scene = spec['scenes'][number]
