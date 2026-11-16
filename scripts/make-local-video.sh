@@ -7,7 +7,7 @@ usage() {
 Usage:
   bash scripts/make-local-video.sh
   bash scripts/make-local-video.sh --draft-only [--model gemma-local] [--idea BANK_ID] [--studio luxury-kitchen] [--answers brief.json]
-  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--editor auto|filmcraft|ffmpeg] [--chain-images] [--best-of-3-stills] [--cache-only] [--stills FOLDER] [--anchor-image IMAGE] [--allow-repeat] [--allow-silence] [--allow-bad-first]
+  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--editor ffmpeg|artcraft|filmcraft|auto] [--chain-images] [--best-of-3-stills] [--cache-only] [--stills FOLDER] [--anchor-image IMAGE] [--allow-repeat] [--allow-silence] [--allow-bad-first]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json [--watch]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json --preview
 
@@ -43,7 +43,7 @@ while (($#)); do
     *) usage; exit 2 ;;
   esac
 done
-[[ "$editor" == auto || "$editor" == filmcraft || "$editor" == ffmpeg ]] || { echo 'Editor must be auto, filmcraft, or ffmpeg.' >&2; exit 2; }
+[[ "$editor" == auto || "$editor" == filmcraft || "$editor" == ffmpeg || "$editor" == artcraft ]] || { echo 'Editor must be ffmpeg, artcraft, filmcraft, or auto.' >&2; exit 2; }
 
 if [[ -n "$status" ]]; then
   [[ -z "$scenario" ]] || { echo 'Use --status or --scenario, not both.' >&2; exit 2; }
@@ -108,7 +108,7 @@ python3 scripts/evidence_gate.py "$scenario" || { echo 'Evidence gate blocked th
 storage/tools/ComfyUI/.venv/bin/python scripts/add-sfx.py --scenario "$scenario" --audit || { echo 'Sound cue gate blocked this scenario. Edit its shot sound lines before rendering.' >&2; exit 3; }
 t_checks=$SECONDS
 echo "Step 3/4  Rendering local video to $output (about 5 min per shot on an M1: still, motion, voice, assembly)"
-python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" ${chain:+$chain} ${cache_only:+$cache_only} ${best_of_3:+$best_of_3} ${allow_silence:+$allow_silence} ${allow_bad_first:+$allow_bad_first} ${stills:+--stills "$stills"} ${anchor_image:+--anchor-image "$anchor_image"}
+python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" $([[ "$editor" == artcraft ]] && echo --prep-stills) ${chain:+$chain} ${cache_only:+$cache_only} ${best_of_3:+$best_of_3} ${allow_silence:+$allow_silence} ${allow_bad_first:+$allow_bad_first} ${stills:+--stills "$stills"} ${anchor_image:+--anchor-image "$anchor_image"}
 t_render=$SECONDS
 echo "Base render complete: $output (not release approved)"
 echo "Step 4/4  Shot-synced ASMR, captions, upload pack and quality check"
@@ -117,7 +117,23 @@ finished_video="${output%.mp4}.sfx.mp4"
 python3 scripts/finish-local-video.py --scenario "$scenario" --video "$finished_video" && echo "Captioned ASMR video and upload pack are next to $finished_video"
 pack="${finished_video%.mp4}.pack.json"
 final_video="${finished_video%.mp4}.captioned.mp4"
-if [[ "$editor" == filmcraft || ( "$editor" == auto && -x storage/tools/artcraft/filmcraft-cli ) ]]; then
+if [[ "$editor" == artcraft ]]; then
+  # SoundCraft remaster + this film's own captions at 1080 + FilmCraft 1080x1920 edit of the rendered shots.
+  art_video="${finished_video%.mp4}.artcraft.mp4"
+  art_args=(--assembly "${output%.mp4}.assembly" --audio "$finished_video" --output "$art_video")
+  [[ ! -f "${finished_video%.mp4}.ass" ]] || art_args+=(--captions "${finished_video%.mp4}.ass")
+  python3 scripts/artcraft-finish.py "${art_args[@]}"
+  final_video="$art_video"
+  python3 - "$pack" "$final_video" <<'PY2'
+import json,sys
+from pathlib import Path
+pack,video=map(Path,sys.argv[1:])
+data=json.loads(pack.read_text())
+data['video']=video.name
+data['finishingEditor']='ArtCraft (SoundCraft + FilmCraft)'
+pack.write_text(json.dumps(data,indent=2)+'\n')
+PY2
+elif [[ "$editor" == filmcraft || ( "$editor" == auto && -x storage/tools/artcraft/filmcraft-cli ) ]]; then
   python3 scripts/filmcraft-finish.py --video "$final_video"
   final_video="${final_video%.mp4}.filmcraft.mp4"
   python3 - "$pack" "$final_video" <<'PY'

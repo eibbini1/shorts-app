@@ -6,3 +6,5 @@ Hardware: Apple M1, 16 GB. Local models in storage/models (FLUX.2 Klein 4B q4, G
 Existing docs not duplicated here: LOCAL_DIRECTOR.md, LOCAL_PIPELINE.md, QUALITY_RELEASE_GATE.md, MOTION_SHOT_RECIPE.md, CINEMATIC_PLAN.md.
 Licences: Remotion free for individuals/teams<=3; FLUX.2 klein 4B Apache-2.0; LTX-2.3 licence text must be read at source before commercial reliance (sources conflict). Seedance/cloud prices unverified.
 Baseline: storage/baselines/hotel-hot-dog-20261114/ (sha256 in SHA256SUMS, FINDINGS.md). Score 45/100.
+
+- 2026-11-16: Owner wants the four installed ArtCraft tools (PhotoCraft, FilmCraft, EffectCraft, SoundCraft) used for finishing, plus better voices and the existing Lora gold-word captions. Opt-in path works (`--editor artcraft`); see `docs/ARTCRAFT_LOCAL_INTEGRATION.md`. Generation (FLUX/LTX) is unchanged.

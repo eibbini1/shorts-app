@@ -87,7 +87,16 @@ def effectcraft_title(text, target, work, seconds=3.0):
          '--prores', '4444', '--channels', 'rgba', '--audio', 'off'], cwd=work)
 
 
-def filmcraft_edit(segments, mix, title, output, project, sharpen):
+def captions_overlay(ass, target, seconds):
+    """The pipeline's own Lora gold-word captions, drawn at 1080x1920 on a transparent layer (not upscaled)."""
+    def esc(path):
+        return str(path).replace('\\', '/').replace(':', '\\:').replace("'", "\\'")
+    vf = f"subtitles='{esc(ass)}':fontsdir='{esc(ROOT / 'assets/fonts')}':alpha=1"
+    run(['ffmpeg', '-y', '-v', 'error', '-f', 'lavfi', '-i',
+         f'color=c=0x00000000:s=1080x1920:r=24:d={seconds},format=rgba', '-vf', vf, '-c:v', 'prores_ks', '-profile:v', '4444', '-pix_fmt', 'yuva444p10le', target])
+
+
+def filmcraft_edit(segments, mix, overlays, output, project, sharpen):
     cli = tool('filmcraft')
 
     def call(*parts, new=False, save=True):
@@ -98,7 +107,7 @@ def filmcraft_edit(segments, mix, title, output, project, sharpen):
 
     call('exec', 'file.newProject', f'name={output.stem}', new=True)
     call('exec', 'file.newSequence', f'name={output.stem}', 'width=1080', 'height=1920', 'fps=24',
-         'video=2', 'audio=1')
+         f'video={1 + len(overlays)}', 'audio=1')
     items = call('import', *segments)['items']
     clips = call('exec', 'timeline.place', json.dumps({'items': items, 'frame': 0, 'audio': False}))['clips']
     for clip in clips:                                   # 720x1280 shots fill the 1080x1920 frame
@@ -108,16 +117,18 @@ def filmcraft_edit(segments, mix, title, output, project, sharpen):
             call('exec', 'effects.setParam', json.dumps({'clip': clip, 'effect': index, 'param': 'amount', 'value': sharpen}))
     audio = call('import', mix)['items'][0]
     call('exec', 'timeline.place', json.dumps({'item': audio, 'track': 'A1', 'frame': 0, 'video': False}))
-    if title:
-        over = call('import', title)['items'][0]
-        call('exec', 'timeline.place', json.dumps({'item': over, 'track': 'V2', 'frame': 0, 'audio': False}))
+    for number, layer in enumerate(overlays, start=2):
+        over = call('import', layer)['items'][0]
+        call('exec', 'timeline.place', json.dumps({'item': over, 'track': f'V{number}', 'frame': 0, 'audio': False}))
     return call('export', output, '--preset', PRESET, save=False)
 
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--assembly', required=True, type=Path, help='Folder with segment-000.mp4 ... from render-any-local.py')
-    p.add_argument('--sfx', required=True, type=Path, help='The raw .sfx.wav sound track')
+    p.add_argument('--sfx', type=Path, help='A raw sound track (.wav) for silent films')
+    p.add_argument('--audio', type=Path, help='Any finished audio or video whose sound (voice + effects) should be remastered')
+    p.add_argument('--captions', type=Path, help='The .ass captions written by finish-local-video.py')
     p.add_argument('--output', required=True, type=Path)
     p.add_argument('--title', help='Optional short top-of-frame title for the first three seconds')
     p.add_argument('--sharpen', type=float, default=30, help='FilmCraft unsharp mask amount after the upscale, 0 = off')
@@ -125,24 +136,36 @@ def main():
     segments = sorted(args.assembly.resolve().glob('segment-*.mp4'))
     output = args.output.resolve()
     project = output.with_suffix('.fcproj')
-    if not segments or not args.sfx.is_file():
-        p.error('Need segment-*.mp4 files and the sfx wav')
+    source_audio = args.audio or args.sfx
+    if not segments or not source_audio or not source_audio.is_file():
+        p.error('Need segment-*.mp4 files and --sfx or --audio')
     if output.exists() or project.exists():
         p.error('Use a new output path; this tool never overwrites a film')
     started = time.monotonic()
     with tempfile.TemporaryDirectory(prefix='artcraft-finish-') as tmp:
         work = Path(tmp)
         mix = output.with_suffix('.soundcraft.wav')
-        mixed = soundcraft_mix(args.sfx.resolve(), mix)
-        title = None
+        raw = work / 'source.wav'
+        run(['ffmpeg', '-y', '-v', 'error', '-i', source_audio.resolve(), '-vn', '-ac', '1', '-ar', '48000', '-c:a', 'pcm_s24le', raw])
+        mixed = soundcraft_mix(raw, mix)
+        overlays = []
+        if args.captions:
+            if not args.captions.is_file():
+                p.error(f'No captions file: {args.captions}')
+            seconds = sum(float(subprocess.check_output(['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
+                                                         '-of', 'csv=p=0', str(s)], text=True)) for s in segments)
+            layer = output.with_suffix('.captions.mov')
+            captions_overlay(args.captions.resolve(), layer, round(seconds, 3))
+            overlays.append(layer)
         if args.title:
-            title = output.with_suffix('.title.mov')
-            effectcraft_title(args.title, title, work)
-        exported = filmcraft_edit(segments, mix, title, output, project, args.sharpen)
+            layer = output.with_suffix('.title.mov')
+            effectcraft_title(args.title, layer, work)
+            overlays.append(layer)
+        exported = filmcraft_edit(segments, mix, overlays, output, project, args.sharpen)
     if not output.is_file() or not output.stat().st_size:
         raise SystemExit(f'FilmCraft export failed: {exported}')
     report = {'output': str(output), 'project': str(project), 'segments': [s.name for s in segments],
-              'soundcraftMix': mixed, 'title': args.title, 'sharpen': args.sharpen,
+              'soundcraftMix': mixed, 'title': args.title, 'captions': str(args.captions) if args.captions else None, 'sharpen': args.sharpen,
               'elapsedSeconds': round(time.monotonic() - started, 1), 'export': exported.get('result')}
     output.with_suffix('.artcraft.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report, indent=2))

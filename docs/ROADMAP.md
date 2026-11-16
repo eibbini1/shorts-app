@@ -27,3 +27,9 @@ On the 16 GB M1, a 25-frame 1024×1920 MLX LTX output took 657 seconds. A 97-fra
 ## Faster runs without weaker gates
 
 The render now prepares Kokoro narration and the original soundtrack concurrently; both finish and the silence gate runs **before** the first model clip. `--cache-only` reuses approved stills and clips and fails on a cache miss rather than unexpectedly starting a long model job. This is useful for changing narration and timing while retaining the shot prompts. The dominant cost remains MLX LTX motion generation, which runs one clip at a time on the 16 GB unified-memory Mac. FLUX stills are also sequential when `--chain-images` is used because each still depends on the previous one. Parallel FLUX/LTX jobs may cause memory pressure and retry costs, so the next speed work is measuring per-shot elapsed time and a same-prompt test of fewer frames or faster settings before changing the default. Final-file QA and story checks remain mandatory.
+
+## ArtCraft finishing path (2026-11-16)
+
+- VERIFIED: `--editor artcraft` = PhotoCraft still prep, SoundCraft master, 1080 caption layer, FilmCraft 1080x1920 export. Details and evidence: `docs/ARTCRAFT_LOCAL_INTEGRATION.md`.
+- NEXT: (1) owner judges voiced red-curry and the still-prep A/B; (2) SoundCraft voice chain + three-track mix; (3) EffectCraft captions animation and price counter; (4) stub-CLI tests and version pin; (5) make ArtCraft the default only after one voiced and one silent film are approved.
+- ArtCraft does not generate footage or shorten FLUX/LTX time.

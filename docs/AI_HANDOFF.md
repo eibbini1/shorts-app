@@ -171,3 +171,15 @@ Do not commit generated media, model weights, credentials or scratch outputs. So
 - LIMITS: the 1080 picture is an upscale of 384x640-native footage, not extra detail. Title font fell back to a sans face (`Lora-Bold` not picked up). No price counter/HUD or captions in this path yet. SoundCraft clip id 3 / track id 2 are assumed for a fresh one-file session. PhotoCraft still prep (slice 4, needs GPU) not started. No assistant has heard the mix.
 - Review copy: `storage/p9/review/shallot-v4-C-artcraft-1080.mp4`.
 - NEXT: owner compares A (FFmpeg 720p) with C; if C wins, add `--editor artcraft` to `make-local-video.sh`, port the Level up HUD to EffectCraft, add a unit test with stubbed CLIs.
+
+## 2026-11-16 13:40 +03 — Claude: `--editor artcraft` wired, captions at 1080, PhotoCraft still prep, docs for Codex
+
+- Branch `feature/evidence-gates-local` after `dd1d1e9`; this commit also merged into `integrate/claude-codex` in the main folder. Nothing pushed. Owner chose version C (ArtCraft 1080) over A (FFmpeg) and asked for the full ArtCraft pipeline, better voices, the existing captions, and PhotoCraft still prep.
+- VERIFIED: `scripts/artcraft-finish.py` now takes `--audio` (any finished mix), `--captions` (.ass) and optional `--title`. Voiced test `outputs/red-curry-dumpling-bake-30-20261115-143810.sfx.artcraft.mp4`: 1080x1920, 30.02 s, QA 6/6, -16.24 LUFS, hook speech at 0.15 s, 33 s to finish. Silent test shallot v4: QA 6/6.
+- VERIFIED: `render-any-local.py --prep-stills` (PhotoCraft auto contrast + unsharp mask; cached as `refs/prep-<hash>.png`). One-shot A/B on shallot shot 3 (265 s GPU): blurdetect 8.57 -> 7.82, crops slightly crisper, warm cast kept. `--cache-only` rerun of the default path still reuses every clip. Auto tone rejected (cools the image).
+- IMPLEMENTED BUT UNTESTED END TO END: `make-local-video.sh --editor artcraft` (syntax checked; the two halves were run separately, not through the one command). No unit test for `artcraft-finish.py` yet.
+- Tests: Python 58/60 (2 need numpy in system Python), `verify-npm-scripts.py` passes.
+- OBSERVED: red-curry captions (bottom, MarginV 320) sit on the dish in some shots; the main-folder branch had moved captions to the top (Alignment 8, MarginV 190). Owner to pick one placement.
+- NOT DONE: voice chain, EffectCraft caption animation, price counter, Lora in EffectCraft, version pin. No assistant has heard any audio.
+- Review copies in main folder `storage/p9/review/`: `red-curry-artcraft-1080.mp4`, `shallot-v4-C-artcraft-1080.mp4`, `photocraft-motion-A-plain-vs-B-prepped.mp4`.
+- NEXT for whoever resumes: read `docs/ARTCRAFT_LOCAL_INTEGRATION.md` (new section), run one film through `--editor artcraft` end to end, then build the SoundCraft voice chain.
