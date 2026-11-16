@@ -1,0 +1,108 @@
+{
+  "id": "avocado-egg-salad-ar-60",
+  "title": "سلطة الأفوكادو بالبيض — Avocado & Egg Salad",
+  "language": "ar-JO",
+  "seconds": 60,
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "setBible": "One warm kitchen throughout: cream stone counter, oak board, matte ivory ceramic bowl, natural-nailed adult hands, soft side-window light. Keep the same avocado, three boiled eggs, one boiled potato, parsley and green onions from preparation to serving. No new food appears after dressing.",
+  "voice": {
+    "requirement": "Natural female Jordanian Arabic cooking presenter",
+    "source": "recorded-or-licensed-voice-required",
+    "approvalStatus": "pending-listening-and-rights-review"
+  },
+  "soundBed": {
+    "file": "assets/recipes/avocado-egg-salad-ar/kitchen-bed-60.wav",
+    "licenseStatus": "pending-commercial-use-review",
+    "note": "Record or source 60 seconds of natural kitchen sound matching the six actions."
+  },
+  "music": {
+    "file": null,
+    "license": null,
+    "status": "optional-pending-licensed-source"
+  },
+  "captionTimingStatus": "draft-not-synced-to-recorded-voice",
+  "scenes": [
+    {
+      "id": "01-hook",
+      "startSeconds": 0,
+      "endSeconds": 6,
+      "media": "assets/recipes/avocado-egg-salad-ar/scene-01.mp4",
+      "voiceFile": "assets/recipes/avocado-egg-salad-ar/voice-01.wav",
+      "sourcePriority": ["recorded-footage", "licensed-footage", "verified-local-image-to-video"],
+      "visual": "Finished creamy avocado and egg salad in the matte ivory bowl. A spoon lifts a bite, with recognizable avocado cubes and boiled egg pieces; 50 mm macro, warm side light, restrained push-in. No extra ingredients, no floating utensils.",
+      "narration": "إذا بتحبي الأكل الصحي والطيب، عندي إلك وصفة رح تعجبك!",
+      "visualQuestion": "Are avocado cubes and boiled egg pieces visible in the same ivory salad bowl?"
+    },
+    {
+      "id": "02-ingredients",
+      "startSeconds": 6,
+      "endSeconds": 18,
+      "media": "assets/recipes/avocado-egg-salad-ar/scene-02.mp4",
+      "voiceFile": "assets/recipes/avocado-egg-salad-ar/voice-02.wav",
+      "sourcePriority": ["recorded-footage", "licensed-footage", "verified-local-image-to-video"],
+      "visual": "Overhead on the same oak board: one whole avocado, exactly three boiled eggs, one boiled potato, parsley and green onions. Natural hands gently arrange each item. Cream stone counter and ivory bowl remain in view. No lemon, oil or seasoning yet.",
+      "narration": "حبة أفوكادو، ثلاث بيضات مسلوقات، حبة بطاطا مسلوقة، بقدونس وبصل أخضر.",
+      "visualQuestion": "Are one avocado, three boiled eggs, one boiled potato, parsley and green onions visible?"
+    },
+    {
+      "id": "03-chop",
+      "startSeconds": 18,
+      "endSeconds": 30,
+      "media": "assets/recipes/avocado-egg-salad-ar/scene-03.mp4",
+      "voiceFile": "assets/recipes/avocado-egg-salad-ar/voice-03.wav",
+      "sourcePriority": ["recorded-footage", "licensed-footage", "verified-local-image-to-video"],
+      "visual": "Close overhead on the same board and hands. Knife cuts the avocado, boiled eggs and potato into small cubes; parsley and green onions are chopped finely. Show actual blade contact and ingredient transformation in a few motivated cuts, no morphing or instant pre-chopped food.",
+      "narration": "بنقطّع الأفوكادو والبيض والبطاطا لمكعبات، وبنفرم البقدونس والبصل الأخضر ناعم.",
+      "visualQuestion": "Do the avocado, boiled egg and potato appear cut into cubes on the same board?"
+    },
+    {
+      "id": "04-dress",
+      "startSeconds": 30,
+      "endSeconds": 42,
+      "media": "assets/recipes/avocado-egg-salad-ar/scene-04.mp4",
+      "voiceFile": "assets/recipes/avocado-egg-salad-ar/voice-04.wav",
+      "sourcePriority": ["recorded-footage", "licensed-footage", "verified-local-image-to-video"],
+      "visual": "Same ivory bowl now contains the chopped avocado, egg, potato, parsley and green onions. A real lemon is squeezed, then olive oil pours in a thin stream; salt and black pepper are added. Warm close side angle and clear hand-to-food contact.",
+      "narration": "منحط كل المكونات بوعاء، ومنضيف عصرة ليمون، زيت زيتون، ملح وفلفل حسب الرغبة.",
+      "visualQuestion": "Are lemon juice and olive oil being added to the same bowl of chopped ingredients?"
+    },
+    {
+      "id": "05-mix",
+      "startSeconds": 42,
+      "endSeconds": 53,
+      "media": "assets/recipes/avocado-egg-salad-ar/scene-05.mp4",
+      "voiceFile": "assets/recipes/avocado-egg-salad-ar/voice-05.wav",
+      "sourcePriority": ["recorded-footage", "licensed-footage", "verified-local-image-to-video"],
+      "visual": "A spoon gently folds the same five prepared ingredients with the lemon-oil dressing in the same ivory bowl. Show a real mixing action, then a warm macro of the creamy but still distinct avocado and egg texture. Do not turn it into puree.",
+      "narration": "منقلّبهم بشويش، وهيك بتصير عنا سلطة كريمية، طيبة ومشبعة!",
+      "visualQuestion": "Is the same salad being gently mixed while avocado and egg pieces remain distinct?"
+    },
+    {
+      "id": "06-serve",
+      "startSeconds": 53,
+      "endSeconds": 60,
+      "media": "assets/recipes/avocado-egg-salad-ar/scene-06.mp4",
+      "voiceFile": "assets/recipes/avocado-egg-salad-ar/voice-06.wav",
+      "sourcePriority": ["recorded-footage", "licensed-footage", "verified-local-image-to-video"],
+      "visual": "Final beauty shot of the same ivory bowl in the same warm kitchen. One spoon lifts a bite with avocado and boiled egg visible; slow controlled pullback. Leave a clean upper safe zone for a small Arabic call to action. No new garnish or ingredient appears.",
+      "narration": "جرّبيها واحكيلي شو رأيك، ولا تنسي تحفظي الوصفة!",
+      "visualQuestion": "Does the final spoonful visibly contain avocado and boiled egg from the same salad?"
+    }
+  ],
+  "captionCues": [
+    {"startSeconds": 0.2, "endSeconds": 2.9, "text": "إذا بتحبي الأكل الصحي والطيب"},
+    {"startSeconds": 2.9, "endSeconds": 5.8, "text": "عندي إلك وصفة رح تعجبك!"},
+    {"startSeconds": 6.2, "endSeconds": 11.8, "text": "حبة أفوكادو، ثلاث بيضات مسلوقات"},
+    {"startSeconds": 11.8, "endSeconds": 17.8, "text": "حبة بطاطا، بقدونس وبصل أخضر"},
+    {"startSeconds": 18.2, "endSeconds": 23.8, "text": "بنقطّع الأفوكادو والبيض والبطاطا"},
+    {"startSeconds": 23.8, "endSeconds": 29.8, "text": "وبنفرم البقدونس والبصل الأخضر"},
+    {"startSeconds": 30.2, "endSeconds": 35.8, "text": "منحط كل المكونات بوعاء"},
+    {"startSeconds": 35.8, "endSeconds": 41.8, "text": "عصرة ليمون، زيت زيتون، ملح وفلفل"},
+    {"startSeconds": 42.2, "endSeconds": 47.8, "text": "منقلّبهم بشويش"},
+    {"startSeconds": 47.8, "endSeconds": 52.8, "text": "سلطة كريمية، طيبة ومشبعة!"},
+    {"startSeconds": 53.2, "endSeconds": 56.2, "text": "جرّبيها واحكيلي شو رأيك"},
+    {"startSeconds": 56.2, "endSeconds": 59.8, "text": "ولا تنسي تحفظي الوصفة!"}
+  ]
+}
