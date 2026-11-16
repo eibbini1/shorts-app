@@ -1,5 +1,13 @@
 # AI handoff
 
+## 2026-11-16 — Arabic recipe ArtCraft pilot (Codex)
+
+- Branch: `feature/arabic-artcraft-recipe`, isolated worktree under `/Users/eibbini/Documents/Codex/2026-11-06/python-3-12-is-already-installed/shorts-app-arabic-artcraft`. Code commit before this handoff: `a7a192b`. Working tree after that commit: only untracked `outputs/` local preview files; do not commit them. Claude's original checkout and GPU render were not changed.
+- VERIFIED: a pre-existing two-shot film was re-exported through FilmCraft at 1080×1920, 30 fps, 300 frames, 10.005 s. Its source footage was 24 fps, so this demonstrates an export setting only. A rendered Arabic Cairo caption frame at an active cue showed connected RTL text, punctuation and top safe placement. `python3 scripts/test_arabic_recipe.py` passed 3 tests; `npm run scripts:verify` passed 68 npm entries and script syntax; `git diff --cached --check` passed. `npm run recipe:arabic:check` correctly blocked the missing media and unverified reviews.
+- IMPLEMENTED BUT UNTESTED END TO END: the six-scene recipe manifest, bundled OFL Cairo font, ArtCraft 30-fps and source-dimension handling, voice/caption/media preflight, and staging adapter. The 60-second recipe has **no finished film**. `scripts/arabic_recipe.py --output` has not been run with real assets. Final 60-second QA and full watch/listen remain required.
+- BLOCKERS: six actual scene videos, six recorded or commercially licensed natural Jordanian female voice lines, a 60-second rights-cleared kitchen audio bed, and caption timing verified against that recording. Installed Kokoro voices are English and macOS `say` currently exposes only a male Arabic voice; neither meets the brief. Separate music is deliberately blocked by this first adapter rather than silently ignored. Windows ArtCraft and bundled font operation are not tested.
+- NEXT: obtain/record the six scenes and voice without competing with Claude's active GPU render; inspect food actions and continuity; time captions to the recorded speech; run the ArtCraft adapter; add final-file QA, contact sheet and owner picture/sound review before any release claim. See `docs/ARABIC_RECIPE_ARTCRAFT.md`.
+
 Updated: 2026-11-14. Review branch: `feature/unified-shorts-pipeline`, based on `feature/phase4-trend-intelligence` at `2d7b162`. This branch lives in an isolated worktree under `/Users/eibbini/Documents/Codex/2026-11-06/python-3-12-is-already-installed/shorts-app-unify`. The original checkout is `/Users/eibbini/Documents/shorts-app`; do not switch it while other agents may use it.
 
 Draft pull request: [#17](https://github.com/eibbini1/shorts-app/pull/17). The branch includes commit `52a94a4`; the 10-second presentation-mode work is still local until its real render passes.
