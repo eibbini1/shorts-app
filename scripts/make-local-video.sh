@@ -7,7 +7,7 @@ usage() {
 Usage:
   bash scripts/make-local-video.sh
   bash scripts/make-local-video.sh --draft-only [--model gemma-local] [--idea BANK_ID] [--studio luxury-kitchen] [--answers brief.json]
-  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--editor ffmpeg|artcraft|filmcraft|auto] [--chain-images] [--best-of-3-stills] [--cache-only] [--stills FOLDER] [--anchor-image IMAGE] [--allow-repeat] [--allow-silence] [--allow-bad-first]
+  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--editor ffmpeg|artcraft|filmcraft|auto] [--title 'Optional film title'] [--chain-images] [--best-of-3-stills] [--cache-only] [--stills FOLDER] [--anchor-image IMAGE] [--allow-repeat] [--allow-silence] [--allow-bad-first]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json [--watch]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json --preview
 
@@ -18,7 +18,7 @@ USAGE
 
 default_model='qwen3:1.7b'
 [[ -s storage/setup/gemma-model-dir.txt ]] && default_model='gemma-local'
-scenario=''; status=''; chain=''; stills=''; anchor_image=''; allow_repeat=''; cache_only=''; best_of_3=''; idea=''; studio=''; answers=''; editor="${SHORTS_EDITOR:-auto}"; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
+scenario=''; status=''; chain=''; stills=''; anchor_image=''; allow_repeat=''; cache_only=''; best_of_3=''; idea=''; studio=''; answers=''; title=''; editor="${SHORTS_EDITOR:-auto}"; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
 while (($#)); do
   case "$1" in
     --scenario) scenario="${2:?Missing scenario path}"; shift 2 ;;
@@ -31,6 +31,7 @@ while (($#)); do
     --stills) stills="$2"; shift 2 ;;
     --anchor-image) anchor_image="$2"; shift 2 ;;
     --editor) editor="${2:?Missing editor}"; shift 2 ;;
+    --title) title="${2:?Missing title}"; shift 2 ;;
     --allow-repeat) allow_repeat='--allow'; shift ;;
     --allow-silence) allow_silence='--allow-silence'; shift ;;
     --allow-bad-first) allow_bad_first='--allow-bad-first'; shift ;;
@@ -50,6 +51,8 @@ if [[ "$editor" == auto ]]; then
     editor=artcraft
   fi
 fi
+[[ -z "$title" || "$editor" == artcraft ]] || { echo '--title requires the ArtCraft editor.' >&2; exit 2; }
+[[ ${#title} -le 48 ]] || { echo '--title must be 48 characters or fewer.' >&2; exit 2; }
 
 if [[ -n "$status" ]]; then
   [[ -z "$scenario" ]] || { echo 'Use --status or --scenario, not both.' >&2; exit 2; }
@@ -135,6 +138,7 @@ if [[ "$editor" == artcraft ]]; then
   [[ ! -f "$art_work/voice-timeline.wav" ]] || art_args+=(--voice "$art_work/voice-timeline.wav" --sfx "${output%.mp4}.sfx.wav")
   [[ ! -f "$art_work/soundtrack.wav" ]] || art_args+=(--bed "$art_work/soundtrack.wav")
   [[ ! -f "${finished_video%.mp4}.ass" ]] || art_args+=(--captions "${finished_video%.mp4}.ass")
+  [[ -z "$title" ]] || art_args+=(--title "$title")
   python3 scripts/artcraft-finish.py "${art_args[@]}"
   final_video="$art_video"
   python3 - "$pack" "$final_video" <<'PY2'

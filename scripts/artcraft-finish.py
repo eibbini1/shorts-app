@@ -111,8 +111,8 @@ def effectcraft_title(text, target, work, seconds=3.0):
          json.dumps({'name': 'Title', 'width': 1080, 'height': 1920, 'frameRate': 24, 'duration': seconds}), '--save'],
         cwd=work)
     code = ("var c=app.project.item(1);var t=c.layers.addText(%s);var p=t.property('Source Text');var d=p.value;"
-            "d.fontSize=104;d.applyFill=true;d.fillColor=[1,0.97,0.9];try{d.font='Lora-Bold';}catch(e){}d.justification=ParagraphJustification.CENTER_JUSTIFY;"
-            "d.applyStroke=true;d.strokeColor=[0.1,0.06,0.03];d.strokeWidth=6;p.setValue(d);"
+            "d.fontSize=82;d.applyFill=true;d.fillColor=[0.24,0.12,0.065];try{d.font='Georgia';}catch(e){}d.justification=ParagraphJustification.CENTER_JUSTIFY;"
+            "d.applyStroke=true;d.strokeColor=[1,0.95,0.82];d.strokeWidth=2;p.setValue(d);"
             "t.property('Position').setValue([540,330]);var o=t.property('Opacity');"
             "o.setValueAtTime(0,0);o.setValueAtTime(0.4,100);o.setValueAtTime(%s,100);o.setValueAtTime(%s,0);"
             "var s=t.property('Scale');s.setValueAtTime(0,[88,88]);s.setValueAtTime(0.5,[100,100]);'ok';"
