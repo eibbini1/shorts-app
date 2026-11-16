@@ -156,3 +156,9 @@ Do not commit generated media, model weights, credentials or scratch outputs. So
 - Remaining picture defects in both: pan shows garlic cloves, no diced shallots; oven-shot toppings (brown rounds) differ from the dressing shot; hook bread differs from the final pull. No assistant has heard either file.
 - Review copies for the owner: `storage/p9/review/shallot-v4-A-ffmpeg.mp4`, `-B-filmcraft.mp4`, `-A-vs-B.mp4`.
 - RECOMMENDATION pending owner verdict: keep FFmpeg as default editor; use FilmCraft only for titles/motion graphics or same-scene transitions, with a loudness step.
+
+## 2026-11-16 12:40 +03 — Claude: default editor back to FFmpeg; ArtCraft CLI capabilities probed
+
+- Owner agreed after the A/B: `scripts/make-local-video.sh` default is now `--editor ffmpeg`; `auto` and `filmcraft` remain opt-in. `bash -n` passes.
+- Owner's new direction: use all four ArtCraft tools for the master Shorts. PROBED (help/commands only, not built): SoundCraft `convert --normalize` is peak-only (-0.1 dBFS), LUFS needs a session with `compressor` (Compressor/Limiter) + `file.bounce_mix`; PhotoCraft has `filter.sharpen.smartSharpen/unsharpMask`, `image.autoTone`, `file.automate.fitImage`, `batch`; EffectCraft has `comp.new` (1080x1920 comp created OK), `file.import`, `script.run` (AE-style JS), `render --channels rgba --prores`; FilmCraft shot-level edit already verified.
+- None of these tools generates footage or shortens FLUX/LTX time; they are finishing tools. PLANNED slices are in the chat reply of this date; nothing built yet.
