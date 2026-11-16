@@ -46,6 +46,19 @@ def valid_video(path):
         return False
 
 
+def prep_still(work, reference):
+    """PhotoCraft still prep before motion: auto contrast + unsharp mask (keeps the warm cast; auto tone cooled it)."""
+    cli = ROOT / 'storage/tools/artcraft/photocraft-cli'
+    if not cli.is_file():
+        raise SystemExit('--prep-stills needs storage/tools/artcraft/photocraft-cli (npm run artcraft:check:mac)')
+    target = work / 'refs' / f'prep-{file_hash(reference)[:12]}.png'
+    if not target.is_file():
+        subprocess.run([str(cli), 'run', str(reference), '--no-gpu', '--cmd', 'image.autoContrast',
+                        '--cmd', 'filter.sharpen.unsharpMask', '--out', str(target)], check=True, capture_output=True)
+        print(f'PhotoCraft prepped still: {target.name}', flush=True)
+    return target
+
+
 def still(work, index, shot, seed, source, width, height, cache_only=False):
     key = digest({'prompt': shot['imagePrompt'], 'seed': seed, 'sourceHash': file_hash(source) if source else None,
                   'model': 'flux2-klein-4b-q4', 'width': width, 'height': height})
@@ -140,6 +153,7 @@ def main():
     parser.add_argument('--allow-bad-first', action='store_true', help='Skip the first-picture and first-clip checks')
     parser.add_argument('--stills', type=Path, default=os.environ.get('BB_STILLS') or None, help='Folder with your own stills named shot-01.png, shot-02.png ... (for example from Google Flow). Missing shots fall back to FLUX')
     parser.add_argument('--anchor-image', type=Path, default=os.environ.get('BB_ANCHOR_IMAGE') or None, help='Recurring character: edit this image into each shot so one face is reused across films (or set BB_ANCHOR_IMAGE)')
+    parser.add_argument('--prep-stills', action='store_true', help='PhotoCraft auto contrast + unsharp mask on each still before motion (changes the motion cache key)')
     parser.add_argument('--cache-only', action='store_true', help='Reuse existing FLUX/LTX assets; fail rather than start a model job on a cache miss')
     parser.add_argument('--best-of-3-stills', action='store_true', help='Generate three stills per shot and require local Qwen hand/utensil review before motion')
     args = parser.parse_args()
@@ -241,6 +255,8 @@ def main():
                 parser.error(f'First picture failed: {problem}. Stopped before the clip step (use --allow-bad-first to override)')
             print('First picture check passed', flush=True)
         previous = reference
+        if args.prep_stills:
+            reference = prep_still(work, reference)
         parts = math.ceil(shot['seconds'] / 5)
         total_frames = shot['seconds'] * FPS
         frame_counts = [total_frames // parts + (1 if part < total_frames % parts else 0) for part in range(parts)]

@@ -57,3 +57,22 @@ Only promote FilmCraft to the default if the sample is at least as reliable and 
 **Not yet verified:** FilmCraft has not assembled the eight separate motion clips, transitions, captions or sound stems. The exported pilot is a lightly graded copy of the finished film, so it does not prove better motion, realism, continuity, montage or audio quality. No one has listened to the full FilmCraft output. The existing dumpling geometry still varies between shots. The 16 ms audio/container tail and roughly 10× larger file need export-setting tests before a default switch. PhotoCraft, EffectCraft and SoundCraft have not been CLI-tested. The downloaded CLI and pilot files currently live under `/private/tmp/shorts-artcraft-tools`, outside Git.
 
 **Next:** create a deterministic shot-level FilmCraft project from the eight clip manifest, reproduce exactly 30 s with the original voice/music/foley stems, then test one motivated dissolve and one matched color pass. Export and QA the exact final file; inspect every cut and listen to the whole mix. Only then wire `--editor filmcraft` into the creator command. The installed GUI apps remain available for manual work meanwhile.
+
+## Working ArtCraft finish path (Claude, 2026-11-16, owner-approved direction)
+
+Owner compared FFmpeg 720p (A), a FilmCraft dissolve edit (B) and the ArtCraft 1080 finish (C) on shallot v4 and chose C. Default editor is still `ffmpeg`; ArtCraft is opt-in until one voiced and one silent film are owner-approved.
+
+One command: `bash scripts/make-local-video.sh --scenario X.local-scenario.json --editor artcraft`
+- adds `--prep-stills` to the render (PhotoCraft), then after sound and captions runs `scripts/artcraft-finish.py`.
+
+| Stage | Tool | What runs | Status |
+|---|---|---|---|
+| Still prep | PhotoCraft | `image.autoContrast` + `filter.sharpen.unsharpMask` on each still before LTX (`render-any-local.py --prep-stills`) | VERIFIED on one shot: blurdetect mean 8.57 -> 7.82 (lower is sharper); owner has not judged it. `image.autoTone` REJECTED: it removes the warm cast |
+| Sound | SoundCraft | Finished mix through clip gain + Compressor/Limiter, gain searched to -16 LUFS / <= -1 dBTP, bounced | VERIFIED: -16.5 LUFS (silent film), -16.2 LUFS (voiced) |
+| Captions | pipeline `.ass` + FFmpeg + FilmCraft | The same Lora gold-word captions drawn at 1080x1920 on a transparent ProRes 4444 layer, placed on V2 | VERIFIED on red curry 30 s |
+| Title | EffectCraft | Optional `--title`, AE-style `script.run` text layer, ProRes 4444 alpha | VERIFIED; font falls back to sans (Lora not picked up); off unless asked |
+| Edit/export | FilmCraft | 1080x1920 sequence, shots scaled 150 %, unsharp 30, hard cuts, overlays, export | VERIFIED: final-file QA 6/6 on both films; 16 s (20 s film), 33 s (30 s film) |
+
+Findings to keep: cross dissolves between different scenes ghost and look worse than hard cuts; the raw `.sfx.wav` is about -33 LUFS and must be mastered; a lavfi `color` source needs `format=rgba` inside the source graph or the caption layer is opaque black; 1080 here is an upscale of 384x640-native footage.
+
+PLANNED, not built: voice chain in SoundCraft (expander_gate, eq_7band, de_esser, compressor, saturator are installed) with separate voice/effects/music tracks; EffectCraft animated captions and Level up price counter; Lora in EffectCraft; unit test with stubbed CLIs; pin CLI versions. SoundCraft ids (clip 3, track 2) are assumed for a fresh one-file session.

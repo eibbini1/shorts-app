@@ -196,3 +196,40 @@ CAUTIONS: scripts/_retired/ holds old generators incl. another session's story_m
 - Frame review of v3 (contact sheet, Claude): one warm kitchen throughout, the brick-wall still is gone. Defects: the pan shows whole garlic cloves, no shallots; bread on the tray changes from long slices to six round pieces inside the oven; the hook bread does not match the final pull. Audio: none yet, so nothing heard.
 - The four ArtCraft CLIs sit under `storage/tools/artcraft/` (via the storage symlink, about 635 MB, outside Git). Smoke drafts and generated media left untracked.
 - NEXT: run add-sfx/finish/QA on v3 or re-render the oven shot first; shot-level FilmCraft vs FFmpeg comparison on the same five clips; then decide the default editor. Push only with owner approval.
+
+## 2026-11-16 12:25 +03 — Claude: shallot v4 (oven still fixed) and shot-level FilmCraft vs FFmpeg test
+
+- Branch `feature/evidence-gates-local` after `e2541cf`; only this entry is new in Git. Not pushed. Owner approved the oven re-render and the comparison.
+- VERIFIED: new `outputs/shallot-garlic-bread-stills/shot-04.png` (FLUX edit of the dressing still, seed 431) shows long slices in a row at the oven; shot 4 motion re-rendered (256 s), other clips reused. `outputs/shallot-garlic-bread-20-v4.sfx.mp4` (A, FFmpeg hard cuts) passes final-file QA: 20.0 s, -18.75 LUFS, peak -1.14 dB, no black/frozen/silent span.
+- VERIFIED: shot-level FilmCraft edit (B) works headless: 5 segments placed back to back, 8-frame cross dissolves at 4 cuts, contrast 8 + unsharp mask 40 per clip, SFX wav on A1, 480 frames exported in ~7 s. Project `outputs/shallot-garlic-bread-20-v4.filmcraft-shots.fcproj`; throwaway driver was `/private/tmp/fc_shots.py` (not in Git).
+- Frame review (Claude, contact sheets): B's dissolves ghost one scene over the next (tray over pan, oven over counter) and read worse than A's hard cuts for these scene changes; B's grade/sharpen gives no visible gain at 720x1280. B audio: the raw `.sfx.wav` is -33 LUFS (the FFmpeg mux normalises it); +11.7 dB in FilmCraft reached -18.8 LUFS but true peak +4.76 dB, so B ships at -24.8 LUFS / -1.27 dB and FAILS the loudness check. FilmCraft path needs a limiter or the normalised track. B is 20.01 s.
+- Remaining picture defects in both: pan shows garlic cloves, no diced shallots; oven-shot toppings (brown rounds) differ from the dressing shot; hook bread differs from the final pull. No assistant has heard either file.
+- Review copies for the owner: `storage/p9/review/shallot-v4-A-ffmpeg.mp4`, `-B-filmcraft.mp4`, `-A-vs-B.mp4`.
+- RECOMMENDATION pending owner verdict: keep FFmpeg as default editor; use FilmCraft only for titles/motion graphics or same-scene transitions, with a loudness step.
+
+## 2026-11-16 12:40 +03 — Claude: default editor back to FFmpeg; ArtCraft CLI capabilities probed
+
+- Owner agreed after the A/B: `scripts/make-local-video.sh` default is now `--editor ffmpeg`; `auto` and `filmcraft` remain opt-in. `bash -n` passes.
+- Owner's new direction: use all four ArtCraft tools for the master Shorts. PROBED (help/commands only, not built): SoundCraft `convert --normalize` is peak-only (-0.1 dBFS), LUFS needs a session with `compressor` (Compressor/Limiter) + `file.bounce_mix`; PhotoCraft has `filter.sharpen.smartSharpen/unsharpMask`, `image.autoTone`, `file.automate.fitImage`, `batch`; EffectCraft has `comp.new` (1080x1920 comp created OK), `file.import`, `script.run` (AE-style JS), `render --channels rgba --prores`; FilmCraft shot-level edit already verified.
+- None of these tools generates footage or shortens FLUX/LTX time; they are finishing tools. PLANNED slices are in the chat reply of this date; nothing built yet.
+
+## 2026-11-16 13:05 +03 — Claude: `scripts/artcraft-finish.py` (SoundCraft mix + EffectCraft title + FilmCraft 1080x1920)
+
+- Branch `feature/evidence-gates-local` after `be87f24`. Not pushed. Owner said "go" on slices 1-3 of the ArtCraft plan; default editor stays FFmpeg and this script is not yet wired into `make-local-video.sh`.
+- VERIFIED on the shallot v4 clips: `python3 scripts/artcraft-finish.py --assembly outputs/shallot-garlic-bread-20-v4.assembly --sfx outputs/shallot-garlic-bread-20-v4.sfx.wav --title "Shallot Garlic Bread" --output outputs/shallot-garlic-bread-20-v4.artcraft.mp4` ran in 16 s. Output 1080x1920 H.264/AAC, 20.01 s, 13.2 MB; `qa-local-video.py` 6/6 ok, loudness -16.5 LUFS, true peak -1.3 dB.
+- How: SoundCraft session (clip gain searched to target, Compressor/Limiter threshold -6 ratio 20, bounce) -> EffectCraft AE-style `script.run` text layer rendered ProRes 4444 alpha -> FilmCraft 1080x1920 sequence, shots scaled 150% with unsharp mask 30, hard cuts, title on V2, mix on A1.
+- LIMITS: the 1080 picture is an upscale of 384x640-native footage, not extra detail. Title font fell back to a sans face (`Lora-Bold` not picked up). No price counter/HUD or captions in this path yet. SoundCraft clip id 3 / track id 2 are assumed for a fresh one-file session. PhotoCraft still prep (slice 4, needs GPU) not started. No assistant has heard the mix.
+- Review copy: `storage/p9/review/shallot-v4-C-artcraft-1080.mp4`.
+- NEXT: owner compares A (FFmpeg 720p) with C; if C wins, add `--editor artcraft` to `make-local-video.sh`, port the Level up HUD to EffectCraft, add a unit test with stubbed CLIs.
+
+## 2026-11-16 13:40 +03 — Claude: `--editor artcraft` wired, captions at 1080, PhotoCraft still prep, docs for Codex
+
+- Branch `feature/evidence-gates-local` after `dd1d1e9`; this commit also merged into `integrate/claude-codex` in the main folder. Nothing pushed. Owner chose version C (ArtCraft 1080) over A (FFmpeg) and asked for the full ArtCraft pipeline, better voices, the existing captions, and PhotoCraft still prep.
+- VERIFIED: `scripts/artcraft-finish.py` now takes `--audio` (any finished mix), `--captions` (.ass) and optional `--title`. Voiced test `outputs/red-curry-dumpling-bake-30-20261115-143810.sfx.artcraft.mp4`: 1080x1920, 30.02 s, QA 6/6, -16.24 LUFS, hook speech at 0.15 s, 33 s to finish. Silent test shallot v4: QA 6/6.
+- VERIFIED: `render-any-local.py --prep-stills` (PhotoCraft auto contrast + unsharp mask; cached as `refs/prep-<hash>.png`). One-shot A/B on shallot shot 3 (265 s GPU): blurdetect 8.57 -> 7.82, crops slightly crisper, warm cast kept. `--cache-only` rerun of the default path still reuses every clip. Auto tone rejected (cools the image).
+- IMPLEMENTED BUT UNTESTED END TO END: `make-local-video.sh --editor artcraft` (syntax checked; the two halves were run separately, not through the one command). No unit test for `artcraft-finish.py` yet.
+- Tests: Python 58/60 (2 need numpy in system Python), `verify-npm-scripts.py` passes.
+- OBSERVED: red-curry captions (bottom, MarginV 320) sit on the dish in some shots; the main-folder branch had moved captions to the top (Alignment 8, MarginV 190). Owner to pick one placement.
+- NOT DONE: voice chain, EffectCraft caption animation, price counter, Lora in EffectCraft, version pin. No assistant has heard any audio.
+- Review copies in main folder `storage/p9/review/`: `red-curry-artcraft-1080.mp4`, `shallot-v4-C-artcraft-1080.mp4`, `photocraft-motion-A-plain-vs-B-prepped.mp4`.
+- NEXT for whoever resumes: read `docs/ARTCRAFT_LOCAL_INTEGRATION.md` (new section), run one film through `--editor artcraft` end to end, then build the SoundCraft voice chain.
