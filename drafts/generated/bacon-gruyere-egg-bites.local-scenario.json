@@ -1,0 +1,79 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 15,
+    "voice": "af_heart",
+    "presentationMode": "voiced"
+  },
+  "model": "hand-written",
+  "topic": "Bacon and Gruyere Egg Bites: a quick trending home recipe in three beats",
+  "style": "photoreal luxury designer kitchen, navy cabinetry with brass fixtures, polished black and gold marble counter, copper cookware, gold utensils, one emerald green enamel accent, warm key light with bright rim light, extreme macro food close-ups, hands only, vertical framing",
+  "requestedEnding": "A fork breaks open the soft egg bite and melted Gruyere cheese stretches.",
+  "totalSeconds": 15,
+  "template": "story",
+  "plan": {
+    "ideas": [
+      {
+        "title": "Bacon and Gruyere Egg Bites",
+        "angle": "three-beat quick recipe"
+      },
+      {
+        "title": "Bacon and Gruyere Egg Bites idea 2",
+        "angle": "macro hero close-up"
+      },
+      {
+        "title": "Bacon and Gruyere Egg Bites idea 3",
+        "angle": "steam and texture payoff"
+      },
+      {
+        "title": "Bacon and Gruyere Egg Bites idea 4",
+        "angle": "hands only, food first"
+      },
+      {
+        "title": "Bacon and Gruyere Egg Bites idea 5",
+        "angle": "save-for-later dinner"
+      }
+    ],
+    "title": "Bacon and Gruyere Egg Bites",
+    "hook": "One blender, yet twelve fluffy egg bites ready in minutes. Ready?",
+    "payoff": "A fork breaks open the soft egg bite and melted Gruyere cheese stretches.",
+    "shots": [
+      {
+        "seconds": 5,
+        "narration": "One blender, yet twelve fluffy egg bites ready in minutes. Ready?",
+        "imagePrompt": "Bacon and Gruyere Egg Bites, extreme macro close-up: a blender pouring a pale yellow egg mixture into a gold-toned muffin tin on a marble counter, the food filling most of the frame. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent glowing far in the background. Fine texture shows on the food, with glistening highlights and a thin curl of steam rising. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro food photograph, low 30-degree angle, 100mm macro lens at f/2.8, shallow depth of field, creamy bokeh, sharp focus on the food. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Extreme close-up on the gold-toned muffin tin. The cups sit empty, then pale egg mixture pours from the rose-gold blender in a smooth steady stream and fills each cup as the surface settles flat. The camera makes one slow push in toward the filling cup until the pour ends.",
+        "sound": "blender pour, liquid into silicone tin"
+      },
+      {
+        "seconds": 5,
+        "narration": "Crispy bacon and grated Gruyere cheese go into every cup before they bake.",
+        "imagePrompt": "Bacon and Gruyere Egg Bites, extreme macro close-up: a gold-toned muffin tin of egg mixture, a hand sprinkling crispy bacon pieces and grated Gruyere cheese on top, the food filling most of the frame. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent glowing far in the background. Fine texture shows on the food, with glistening highlights and a thin curl of steam rising. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro food photograph, overhead 60-degree view, 100mm macro lens at f/2.8, shallow depth of field, creamy bokeh, sharp focus on the food. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Extreme close-up on the egg cups in the gold-toned muffin tin. The mixture sits still, then a hand sprinkles crispy bacon pieces and grated Gruyere over each cup as the pieces land softly and the cheese begins to melt. The camera makes one slow push in toward the nearest cup until the hand lifts away.",
+        "sound": "crispy bacon crumble, cheese sprinkle"
+      },
+      {
+        "seconds": 5,
+        "narration": "Soft, golden and cheesy. Break one open and save the recipe.",
+        "imagePrompt": "Bacon and Gruyere Egg Bites, extreme macro close-up: golden egg bites on a plate, one broken open showing soft egg, bacon and melted cheese, the food filling most of the frame. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent glowing far in the background. Fine texture shows on the food, with glistening highlights and a thin curl of steam rising. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro food photograph, side angle at counter height, 100mm macro lens at f/2.8, shallow depth of field, creamy bokeh, sharp focus on the food. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Extreme close-up on a golden egg bite on the gold-rimmed plate. The bite sits still, then a fork breaks open the soft egg bite and melted Gruyere cheese stretches in a long strand as steam rises. The camera makes one slow push in toward the stretching cheese until the fork rests.",
+        "sound": "fork crack, soft steam, cheese stretch"
+      }
+    ],
+    "claimsToCheck": [
+      "Dish named on a 2026 recipe list; confirm the original recipe credit before publishing",
+      "AI-generated original footage; no reference footage, audio or branding reused",
+      "Do not state protein or time figures as facts without a source"
+    ]
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "dish named on a 2026 recipe list (Bon Appetit gallery); pacing reference only, not a verified view trend",
+    "sources": [
+      "https://www.bonappetit.com/gallery/best-recipes-2026",
+      "https://www.youtube.com/shorts/bkUpOMCZ9GQ"
+    ]
+  }
+}

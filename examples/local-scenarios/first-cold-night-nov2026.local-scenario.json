@@ -1,0 +1,128 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Local Studio",
+    "format": "short",
+    "seconds": 30,
+    "voice": "af_heart"
+  },
+  "model": "reference-inspired-local",
+  "topic": "The first cold night: chocolate-shell hot cocoa movie-night ritual",
+  "style": "Photorealistic cozy luxury chocolate commercial; warm November apartment, rain and fairy lights, one continuous red mug story.",
+  "requestedEnding": "One strawberry dips into the finished glossy hot chocolate as rain falls outside.",
+  "totalSeconds": 30,
+  "storyArc": {
+    "protagonist": "the red mug and its chocolate shell",
+    "setting": "one warm apartment by a rainy November window",
+    "goal": "Turn a cold evening into a comforting chocolate ritual.",
+    "obstacle": "A closed dark chocolate shell hides the cocoa and marshmallows.",
+    "turn": "Hot milk melts the shell; one slow stir makes a silky drink.",
+    "visualBible": "Same small apartment on a cold November evening, dark walnut table by a rain-specked window, muted red ceramic mug, cream linen napkin, brass spoon, warm fairy-light bokeh, one pair of adult hands with natural nails. No visible TV imagery, labels, text, brand marks or extra people. Photorealistic luxury food commercial, natural edible chocolate texture, shallow depth of field, cinematic warm highlights and cool blue window light. Same mug, shell, milk, spoon, window and hands in every shot. The finished drink in the first shot matches the final stir.",
+    "beats": [
+      {
+        "number": 1,
+        "label": "Finished-cup hook",
+        "seconds": 5
+      },
+      {
+        "number": 2,
+        "label": "The shell",
+        "seconds": 5
+      },
+      {
+        "number": 3,
+        "label": "Hot milk",
+        "seconds": 5
+      },
+      {
+        "number": 4,
+        "label": "Chocolate reveal",
+        "seconds": 5
+      },
+      {
+        "number": 5,
+        "label": "Silky stir",
+        "seconds": 5
+      },
+      {
+        "number": 6,
+        "label": "Cozy payoff",
+        "seconds": 5
+      }
+    ]
+  },
+  "qualityChecks": {
+    "exactTiming": true,
+    "uniquePromptText": true,
+    "narrationFits": true,
+    "endingLockedFromUser": false,
+    "rewrites": 0,
+    "fieldsNeedingRepair": 0
+  },
+  "plan": {
+    "ideas": [
+      {
+        "title": "The First Cold Night",
+        "angle": "A chocolate shell turns one red mug into a warm movie-night ritual."
+      }
+    ],
+    "title": "The First Cold Night",
+    "hook": "One cold night. But one chocolate shell changes everything.",
+    "payoff": "One strawberry dips into the finished glossy hot chocolate as rain falls outside.",
+    "shots": [
+      {
+        "seconds": 5,
+        "narration": "One cold night. But one chocolate shell changes everything.",
+        "imagePrompt": "Extreme close-up of a finished steaming dark hot chocolate in the muted red mug; glossy surface, a few tiny marshmallows and a soft ribbon of melted chocolate visible. Same small apartment on a cold November evening, dark walnut table by a rain-specked window, muted red ceramic mug, cream linen napkin, brass spoon, warm fairy-light bokeh, one pair of adult hands with natural nails. No visible TV imagery, labels, text, brand marks or extra people. Photorealistic luxury food commercial, natural edible chocolate texture, shallow depth of field, cinematic warm highlights and cool blue window light.",
+        "motionPrompt": "One hand lifts the mug slightly while a brass spoon draws one slow swirl through the glossy chocolate; the camera pushes gently toward the surface. One continuous physical action, stable geometry, no cuts.",
+        "sound": "soft spoon swirl, rain ambience"
+      },
+      {
+        "seconds": 5,
+        "narration": "It starts with one dark chocolate shell and a waiting cup.",
+        "imagePrompt": "Close view of a thin dark chocolate sphere resting inside the empty muted red mug on the walnut table. Same small apartment on a cold November evening, dark walnut table by a rain-specked window, muted red ceramic mug, cream linen napkin, brass spoon, warm fairy-light bokeh, one pair of adult hands with natural nails. No visible TV imagery, labels, text, brand marks or extra people. Photorealistic luxury food commercial, natural edible chocolate texture, shallow depth of field, cinematic warm highlights and cool blue window light.",
+        "motionPrompt": "One hand lowers the dark chocolate sphere carefully in the red mug, then withdraws; camera holds a slightly overhead angle. One continuous physical action, stable geometry, no cuts.",
+        "sound": "ceramic tap, quiet room"
+      },
+      {
+        "seconds": 5,
+        "narration": "Hot milk pours slowly over the shell. Watch the first crack.",
+        "imagePrompt": "Macro view of hot milk just starting to stream from a small cream ceramic pitcher onto the dark chocolate sphere inside the red mug. Same small apartment on a cold November evening, dark walnut table by a rain-specked window, muted red ceramic mug, cream linen napkin, brass spoon, warm fairy-light bokeh, one pair of adult hands with natural nails. No visible TV imagery, labels, text, brand marks or extra people. Photorealistic luxury food commercial, natural edible chocolate texture, shallow depth of field, cinematic warm highlights and cool blue window light.",
+        "motionPrompt": "A narrow continuous stream of steaming milk strikes the shell and the first fine crack appears; camera tracks the pour, no cut. Stable geometry and natural liquid motion.",
+        "sound": "warm milk pour, first crack"
+      },
+      {
+        "seconds": 5,
+        "narration": "The shell folds open, releasing rich cocoa and tiny marshmallows.",
+        "imagePrompt": "Macro view inside the same red mug as the softened chocolate shell has split, revealing cocoa and tiny white marshmallows in the hot milk. Same small apartment on a cold November evening, dark walnut table by a rain-specked window, muted red ceramic mug, cream linen napkin, brass spoon, warm fairy-light bokeh, one pair of adult hands with natural nails. No visible TV imagery, labels, text, brand marks or extra people. Photorealistic luxury food commercial, natural edible chocolate texture, shallow depth of field, cinematic warm highlights and cool blue window light.",
+        "motionPrompt": "The dark shell cracks open and folds inward once, releasing cocoa and tiny marshmallows that float upward; camera stays steady over the mug. One coherent physical transformation, no cuts.",
+        "sound": "delicate chocolate snap, gentle liquid"
+      },
+      {
+        "seconds": 5,
+        "narration": "One slow stir turns it silky, dark and ready to share.",
+        "imagePrompt": "Close view of the same red mug now full of deep brown hot chocolate, brass spoon touching the surface and a few marshmallows floating. Same small apartment on a cold November evening, dark walnut table by a rain-specked window, muted red ceramic mug, cream linen napkin, brass spoon, warm fairy-light bokeh, one pair of adult hands with natural nails. No visible TV imagery, labels, text, brand marks or extra people. Photorealistic luxury food commercial, natural edible chocolate texture, shallow depth of field, cinematic warm highlights and cool blue window light.",
+        "motionPrompt": "One hand stirs the mug slowly twice, chocolate ribbons smoothing into a glossy surface while steam rises; camera circles a few degrees, no cuts.",
+        "sound": "spoon clink, slow stir"
+      },
+      {
+        "seconds": 5,
+        "narration": "Rain outside. Rich warm chocolate inside. Our movie night begins.",
+        "imagePrompt": "Wide cozy hero view of the same red mug on the walnut table by the rainy window, a plate of fresh strawberries and marshmallows beside it, warm fairy lights, soft blanket edge; no visible movie imagery. Same small apartment on a cold November evening, dark walnut table by a rain-specked window, muted red ceramic mug, cream linen napkin, brass spoon, warm fairy-light bokeh, one pair of adult hands with natural nails. No visible TV imagery, labels, text, brand marks or extra people. Photorealistic luxury food commercial, natural edible chocolate texture, shallow depth of field, cinematic warm highlights and cool blue window light.",
+        "motionPrompt": "One hand dips a single strawberry into the chocolate and lifts it with a glossy coating; camera pulls back just enough to reveal the rain and warm lights. One continuous action, no cuts.",
+        "sound": "strawberry dip, soft rain, quiet original piano"
+      }
+    ],
+    "claimsToCheck": [
+      "Creative reference: https://www.youtube.com/shorts/F3x5u2ntqtY ; original visuals and audio required"
+    ]
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "creative reference, not evidence of a worldwide trend",
+    "sources": [
+      "https://www.youtube.com/shorts/F3x5u2ntqtY"
+    ]
+  },
+  "template": "hand-written-cozy-story"
+}

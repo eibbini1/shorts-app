@@ -7,7 +7,7 @@
 set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"; cd "$root"
 template="${1:?usage: make-film.sh TEMPLATE --slot key=value ... [--draft-only] [--no-crumb] [--id NAME]}"; shift
-slots=(); given=""; rep=""; draft=0; crumb=1; effects=1; punch=0; id=""; on_plate=0; source_video=""; pack_override=""; qa_work_dir=""; cache_only=0; chain_images=1
+slots=(); given=""; rep=""; draft=0; crumb=1; effects=1; punch=0; id=""; on_plate=0; source_video=""; pack_override=""; qa_work_dir=""; cache_only=0; chain_images=1; smart_template=1; template_model='qwen3:8b'
 while [ $# -gt 0 ]; do case "$1" in
   --slot) slots+=(--slot "$2"); shift 2 ;;
   --draft-only) draft=1; shift ;;
@@ -24,6 +24,8 @@ while [ $# -gt 0 ]; do case "$1" in
   --pack) pack_override="$2"; shift 2 ;;
   --qa-work-dir) qa_work_dir="$2"; shift 2 ;;
   --allow-repeat) rep="--allow-repeat"; shift ;;
+  --offline-template) smart_template=0; shift ;;
+  --template-model) template_model="$2"; shift 2 ;;
   *) echo "unknown option $1" >&2; exit 2 ;;
 esac; done
 [ -n "$id" ] || id="$template-$(date +%Y%m%d-%H%M)"
@@ -34,20 +36,26 @@ if [ -n "$given" ]; then
   echo "1/6 Using hand-written story scenario $given"; scenario="$given"; id="$(basename "$scenario" .local-scenario.json)"
 else
   echo "1/6 Build scenario from template '$template'"
-  python3 scripts/template_to_scenario.py "$template" ${slots[@]+"${slots[@]}"} ${rep:+--allow-repeat} --out "$scenario"
+  smart_args=(--model "$template_model"); [ "$smart_template" = 0 ] || smart_args+=(--smart); [ "$smart_template" = 1 ] || smart_args+=(--offline-template)
+  python3 scripts/template_to_scenario.py "$template" ${slots[@]+"${slots[@]}"} ${rep:+--allow-repeat} "${smart_args[@]}" --out "$scenario"
 fi
 if [ "$on_plate" = 1 ]; then
   [[ "$id" == juuni-ban* ]] || { echo '--crumb-on-plate currently supports only the reviewed Juuni Ban plate anchors.' >&2; exit 2; }
   crumb=1
 fi
 node scripts/bb-local-scenario.mjs --validate "$scenario"
+python3 scripts/preflight-short.py "$scenario" --strict ${rep:+--allow} || { echo 'Strict preflight blocked the draft.' >&2; exit 3; }
+python3 scripts/audit-local-story.py "$scenario" || { echo 'Story audit blocked the draft.' >&2; exit 3; }
+presentation_mode="$(python3 -c "import json,sys; sys.path.insert(0,'scripts'); from presentation_mode import choose; print(choose(json.load(open(sys.argv[1])))['mode'])" "$scenario")"
 [ "$draft" = 1 ] && { echo "Draft only: review $scenario, then run again without --draft-only."; exit 0; }
 expected_seconds="$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['settings']['seconds'])" "$scenario")"
+python3 scripts/evidence_gate.py "$scenario" || { echo 'Evidence gate blocked this film.' >&2; exit 3; }
+storage/tools/ComfyUI/.venv/bin/python scripts/add-sfx.py --scenario "$scenario" --audit || { echo 'Sound cue gate blocked this film.' >&2; exit 3; }
 [ -n "$qa_work_dir" ] || qa_work_dir="storage/any-local/$(basename "$scenario" .json)"
 qa_stage() {
   echo "Technical QA: $1"
   python3 scripts/qa-local-video.py --video "$1" --expected-seconds "$expected_seconds" \
-    --work-dir "$qa_work_dir" --report "$1.qa.json"
+    --scenario "$scenario" --work-dir "$qa_work_dir" --report "$1.qa.json"
 }
 
 if [ -n "$source_video" ]; then
@@ -100,7 +108,11 @@ if [ "$effects" = 1 ]; then
   qa_stage "$fx.1.mp4"
   cur="$fx.1.mp4"
   if [ "$punch" = 1 ]; then python3 scripts/brand-extras.py punch --scenario "$scenario" --video "$cur" --out "$fx.2.mp4"; cur="$fx.2.mp4"; qa_stage "$cur"; fi
-  python3 scripts/brand-extras.py seal --scenario "$scenario" --video "$cur" --out "${out%.mp4}.final.mp4" --text "$hook" --no-opening-text
+  if [ "$presentation_mode" = asmr ]; then
+    cp "$cur" "${out%.mp4}.final.mp4"
+  else
+    python3 scripts/brand-extras.py seal --scenario "$scenario" --video "$cur" --out "${out%.mp4}.final.mp4" --text "$hook" --no-opening-text
+  fi
   qa_stage "${out%.mp4}.final.mp4"
   rm -f "$fx".*.mp4
   out="${out%.mp4}.final.mp4"

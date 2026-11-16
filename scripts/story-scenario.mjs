@@ -5,12 +5,18 @@ import {promisify} from 'node:util';
 import {parseArgs} from 'node:util';
 import {z} from 'zod';
 import {scenarioSettings, verifyScenario} from './scenario-schema.mjs';
+import {fitOutlineIdeas, narrationWordBand} from './story-draft-utils.mjs';
 
-const args=parseArgs({allowPositionals:true,options:{style:{type:'string',default:'cinematic'},ending:{type:'string',default:''},title:{type:'string',default:''},format:{type:'string',default:'short'},seconds:{type:'string',default:'30'},model:{type:'string',default:'qwen3:1.7b'}}});
+const args=parseArgs({allowPositionals:true,options:{style:{type:'string',default:'cinematic'},ending:{type:'string',default:''},title:{type:'string',default:''},set:{type:'string',default:''},hook:{type:'string',default:''},'must-show':{type:'string',default:''},obstacle:{type:'string',default:''},turn:{type:'string',default:''},audio:{type:'string',default:'auto'},format:{type:'string',default:'short'},seconds:{type:'string',default:'30'},model:{type:'string',default:'qwen3:1.7b'}}});
 const execFileAsync=promisify(execFile);
+const masterPrompts=JSON.parse(await readFile(new URL('../data/master-prompts.json',import.meta.url),'utf8'));
 const [topic,id]=args.positionals;
 if (!topic?.trim() || !/^[a-z0-9][a-z0-9-]{0,79}$/.test(id??'')) throw new Error('Usage: node scripts/story-scenario.mjs "subject" draft-id [--style ...] [--ending ...] [--seconds 30]');
-const foodProcess=/\b(cook|cooking|sear|toast|assemble|bake|baking|food|hot dog|burger|scallop|steak|pizza|chocolate|pastry|dessert)\b/i.test(topic);
+const foodProcess=/\b(cook|cooking|sear|toast|assemble|bake|baking|food|hot dog|burger|scallop|steak|pizza|chocolate|pastry|dessert|bread|garlic|dumplings?|pasta|noodles?|drink|coffee|kebab|cabbage|arancini|recipe)\b/i.test(topic);
+const audioChoice=args.values.audio.toLowerCase();
+if(!['auto','asmr','voiced'].includes(audioChoice)) throw new Error('--audio must be auto, asmr, or voiced');
+const creativeBrief={set:args.values.set.trim(),hookImage:args.values.hook.trim(),mustShow:args.values['must-show'].trim(),obstacle:args.values.obstacle.trim(),turn:args.values.turn.trim(),audio:audioChoice};
+const briefRules=`Requested set: ${creativeBrief.set||'choose one consistent set'}. First visible hook: ${creativeBrief.hookImage||'choose one concrete food or story action'}. Required physical action: ${creativeBrief.mustShow||'choose one clear transformation'}. Physical obstacle: ${creativeBrief.obstacle||'choose a plausible food or story constraint'}. Technique or decision that solves it: ${creativeBrief.turn||'choose a visible solution'}. Preserve these user choices through the entire film.`;
 const hotDog=/\bhot[ -]?dog\b/i.test(topic);
 const prehistoricCars=/\b(flin(?:t)?ston(?:e)?s?|stone[ -]?age|caveman|prehistoric)\b/i.test(topic) && /\b(cars?|vehicles?|racing)\b/i.test(topic);
 const subjectRules=prehistoricCars?
@@ -19,6 +25,7 @@ const subjectRules=prehistoricCars?
 const forbiddenModern=/\b(fairlane|ford|chevrolet|ferrari|engine|carburetor|gasoline|petrol|fuel|gps|dashboard|asphalt|spark plug|exhaust|gearbox|piston|horsepower|repair manual)\b/i;
 function subjectIssue(value){return prehistoricCars && forbiddenModern.test(value);}
 const settings=scenarioSettings({brand:'Local Studio',format:args.values.format,seconds:args.values.seconds});
+settings.presentationMode=audioChoice;
 if (settings.seconds>60) throw new Error('Local story builder supports up to 60 seconds');
 const model=args.values.model;
 if (model.endsWith(':cloud')) throw new Error('Use an installed local Ollama model');
@@ -65,7 +72,8 @@ async function ask(schema,system,payload){
       }
       if(typeof raw!=='string') throw new Error('Local model returned no text');
       const body=raw.slice(raw.indexOf('{'),raw.lastIndexOf('}')+1);
-      return schema.parse(JSON.parse(body));
+      const parsed=JSON.parse(body);
+      return schema.parse(schema===outlineSchema?fitOutlineIdeas(parsed):parsed);
     }catch(error){
       last=error;
       if(model==='gemma-local' && error.code!==undefined){
@@ -86,7 +94,7 @@ const selected=count===2?['Hook and goal','Payoff and closing image']:
   count===6?(foodProcess?['Hook','Preparation','Heat','Build','Finish','Payoff']:['Hook','Goal','Obstacle','New plan','Action','Payoff']):
   Array.from({length:count},(_,i)=>core[Math.round(i*(core.length-1)/(count-1))]);
 const beats=selected.map((label,i)=>({number:i+1,label,seconds:durations[i]}));
-const outlineInstruction=`You are a visual story editor. ${subjectRules} Develop one concrete, filmable story from the user's subject. The title must describe the subject or visible payoff, and the hook must start the same story. Pick a specific protagonist or focal object, one setting, a visible goal, a physical obstacle that temporarily prevents the goal, a change of approach, and a satisfying visible outcome. ${foodProcess?'For a cooking transformation, make the obstacle a real texture or heat constraint and resolve it through visible cooking technique; never invent a disaster or unrelated mission. The six beats are hook, preparation, heat, build, finish, and payoff.':''} If the user gives an ending, the goal and payoff MUST directly be that ending. Do not invent another mission, destination or unrelated stakes. The requested ending is success, never the obstacle. The turn must visibly solve the obstacle, and the payoff must answer the opening. Avoid vague metaphors, repeated beauty shots, fabricated facts, and unsupported claims. Keep one consistent subject, lighting progression, props and location. Write compact JSON fields only.`;
+const outlineInstruction=`You are a visual story editor. ${masterPrompts.story} ${foodProcess?masterPrompts.foodStory:''} ${masterPrompts.montage} ${subjectRules} ${briefRules} Develop one concrete, filmable story from the user's subject. The title must describe the subject or visible payoff, and the hook must start the same story. Pick a specific protagonist or focal object, one setting, a visible goal, a physical obstacle that temporarily prevents the goal, a change of approach, and a satisfying visible outcome. ${foodProcess?'For a cooking transformation, make the obstacle a real texture or heat constraint and resolve it through visible cooking technique; never invent a disaster or unrelated mission. The six beats are hook, preparation, heat, build, finish, and payoff.':''} If the user gives an ending, the goal and payoff MUST directly be that ending. Do not invent another mission, destination or unrelated stakes. The requested ending is success, never the obstacle. The turn must visibly solve the obstacle, and the payoff must answer the opening. Avoid vague metaphors, repeated beauty shots, fabricated facts, and unsupported claims. Keep one consistent subject, lighting progression, props and location. Write compact JSON fields only.`;
 const anchorWords=new Set((args.values.ending.toLowerCase().match(/[a-z]{5,}/g)||[]).filter(word=>!['after','around','before','driver','takes','taking','reaches','reach','along','while','through','there','their','where','which','empty','small','safe','sunrise','sunset','morning','night'].includes(word)));
 function endingMatches(goal){
   if(!anchorWords.size) return true;
@@ -102,7 +110,7 @@ let outline;
 let endingLocked=false;
 for(let attempt=1;attempt<=2;attempt++){
   outline=await ask(outlineSchema,outlineInstruction,
-    {topic,style:args.values.style,requestedTitle:args.values.title||undefined,requestedEnding:args.values.ending||'Choose a concrete satisfying ending',seconds:settings.seconds,
+    {topic,style:args.values.style,creativeBrief,requestedTitle:args.values.title||undefined,requestedEnding:args.values.ending||'Choose a concrete satisfying ending',seconds:settings.seconds,
       correction:attempt>1?`Your prior outline violated this requirement: ${subjectRules} Keep the requested ending as the literal goal and payoff when one was supplied.`:undefined});
   const storyText=[outline.title,outline.hook,outline.payoff,outline.protagonist,outline.setting,outline.goal,outline.obstacle,outline.turn,outline.visualBible].join(' ');
   const subjectMiss=subjectIssue(storyText) || (prehistoricCars && !/\b(stone|wood|prehistoric|caveman|foot-powered|foot powered)\b/i.test(storyText));
@@ -122,6 +130,13 @@ if(args.values.ending && !endingMatches(outline.payoff)){
   console.log('Locked the final payoff to the exact ending you requested');
 }
 if(args.values.title) outline.title=args.values.title;
+if(creativeBrief.set){
+  outline.setting=creativeBrief.set;
+  outline.visualBible=`Locked setting: ${creativeBrief.set}. ${outline.visualBible}`.slice(0,1000);
+}
+if(creativeBrief.hookImage) outline.hook=creativeBrief.hookImage;
+if(creativeBrief.obstacle) outline.obstacle=creativeBrief.obstacle;
+if(creativeBrief.turn) outline.turn=creativeBrief.turn;
 console.log(`Story spine: ${outline.goal} → ${outline.obstacle} → ${outline.turn} → ${outline.payoff}`);
 const shots=[];
 const normalize=text=>text.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
@@ -202,33 +217,35 @@ function fallbackNarration(beat){
   return `One journey leads toward ${goal}.`;
 }
 function shortenNarration(text,seconds){
-  const limit=Math.ceil(seconds*2.5);
+  const {min:minimum,max:limit}=narrationWordBand(seconds);
   const words=text.trim().split(/\s+/);
   if(words.length<=limit) return text;
   const sentences=text.match(/[^.!?]+[.!?]?/g)?.map(item=>item.trim())??[];
-  const fit=sentences.find(sentence=>sentence.split(/\s+/).length<=limit);
+  const fit=sentences.find(sentence=>sentence.split(/\s+/).length>=minimum && sentence.split(/\s+/).length<=limit);
   return fit || words.slice(0,limit).join(' ').replace(/[,;:]+$/,'')+'.';
 }
 for(let i=0;i<count;i++){
   const beat=beats[i];
+  const {min:minWords,max:maxWords}=narrationWordBand(beat.seconds);
   let shot;
   let issues=[];
   for(let attempt=1;attempt<=2;attempt++){
     shot=await ask(shotSchema,
-      `Write ONE shot for ONE specific story beat. ${subjectRules} Follow the beat directive literally. Keep the same subject, location, props and lighting progression from the outline. Do not include any event assigned to a later beat. The imagePrompt depicts the START of one distinct physical event, not its finished result. The motionPrompt must name the subject and describe a physical start, visible action and changed end state; include one camera move tracking that action in a single continuous take. No camera-only pans or zooms over a static pose, no cut or montage. Narration is one specific sentence, about four to ten words for a five-second shot. No unsupported facts or generic mood-only phrases. Sound names one localized effect synchronized with the action; for food use cues such as sizzle, slice, pour, crunch or utensil clink when physically appropriate. Output only JSON.`,
-      {topic,style:args.values.style,outline,beat,directive:beatDirective(beat),reviewedShotExamples,previousShots:shots.map((item,j)=>({beat:beats[j].label,imagePrompt:item.imagePrompt,motionPrompt:item.motionPrompt})),
-        correction:attempt>1?`The last answer repeated a scene, included a cut, changed the subject, or had unsuitable narration. ${subjectRules} Make this beat visibly distinct and speakable.`:undefined});
+      `Write ONE shot for ONE specific story beat. ${masterPrompts.shot} ${masterPrompts.footage} ${masterPrompts.sound} ${subjectRules} ${briefRules} Follow the beat directive literally. Keep the same subject, location, props and lighting progression from the outline. Do not include any event assigned to a later beat. The imagePrompt depicts the START of one distinct physical event, not its finished result. The motionPrompt must name the subject and describe a physical start, visible action and changed end state; include one camera move tracking that action in a single continuous take. No camera-only pans or zooms over a static pose, no cut or montage. Narration should be one speakable specific sentence, ideally ${Math.min(maxWords,Math.max(minWords,Math.ceil(beat.seconds*1.8)))} to ${maxWords} words for this ${beat.seconds}-second shot; a shorter line is acceptable only if the scene has a sound-led pause. For the hook, name the exact subject and a visible action, then add a truthful quantity, contrast, or question if natural; do not invent a fact. No unsupported facts or generic mood-only phrases. Sound names one localized effect synchronized with the action; for food use cues such as sizzle, slice, pour, crunch or utensil clink when physically appropriate. Output only JSON.`,
+      {topic,style:args.values.style,creativeBrief,outline,beat,directive:beatDirective(beat),reviewedShotExamples,previousShots:shots.map((item,j)=>({beat:beats[j].label,imagePrompt:item.imagePrompt,motionPrompt:item.motionPrompt})),
+        correction:attempt>1?`The last answer repeated a scene, included a cut, changed the subject, or had unsuitable narration. The narration MUST contain ${minWords} to ${maxWords} words in one natural sentence. ${subjectRules} Make this beat visibly distinct and speakable.`:undefined});
     const words=shot.narration.split(/\s+/).length;
     issues=[];
     if(subjectIssue(Object.values(shot).join(' '))) issues.push('subject');
     if(seenImages.some(value=>similar(value,shot.imagePrompt,0.85))) issues.push('image');
     if(seenMotion.some(value=>similar(value,shot.motionPrompt,0.85))||/\b(cut to|quick cut|montage|transition to)\b/i.test(shot.motionPrompt)) issues.push('motion');
-    if(seenNarration.some(value=>similar(value,shot.narration,0.85))||words>Math.ceil(beat.seconds*2.5)||
-       words<Math.max(3,Math.floor(beat.seconds*0.8))) issues.push('narration');
+    if(seenNarration.some(value=>similar(value,shot.narration,0.85))||words>maxWords||words<minWords) issues.push('narration');
     if(!issues.length) break;
     rewriteCount++;
     if(attempt===2){
       if(issues.includes('subject')) throw new Error(`Beat ${i+1} changed the requested subject. No scenario was saved or rendered.`);
+      if(issues.includes('narration') && (words<minWords || seenNarration.some(value=>similar(value,shot.narration,0.85))))
+        throw new Error(`Beat ${i+1} narration is too short or repeats another line (${words} words; ${minWords}-${maxWords} preferred). No scenario was saved or rendered; give a more specific action or try another installed local story model.`);
       console.log(`Repairing ${issues.join(', ')} in beat ${i+1}; review it closely`);
       fallbackCount+=issues.length;
       break;
@@ -236,7 +253,7 @@ for(let i=0;i<count;i++){
     console.log(`Rewriting beat ${i+1} (${issues.join(', ')}) before saving`);
   }
   const action=beatAction(beat);
-  const narration=issues.includes('narration')?fallbackNarration(beat):shot.narration;
+  const narration=shot.narration;
   let image=issues.includes('image')?`${action}. Same ${outline.protagonist} in ${outline.setting}. ${args.values.style}.`:
     `${shot.imagePrompt}${/consistent subject/i.test(shot.imagePrompt)?'':` Consistent subject: ${outline.protagonist.replace(/[.!?]+$/,'')}.`} Visual style: ${args.values.style}.`;
   let motion=issues.includes('motion')?`${action}. One continuous shot. The subject moves visibly while the camera tracks the action.`:
@@ -253,7 +270,7 @@ for(let i=0;i<count;i++){
     motion+=' Preserve the same long cylindrical sausage and elongated bun only when that stage includes them; no shape change or extra sausage.';
   }
   if(!prehistoricCars && (hotDog || /\b(kitchen|chef|pan|sausage|dish|food|chocolate|steak|pizza|cheese|scallop)\b/i.test(`${topic} ${outline.setting}`))){
-    image+=' Continuity: one chef, one white-gloved hand, same copper pan and black slate, warm tungsten light.';
+    image+=` Continuity: same ${creativeBrief.set||outline.setting}; retain the same named dish, tools, surface and lighting from the visual bible.`;
   }
   shots.push({seconds:beat.seconds,narration:shortenNarration(narration,beat.seconds),
     imagePrompt:image.slice(0,1000),motionPrompt:motion.slice(0,1000),sound:shot.sound});
@@ -270,7 +287,11 @@ const overlong=shots.flatMap((shot,i)=>shot.narration.split(/\s+/).length>Math.c
 if(overlong.length) throw new Error(`Narration too long in shots ${overlong.join(', ')}; rerun with a more specific ending`);
 const plan={ideas:outline.ideas,title:outline.title,hook:outline.hook,payoff:outline.payoff,shots,claimsToCheck:[]};
 verifyScenario(plan,settings);
-const saved={status:'review-required',settings,model,topic,style:args.values.style,requestedEnding:args.values.ending||null,totalSeconds:settings.seconds,storyArc:{protagonist:outline.protagonist,setting:outline.setting,goal:outline.goal,obstacle:outline.obstacle,turn:outline.turn,visualBible:outline.visualBible,beats},qualityChecks:{exactTiming:true,uniquePromptText:true,narrationFits:true,endingLockedFromUser:endingLocked,rewrites:rewriteCount,fieldsNeedingRepair:fallbackCount,reviewedShotExamplesUsed:reviewedShotExamples.length},plan};
+const formatFamily=/\b(guess|price)\b/i.test(topic)?'guess-the-price':
+  /\b(level|levels|upgrade)\b/i.test(topic)?'ingredient-basket-level-up':
+  audioChoice==='asmr'?'tactile-recipe-reveal':'food-process-story';
+const creativeSignature=foodProcess?{format:formatFamily,set:outline.setting,hookPattern:creativeBrief.hookImage||outline.hook}:undefined;
+const saved={status:'review-required',settings,model,promptPackVersion:masterPrompts.version,creativeBrief,...(creativeSignature?{creativeSignature}:{}),topic,style:args.values.style,requestedEnding:args.values.ending||null,totalSeconds:settings.seconds,storyArc:{protagonist:outline.protagonist,setting:outline.setting,goal:outline.goal,obstacle:outline.obstacle,turn:outline.turn,visualBible:outline.visualBible,beats},qualityChecks:{exactTiming:true,uniquePromptText:true,narrationFits:true,endingLockedFromUser:endingLocked,rewrites:rewriteCount,fieldsNeedingRepair:fallbackCount,reviewedShotExamplesUsed:reviewedShotExamples.length},plan};
 await mkdir('drafts/generated',{recursive:true});
 const file=`drafts/generated/${id}.local-scenario.json`;
 await writeFile(file,JSON.stringify(saved,null,2)+'\n',{flag:'wx'});

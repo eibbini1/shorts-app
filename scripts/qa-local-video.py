@@ -7,6 +7,7 @@ Checks: black frames, frozen picture, loudness (target about -16 LUFS), clipping
 length 20-35 s, and that narration starts within 1 s (hook spoken early). Exit 1 when a check fails.
 """
 import argparse
+import hashlib
 import json
 import re
 import subprocess
@@ -14,10 +15,20 @@ import sys
 from pathlib import Path
 
 from first_checks import longest_freeze as measure_freeze
+from first_checks import picture_problem
+from presentation_mode import choose as choose_presentation
 
 
 def ffmpeg_log(args):
     return subprocess.run(['ffmpeg', '-hide_banner', '-nostats', *args], capture_output=True, text=True).stderr
+
+
+def file_sha256(path):
+    digest = hashlib.sha256()
+    with path.open('rb') as source:
+        for block in iter(lambda: source.read(1024 * 1024), b''):
+            digest.update(block)
+    return digest.hexdigest()
 
 
 def main():
@@ -27,8 +38,10 @@ def main():
     parser.add_argument('--report', type=Path, help='Write QA results for this exact final file')
     parser.add_argument('--work-dir', type=Path)
     parser.add_argument('--expected-seconds', type=float, help='Require the final duration to match the scenario, within 0.15 s')
+    parser.add_argument('--scenario', type=Path, help='Use its presentation mode for voiced or visual hook QA')
     args = parser.parse_args()
     video = args.video.resolve()
+    video_sha256 = file_sha256(video)
     duration = float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', str(video)],
                                     capture_output=True, text=True).stdout.strip())
     results, failures = {}, []
@@ -64,13 +77,18 @@ def main():
         stem = re.sub(r'-\d{8}-\d{6}$', '', stem)
         candidate = video.parent.parent / 'storage/any-local' / f'{stem}.local-scenario'
         work = candidate if candidate.is_dir() else None
-    if work and (work / 'voice-provenance.json').is_file():
+    presentation = choose_presentation(json.loads(args.scenario.read_text(encoding='utf-8-sig'))) if args.scenario else {'mode': 'voiced'}
+    if presentation['mode'] == 'asmr':
+        problem = picture_problem(video, at=0.2)
+        results['visualHookEarly'] = {'firstFrameAtSeconds': 0.2, 'ok': problem is None,
+                                      'note': problem or 'visible opening; speech intentionally absent'}
+    elif work and (work / 'voice-provenance.json').is_file():
         lines = json.loads((work / 'voice-provenance.json').read_text())['lines']
         start = lines[0]['atSeconds'] if lines else None
         results['hookSpokenEarly'] = {'firstLineAtSeconds': start, 'ok': start is not None and start <= 1.0}
     else:
-        results['hookSpokenEarly'] = {'ok': work is None,
-                                      'note': 'voice timeline not found; cannot verify hook' if work else 'voice timeline not supplied, skipped'}
+        results['hookSpokenEarly'] = {'ok': False,
+                                      'note': 'voice timeline not found; cannot verify early spoken hook'}
 
     for name, item in results.items():
         status = 'ok' if item['ok'] else 'FAIL'
@@ -80,12 +98,13 @@ def main():
             failures.append(name)
     if args.report:
         args.report.parent.mkdir(parents=True, exist_ok=True)
-        args.report.write_text(json.dumps({'video': str(video), 'passed': not failures,
+        args.report.write_text(json.dumps({'video': str(video), 'videoSha256': video_sha256, 'passed': not failures,
                                            'failed': failures, 'checks': results}, indent=2) + '\n')
     pack = args.pack or (video.with_name(video.name.replace('.captioned.mp4', '.pack.json')) if '.captioned.mp4' in video.name else None)
     if pack and pack.is_file():
         data = json.loads(pack.read_text())
-        data['qa'] = {'passed': not failures, 'failed': failures, 'checks': results}
+        data['qa'] = {'video': str(video), 'videoSha256': video_sha256,
+                      'passed': not failures, 'failed': failures, 'checks': results}
         pack.write_text(json.dumps(data, indent=2) + '\n')
         print(f'Wrote qa block to {pack.name}')
     sys.exit(1 if failures else 0)

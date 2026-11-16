@@ -1,5 +1,6 @@
-import json, shutil, subprocess, sys, tempfile, unittest
+import io, json, shutil, subprocess, sys, tempfile, unittest
 from pathlib import Path
+from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -47,6 +48,49 @@ class TemplateToScenario(unittest.TestCase):
     def test_unknown_template(self):
         with self.assertRaises(ValueError):
             B.build('nope', {})
+
+    def test_templates_use_distinct_sets_and_owner_override(self):
+        templates = T.load_all()
+        process = B.build('process-reveal', slots_for(templates['process-reveal']))
+        price = B.build('guess-the-price', slots_for(templates['guess-the-price']))
+        self.assertNotEqual(process['creativeSignature']['set'], price['creativeSignature']['set'])
+        self.assertIn('walnut board', process['plan']['shots'][0]['imagePrompt'])
+        custom = B.build('process-reveal', {**slots_for(templates['process-reveal']),
+                                            'visual_set': 'sunlit garden kitchen',
+                                            'surface': 'ceramic serving board', 'pan': 'cast-iron skillet',
+                                            'hand': 'bare hand', 'visual_style': 'warm daylight food film'})
+        first = custom['plan']['shots'][0]['imagePrompt']
+        self.assertIn('sunlit garden kitchen', first)
+        self.assertIn('ceramic serving board', first)
+        self.assertNotIn('black slate', first)
+        self.assertNotIn('copper pan', first)
+
+    def test_unsourced_template_prices_are_blocked_by_evidence_gate(self):
+        templates = T.load_all()
+        price_templates = {'countdown', 'guess-the-price', 'same-item-two-prices', 'would-you-rather-menu'}
+        for tid in price_templates:
+            with self.subTest(template=tid), tempfile.TemporaryDirectory() as folder:
+                scenario = B.build(tid, slots_for(templates[tid]))
+                path = Path(folder) / 'scenario.json'
+                path.write_text(json.dumps(scenario))
+                result = subprocess.run(['python3', str(HERE / 'evidence_gate.py'), str(path)],
+                                        capture_output=True, text=True)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('visible price', result.stdout)
+
+    def test_local_refinement_preserves_template_facts_and_timing(self):
+        template = T.load_all()['process-reveal']
+        original = B.build('process-reveal', slots_for(template))
+        before = [(shot['seconds'], shot['narration']) for shot in original['plan']['shots']]
+        rows = [{'imagePrompt': 'Fresh image: ' + shot['imagePrompt'],
+                 'motionPrompt': 'Fresh motion: ' + shot['motionPrompt'],
+                 'sound': 'quiet kitchen room tone'} for shot in original['plan']['shots']]
+        response = io.BytesIO(json.dumps({'message': {'content': json.dumps({'shots': rows})}}).encode())
+        with patch.object(B.urllib.request, 'urlopen', return_value=response):
+            revised = B.refine_with_ollama(original, 'qwen3:8b')
+        self.assertEqual(before, [(shot['seconds'], shot['narration']) for shot in revised['plan']['shots']])
+        self.assertEqual(revised['model'], 'template+ollama/qwen3:8b')
+        self.assertIn('Fresh image:', revised['plan']['shots'][0]['imagePrompt'])
 
     @unittest.skipUnless(shutil.which('node'), 'node not installed')
     def test_existing_validator_accepts_output(self):

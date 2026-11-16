@@ -1,5 +1,6 @@
 """Progress display for a local scenario, including runs started before this module existed."""
 import argparse
+import hashlib
 import json
 import math
 import subprocess
@@ -8,6 +9,17 @@ from io import BytesIO
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def current_run(scenario, work):
+    state = work / 'progress-run.json'
+    try:
+        data = json.loads(state.read_text())
+        if data.get('scenarioSha256') == hashlib.sha256(scenario.read_bytes()).hexdigest():
+            return data
+    except (OSError, ValueError):
+        pass
+    return None
 
 
 def clip_is_complete(path):
@@ -24,16 +36,20 @@ def snapshot(scenario, work, output=None, active_clip=None, elapsed=0, observed=
     data = json.loads(scenario.read_text(encoding='utf-8-sig'))
     shots = data['plan']['shots']
     total = sum(math.ceil(shot['seconds']/5) for shot in shots)
-    completed = []
-    for i, shot in enumerate(shots):
-        for part in range(math.ceil(shot['seconds']/5)):
-            candidates = list((work/'motion').glob(f'shot-{i:02d}-part-{part:02d}-*.mp4'))
-            if any(clip_is_complete(path) for path in candidates): completed.append((i, part))
+    run = current_run(scenario, work)
+    if run:
+        completed = [pair for pair in run.get('completed', []) if len(pair) == 2]
+    else:
+        completed = []
+        for i, shot in enumerate(shots):
+            for part in range(math.ceil(shot['seconds']/5)):
+                candidates = list((work/'motion').glob(f'shot-{i:02d}-part-{part:02d}-*.mp4'))
+                if any(clip_is_complete(path) for path in candidates): completed.append((i, part))
     count = len(completed)
     remaining = total-count
     if observed:
         rate = sum(observed)/len(observed)
-    elif count >= 2:
+    elif count >= 2 and not run:
         stamps = sorted(path.stat().st_mtime for path in (work/'motion').glob('shot-*-part-*.mp4') if clip_is_complete(path))
         rate = max(150, min(360, (stamps[-1]-stamps[0])/(len(stamps)-1)))
     else:
@@ -111,7 +127,8 @@ def main():
         print(f'Preview saved: {make_preview(scenario, work)}', flush=True)
         return
     while True:
-        current_output = output or discover_output(scenario, work)
+        run = current_run(scenario, work)
+        current_output = output or (Path(run['output']) if run and run.get('output') else discover_output(scenario, work))
         print(snapshot(scenario, work, current_output), flush=True)
         if not args.watch or (current_output and current_output.is_file()): break
         time.sleep(30)

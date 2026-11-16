@@ -15,6 +15,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from presentation_mode import choose as choose_presentation
 
 ROOT = Path(__file__).resolve().parents[1]
 NON_USD = re.compile(r'\b(yen|dirhams?|rupees?|pounds?|euros?|£|€)\b|[£€¥]', re.I)
@@ -22,10 +23,10 @@ CONTRAST = re.compile(r'\b(vs\.?|versus|same|instead|but|only|yet)\b', re.I)
 BANNED = re.compile(r'\b(illegal|banned|ban|forbidden|outlawed)\b', re.I)
 NUMBER = re.compile(r'\d|\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion)\b', re.I)
 VAGUE_OPEN = re.compile(r'^(this|these|the|a|an)\b', re.I)
-VISIBLE_ACTION = re.compile(r'\b(lift\w*|lower\w*|spread\w*|pull\w*|push\w*|pour\w*|drip\w*|jump\w*|run\w*|walk\w*|roll\w*|spin\w*|bite\w*|chew\w*|slic\w*|chop\w*|stir\w*|grab\w*|reach\w*|open\w*|clos\w*|arrang\w*|melt\w*|bubbl\w*|rac\w*|carry\w*|drop\w*|catch\w*|cross\w*|serv\w*|eat\w*|driv\w*|pedal\w*|sprinkl\w*|squeez\w*|sear\w*|bast\w*|plat\w*|flip\w*|toss\w*|fold\w*|trac\w*|step\w*|climb\w*|break\w*|crack\w*|glid\w*)\b', re.I)
+VISIBLE_ACTION = re.compile(r'\b(lift\w*|lower\w*|spread\w*|pull\w*|push\w*|pour\w*|drip\w*|jump\w*|run\w*|walk\w*|roll\w*|spin\w*|bite\w*|chew\w*|slic\w*|chop\w*|stir\w*|grab\w*|reach\w*|open\w*|clos\w*|arrang\w*|melt\w*|bubbl\w*|rac\w*|carry\w*|drop\w*|catch\w*|cross\w*|serv\w*|eat\w*|driv\w*|pedal\w*|sprinkl\w*|squeez\w*|sear\w*|bast\w*|plat\w*|flip\w*|toss\w*|fold\w*|trac\w*|step\w*|climb\w*|break\w*|crack\w*|glid\w*|add\w*|present\w*|adjust\w*|smash\w*|press\w*|toast\w*|stack\w*)\b', re.I)
 
 
-def hook_score(line):
+def hook_score(line, topic=''):
     words = line.split()
     score, notes = 40, []
     if NUMBER.search(line):
@@ -46,6 +47,12 @@ def hook_score(line):
         score -= 10; notes.append('vague opening')
     if NON_USD.search(line):
         score -= 15; notes.append('non-USD currency')
+    subject_words = {word for word in re.findall(r'[a-z]{4,}', topic.lower())
+                     if word not in {'with', 'from', 'this', 'that', 'video', 'short', 'story', 'cooking'}}
+    if subject_words.intersection(re.findall(r'[a-z]{4,}', line.lower())):
+        score += 15; notes.append('names the subject')
+    if VISIBLE_ACTION.search(line):
+        score += 10; notes.append('visible action')
     return max(0, min(100, score)), notes
 
 
@@ -55,6 +62,7 @@ def main():
         sys.exit(__doc__)
     data = json.loads(Path(args[0]).read_text(encoding='utf-8-sig'))
     plan, settings = data['plan'], data['settings']
+    presentation = choose_presentation(data)
     problems, warnings = [], []
     topic = subprocess.run([sys.executable, str(ROOT / 'scripts/topic-check.py'), plan['title'] + ' ' + data.get('topic', ''), '--allow'],
                            capture_output=True, text=True)
@@ -62,26 +70,33 @@ def main():
     if topic.stdout.startswith('Repeat'):
         problems.append('repeat topic')
     first = plan['shots'][0]['narration']
-    score, notes = hook_score(first)
-    print(f'Hook: "{first}" -> {score}/100 ({"; ".join(notes)})')
-    if score < 60:
+    score, notes = hook_score(first, data.get('topic', '') or plan.get('title', ''))
+    if presentation['voice']:
+        print(f'Hook: "{first}" -> {score}/100 ({"; ".join(notes)})')
+    else:
+        print('Visual hook: ASMR mode; inspect the first moving shot before release.')
+    if presentation['voice'] and score < 60:
         message = f'weak hook ({score}/100): open with a concrete subject and a short curiosity gap'
         (problems if '--strict' in sys.argv else warnings).append(message)
     seconds = settings['seconds']
     words = sum(len(s['narration'].split()) for s in plan['shots'])
-    print(f'Length: {seconds} s, {words} narrated words ({words / seconds:.1f} per second)')
-    if not 20 <= seconds <= 35:
-        warnings.append('length outside the 20-35 s band')
-    if words / seconds > 3.2:
+    if presentation['voice']:
+        print(f'Length: {seconds} s, {words} narrated words ({words / seconds:.1f} per second)')
+    else:
+        print(f'Length: {seconds} s, no narration in {presentation["mode"]} mode; shot text is for planning only')
+    if not 10 <= seconds <= 35:
+        warnings.append('length outside the 10-35 s local Short band')
+    if presentation['voice'] and words / seconds > 3.2:
         warnings.append('narration too dense for the time')
     # Per-shot pacing: speech runs about 2.6 words per second. A shot much longer than its line leaves dead air.
     for i, shot in enumerate(plan['shots'], 1):
-        speech = len(shot['narration'].split()) / 2.6 + 0.3
-        gap = shot['seconds'] - speech
-        if gap > 1.2:
-            warnings.append(f'shot {i}: line fills about {speech:.1f} s of {shot["seconds"]} s, so about {gap:.1f} s of silence; shorten the shot to {speech + 0.6:.0f} s or add words')
-        elif gap < -0.2:
-            warnings.append(f'shot {i}: line needs about {speech:.1f} s but the shot is {shot["seconds"]} s; trim words or lengthen the shot')
+        if presentation['voice']:
+            speech = len(shot['narration'].split()) / 2.6 + 0.3
+            gap = shot['seconds'] - speech
+            if gap > 1.2:
+                warnings.append(f'shot {i}: line fills about {speech:.1f} s of {shot["seconds"]} s, so about {gap:.1f} s of silence; shorten the shot to {speech + 0.6:.0f} s or add words')
+            elif gap < -0.2:
+                warnings.append(f'shot {i}: line needs about {speech:.1f} s but the shot is {shot["seconds"]} s; trim words or lengthen the shot')
         if not VISIBLE_ACTION.search(shot['motionPrompt']):
             warnings.append(f'shot {i}: motion prompt has no recognizable physical action; review it for camera-only movement before rendering')
     if NON_USD.search(first):

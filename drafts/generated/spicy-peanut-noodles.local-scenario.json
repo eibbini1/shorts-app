@@ -1,0 +1,79 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 15,
+    "voice": "af_heart",
+    "presentationMode": "voiced"
+  },
+  "model": "hand-written",
+  "topic": "Spicy Peanut Noodles: a quick trending home recipe in three beats",
+  "style": "photoreal luxury designer kitchen, dark navy cabinetry with brass fixtures, polished black and gold marble counter, copper cookware, gold utensils, one emerald green enamel accent, warm soft key light with window glow, macro food close-ups with a few hands only, no faces, steam and texture visible, shallow depth of field, vertical framing",
+  "requestedEnding": "Chopsticks lift glossy peanut noodles and the sauce clings and shines.",
+  "totalSeconds": 15,
+  "template": "story",
+  "plan": {
+    "ideas": [
+      {
+        "title": "Spicy Peanut Noodles",
+        "angle": "three-beat quick recipe"
+      },
+      {
+        "title": "Spicy Peanut Noodles idea 2",
+        "angle": "macro hero close-up"
+      },
+      {
+        "title": "Spicy Peanut Noodles idea 3",
+        "angle": "steam and texture payoff"
+      },
+      {
+        "title": "Spicy Peanut Noodles idea 4",
+        "angle": "hands only, food first"
+      },
+      {
+        "title": "Spicy Peanut Noodles idea 5",
+        "angle": "save-for-later dinner"
+      }
+    ],
+    "title": "Spicy Peanut Noodles",
+    "hook": "Ten minutes, one bowl, yet noodles this creamy. Want the sauce?",
+    "payoff": "Chopsticks lift glossy peanut noodles and the sauce clings and shines.",
+    "shots": [
+      {
+        "seconds": 5,
+        "narration": "Ten minutes, one bowl, yet noodles this creamy. Want the sauce?",
+        "imagePrompt": "Photoreal close-up of a small bowl of creamy peanut sauce being whisked with a spoon, chili oil swirling in. The food is the clear hero of the frame. Visual style: photoreal luxury designer kitchen, dark navy cabinetry with brass fixtures, polished black and gold marble counter, copper cookware, gold utensils, one emerald green enamel accent, warm soft key light with window glow, macro food close-ups with a few hands only, no faces, steam and texture visible, shallow depth of field, vertical framing. Continuity: the same glossy noodles coated in spicy peanut sauce with sliced scallions, sesame seeds and crushed peanuts in a emerald enamel bowl and the same luxury designer kitchen throughout. No faces, no text, no labels.",
+        "motionPrompt": "A hand stirs the peanut butter sauce with a spoon while chili oil swirls in. Camera locked.",
+        "sound": "whisk against bowl, thick sauce stir"
+      },
+      {
+        "seconds": 5,
+        "narration": "Peanut butter, soy, garlic and chili oil, whisked until smooth.",
+        "imagePrompt": "Photoreal close-up of hot cooked noodles tossed in tongs above a bowl with dark glossy peanut sauce. The food is the clear hero of the frame. Visual style: photoreal luxury designer kitchen, dark navy cabinetry with brass fixtures, polished black and gold marble counter, copper cookware, gold utensils, one emerald green enamel accent, warm soft key light with window glow, macro food close-ups with a few hands only, no faces, steam and texture visible, shallow depth of field, vertical framing. Continuity: the same glossy noodles coated in spicy peanut sauce with sliced scallions, sesame seeds and crushed peanuts in a emerald enamel bowl and the same luxury designer kitchen throughout. No faces, no text, no labels.",
+        "motionPrompt": "Tongs lift the hot noodles and toss them in the glossy peanut sauce until coated. Camera locked.",
+        "sound": "tongs toss, wet noodles, sauce slap"
+      },
+      {
+        "seconds": 5,
+        "narration": "Top with scallions and peanuts. Slurp it. Save this one.",
+        "imagePrompt": "Photoreal close-up of a emerald enamel bowl of glossy spicy peanut noodles with scallions, sesame seeds and crushed peanuts. The food is the clear hero of the frame. Visual style: photoreal luxury designer kitchen, dark navy cabinetry with brass fixtures, polished black and gold marble counter, copper cookware, gold utensils, one emerald green enamel accent, warm soft key light with window glow, macro food close-ups with a few hands only, no faces, steam and texture visible, shallow depth of field, vertical framing. Continuity: the same glossy noodles coated in spicy peanut sauce with sliced scallions, sesame seeds and crushed peanuts in a emerald enamel bowl and the same luxury designer kitchen throughout. No faces, no text, no labels.",
+        "motionPrompt": "Chopsticks lift glossy peanut noodles and the sauce clings and shines. Camera locked.",
+        "sound": "chopstick lift, soft slurp, crunch of peanuts"
+      }
+    ],
+    "claimsToCheck": [
+      "Dish named on a 2026 recipe list; confirm the original recipe credit before publishing",
+      "AI-generated original footage; no reference footage, audio or branding reused",
+      "Do not state protein or time figures as facts without a source"
+    ]
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "dish named on a 2026 recipe list (Bon Appetit gallery); pacing reference only, not a verified view trend",
+    "sources": [
+      "https://www.bonappetit.com/gallery/best-recipes-2026",
+      "https://www.youtube.com/shorts/bkUpOMCZ9GQ"
+    ]
+  }
+}

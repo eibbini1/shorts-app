@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-11-15",
+  "scope": "English YouTube Shorts returned by three vidIQ outlier searches for smash burgers, crisp food, and luxury food. This is a small discovery sample, not a global top-ten ranking or a forecast for Billionaire Bites.",
+  "channelContext": "The vidIQ connection returned no owned YouTube channels. BB retention, audience fit, and actual upload signatures are unknown.",
+  "sourcePolicy": "Use the linked videos as research evidence. Make original recipes, footage, sounds, hooks, and edits; clear music rights before publishing.",
+  "sources": [
+    {
+      "id": "burger-quest-lacy",
+      "url": "https://www.youtube.com/shorts/MfVKcoYMM-o",
+      "title": "Is this the LACIEST smashburger in Brisbane?!",
+      "channel": "Burger Quest",
+      "publishedAt": "2026-10-11",
+      "durationSeconds": 23,
+      "vidiqSnapshot": {"views": 178500, "breakoutMultiple": 20, "viewsPerHour": 216.3, "engagementRate": 0.021},
+      "reviewDepth": "vidIQ outlier metadata, actual cover, and timestamped vidIQ short-form walkthrough",
+      "observedCover": "Vertical tight finished burger, glossy bun pressed by a gloved finger, crisp beef edges and flowing cheese fill the frame.",
+      "observedEdit": "Finished burger at 0-1 s; griddle smash at 1-6 s; flip, cheese and stack at 7-14 s; sauce, assembly and presentation at 15-23 s. Walkthrough places cuts near 5, 8, 10, 16 and 20 s.",
+      "observedAudio": "No dedicated voiceover. The walkthrough reports griddle sizzle, spatula scrape, kitchen chatter and faint incidental music; the music was not identified or cleared."
+    },
+    {
+      "id": "ace-shawarma-smash",
+      "url": "https://www.youtube.com/shorts/cWtrRGx2r1M",
+      "title": "Perfect smashburgers at Ace shawarma",
+      "channel": "Ace Shawarma New York",
+      "publishedAt": "2026-10-11",
+      "durationSeconds": 17,
+      "vidiqSnapshot": {"views": 29100, "breakoutMultiple": 13, "viewsPerHour": 38.2, "engagementRate": 0.011},
+      "reviewDepth": "vidIQ outlier metadata and actual cover; motion and sound not inspected",
+      "observedCover": "Hands, griddle, browned patties, bun halves and a cheese placement are visible in one close working-kitchen frame."
+    },
+    {
+      "id": "oklahoma-double",
+      "url": "https://www.youtube.com/shorts/L7XVrNTIOxs",
+      "title": "Classic Oklahoma Double Burger",
+      "channel": "Tasty Food Recipes",
+      "publishedAt": "2026-11-11",
+      "durationSeconds": 13,
+      "vidiqSnapshot": {"views": 21000, "breakoutMultiple": 11, "viewsPerHour": 348.5, "engagementRate": 0.007},
+      "reviewDepth": "vidIQ outlier metadata and actual cover; motion and sound not inspected",
+      "observedCover": "Two cheese-topped patties on a hot flat griddle with heavy steam; no visible text on the cover."
+    },
+    {
+      "id": "saffron-caviar-bite",
+      "url": "https://www.youtube.com/shorts/M9uzv2ml4ic",
+      "title": "Crispy Saffron Bite with Ossetra & Crème Fraîche",
+      "channel": "Timo Müller",
+      "publishedAt": "2026-08-31",
+      "durationSeconds": 21,
+      "vidiqSnapshot": {"views": 234600, "breakoutMultiple": 35, "viewsPerHour": 131, "engagementRate": 0.004},
+      "reviewDepth": "vidIQ outlier metadata, actual cover, and timestamped vidIQ short-form walkthrough",
+      "observedCover": "One golden pastry sphere on a textured white plate, cream and red sauce spirals, and a centered caviar crown against a quiet background.",
+      "observedEdit": "Mold and batter at 0-3 s, filling at 3-9 s, frying at 9-13 s, garnish and hand-held reveal at 13-20 s. The walkthrough reports frequent action cuts, including about 1-2, 4-8, 10-11 and 14-18 s.",
+      "observedAudio": "The walkthrough reports continuous hip-hop music with vocals and no culinary narration or prominent kitchen Foley. Do not copy that track; use cleared audio or an original sound design."
+    },
+    {
+      "id": "caviar-tiramisu",
+      "url": "https://www.youtube.com/shorts/53CM0QN-hDI",
+      "title": "Have you ever seen Caviar Tiramisu?",
+      "channel": "Girl About Melbourne",
+      "publishedAt": "2026-09-19",
+      "durationSeconds": 14,
+      "vidiqSnapshot": {"views": 27400, "breakoutMultiple": 14, "viewsPerHour": 21.1, "engagementRate": 0.016},
+      "reviewDepth": "vidIQ outlier metadata and actual cover; motion and sound not inspected",
+      "observedCover": "Clear white title card over a gold tin of caviar-like pearls on ice; the dish identity is the visual question."
+    },
+    {
+      "id": "private-dinner-course",
+      "url": "https://www.youtube.com/shorts/7gdbLyTQqa8",
+      "title": "Private dinner for 9 BTS - First of 3 courses",
+      "channel": "Selflavours",
+      "publishedAt": "2026-10-25",
+      "durationSeconds": 78,
+      "vidiqSnapshot": {"views": 652300, "breakoutMultiple": 101, "viewsPerHour": 63.2, "engagementRate": 0.026},
+      "reviewDepth": "vidIQ outlier metadata only; scenes, cover and sound not inspected"
+    },
+    {
+      "id": "crispy-potato-technique",
+      "url": "https://www.youtube.com/shorts/9N7kn1iQbgc",
+      "title": "The Secret Hack Behind Extra Crispy Potato Sticks",
+      "channel": "The cozy cooking",
+      "publishedAt": "2026-10-22",
+      "durationSeconds": 32,
+      "vidiqSnapshot": {"views": 122200, "breakoutMultiple": 5.7, "viewsPerHour": 0.4, "engagementRate": 0.007},
+      "reviewDepth": "vidIQ outlier metadata only; technique, cover and sound not inspected"
+    },
+    {
+      "id": "chocolate-snowflake",
+      "url": "https://www.youtube.com/shorts/heexlndzRo4",
+      "title": "Make chocolate snowflake crisp",
+      "channel": "The Princess Daily Life",
+      "publishedAt": "2026-10-18",
+      "durationSeconds": 39,
+      "vidiqSnapshot": {"views": 2200000, "breakoutMultiple": 4.5, "viewsPerHour": 0, "engagementRate": 0.024},
+      "reviewDepth": "vidIQ outlier metadata only; scenes, cover and sound not inspected"
+    }
+  ],
+  "patterns": [
+    {
+      "id": "finished-food-loop",
+      "name": "Finished bite, then earn it",
+      "sourceIds": ["burger-quest-lacy"],
+      "evidenceConfidence": "one scene-reviewed example",
+      "hookMechanism": "Show the finished texture in the first second, then reveal the physical work that created it.",
+      "montageDirection": "Finished macro -> heat action -> texture change -> assembly -> finished close view. Cut on spatula contact, cheese placement and bun landing rather than an arbitrary flash.",
+      "originalHookExamples": ["Will this crust hold the cheese?", "Hear what happens when it hits the griddle."],
+      "proposedSound": "Use original or cleared sizzle, steel scrape and one crisp finishing contact; no voice when the actions are self-explanatory.",
+      "continuityGate": "Count patties and buns in every actual clip, then check hand, tool, plate and set across the cut."
+    },
+    {
+      "id": "heat-and-lace",
+      "name": "Heat creates a visible edge",
+      "sourceIds": ["burger-quest-lacy", "ace-shawarma-smash", "oklahoma-double"],
+      "evidenceConfidence": "three independent channel title/cover examples; only one scene-reviewed",
+      "hookMechanism": "A crisping edge, steam plume or melting cheese gives the viewer a specific texture to wait for.",
+      "montageDirection": "Hold enough frames to see the heat change, then cut to the next contact action; use a close griddle view and an unobstructed side view of the finished layers.",
+      "originalHookExamples": ["Watch the edge turn into lace.", "One press changes everything."],
+      "proposedSound": "Lead with pan contact and scrape; leave kitchen room tone between actions, with no compulsory music.",
+      "continuityGate": "Do not approve a model clip that duplicates meat, changes the pan or teleports cheese."
+    },
+    {
+      "id": "hidden-luxury-center",
+      "name": "Plain outside, surprising center",
+      "sourceIds": ["saffron-caviar-bite", "caviar-tiramisu"],
+      "evidenceConfidence": "one scene-reviewed example and one title/cover example",
+      "hookMechanism": "A familiar shape hides a specific ingredient or construction detail that the reveal explains.",
+      "montageDirection": "Show the object -> assemble the center -> cook or chill -> cut or open it -> hold the proof. Keep the vessel and ingredient amounts consistent.",
+      "originalHookExamples": ["What is inside this golden bite?", "This looks like dessert until the cut."],
+      "proposedSound": "For an original ASMR version, emphasize siphon, gentle fry, plate tap and crisp opening. The source's music is not a licence to reuse it.",
+      "continuityGate": "The payoff must visibly show the promised center; do not imply an ingredient absent from the frames."
+    },
+    {
+      "id": "tiny-technique-payoff",
+      "name": "One small technique, audible payoff",
+      "sourceIds": ["crispy-potato-technique"],
+      "evidenceConfidence": "one metadata-only example; technique and result unverified",
+      "hookMechanism": "Promise a practical texture change and show the one action that causes it.",
+      "montageDirection": "Texture problem -> one visible correction -> heat -> controlled crack test. Do not call it a secret unless the technique is actually shown.",
+      "originalHookExamples": ["Why do these stay crisp?", "One step before the fry makes the snap."],
+      "proposedSound": "Clear fry and break sounds; use brief voice or a label only if the technique cannot be inferred visually.",
+      "continuityGate": "Verify the before and after are the same food batch and the stated technique is plausible."
+    },
+    {
+      "id": "service-ritual",
+      "name": "A dish reaches the table",
+      "sourceIds": ["private-dinner-course"],
+      "evidenceConfidence": "one metadata-only example; no scene analysis",
+      "hookMechanism": "A service deadline gives plating a clear story goal instead of a collection of attractive shots.",
+      "montageDirection": "One plate waiting -> final cooking constraint -> precise finish -> carry to the table -> diner-facing reveal.",
+      "originalHookExamples": ["Can this plate make service?", "The last garnish before the door opens."],
+      "proposedSound": "Pan finish, tweezer contact, quiet room tone and a final plate set-down; optional sparse voice when the service stakes need explanation.",
+      "continuityGate": "Track the same plate, garnish, chef sleeve and set from kitchen to table."
+    }
+  ],
+  "originalProductionIdeas": [
+    {"id": "smoky-jalapeno-smash", "recipe": "Smoky Jalapeño Double Smash Burger", "patternId": "finished-food-loop", "hook": "Can you bite this?", "payoff": "One clean slice and a held cross-section", "soundMode": "ASMR", "status": "35-second film in visual review"},
+    {"id": "miso-butter-potato-pave", "recipe": "Miso-Butter Potato Pavé", "patternId": "tiny-technique-payoff", "hook": "Can a potato make this sound?", "payoff": "A thin crisp slice breaks over a soft layered center", "soundMode": "ASMR", "status": "proposal"},
+    {"id": "saffron-citrus-rice-crisp", "recipe": "Saffron-Citrus Rice Crisp", "patternId": "hidden-luxury-center", "hook": "What is hiding under the gold crust?", "payoff": "A cut exposes citrus cream and rice layers", "soundMode": "ASMR", "status": "proposal; recipe requires kitchen validation"},
+    {"id": "hot-honey-chicken-bao", "recipe": "Hot-Honey Crispy Chicken Bao", "patternId": "heat-and-lace", "hook": "Listen before the glaze goes on.", "payoff": "Bun closes around a still-crisp chicken edge", "soundMode": "ASMR", "status": "proposal"},
+    {"id": "brown-butter-mushroom-smash", "recipe": "Brown-Butter Mushroom Smash Burger", "patternId": "heat-and-lace", "hook": "A mushroom can get this crust?", "payoff": "A cut shows crisp edges and glossy mushroom center", "soundMode": "ASMR", "status": "proposal"},
+    {"id": "charred-cabbage-alfredo", "recipe": "Charred Cabbage Alfredo", "patternId": "tiny-technique-payoff", "hook": "The char changes this sauce.", "payoff": "One fork lift shows sauce on a browned cabbage edge", "soundMode": "brief explanation if the technique is unclear", "status": "proposal; broad ingredient signal in recipe-ideas-2026.json"},
+    {"id": "frozen-arancini-service", "recipe": "Restaurant-Finish Crispy Arancini", "patternId": "service-ritual", "hook": "One frozen bite, one dinner-service test.", "payoff": "A plated ball opens at the table with a visible center", "soundMode": "ASMR with one optional setup line", "status": "proposal; broad ingredient signal in recipe-ideas-2026.json"},
+    {"id": "pistachio-chocolate-shell", "recipe": "Pistachio Chocolate Shell Reveal", "patternId": "hidden-luxury-center", "hook": "What happens when the shell cracks?", "payoff": "One clean break reveals the pistachio center", "soundMode": "ASMR", "status": "proposal"},
+    {"id": "sticky-vinegar-carrots", "recipe": "Sticky Fruit-Vinegar Carrots", "patternId": "heat-and-lace", "hook": "One pan turn makes them shine.", "payoff": "A hot glazed carrot lands on the final plate", "soundMode": "pan and plate sounds", "status": "proposal; broad ingredient signal in recipe-ideas-2026.json"},
+    {"id": "chocolate-snowflake-original", "recipe": "Dark Chocolate Snowflake Crisp", "patternId": "tiny-technique-payoff", "hook": "Can chocolate crack like glass?", "payoff": "A single patterned shard snaps near the microphone", "soundMode": "ASMR", "status": "proposal; source metadata only, not a copied recipe"}
+  ]
+}

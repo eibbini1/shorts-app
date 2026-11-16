@@ -7,10 +7,13 @@ import math
 import os
 import subprocess
 import time
+import wave
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from local_video_progress import snapshot
 from first_checks import check_still, check_clip
+from presentation_mode import choose as choose_presentation
+from select_still_local import select as select_still_local
 
 ROOT = Path(__file__).resolve().parents[1]
 FPS = 24
@@ -41,6 +44,19 @@ def valid_video(path):
         return stream['nb_frames'] == '97' and stream['r_frame_rate'] == '24/1' and (stream['width'], stream['height']) in ((384, 640), (640, 384))
     except (KeyError, IndexError, ValueError, subprocess.CalledProcessError):
         return False
+
+
+def prep_still(work, reference):
+    """PhotoCraft still prep before motion: auto contrast + unsharp mask (keeps the warm cast; auto tone cooled it)."""
+    cli = ROOT / 'storage/tools/artcraft/photocraft-cli'
+    if not cli.is_file():
+        raise SystemExit('--prep-stills needs storage/tools/artcraft/photocraft-cli (npm run artcraft:check:mac)')
+    target = work / 'refs' / f'prep-{file_hash(reference)[:12]}.png'
+    if not target.is_file():
+        subprocess.run([str(cli), 'run', str(reference), '--no-gpu', '--cmd', 'image.autoContrast',
+                        '--cmd', 'filter.sharpen.unsharpMask', '--out', str(target)], check=True, capture_output=True)
+        print(f'PhotoCraft prepped still: {target.name}', flush=True)
+    return target
 
 
 def still(work, index, shot, seed, source, width, height, cache_only=False):
@@ -82,6 +98,7 @@ def clip(work, index, part, shot, seed, reference, width, height, model, gemma, 
     target = work / 'motion' / f'shot-{index:02d}-part-{part:02d}-{key}.mp4'
     if valid_video(target):
         print(f'Reusing motion {index + 1}.{part + 1}: {target.name}', flush=True)
+        progress.mark_complete(index, part)
         print(progress(), flush=True)
         return target
     if cache_only:
@@ -107,6 +124,7 @@ def clip(work, index, part, shot, seed, reference, width, height, model, gemma, 
     if code: raise subprocess.CalledProcessError(code, command)
     if not valid_video(target): raise RuntimeError(f'Motion failed verification: {target}')
     progress.observed.append(time.monotonic()-started)
+    progress.mark_complete(index, part)
     print(progress(), flush=True)
     return target
 
@@ -119,6 +137,12 @@ def voice_gaps(wav, limit=1.5):
     return [(a, b) for a, b in zip(starts, ends) if a > 0.5]
 
 
+def sound_led_pauses(data):
+    plan = data.get('audioPlan') or {}
+    music = str(plan.get('music', 'auto')).strip().lower()
+    return music not in ('none', 'no music', 'off', 'silent') or 'room' in (plan.get('foleySamples') or {})
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--scenario', required=True, type=Path)
@@ -127,10 +151,16 @@ def main():
     parser.add_argument('--chain-images', action='store_true', help='Edit previous still to preserve one subject')
     parser.add_argument('--allow-silence', action='store_true', help='Continue even when the voice track has gaps over 1.5 s')
     parser.add_argument('--allow-bad-first', action='store_true', help='Skip the first-picture and first-clip checks')
-    parser.add_argument('--stills', type=Path, help='Folder with your own stills named shot-01.png, shot-02.png ... (for example from Google Flow). Missing shots fall back to FLUX')
+    parser.add_argument('--stills', type=Path, default=os.environ.get('BB_STILLS') or None, help='Folder with your own stills named shot-01.png, shot-02.png ... (for example from Google Flow). Missing shots fall back to FLUX')
+    parser.add_argument('--anchor-image', type=Path, default=os.environ.get('BB_ANCHOR_IMAGE') or None, help='Recurring character: edit this image into each shot so one face is reused across films (or set BB_ANCHOR_IMAGE)')
+    parser.add_argument('--prep-stills', action='store_true', help='PhotoCraft auto contrast + unsharp mask on each still before motion (changes the motion cache key)')
     parser.add_argument('--cache-only', action='store_true', help='Reuse existing FLUX/LTX assets; fail rather than start a model job on a cache miss')
+    parser.add_argument('--best-of-3-stills', action='store_true', help='Generate three stills per shot and require local Qwen hand/utensil review before motion')
     args = parser.parse_args()
     scenario = args.scenario.expanduser().resolve()
+    muse = Path(args.anchor_image).expanduser().resolve() if args.anchor_image else None
+    if muse and not muse.is_file(): parser.error(f'Missing anchor image: {muse}')
+    muse_shots = {int(n) for n in os.environ['BB_ANCHOR_SHOTS'].split(',')} if os.environ.get('BB_ANCHOR_SHOTS') else None  # e.g. BB_ANCHOR_SHOTS=3 limits the anchor to shot 3
     output = args.output.expanduser().resolve()
     work = (args.work_dir or ROOT / 'storage/any-local' / scenario.stem).expanduser().resolve()
     if output.exists(): parser.error(f'Output already exists: {output}')
@@ -138,6 +168,8 @@ def main():
     run('node', ROOT / 'scripts/bb-local-scenario.mjs', '--validate', scenario)
     source_data = json.loads(scenario.read_text(encoding='utf-8-sig'))
     plan, settings = source_data['plan'], source_data['settings']
+    presentation = choose_presentation(source_data)
+    print(f"Presentation: {presentation['mode']} ({presentation['reason']})", flush=True)
     actual_seconds = sum(shot['seconds'] for shot in plan['shots'])
     if actual_seconds != settings['seconds']:
         parser.error(f'Shot timings add to {actual_seconds}s; edit them to equal {settings["seconds"]}s before rendering')
@@ -157,26 +189,47 @@ def main():
     # running both model jobs together competes for unified memory.
     audio_started = time.monotonic()
     with ThreadPoolExecutor(max_workers=2) as pool:
-        voice_job = pool.submit(run, 'node', ROOT / 'scripts/narrate-any-local.mjs', scenario, work)
+        voice_job = (pool.submit(run, 'node', ROOT / 'scripts/narrate-any-local.mjs', scenario, work)
+                     if presentation['voice'] else None)
         sound_job = pool.submit(run, ROOT / 'storage/tools/ComfyUI/.venv/bin/python',
                                 ROOT / 'scripts/sound-any-local.py', scenario, work)
-        voice_job.result()
+        if voice_job:
+            voice_job.result()
         sound_job.result()
+    if not presentation['voice']:
+        with wave.open(str(work / 'voice-timeline.wav'), 'wb') as silent:
+            silent.setnchannels(2); silent.setsampwidth(2); silent.setframerate(48000)
+            silent.writeframes(b'\0' * settings['seconds'] * 48000 * 4)
+        (work / 'voice-provenance.json').write_text(json.dumps({'engine': 'none', 'voice': None,
+            'lines': [], 'presentation': presentation}, indent=2) + '\n')
     print(f'Parallel voice and soundtrack preparation: {time.monotonic() - audio_started:.1f}s', flush=True)
-    # Fail-fast gate: voice exists now, clips do not. Stop here if shots would leave dead air.
-    gaps = voice_gaps(work / 'voice-timeline.wav')
-    if gaps and not args.allow_silence:
+    # A deliberate music or recorded-room bed can carry a visual pause. Final-file QA
+    # still rejects actual silence; a bare voice track with dead air stops before GPU.
+    gaps = voice_gaps(work / 'voice-timeline.wav') if presentation['voice'] else []
+    if gaps and not args.allow_silence and not sound_led_pauses(source_data):
         lines = ', '.join(f'{a:.1f}-{b:.1f} s ({b - a:.1f} s)' for a, b in gaps)
         parser.error(f'Voice track has silence over 1.5 s at {lines}. Shorten those shots to the line length plus 0.6 s (total must stay equal to settings.seconds), or pass --allow-silence. Stopped before the 25-minute clip step')
+    if gaps and sound_led_pauses(source_data):
+        print(f'Voice leaves {len(gaps)} sound-led pause(s); final-file audio QA and a listening review are required.', flush=True)
     model = (ROOT / 'storage/setup/ltx-model-dir.txt').read_text().strip()
     gemma = (ROOT / 'storage/setup/gemma-model-dir.txt').read_text().strip()
     expected = sum(math.ceil(shot['seconds'] / 5) for shot in plan['shots'])
     print(f'{len(plan["shots"])} shots require {expected} new motion clips; allow several minutes per uncached clip.', flush=True)
+    progress_state = work / 'progress-run.json'
     class Progress:
         observed = []
+        completed = []
+        def mark_complete(self, index, part):
+            pair = [index, part]
+            if pair not in self.completed:
+                self.completed.append(pair)
+            progress_state.write_text(json.dumps({'scenarioSha256': file_hash(scenario),
+                'output': str(output.resolve()), 'completed': self.completed}) + '\n')
         def __call__(self, active=None, elapsed=0):
             return snapshot(scenario, work, output, active, elapsed, self.observed)
     progress = Progress()
+    progress_state.write_text(json.dumps({'scenarioSha256': file_hash(scenario),
+        'output': str(output.resolve()), 'completed': []}) + '\n')
     print(progress(), flush=True)
     segments = []
     previous = None
@@ -184,14 +237,26 @@ def main():
     for index, shot in enumerate(plan['shots']):
         reference = own_still(args.stills.expanduser().resolve(), work, index, width, height) if args.stills else None
         if reference is None:
-            reference = still(work, index, shot, 1200 + index,
-                              previous if args.chain_images else None, width, height, args.cache_only)
+            source = previous if args.chain_images and previous else (muse if muse_shots is None or index + 1 in muse_shots else None)
+            if args.best_of_3_stills:
+                candidates = [still(work, index, shot, 1200 + index + variation * 100,
+                                    source, width, height, args.cache_only) for variation in range(3)]
+                selected, review = select_still_local(candidates, shot['imagePrompt'])
+                reference = candidates[selected - 1]
+                (work / 'refs' / f'shot-{index:02d}-best-of-3.json').write_text(
+                    json.dumps({'images': [str(path) for path in candidates], 'selectedIndex': selected,
+                                'review': review, 'note': 'Advisory vision check; human inspection required.'}, indent=2) + '\n')
+                print(f'Best of 3 stills for shot {index + 1}: candidate {selected}', flush=True)
+            else:
+                reference = still(work, index, shot, 1200 + index, source, width, height, args.cache_only)
         if gate and index == 0:
             problem = check_still(reference)
             if problem:
                 parser.error(f'First picture failed: {problem}. Stopped before the clip step (use --allow-bad-first to override)')
             print('First picture check passed', flush=True)
         previous = reference
+        if args.prep_stills:
+            reference = prep_still(work, reference)
         parts = math.ceil(shot['seconds'] / 5)
         total_frames = shot['seconds'] * FPS
         frame_counts = [total_frames // parts + (1 if part < total_frames % parts else 0) for part in range(parts)]
@@ -219,8 +284,12 @@ def main():
     provenance = {'scenario': str(scenario), 'scenarioSha256': file_hash(scenario),
                   'output': str(output), 'outputSha256': file_hash(output),
                   'imageModel': 'user-supplied stills (FLUX for any missing shot)' if args.stills else 'FLUX.2 Klein 4B q4 via MFLUX', 'videoModel': model,
-                  'textEncoder': gemma, 'voice': 'Kokoro ONNX local',
-                  'sound': 'original local synthesis', 'chainImages': args.chain_images,
+                  'textEncoder': gemma, 'voice': 'Kokoro ONNX local' if presentation['voice'] else 'none (ASMR)',
+                  'sound': ('licensed recording: ' + source_data['audioPlan']['musicCredit']
+                            if (source_data.get('audioPlan') or {}).get('music') == 'licensed-track'
+                            else 'none' if (source_data.get('audioPlan') or {}).get('music') == 'none'
+                            else 'original local synthesis'), 'chainImages': args.chain_images,
+                  'presentation': presentation,
                   'motionClips': len(segments), 'totalSeconds': settings['seconds']}
     output.with_suffix('.provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
     print(progress(), flush=True)

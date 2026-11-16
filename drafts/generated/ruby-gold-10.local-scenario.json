@@ -1,0 +1,96 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Local Studio",
+    "format": "short",
+    "seconds": 10,
+    "voice": "af_heart"
+  },
+  "model": "reference-inspired-local",
+  "topic": "Ruby Gold: pomegranate pineapple drink with a crimson-to-gold reveal",
+  "style": "Photorealistic luxury beverage macro, dark charcoal studio, walnut table, one clear tall glass, ruby pomegranate, fresh pineapple, minimal black gloves, tactile sound, no labels.",
+  "requestedEnding": "Golden pineapple juice pours into the crimson pomegranate glass, creating a glowing red-to-gold layered drink.",
+  "totalSeconds": 10,
+  "storyArc": {
+    "protagonist": "one clear tall glass of pomegranate and pineapple",
+    "setting": "dark charcoal studio with a walnut table",
+    "goal": "Build a bright jewel-toned fresh drink from two fruits.",
+    "obstacle": "The pomegranate base hides its final color until the golden pour.",
+    "turn": "Fresh pineapple juice flows over the ruby base and makes a glowing two-tone layer.",
+    "visualBible": "Same tall clear glass centered on the same walnut table against a dark charcoal background, one pair of black-gloved hands, fresh pomegranate arils and pineapple juice, one continuous studio setup. No labels, logos or text. Natural liquid physics and edible texture.",
+    "beats": [
+      {
+        "number": 1,
+        "label": "Ruby base and muddle",
+        "seconds": 5
+      },
+      {
+        "number": 2,
+        "label": "Golden pour reveal",
+        "seconds": 5
+      }
+    ]
+  },
+  "qualityChecks": {
+    "exactTiming": true,
+    "uniquePromptText": true,
+    "narrationFits": true,
+    "endingLockedFromUser": false,
+    "rewrites": 0,
+    "fieldsNeedingRepair": 0
+  },
+  "plan": {
+    "ideas": [
+      {
+        "title": "Ruby Gold",
+        "angle": "Pomegranate red transforms under golden pineapple juice."
+      },
+      {
+        "title": "The Jewel Glass",
+        "angle": "One clear glass carries the full color story."
+      },
+      {
+        "title": "Crimson to Gold",
+        "angle": "Let the two liquids make the reveal."
+      },
+      {
+        "title": "Fresh Fruit Contrast",
+        "angle": "Show pomegranate texture before smooth pineapple pour."
+      },
+      {
+        "title": "One Glass Two Fruits",
+        "angle": "A tactile ASMR drink build without narration."
+      }
+    ],
+    "title": "Ruby Gold",
+    "hook": "One glass. Two fruits. Wait for the color change.",
+    "payoff": "Golden pineapple juice pours into the crimson pomegranate glass, creating a glowing red-to-gold layered drink.",
+    "shots": [
+      {
+        "seconds": 5,
+        "narration": "One glass. Two fruits. Wait for the color change.",
+        "imagePrompt": "Macro front view of fresh ruby pomegranate arils at the bottom of a tall clear glass on a walnut table against a dark charcoal studio background. One pair of black-gloved adult hands holds a slim steel muddler above the fruit. No labels, logos, other people or text. Photorealistic luxury beverage commercial, sharp fruit texture, clean reflections, moody side light.",
+        "motionPrompt": "One black-gloved hand presses the slim steel muddler down into the ruby pomegranate arils twice, releasing deep red juice that rises in the same clear glass. Camera gently pushes inward while keeping the rim and fruit visible. One continuous physical action, no cuts.",
+        "sound": "glass tap, juicy fruit crush, soft liquid movement"
+      },
+      {
+        "seconds": 5,
+        "narration": "Golden pineapple pours in, and ruby turns into a glowing sunset.",
+        "imagePrompt": "Macro front view of the same tall clear glass now holding crushed ruby pomegranate and dark red juice on the same walnut table against the same charcoal studio background. One black-gloved hand holds a small unbranded glass jug of golden fresh pineapple juice above the rim. No labels, logos, other people or text. Photorealistic luxury beverage commercial, moody side light, natural liquid reflections.",
+        "motionPrompt": "Golden pineapple juice pours in one unbroken narrow stream into the same crimson pomegranate glass; the liquid swirls into a glowing red-to-gold layer as the camera moves gently closer. One continuous physical pour, stable glass geometry, no cuts.",
+        "sound": "slow juice pour, soft glass clink, natural liquid swirl"
+      }
+    ],
+    "claimsToCheck": [
+      "Creative reference: https://www.youtube.com/shorts/CVRQZvbyFxM ; original visuals and audio required"
+    ]
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "creative ASMR reference, not a verified November trend",
+    "sources": [
+      "https://www.youtube.com/shorts/CVRQZvbyFxM"
+    ]
+  },
+  "template": "hand-written-asmr-prototype"
+}

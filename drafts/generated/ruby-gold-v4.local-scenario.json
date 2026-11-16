@@ -1,0 +1,109 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Local Studio",
+    "format": "short",
+    "seconds": 10,
+    "voice": "af_heart",
+    "presentationMode": "asmr"
+  },
+  "model": "reference-inspired-local",
+  "topic": "Ruby Gold: an elegant woman in a red dress makes a pomegranate pineapple drink in a luxury lounge",
+  "style": "Photorealistic macro beverage commercial shot on a 100mm lens, locked-off tripod camera, dark upscale lounge bar, warm bokeh, real glass, real fresh fruit, natural colors, tactile sound, no labels.",
+  "requestedEnding": "The layered red and gold drink is lifted and sipped, glowing in sharp focus.",
+  "totalSeconds": 10,
+  "storyArc": {
+    "protagonist": "an elegant dark-haired woman in a fitted red evening dress, making a drink at a marble bar",
+    "setting": "glamorous upscale lounge at night with warm golden bokeh lights and a dark marble bar",
+    "goal": "Build a jewel-toned fresh drink from two fruits with graceful, confident movements.",
+    "obstacle": "The pomegranate base hides its final color until the golden pour.",
+    "turn": "Fresh pineapple juice flows over the ruby base and makes a glowing two-tone layer.",
+    "visualBible": "Food is the focus of every shot. Same straight-sided tall clear glass on the same dark marble bar in the same dim lounge with warm golden bokeh. Macro shots show only an elegant hand with deep red nails. In the final shot the drink is sharp in the foreground and the woman in the red dress is only a soft blurred figure behind it. Locked camera, natural colors, real liquid physics. No labels, logos or text.",
+    "beats": [
+      {
+        "number": 1,
+        "label": "Muddle the pomegranate",
+        "seconds": 3
+      },
+      {
+        "number": 2,
+        "label": "Golden pineapple pour",
+        "seconds": 4
+      },
+      {
+        "number": 3,
+        "label": "The layered drink is lifted and sipped",
+        "seconds": 3
+      }
+    ]
+  },
+  "qualityChecks": {
+    "exactTiming": true,
+    "uniquePromptText": true,
+    "narrationFits": true,
+    "endingLockedFromUser": false,
+    "rewrites": 0,
+    "fieldsNeedingRepair": 0
+  },
+  "plan": {
+    "ideas": [
+      {
+        "title": "Ruby Gold",
+        "angle": "Pomegranate red transforms under golden pineapple juice."
+      },
+      {
+        "title": "The Jewel Glass",
+        "angle": "One clear glass carries the full color story."
+      },
+      {
+        "title": "Crimson to Gold",
+        "angle": "Let the two liquids make the reveal."
+      },
+      {
+        "title": "Fresh Fruit Contrast",
+        "angle": "Show pomegranate texture before smooth pineapple pour."
+      },
+      {
+        "title": "One Glass Two Fruits",
+        "angle": "A tactile ASMR drink build without narration."
+      }
+    ],
+    "title": "Ruby Gold",
+    "hook": "One glass. Two fruits. Wait for the color change.",
+    "payoff": "Golden pineapple juice pours into the crimson pomegranate glass, creating a glowing red-to-gold layered drink.",
+    "shots": [
+      {
+        "seconds": 3,
+        "narration": "One glass.",
+        "imagePrompt": "Macro photograph of a tall straight-sided clear highball glass filled with fresh ruby pomegranate arils on a dark marble bar, dim upscale lounge with soft warm bokeh behind. An elegant hand with deep red nails holds a slim steel muddler just above the arils. Natural juicy fruit texture, sharp glass edges and reflections, shot on a 100mm macro lens, locked camera, no labels, no text.",
+        "motionPrompt": "The hand presses the steel muddler down into the pomegranate arils twice with a crushing motion, so deep red juice rises in the glass. The camera stays locked and steady. One continuous physical action, no cuts.",
+        "sound": "glass tap, juicy fruit crush, soft lounge ambience"
+      },
+      {
+        "seconds": 4,
+        "narration": "Two fruits.",
+        "imagePrompt": "Macro photograph of a tall clear glass of crushed ruby pomegranate juice on a dark marble bar, dim upscale lounge with warm bokeh behind. An elegant hand with deep red nails tips a small clear glass jug so a thin continuous stream of pale golden pineapple juice falls into the glass, forming a tiny splash crown where it lands, with rising micro-bubbles, a soft gold layer over the ruby, condensation droplets on the cold glass, light refracting through the liquid, slight fruit pulp. Photorealistic, shot on a 100mm macro lens, locked camera, natural colors, no labels, no text.",
+        "motionPrompt": "A thin continuous stream of pale golden pineapple juice pours from the small glass jug into the glass, a tiny splash crown forms where it lands, micro-bubbles rise, and the gold juice settles into a glowing layer over the ruby juice. The camera stays locked and steady. One continuous pour, stable glass shape, no cuts.",
+        "sound": "slow juice pour, soft glass clink, gentle liquid swirl"
+      },
+      {
+        "seconds": 3,
+        "narration": "Watch the color change.",
+        "imagePrompt": "Macro photograph, the glass sharp in the foreground: a tall straight-sided clear highball glass of layered drink, glowing golden pineapple juice floating over ruby pomegranate juice with suspended seeds, condensation droplets, held by an elegant hand with deep red nails. Behind it, softly out of focus, a woman in a fitted red evening dress at the same dark marble bar with warm golden bokeh. Photorealistic, shot on a 100mm macro lens, shallow depth of field, no labels, no text.",
+        "motionPrompt": "The hand lifts the layered red and gold drink slowly toward the blurred woman behind it, who tilts her head and sips; the glowing drink stays sharp in the foreground. The camera stays locked and steady. One continuous action, no cuts.",
+        "sound": "soft glass clink, quiet sip, lounge ambience"
+      }
+    ],
+    "claimsToCheck": [
+      "Creative reference: https://www.youtube.com/shorts/CVRQZvbyFxM ; original visuals and audio required"
+    ]
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "creative reference for pacing only; original fictional woman and venue",
+    "sources": [
+      "https://www.youtube.com/shorts/CVRQZvbyFxM"
+    ]
+  },
+  "template": "hand-written-asmr-prototype"
+}

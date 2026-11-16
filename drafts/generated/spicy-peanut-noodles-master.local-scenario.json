@@ -1,0 +1,79 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 15,
+    "voice": "af_heart",
+    "presentationMode": "voiced"
+  },
+  "model": "hand-written",
+  "topic": "Spicy Peanut Noodles: a quick trending home recipe in three beats",
+  "style": "photoreal luxury designer kitchen, navy cabinetry with brass fixtures, polished black and gold marble counter, copper cookware, gold utensils, one emerald green enamel accent, warm key light with bright rim light, extreme macro food close-ups, hands only, vertical framing",
+  "requestedEnding": "Chopsticks lift glossy peanut noodles and the sauce clings and shines.",
+  "totalSeconds": 15,
+  "template": "story",
+  "plan": {
+    "ideas": [
+      {
+        "title": "Spicy Peanut Noodles",
+        "angle": "three-beat quick recipe"
+      },
+      {
+        "title": "Spicy Peanut Noodles idea 2",
+        "angle": "macro hero close-up"
+      },
+      {
+        "title": "Spicy Peanut Noodles idea 3",
+        "angle": "steam and texture payoff"
+      },
+      {
+        "title": "Spicy Peanut Noodles idea 4",
+        "angle": "hands only, food first"
+      },
+      {
+        "title": "Spicy Peanut Noodles idea 5",
+        "angle": "save-for-later dinner"
+      }
+    ],
+    "title": "Spicy Peanut Noodles",
+    "hook": "Ten minutes, one bowl, yet noodles this creamy. Want the sauce?",
+    "payoff": "Chopsticks lift glossy peanut noodles and the sauce clings and shines.",
+    "shots": [
+      {
+        "seconds": 5,
+        "narration": "Ten minutes, one bowl, yet noodles this creamy. Want the sauce?",
+        "imagePrompt": "Spicy Peanut Noodles, extreme macro close-up: a small bowl of creamy peanut sauce being whisked with a spoon, chili oil swirling in, the food filling most of the frame. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent glowing far in the background. Fine texture shows on the food, with glistening highlights and a thin curl of steam rising. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro food photograph, low 30-degree angle, 100mm macro lens at f/2.8, shallow depth of field, creamy bokeh, sharp focus on the food. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Extreme close-up on the small bowl of peanut sauce. The sauce sits still, then a hand stirs the peanut butter sauce slowly with a gold spoon as red chili oil swirls in and turns it glossy. The camera makes one slow push in toward the swirl until the stirring slows to a stop.",
+        "sound": "whisk against bowl, thick sauce stir"
+      },
+      {
+        "seconds": 5,
+        "narration": "Peanut butter, soy, garlic and chili oil, whisked until smooth.",
+        "imagePrompt": "Spicy Peanut Noodles, extreme macro close-up: hot cooked noodles tossed in tongs above a bowl with dark glossy peanut sauce, the food filling most of the frame. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent glowing far in the background. Fine texture shows on the food, with glistening highlights and a thin curl of steam rising. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro food photograph, overhead 60-degree view, 100mm macro lens at f/2.8, shallow depth of field, creamy bokeh, sharp focus on the food. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Extreme close-up on the hot noodles above the bowl. The noodles hang still, then gold tongs lift the hot noodles and toss them gently in the glossy peanut sauce as the sauce coats every strand and steam rises. The camera makes one slow push in toward the noodles until the tongs rest.",
+        "sound": "tongs toss, wet noodles, sauce slap"
+      },
+      {
+        "seconds": 5,
+        "narration": "Top with scallions and peanuts. Slurp it. Save this one.",
+        "imagePrompt": "Spicy Peanut Noodles, extreme macro close-up: a emerald enamel bowl of glossy spicy peanut noodles with scallions, sesame seeds and crushed peanuts, the food filling most of the frame. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent glowing far in the background. Fine texture shows on the food, with glistening highlights and a thin curl of steam rising. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro food photograph, side angle at counter height, 100mm macro lens at f/2.8, shallow depth of field, creamy bokeh, sharp focus on the food. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Extreme close-up on the emerald enamel bowl of noodles topped with scallions and crushed peanuts. The bowl sits still, then chopsticks lift glossy peanut noodles slowly and the sauce clings and shines as it drips back in a thin ribbon. The camera makes one slow push in toward the lifted noodles until they hold still.",
+        "sound": "chopstick lift, soft slurp, crunch of peanuts"
+      }
+    ],
+    "claimsToCheck": [
+      "Dish named on a 2026 recipe list; confirm the original recipe credit before publishing",
+      "AI-generated original footage; no reference footage, audio or branding reused",
+      "Do not state protein or time figures as facts without a source"
+    ]
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "dish named on a 2026 recipe list (Bon Appetit gallery); pacing reference only, not a verified view trend",
+    "sources": [
+      "https://www.bonappetit.com/gallery/best-recipes-2026",
+      "https://www.youtube.com/shorts/bkUpOMCZ9GQ"
+    ]
+  }
+}

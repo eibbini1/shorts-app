@@ -1,0 +1,79 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 15,
+    "voice": "af_heart",
+    "presentationMode": "voiced"
+  },
+  "model": "hand-written",
+  "topic": "Sticky Korean Beef and Rice: a quick trending home recipe in three beats",
+  "style": "photoreal luxury designer kitchen, navy cabinetry with brass fixtures, polished black and gold marble counter, copper cookware, gold utensils, one emerald green enamel accent, warm key light with bright rim light, extreme macro food close-ups, hands only, vertical framing",
+  "requestedEnding": "A spoon lifts sticky Korean beef over the steaming rice and sauce glistens.",
+  "totalSeconds": 15,
+  "template": "story",
+  "plan": {
+    "ideas": [
+      {
+        "title": "Sticky Korean Beef and Rice",
+        "angle": "three-beat quick recipe"
+      },
+      {
+        "title": "Sticky Korean Beef and Rice idea 2",
+        "angle": "macro hero close-up"
+      },
+      {
+        "title": "Sticky Korean Beef and Rice idea 3",
+        "angle": "steam and texture payoff"
+      },
+      {
+        "title": "Sticky Korean Beef and Rice idea 4",
+        "angle": "hands only, food first"
+      },
+      {
+        "title": "Sticky Korean Beef and Rice idea 5",
+        "angle": "save-for-later dinner"
+      }
+    ],
+    "title": "Sticky Korean Beef and Rice",
+    "hook": "Five minutes of prep, yet this beef is sticky, sweet and savory.",
+    "payoff": "A spoon lifts sticky Korean beef over the steaming rice and sauce glistens.",
+    "shots": [
+      {
+        "seconds": 5,
+        "narration": "Five minutes of prep, yet this beef is sticky, sweet and savory.",
+        "imagePrompt": "Sticky Korean Beef and Rice, extreme macro close-up: ground beef browning and crumbling in a hot skillet with a gold spoon, the food filling most of the frame. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent glowing far in the background. Fine texture shows on the food, with glistening highlights and a thin curl of steam rising. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro food photograph, low 30-degree angle, 100mm macro lens at f/2.8, shallow depth of field, creamy bokeh, sharp focus on the food. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Extreme close-up on the ground beef in the copper skillet. The beef sits still, then a hand breaks up the browning ground beef with a gold spoon as it crumbles and sizzles and steam rises. The camera makes one slow push in toward the browning beef until the spoon rests.",
+        "sound": "beef sizzle, wooden spoon scrape"
+      },
+      {
+        "seconds": 5,
+        "narration": "Soy, brown sugar, garlic and ginger turn the pan into glaze.",
+        "imagePrompt": "Sticky Korean Beef and Rice, extreme macro close-up: dark glossy sauce bubbling around ground beef in the skillet, steam rising, the food filling most of the frame. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent glowing far in the background. Fine texture shows on the food, with glistening highlights and a thin curl of steam rising. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro food photograph, overhead 60-degree view, 100mm macro lens at f/2.8, shallow depth of field, creamy bokeh, sharp focus on the food. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Extreme close-up on the copper skillet. The beef sits still, then dark sticky sauce bubbles around it and a hand stirs it slowly so the glaze coats the browning beef as steam rises. The camera makes one slow push in toward the glossy glaze until the stirring slows to a stop.",
+        "sound": "thick sauce bubbling, spoon stir"
+      },
+      {
+        "seconds": 5,
+        "narration": "Spoon it over rice, add sesame seeds. Dinner in twenty minutes.",
+        "imagePrompt": "Sticky Korean Beef and Rice, extreme macro close-up: a emerald enamel bowl of steamed rice topped with sticky glazed Korean beef, sesame seeds and sliced scallions, the food filling most of the frame. It sits on a polished black and gold marble counter in a luxury designer kitchen, navy cabinetry and brass fixtures softly blurred behind, with one emerald green enamel accent glowing far in the background. Fine texture shows on the food, with glistening highlights and a thin curl of steam rising. Warm key light from camera-left with a bright rim light along the glossy highlights and deep soft shadows. Photorealistic macro food photograph, side angle at counter height, 100mm macro lens at f/2.8, shallow depth of field, creamy bokeh, sharp focus on the food. Only one hand enters the frame, holding at most one utensil that touches the food, and every surface is clean and unmarked.",
+        "motionPrompt": "Extreme close-up on the emerald enamel bowl of steamed rice. The rice sits still, then a spoon lifts sticky Korean beef over the steaming rice and lays it down gently as the sauce glistens and drips. The camera makes one slow push in toward the glistening beef until the spoon lifts away.",
+        "sound": "spoon into rice, soft steam, sauce drip"
+      }
+    ],
+    "claimsToCheck": [
+      "Dish named on a 2026 recipe list; confirm the original recipe credit before publishing",
+      "AI-generated original footage; no reference footage, audio or branding reused",
+      "Do not state protein or time figures as facts without a source"
+    ]
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-14",
+    "trendLabel": "dish named on a 2026 recipe list (Bon Appetit gallery); pacing reference only, not a verified view trend",
+    "sources": [
+      "https://www.bonappetit.com/gallery/best-recipes-2026",
+      "https://www.youtube.com/shorts/bkUpOMCZ9GQ"
+    ]
+  }
+}

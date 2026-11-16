@@ -1,0 +1,291 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 30,
+    "voice": "af_heart",
+    "presentationMode": "voiced"
+  },
+  "model": "hand-directed-local-models",
+  "promptPackVersion": "2026-11-15",
+  "topic": "One-Pan Red Curry Dumpling Bake",
+  "style": "Photoreal vertical 9:16 cinematic food film. Same cream ceramic 24 cm oval oven-safe dish on a dark walnut board, pale stone counter, copper utensils, amber window light from camera left, shadowed walnut cabinets. Same adult cook hands with short natural nails, no gloves, no face. One dish only, no packaging, logos, generated lettering, extra hands or duplicate dumplings. Shallow macro focus and appetizing but plausible food texture.",
+  "requestedEnding": "The same cooked red curry dumpling bake is garnished with chili crisp and lime, then one hot sauce-coated dumpling is served from the same dish.",
+  "creativeSignature": {
+    "format": "food-process-story",
+    "set": "amber-walnut-home-kitchen",
+    "hookPattern": "finished-spoonful-then-item-by-item-recipe"
+  },
+  "creativeBrief": {
+    "hookImage": "One finished red curry dumpling lifted in a glossy spoonful",
+    "mustShow": "Red curry paste, garlic, ginger, coconut milk, broccoli, spinach and frozen dumplings enter one dish before baking, then one cooked dumpling is served."
+  },
+  "storyArc": {
+    "protagonist": "one pan of red curry dumplings",
+    "setting": "one warm walnut home kitchen with cream ceramic oven-safe dish",
+    "goal": "Make a usable one-pan red curry dumpling bake with individually shown ingredients and a served payoff.",
+    "obstacle": "The frozen dumplings and fresh greens start uncooked and cannot become the final dish without baking.",
+    "turn": "Build the coconut curry in the one ceramic dish, add greens and dumplings, cut forward across the bake, then finish and serve.",
+    "visualBible": "Photoreal vertical 9:16 cinematic food film. Same cream ceramic 24 cm oval oven-safe dish on a dark walnut board, pale stone counter, copper utensils, amber window light from camera left, shadowed walnut cabinets. Same adult cook hands with short natural nails, no gloves, no face. One dish only, no packaging, logos, generated lettering, extra hands or duplicate dumplings. Shallow macro focus and appetizing but plausible food texture. The cream oval dish, same hands, and walnut board persist. Ingredient states advance only after their visible additions; baked food first appears after the explicit cooking-time cut.",
+    "beats": [
+      {
+        "number": 1,
+        "label": "Finished spoonful hook",
+        "seconds": 3
+      },
+      {
+        "number": 2,
+        "label": "Curry paste enters",
+        "seconds": 4
+      },
+      {
+        "number": 3,
+        "label": "Aromatics enter",
+        "seconds": 4
+      },
+      {
+        "number": 4,
+        "label": "Coconut milk and seasoning",
+        "seconds": 4
+      },
+      {
+        "number": 5,
+        "label": "Greens enter",
+        "seconds": 4
+      },
+      {
+        "number": 6,
+        "label": "Frozen dumplings enter",
+        "seconds": 4
+      },
+      {
+        "number": 7,
+        "label": "Bake to cooked result",
+        "seconds": 4
+      },
+      {
+        "number": 8,
+        "label": "Finish and serve",
+        "seconds": 3
+      }
+    ]
+  },
+  "qualityChecks": {
+    "exactTiming": true,
+    "uniquePromptText": true,
+    "narrationFits": true,
+    "endingLockedFromUser": true,
+    "rewrites": 0,
+    "fieldsNeedingRepair": 0
+  },
+  "plan": {
+    "ideas": [
+      {
+        "title": "One-Pan Red Curry Dumpling Bake",
+        "angle": "Ingredient-by-ingredient 30-second recipe with a hot spoonful payoff"
+      },
+      {
+        "title": "Coconut Curry Dumplings",
+        "angle": "Macro curry paste to cooked dumpling transformation"
+      },
+      {
+        "title": "The Dumpling Bake",
+        "angle": "One dish moves from raw to bubbling cooked dinner"
+      },
+      {
+        "title": "Weeknight Curry Pan",
+        "angle": "Teach the seven steps with a serving payoff"
+      },
+      {
+        "title": "Chili Crisp Dumplings",
+        "angle": "Finish the warm curry bake with lime and chili crisp"
+      }
+    ],
+    "title": "One-Pan Red Curry Dumpling Bake",
+    "hook": "One pan, curry dumplings. Watch this.",
+    "payoff": "The same baked dumplings are dressed with chili crisp and lime, then served as one hot spoonful.",
+    "shots": [
+      {
+        "seconds": 3,
+        "narration": "One pan, curry dumplings. Watch this.",
+        "imagePrompt": "Photoreal vertical 9:16 warm kitchen; same cream oval dish on dark walnut board and pale counter. Finished red curry coconut dumpling bake with many distinct pale pleated dumplings, small softened broccoli and wilted spinach, curry pooled around their bases, restrained chili crisp, coriander and lime. One natural-nailed hand already holds a copper spoon with one intact cooked dumpling just above the dish. Amber window light from camera left, real food texture, no text, duplicate dish or extra hands.",
+        "motionPrompt": "Start with one cooked pleated dumpling already resting fully on the copper spoon above the same cream dish. The same hand gently raises the spoon just two centimeters and holds it steady; the dumpling remains intact on the spoon from first frame to last. Faint steam and a tiny camera push move; the many dumplings in the pan remain stable. One continuous shot, no new food or cut.",
+        "sound": "soft kitchen room ambience"
+      },
+      {
+        "seconds": 4,
+        "narration": "Start with three tablespoons of red curry paste.",
+        "imagePrompt": "Photoreal vertical 9:16 cinematic food film. Same cream ceramic 24 cm oval oven-safe dish on a dark walnut board, pale stone counter, copper utensils, amber window light from camera left, shadowed walnut cabinets. Same adult cook hands with short natural nails, no gloves, no face. One dish only, no packaging, logos, generated lettering, extra hands or duplicate dumplings. Shallow macro focus and appetizing but plausible food texture. Empty clean cream oval oven-safe dish on the same walnut board. A small copper measuring spoon holding a dense mound of deep red curry paste touches the center of the dish; no coconut milk yet. Same hands and left-side amber light.",
+        "motionPrompt": "The hand drops exactly one measured spoonful of red curry paste into the center of the empty dish. The dense paste slides off the spoon and stays in one mound. Tight side macro; the dish does not move.",
+        "sound": "quiet kitchen room ambience, cutlery clink"
+      },
+      {
+        "seconds": 4,
+        "narration": "Add one teaspoon garlic, one teaspoon ginger; stir the paste.",
+        "imagePrompt": "Photoreal vertical 9:16 cinematic food film. Same cream ceramic 24 cm oval oven-safe dish on a dark walnut board, pale stone counter, copper utensils, amber window light from camera left, shadowed walnut cabinets. Same adult cook hands with short natural nails, no gloves, no face. One dish only, no packaging, logos, generated lettering, extra hands or duplicate dumplings. Shallow macro focus and appetizing but plausible food texture. Same cream oval dish now contains only deep red curry paste in its center. One teaspoon minced pale garlic and one teaspoon minced golden ginger sit separately on a small copper spoon above the dish. Same hands, board and light. No sauce or greens yet.",
+        "motionPrompt": "The hand taps the minced garlic into the dish beside the paste, then adds the minced ginger from the same spoon. Two distinct small additions, no cut, no food appearing elsewhere. Camera holds on the growing aromatic mixture.",
+        "sound": "soft kitchen room ambience, cutlery clink"
+      },
+      {
+        "seconds": 4,
+        "narration": "Pour four hundred milliliters coconut milk; add fish sauce.",
+        "imagePrompt": "Photoreal vertical 9:16 cinematic food film. Same cream ceramic 24 cm oval oven-safe dish on a dark walnut board, pale stone counter, copper utensils, amber window light from camera left, shadowed walnut cabinets. Same adult cook hands with short natural nails, no gloves, no face. One dish only, no packaging, logos, generated lettering, extra hands or duplicate dumplings. Shallow macro focus and appetizing but plausible food texture. Same dish contains red curry paste, minced garlic and minced ginger. A small plain glass measuring jug pours opaque white coconut milk into the dish; a copper whisk rests to the right. One tablespoon of fish sauce stands in a copper spoon beside the dish. No vegetables or dumplings yet. Same warm kitchen and hands.",
+        "motionPrompt": "A steady white coconut-milk stream pours from the jug around the red paste. The hand then stirs with the copper whisk until the liquid visibly swirls red-orange. The hand adds the fish sauce from the copper spoon, then shows a continuous real pour and stir, no sudden extra food.",
+        "sound": "quiet kitchen room ambience"
+      },
+      {
+        "seconds": 4,
+        "narration": "Add two hundred grams broccoli, then baby spinach.",
+        "imagePrompt": "Photoreal vertical 9:16 cinematic food film. Same cream ceramic 24 cm oval oven-safe dish on a dark walnut board, pale stone counter, copper utensils, amber window light from camera left, shadowed walnut cabinets. Same adult cook hands with short natural nails, no gloves, no face. One dish only, no packaging, logos, generated lettering, extra hands or duplicate dumplings. Shallow macro focus and appetizing but plausible food texture. Same cream dish now holds smooth red-orange coconut curry sauce. Small fresh broccoli florets and a modest handful of baby spinach are held above the sauce by the same natural-nailed hands. No dumplings yet. Cream dish, walnut board and warm amber window light unchanged.",
+        "motionPrompt": "The hand places broccoli florets around the sauce, then tucks baby spinach between them. The leaves remain visible, the sauce level stays stable and the camera makes a small overhead push.",
+        "sound": "soft kitchen room ambience"
+      },
+      {
+        "seconds": 4,
+        "narration": "Nestle twenty frozen dumplings into the sauce.",
+        "imagePrompt": "Photoreal vertical 9:16 cinematic food film. Same cream ceramic 24 cm oval oven-safe dish on a dark walnut board, pale stone counter, copper utensils, amber window light from camera left, shadowed walnut cabinets. Same adult cook hands with short natural nails, no gloves, no face. One dish only, no packaging, logos, generated lettering, extra hands or duplicate dumplings. Shallow macro focus and appetizing but plausible food texture. Same cream dish with red-orange curry sauce, broccoli and spinach. Frozen pale pleated dumplings are arranged in two neat rows, partially submerged, with the same hand placing the final one. Only this one dish; no cooked food yet. Warm kitchen unchanged.",
+        "motionPrompt": "The hand lowers one frozen pleated dumpling into an open space, then nudges it gently until its base sits in the sauce. Hold on the complete arranged dish with the dumplings still pale and uncooked. No spontaneous browning.",
+        "sound": "soft kitchen room ambience"
+      },
+      {
+        "seconds": 4,
+        "narration": "Bake for twenty minutes, until dumplings are cooked through.",
+        "imagePrompt": "Photoreal vertical 9:16 cinematic food film. Same cream ceramic 24 cm oval oven-safe dish on a dark walnut board, pale stone counter, copper utensils, amber window light from camera left, shadowed walnut cabinets. Same adult cook hands with short natural nails, no gloves, no face. One dish only, no packaging, logos, generated lettering, extra hands or duplicate dumplings. Shallow macro focus and appetizing but plausible food texture. Same cream oval dish after baking: dumplings are plump and lightly golden at their high points, broccoli softened, spinach wilted, coconut curry bubbling gently at the edges. A folded linen towel in the same hand steadies the hot dish on the walnut board. Same warm left light. No new pot or ingredients.",
+        "motionPrompt": "The hot baked dish settles onto the walnut board in a clear cut across cooking time. Small curry bubbles burst around the cooked dumplings as the camera pushes toward their lightly golden pleats. The same towel stays under the hand; no raw-to-cooked morph within the shot.",
+        "sound": "quiet kitchen room ambience"
+      },
+      {
+        "seconds": 3,
+        "narration": "Chili crisp, lime, then serve hot.",
+        "imagePrompt": "Photoreal vertical 9:16 cinematic food film. Same cream ceramic 24 cm oval oven-safe dish on a dark walnut board, pale stone counter, copper utensils, amber window light from camera left, shadowed walnut cabinets. Same adult cook hands with short natural nails, no gloves, no face. One dish only, no packaging, logos, generated lettering, extra hands or duplicate dumplings. Shallow macro focus and appetizing but plausible food texture. Same baked red curry dumplings in the same cream dish. A restrained ribbon of red chili crisp oil and green coriander garnish the top; a fresh lime wedge is held at the rim. One copper spoon holds a clearly pleated wheat-skin dumpling above broccoli and wilted spinach; every dumpling remains pale with visible folded seams, never round like meatballs. Warm amber kitchen.",
+      "motionPrompt": "One pleated dumpling is already held above the dish in a copper spoon. The same hand moves the spoon gently upward a few centimeters toward camera; the pleated dumpling stays intact on the spoon while one tiny orange sauce drop falls back into the dish. The lime, broccoli and remaining dumplings stay fixed. No utensil swaps or extra hands.",
+        "sound": "soft kitchen room ambience"
+      }
+    ],
+    "claimsToCheck": [
+      "Cook frozen dumplings until cooked through according to package instructions; oven timing varies.",
+      "This is an AI-generated demonstration, not evidence that the recipe was cooked and tasted."
+    ]
+  },
+  "recipe": {
+    "status": "Adapted editorial recipe; cook and taste before publishing it as tested. Source credit below.",
+    "servings": 4,
+    "ingredients": [
+      "3 tbsp red curry paste",
+      "1 tsp minced garlic",
+      "1 tsp minced ginger",
+      "400 ml coconut milk",
+      "1 tbsp fish sauce, optional; check dietary needs",
+      "200 g small broccoli florets",
+      "1 cup baby spinach",
+      "20 frozen dumplings",
+      "2 tbsp chili crisp, to finish",
+      "coriander and lime, to finish"
+    ],
+    "method": [
+      "Preheat oven to 200\u00b0C (180\u00b0C fan). In one oven-safe dish, stir red curry paste, garlic, ginger, coconut milk and fish sauce until smooth.",
+      "Add broccoli and spinach, then arrange frozen dumplings partially in the sauce.",
+      "Bake for about 20 minutes, or until dumplings are cooked through and lightly golden. Check the dumpling package and extend cooking if needed.",
+      "Finish with chili crisp, coriander and lime. Serve hot."
+    ],
+    "inspirationSource": "https://www.marionskitchen.com/one-pan-red-curry-dumplings/"
+  },
+  "audioPlan": {
+    "music": "licensed-track",
+    "musicFile": "assets/music/wholesome-kevin-macleod-60s.ogg",
+    "musicSource": "https://commons.wikimedia.org/wiki/File:Wholesome_by_Kevin_MacLeod.ogg",
+    "musicLicense": "CC BY 4.0",
+    "musicCredit": "Wholesome by Kevin MacLeod (incompetech.com), CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ — 60-second excerpt",
+    "voice": "Kokoro af_heart",
+    "subtitles": "captions",
+    "foley": "Low real kitchen ambience and cutlery contact only; avoid synthesized food actions. Review the mix by listening.",
+    "sfxPolicy": "recordings-only",
+    "foleySamples": {
+      "room": {
+        "file": "assets/foley/public-domain/ambient-kitchen.ogg",
+        "offsetSeconds": 12,
+        "gain": 0.5,
+        "recordedAction": "kitchen ambience",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ambient_Kitchen_Sounds.wav",
+        "license": "CC0"
+      },
+      "clink": {
+        "file": "assets/foley/public-domain/wood-and-cutlery.ogg",
+        "offsetSeconds": 0,
+        "gain": 0.5,
+        "recordedAction": "cutlery placed on wood",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Wood_and_cutlery.ogg",
+        "license": "public domain"
+      }
+    }
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-15",
+    "trendLabel": "vidIQ snapshot: several one-pan dumpling Shorts had channel-relative breakout; this original adaptation is not a forecast of views",
+    "sources": [
+      "https://www.youtube.com/shorts/1-bqSdhUxtA",
+      "https://www.youtube.com/shorts/wyFzcbhtL5k",
+      "https://www.marionskitchen.com/one-pan-red-curry-dumplings/"
+    ]
+  },
+  "template": "hand-directed-subtitled-one-pan-recipe",
+  "recipeSequence": [
+    {
+      "phase": "teaser",
+      "vessel": "cream oval dish",
+      "adds": []
+    },
+    {
+      "phase": "prep",
+      "vessel": "cream oval dish",
+      "adds": [
+        "red curry paste"
+      ]
+    },
+    {
+      "phase": "prep",
+      "vessel": "cream oval dish",
+      "adds": [
+        "garlic",
+        "ginger"
+      ]
+    },
+    {
+      "phase": "prep",
+      "vessel": "cream oval dish",
+      "adds": [
+        "coconut milk",
+        "fish sauce"
+      ]
+    },
+    {
+      "phase": "prep",
+      "vessel": "cream oval dish",
+      "adds": [
+        "broccoli",
+        "spinach"
+      ]
+    },
+    {
+      "phase": "prep",
+      "vessel": "cream oval dish",
+      "adds": [
+        "dumpling"
+      ]
+    },
+    {
+      "phase": "bake",
+      "vessel": "cream oval dish",
+      "adds": []
+    },
+    {
+      "phase": "serve",
+      "vessel": "cream oval dish",
+      "adds": [
+        "chili crisp",
+        "lime"
+      ]
+    }
+  ]
+}

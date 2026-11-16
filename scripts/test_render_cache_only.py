@@ -12,6 +12,11 @@ spec.loader.exec_module(render)
 
 
 class CacheOnlyTests(unittest.TestCase):
+    def test_voice_pause_needs_continuous_audio_bed(self):
+        self.assertTrue(render.sound_led_pauses({'audioPlan': {'music': 'licensed-track'}}))
+        self.assertTrue(render.sound_led_pauses({'audioPlan': {'music': 'none', 'foleySamples': {'room': {}}}}))
+        self.assertFalse(render.sound_led_pauses({'audioPlan': {'music': 'none'}}))
+
     def test_missing_still_stops_before_flux(self):
         with tempfile.TemporaryDirectory() as folder:
             with self.assertRaisesRegex(RuntimeError, 'missing approved still'):
