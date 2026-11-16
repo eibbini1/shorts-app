@@ -179,7 +179,11 @@ PY
 fi
 python3 scripts/qa-local-video.py --video "$final_video" --pack "$pack" --scenario "$scenario" --expected-seconds "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["settings"]["seconds"])' "$scenario")" --work-dir "storage/any-local/$(basename "$scenario" .json)" || { echo "Technical QA failed: read $pack before uploading." >&2; exit 5; }
 python3 scripts/log-local-run.py --scenario "$scenario" --video "$final_video" --pack "$pack"
+# Advisory screen of the exact final file (shot questions on middle frames, final payoff, dish continuity, loudness).
+# It awards no points; it tells the reviewer which ratings are likely to fall below 4/5.
+python3 scripts/prereview-local-video.py --scenario "$scenario" --video "$final_video" ${skip_vision_gate:+--skip-vision} || echo 'Pre-review flagged likely weak categories; fix them before the editorial review.' >&2
 python3 scripts/score-local-video.py --scenario "$scenario" --pack "$pack" --video "$final_video" || echo 'Release gate is blocked or needs editorial review; inspect the quality report.' >&2
+echo "Editorial review (watch and listen, about 2 minutes): npm run review:video:mac -- --scenario '$scenario' --pack '$pack' --video '$final_video'"
 t_end=$SECONDS
 checks_s=$((t_checks - t_start)); render_s=$((t_render - t_checks)); finish_s=$((t_end - t_render)); total_s=$((t_end - t_start))
 printf 'Timing: checks %ds, render %dm%02ds, captions+QA %ds, total %dm%02ds\n' "$checks_s" $((render_s / 60)) $((render_s % 60)) "$finish_s" $((total_s / 60)) $((total_s % 60))
