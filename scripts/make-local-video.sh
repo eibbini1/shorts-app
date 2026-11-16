@@ -18,7 +18,7 @@ USAGE
 
 default_model='qwen3:1.7b'
 [[ -s storage/setup/gemma-model-dir.txt ]] && default_model='gemma-local'
-scenario=''; status=''; chain=''; stills=''; anchor_image=''; allow_repeat=''; cache_only=''; best_of_3=''; idea=''; studio=''; answers=''; editor='ffmpeg'; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
+scenario=''; status=''; chain=''; stills=''; anchor_image=''; allow_repeat=''; cache_only=''; best_of_3=''; idea=''; studio=''; answers=''; editor="${SHORTS_EDITOR:-auto}"; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
 while (($#)); do
   case "$1" in
     --scenario) scenario="${2:?Missing scenario path}"; shift 2 ;;
@@ -44,6 +44,12 @@ while (($#)); do
   esac
 done
 [[ "$editor" == auto || "$editor" == filmcraft || "$editor" == ffmpeg || "$editor" == artcraft ]] || { echo 'Editor must be ffmpeg, artcraft, filmcraft, or auto.' >&2; exit 2; }
+if [[ "$editor" == auto ]]; then
+  editor=ffmpeg
+  if [[ "$(uname -s)" == Darwin && -x storage/tools/artcraft/photocraft-cli && -x storage/tools/artcraft/filmcraft-cli && -x storage/tools/artcraft/soundcraft-cli && -x storage/tools/artcraft/effectcraft-cli ]]; then
+    editor=artcraft
+  fi
+fi
 
 if [[ -n "$status" ]]; then
   [[ -z "$scenario" ]] || { echo 'Use --status or --scenario, not both.' >&2; exit 2; }
@@ -100,6 +106,10 @@ base="${base%.json}"
 output="outputs/$base-$(date +%Y%m%d-%H%M%S).mp4"
 t_start=$SECONDS
 echo "Step 1/4  Environment check"
+echo "Finishing editor: $editor"
+if [[ "$editor" == artcraft ]]; then
+  python3 scripts/check-artcraft-mac.py --require-cli || { echo 'ArtCraft version check failed before rendering.' >&2; exit 4; }
+fi
 python3 scripts/check-env.py || { echo "Fix the FAIL lines above, then run this again." >&2; exit 4; }
 echo "Step 2/4  Pre-render check (topic, hook, length, currency, claims)"
 python3 scripts/preflight-short.py "$scenario" --strict ${allow_repeat:+$allow_repeat} || { echo "Preflight blocked this scenario. Fix the listed problems before rendering." >&2; exit 3; }
@@ -121,6 +131,9 @@ if [[ "$editor" == artcraft ]]; then
   # SoundCraft remaster + this film's own captions at 1080 + FilmCraft 1080x1920 edit of the rendered shots.
   art_video="${finished_video%.mp4}.artcraft.mp4"
   art_args=(--assembly "${output%.mp4}.assembly" --audio "$finished_video" --output "$art_video")
+  art_work="storage/any-local/$(basename "$scenario" .json)"
+  [[ ! -f "$art_work/voice-timeline.wav" ]] || art_args+=(--voice "$art_work/voice-timeline.wav" --sfx "${output%.mp4}.sfx.wav")
+  [[ ! -f "$art_work/soundtrack.wav" ]] || art_args+=(--bed "$art_work/soundtrack.wav")
   [[ ! -f "${finished_video%.mp4}.ass" ]] || art_args+=(--captions "${finished_video%.mp4}.ass")
   python3 scripts/artcraft-finish.py "${art_args[@]}"
   final_video="$art_video"

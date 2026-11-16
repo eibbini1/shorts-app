@@ -65,6 +65,44 @@ def soundcraft_mix(source, target, lufs=-16.0, peak=-1.0):
     return best
 
 
+VOICE_CHAIN = (  # slot order matters: clean, shape, tame, level, warm
+    ('expander_gate', {'threshold': -55, 'ratio': 2, 'attack': 2, 'release': 120, 'hold': 40}),
+    ('eq_7band', {'hpf_on': 1, 'hpf_freq': 85, 'low_mid_freq': 300, 'low_mid_gain': -2, 'low_mid_q': 1,
+                  'high_mid_freq': 3500, 'high_mid_gain': 2.5, 'high_mid_q': 0.9,
+                  'high_shelf_freq': 9000, 'high_shelf_gain': 1.5}),
+    ('de_esser', {'threshold': -28, 'freq': 6500}),
+    ('compressor', {'threshold': -20, 'ratio': 3, 'attack': 8, 'release': 120, 'knee': 6, 'makeup': 3}),
+    ('saturator', {'drive': 1}),
+)
+
+
+def soundcraft_voice(source, target, chain=VOICE_CHAIN):
+    """The narration on its own SoundCraft track: gate, EQ, de-esser, compressor, light saturation."""
+    cmd = [tool('soundcraft'), 'run', '--cmd', f'file.import_audio={json.dumps({"path": str(source)})}']
+    for slot, (plugin, params) in enumerate(chain):
+        cmd += ['--cmd', f'mix.insert={json.dumps({"track": 2, "slot": slot, "plugin": plugin})}',
+                '--cmd', f'mix.insert_params={json.dumps({"track": 2, "slot": slot, "params": params})}']
+    run(cmd + ['--bounce', target])
+    before, after = loudness(source), loudness(target)
+    if after[0] < before[0] - 6 or after[1] > 0:
+        raise SystemExit(f'Voice chain changed the narration too much ({before} -> {after}); not using it')
+    return {'chain': [name for name, _ in chain], 'before': before, 'after': after}
+
+
+def stem_premix(voice, beds, target):
+    """Processed voice over the effect and room beds, which dip while the voice speaks (the app's existing duck)."""
+    cmd = ['ffmpeg', '-y', '-v', 'error', '-i', voice]
+    for bed in beds:
+        cmd += ['-i', bed]
+    labels = ''.join(f'[{n + 1}:a]aresample=48000,aformat=channel_layouts=mono[b{n}];' for n in range(len(beds)))
+    joined = ''.join(f'[b{n}]' for n in range(len(beds)))
+    graph = (f'[0:a]aresample=48000,aformat=channel_layouts=mono,asplit=2[v][key];{labels}'
+             f'{joined}amix=inputs={len(beds)}:normalize=0[bed];'
+             '[bed][key]sidechaincompress=threshold=0.003:ratio=20:attack=8:release=350[duck];'
+             '[v][duck]amix=inputs=2:normalize=0:duration=first[a]')
+    run(cmd + ['-filter_complex', graph, '-map', '[a]', '-c:a', 'pcm_s24le', target])
+
+
 def effectcraft_title(text, target, work, seconds=3.0):
     """A short top-of-frame title with a fade and settle, rendered as ProRes 4444 with alpha."""
     cli = tool('effectcraft')
@@ -128,6 +166,8 @@ def main():
     p.add_argument('--assembly', required=True, type=Path, help='Folder with segment-000.mp4 ... from render-any-local.py')
     p.add_argument('--sfx', type=Path, help='A raw sound track (.wav) for silent films')
     p.add_argument('--audio', type=Path, help='Any finished audio or video whose sound (voice + effects) should be remastered')
+    p.add_argument('--voice', type=Path, help='voice-timeline.wav: narration gets its own SoundCraft chain (needs --sfx and/or --bed)')
+    p.add_argument('--bed', type=Path, help='soundtrack.wav: the room or music bed that goes with --voice')
     p.add_argument('--captions', type=Path, help='The .ass captions written by finish-local-video.py')
     p.add_argument('--output', required=True, type=Path)
     p.add_argument('--title', help='Optional short top-of-frame title for the first three seconds')
@@ -146,7 +186,15 @@ def main():
         work = Path(tmp)
         mix = output.with_suffix('.soundcraft.wav')
         raw = work / 'source.wav'
-        run(['ffmpeg', '-y', '-v', 'error', '-i', source_audio.resolve(), '-vn', '-ac', '1', '-ar', '48000', '-c:a', 'pcm_s24le', raw])
+        voice_report = None
+        beds = [b.resolve() for b in (args.sfx, args.bed) if b and b.is_file()]
+        if args.voice and args.voice.is_file() and beds and loudness(args.voice)[0] > -60:
+            voice = output.with_suffix('.voice.wav')
+            voice_report = soundcraft_voice(args.voice.resolve(), voice)
+            stem_premix(voice, beds, raw)
+        else:
+            run(['ffmpeg', '-y', '-v', 'error', '-i', source_audio.resolve(), '-vn', '-ac', '1', '-ar', '48000',
+                 '-c:a', 'pcm_s24le', raw])
         mixed = soundcraft_mix(raw, mix)
         overlays = []
         if args.captions:
@@ -165,7 +213,7 @@ def main():
     if not output.is_file() or not output.stat().st_size:
         raise SystemExit(f'FilmCraft export failed: {exported}')
     report = {'output': str(output), 'project': str(project), 'segments': [s.name for s in segments],
-              'soundcraftMix': mixed, 'title': args.title, 'captions': str(args.captions) if args.captions else None, 'sharpen': args.sharpen,
+              'soundcraftMix': mixed, 'voice': voice_report, 'title': args.title, 'captions': str(args.captions) if args.captions else None, 'sharpen': args.sharpen,
               'elapsedSeconds': round(time.monotonic() - started, 1), 'export': exported.get('result')}
     output.with_suffix('.artcraft.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report, indent=2))

@@ -15,7 +15,17 @@ Status on 2026-11-16: the user installed the ArtCraft Launcher and four desktop 
 
 Primary references: [FilmCraft product](https://getartcraft.com/apps/filmcraft), [FilmCraft agent/CLI guide](https://github.com/storytold/filmcraft/blob/main/docs/agents.md), [PhotoCraft CLI guide](https://github.com/storytold/photocraft/blob/main/book/src/automation/cli.md), [EffectCraft product](https://www.getartcraft.com/apps/effectcraft), [SoundCraft CLI guide](https://github.com/storytold/soundcraft/blob/main/docs/cli.md), [ArtCraft Studio repository](https://github.com/storytold/artcraft), [ArtCraft pricing](https://getartcraft.com/pricing).
 
+## Current local editor selection (2026-11-16)
+
+`npm run video:local -- --scenario examples/local-scenarios/first-cold-night-10.local-scenario.json` selects the local ArtCraft path on a Mac with all four matching CLIs in `storage/tools/artcraft`; `--editor ffmpeg` remains an explicit fallback. `--editor artcraft` requires the ArtCraft path. The app and CLI versions are checked **before** FLUX or LTX work; a missing or mismatched CLI stops the job. Hosted ArtCraft Studio generation is not called.
+
+One actual 10-second, two-shot run through the single ArtCraft command completed in 9m13s: PhotoCraft prepared the two stills, local LTX generated both moving clips, SoundCraft mastered the Foley mix, and FilmCraft exported a 1080×1920 H.264/AAC video in an editable project. The final file passed six technical QA checks (10.01s, −15.54 LUFS, −3.41 dB true peak). This older smoke scenario has no `audioPlan` with field-recording sources, so its sound realism is unproven; it also lacks a creative variety signature and its full audio has not been heard. The release gate blocks it. The 1080 output is an upscale of lower-resolution generated motion; it is not new optical detail.
+
+The voiced red-curry pilot separately exercised SoundCraft's narration chain (gate, EQ, de-esser, compressor, light saturation), the 1080 caption layer, and FilmCraft export. It passed six technical checks (30.02s, −16.94 LUFS, −1.36 dB true peak). The captions were moved to the top after sampled bottom captions covered the dish; sampled frames of the new 1080 export keep text off the food. A full listen and full-frame editorial review remain required. EffectCraft's optional title was tested on the shallot film, but it is not added to a Short that does not ask for a title.
+
 ## Integration in one terminal command
+
+The staged design below is historical; the verified current behavior is recorded above.
 
 `npm run video:local` stays the only creator entry point. Its existing brief, local story draft, preflight, still generation, LTX motion, Kokoro voice and sound provenance remain in place. Add optional editor and sound backends only after their baseline tests. The installed GUI apps can already be used for manual review; they do not by themselves make the terminal pipeline automatic. For macOS, the FilmCraft release ships its CLI as a separate zip, and the desktop `.app` contains only the GUI.
 
