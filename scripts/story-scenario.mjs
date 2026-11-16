@@ -5,6 +5,7 @@ import {promisify} from 'node:util';
 import {parseArgs} from 'node:util';
 import {z} from 'zod';
 import {scenarioSettings, verifyScenario} from './scenario-schema.mjs';
+import {fitOutlineIdeas, narrationWordBand} from './story-draft-utils.mjs';
 
 const args=parseArgs({allowPositionals:true,options:{style:{type:'string',default:'cinematic'},ending:{type:'string',default:''},title:{type:'string',default:''},set:{type:'string',default:''},hook:{type:'string',default:''},'must-show':{type:'string',default:''},obstacle:{type:'string',default:''},turn:{type:'string',default:''},audio:{type:'string',default:'auto'},format:{type:'string',default:'short'},seconds:{type:'string',default:'30'},model:{type:'string',default:'qwen3:1.7b'}}});
 const execFileAsync=promisify(execFile);
@@ -71,7 +72,8 @@ async function ask(schema,system,payload){
       }
       if(typeof raw!=='string') throw new Error('Local model returned no text');
       const body=raw.slice(raw.indexOf('{'),raw.lastIndexOf('}')+1);
-      return schema.parse(JSON.parse(body));
+      const parsed=JSON.parse(body);
+      return schema.parse(schema===outlineSchema?fitOutlineIdeas(parsed):parsed);
     }catch(error){
       last=error;
       if(model==='gemma-local' && error.code!==undefined){
@@ -215,33 +217,35 @@ function fallbackNarration(beat){
   return `One journey leads toward ${goal}.`;
 }
 function shortenNarration(text,seconds){
-  const limit=Math.ceil(seconds*2.5);
+  const {min:minimum,max:limit}=narrationWordBand(seconds);
   const words=text.trim().split(/\s+/);
   if(words.length<=limit) return text;
   const sentences=text.match(/[^.!?]+[.!?]?/g)?.map(item=>item.trim())??[];
-  const fit=sentences.find(sentence=>sentence.split(/\s+/).length<=limit);
+  const fit=sentences.find(sentence=>sentence.split(/\s+/).length>=minimum && sentence.split(/\s+/).length<=limit);
   return fit || words.slice(0,limit).join(' ').replace(/[,;:]+$/,'')+'.';
 }
 for(let i=0;i<count;i++){
   const beat=beats[i];
+  const {min:minWords,max:maxWords}=narrationWordBand(beat.seconds);
   let shot;
   let issues=[];
   for(let attempt=1;attempt<=2;attempt++){
     shot=await ask(shotSchema,
-      `Write ONE shot for ONE specific story beat. ${masterPrompts.shot} ${masterPrompts.footage} ${masterPrompts.sound} ${subjectRules} ${briefRules} Follow the beat directive literally. Keep the same subject, location, props and lighting progression from the outline. Do not include any event assigned to a later beat. The imagePrompt depicts the START of one distinct physical event, not its finished result. The motionPrompt must name the subject and describe a physical start, visible action and changed end state; include one camera move tracking that action in a single continuous take. No camera-only pans or zooms over a static pose, no cut or montage. Narration is one specific sentence, about four to ten words for a five-second shot. No unsupported facts or generic mood-only phrases. Sound names one localized effect synchronized with the action; for food use cues such as sizzle, slice, pour, crunch or utensil clink when physically appropriate. Output only JSON.`,
+      `Write ONE shot for ONE specific story beat. ${masterPrompts.shot} ${masterPrompts.footage} ${masterPrompts.sound} ${subjectRules} ${briefRules} Follow the beat directive literally. Keep the same subject, location, props and lighting progression from the outline. Do not include any event assigned to a later beat. The imagePrompt depicts the START of one distinct physical event, not its finished result. The motionPrompt must name the subject and describe a physical start, visible action and changed end state; include one camera move tracking that action in a single continuous take. No camera-only pans or zooms over a static pose, no cut or montage. Narration should be one speakable specific sentence, ideally ${Math.min(maxWords,Math.max(minWords,Math.ceil(beat.seconds*1.8)))} to ${maxWords} words for this ${beat.seconds}-second shot; a shorter line is acceptable only if the scene has a sound-led pause. For the hook, name the exact subject and a visible action, then add a truthful quantity, contrast, or question if natural; do not invent a fact. No unsupported facts or generic mood-only phrases. Sound names one localized effect synchronized with the action; for food use cues such as sizzle, slice, pour, crunch or utensil clink when physically appropriate. Output only JSON.`,
       {topic,style:args.values.style,creativeBrief,outline,beat,directive:beatDirective(beat),reviewedShotExamples,previousShots:shots.map((item,j)=>({beat:beats[j].label,imagePrompt:item.imagePrompt,motionPrompt:item.motionPrompt})),
-        correction:attempt>1?`The last answer repeated a scene, included a cut, changed the subject, or had unsuitable narration. ${subjectRules} Make this beat visibly distinct and speakable.`:undefined});
+        correction:attempt>1?`The last answer repeated a scene, included a cut, changed the subject, or had unsuitable narration. The narration MUST contain ${minWords} to ${maxWords} words in one natural sentence. ${subjectRules} Make this beat visibly distinct and speakable.`:undefined});
     const words=shot.narration.split(/\s+/).length;
     issues=[];
     if(subjectIssue(Object.values(shot).join(' '))) issues.push('subject');
     if(seenImages.some(value=>similar(value,shot.imagePrompt,0.85))) issues.push('image');
     if(seenMotion.some(value=>similar(value,shot.motionPrompt,0.85))||/\b(cut to|quick cut|montage|transition to)\b/i.test(shot.motionPrompt)) issues.push('motion');
-    if(seenNarration.some(value=>similar(value,shot.narration,0.85))||words>Math.ceil(beat.seconds*2.5)||
-       words<Math.max(3,Math.floor(beat.seconds*0.8))) issues.push('narration');
+    if(seenNarration.some(value=>similar(value,shot.narration,0.85))||words>maxWords||words<minWords) issues.push('narration');
     if(!issues.length) break;
     rewriteCount++;
     if(attempt===2){
       if(issues.includes('subject')) throw new Error(`Beat ${i+1} changed the requested subject. No scenario was saved or rendered.`);
+      if(issues.includes('narration') && (words<minWords || seenNarration.some(value=>similar(value,shot.narration,0.85))))
+        throw new Error(`Beat ${i+1} narration is too short or repeats another line (${words} words; ${minWords}-${maxWords} preferred). No scenario was saved or rendered; give a more specific action or try another installed local story model.`);
       console.log(`Repairing ${issues.join(', ')} in beat ${i+1}; review it closely`);
       fallbackCount+=issues.length;
       break;
@@ -249,7 +253,7 @@ for(let i=0;i<count;i++){
     console.log(`Rewriting beat ${i+1} (${issues.join(', ')}) before saving`);
   }
   const action=beatAction(beat);
-  const narration=issues.includes('narration')?fallbackNarration(beat):shot.narration;
+  const narration=shot.narration;
   let image=issues.includes('image')?`${action}. Same ${outline.protagonist} in ${outline.setting}. ${args.values.style}.`:
     `${shot.imagePrompt}${/consistent subject/i.test(shot.imagePrompt)?'':` Consistent subject: ${outline.protagonist.replace(/[.!?]+$/,'')}.`} Visual style: ${args.values.style}.`;
   let motion=issues.includes('motion')?`${action}. One continuous shot. The subject moves visibly while the camera tracks the action.`:

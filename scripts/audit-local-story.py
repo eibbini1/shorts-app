@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Fast editorial gate before spending time on FLUX or LTX."""
 import argparse
+from difflib import SequenceMatcher
 import json
 import math
 import re
@@ -11,6 +12,19 @@ from presentation_mode import choose as choose_presentation
 STOP = {'the','and','with','from','into','that','this','one','same','scene','shot','film','video','warm','cinematic','real','local'}
 ACTION = re.compile(r'\b(place|drop|sear|bast|pour|squeeze|lift|lower|slide|sets|arrange|rotate|cut|slice|bite|stir|chop|melt|sizzle|open|close|pull|push|run|walk|jump|turn|catch|serve|mix|roll|spin|crack|break|assemble|brown|cook|garnish|add|present|adjust|smash|press|toast|stack)\w*\b', re.I)
 CAMERA_ONLY = re.compile(r'^(?:the )?camera (?:slowly )?(?:pan|tilt|zoom|track)', re.I)
+ABSTRACT_MOTION = re.compile(r'physical obstacle blocks progress|visibly discovers a way|begins carrying out|comes close to .*without reaching|the subject moves visibly', re.I)
+FRAGMENT_END = re.compile(r'(?:\b(?:the|a|an|to|and|of|with|for)|\b(?:get|balance) that)\W*$', re.I)
+
+
+def near_duplicate(a, b):
+    # Compare the shot's leading action, not the shared visual-bible suffix.
+    lead_a = ' '.join(a.split('.', 1)[0].lower().split())
+    lead_b = ' '.join(b.split('.', 1)[0].lower().split())
+    # Mirrored A/B or left/center/right comparisons intentionally share a setup.
+    variants = re.compile(r'\b(?:first|second|left|center|right|option_[abc])\b', re.I)
+    if set(variants.findall(lead_a)) != set(variants.findall(lead_b)) and variants.search(lead_a) and variants.search(lead_b):
+        return False
+    return SequenceMatcher(None, lead_a, lead_b).ratio() >= .84
 
 
 def physical_action(motion):
@@ -115,9 +129,12 @@ def main():
     setting_words = words(data.get('storyArc', {}).get('setting', ''))
     for i, shot in enumerate(shots, 1):
         if not physical_action(shot['motionPrompt']): problems.append(f'shot {i} has no recognizable physical action')
+        if ABSTRACT_MOTION.search(shot['motionPrompt']): problems.append(f'shot {i} uses abstract or placeholder motion instead of a filmable action')
         if CAMERA_ONLY.search(shot['motionPrompt']) and not physical_action(shot['motionPrompt']): problems.append(f'shot {i} is camera movement over a still')
         if presentation['voice'] and len(shot['narration'].split()) > math.ceil(shot['seconds'] * 2.5):
             problems.append(f'shot {i} narration cannot fit')
+        if presentation['voice'] and FRAGMENT_END.search(shot['narration']):
+            problems.append(f'shot {i} narration ends mid-sentence')
         if not shot.get('sound', '').strip(): notes.append(f'shot {i} has no localized sound cue')
         shot_words = words(shot['imagePrompt'] + ' ' + shot['motionPrompt'])
         if protagonist_words and not protagonist_words.intersection(shot_words):
@@ -127,6 +144,9 @@ def main():
     for field in ('imagePrompt','motionPrompt'):
         values = [' '.join(s[field].lower().split()) for s in shots]
         if len(values) != len(set(values)): problems.append(f'repeated {field}')
+        for i in range(1, len(values)):
+            if near_duplicate(values[i-1], values[i]):
+                problems.append(f'shots {i} and {i+1} have near-identical {field}')
     if data.get('qualityChecks', {}).get('fieldsNeedingRepair'):
         notes.append('the story model repaired fields automatically; inspect those shots before render')
     if not data.get('sourceReview'):

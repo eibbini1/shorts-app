@@ -124,6 +124,12 @@ def voice_gaps(wav, limit=1.5):
     return [(a, b) for a, b in zip(starts, ends) if a > 0.5]
 
 
+def sound_led_pauses(data):
+    plan = data.get('audioPlan') or {}
+    music = str(plan.get('music', 'auto')).strip().lower()
+    return music not in ('none', 'no music', 'off', 'silent') or 'room' in (plan.get('foleySamples') or {})
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--scenario', required=True, type=Path)
@@ -183,11 +189,14 @@ def main():
         (work / 'voice-provenance.json').write_text(json.dumps({'engine': 'none', 'voice': None,
             'lines': [], 'presentation': presentation}, indent=2) + '\n')
     print(f'Parallel voice and soundtrack preparation: {time.monotonic() - audio_started:.1f}s', flush=True)
-    # Fail-fast gate: voice exists now, clips do not. Stop here if shots would leave dead air.
+    # A deliberate music or recorded-room bed can carry a visual pause. Final-file QA
+    # still rejects actual silence; a bare voice track with dead air stops before GPU.
     gaps = voice_gaps(work / 'voice-timeline.wav') if presentation['voice'] else []
-    if gaps and not args.allow_silence:
+    if gaps and not args.allow_silence and not sound_led_pauses(source_data):
         lines = ', '.join(f'{a:.1f}-{b:.1f} s ({b - a:.1f} s)' for a, b in gaps)
         parser.error(f'Voice track has silence over 1.5 s at {lines}. Shorten those shots to the line length plus 0.6 s (total must stay equal to settings.seconds), or pass --allow-silence. Stopped before the 25-minute clip step')
+    if gaps and sound_led_pauses(source_data):
+        print(f'Voice leaves {len(gaps)} sound-led pause(s); final-file audio QA and a listening review are required.', flush=True)
     model = (ROOT / 'storage/setup/ltx-model-dir.txt').read_text().strip()
     gemma = (ROOT / 'storage/setup/gemma-model-dir.txt').read_text().strip()
     expected = sum(math.ceil(shot['seconds'] / 5) for shot in plan['shots'])
