@@ -1,0 +1,205 @@
+{
+  "status": "review-required",
+  "settings": {
+    "brand": "Billionaire Bites",
+    "format": "short",
+    "seconds": 20,
+    "voice": "af_heart",
+    "presentationMode": "asmr"
+  },
+  "model": "hand-directed-from-reference-and-local-gates",
+  "promptPackVersion": "2026-11-16",
+  "topic": "Six shallot and roasted garlic bread slices in one warm kitchen",
+  "style": "Photoreal macro food film of six thick slices cut from one baguette, all cooked and served together. Brown butter, softened shallots, roasted garlic, thyme and Gruyere. Same copper skillet, walnut board, cream counter, natural-nailed adult hands and warm side light. Realistic food geometry; no floating objects, labels or extra hands.",
+  "requestedEnding": "One finished shallot and roasted garlic bread slice is lifted from the same tray and served warm with a short believable cheese stretch.",
+  "totalSeconds": 20,
+  "creativeSignature": {
+    "format": "tactile-recipe-reveal",
+    "set": "warm-walnut-copper-kitchen",
+    "hookPattern": "finished-food-tear-first"
+  },
+  "storyArc": {
+    "protagonist": "six thick slices cut from one baguette",
+    "setting": "one elegant warm kitchen with copper pans, dark walnut board and cream stone counter",
+    "goal": "Turn six plain baguette slices into crisp, cheesy shallot and roasted garlic bread.",
+    "obstacle": "The slices start plain and the aromatics are uncooked.",
+    "turn": "Brown butter, softened shallots, roasted garlic and thyme coat each slice before Gruyere melts in the oven.",
+    "visualBible": "The same six thick baguette slices, dark walnut board, cream stone counter, copper skillet, brushed steel knife, small brass butter bowl and one pair of adult natural-nailed hands recur. The hook isolates one of these six slices; later shots reveal the group. Golden brown crust, visible shallot and thyme flecks, roasted garlic and moderate Gruyere. No whole unsliced loaf, unrelated rolls, gloves, faces, logos or impossible cheese stretch.",
+    "beats": [
+      {
+        "number": 1,
+        "label": "Crust hook",
+        "seconds": 3
+      },
+      {
+        "number": 2,
+        "label": "Aromatics cook",
+        "seconds": 4
+      },
+      {
+        "number": 3,
+        "label": "Bread is dressed",
+        "seconds": 4
+      },
+      {
+        "number": 4,
+        "label": "Bread bakes",
+        "seconds": 4
+      },
+      {
+        "number": 5,
+        "label": "Warm serving payoff",
+        "seconds": 5
+      }
+    ]
+  },
+  "qualityChecks": {
+    "exactTiming": true,
+    "uniquePromptText": true,
+    "narrationFits": true,
+    "endingLockedFromUser": true,
+    "rewrites": 0,
+    "fieldsNeedingRepair": 0
+  },
+  "plan": {
+    "ideas": [
+      {
+        "title": "Shallot and Roasted Garlic Bread",
+        "angle": "A finished-food tear invites viewers into the small kitchen ritual that made it."
+      },
+      {
+        "title": "Brown Butter Bread",
+        "angle": "Lead with the sizzling shallot and browned-butter pan."
+      },
+      {
+        "title": "The Garlic Squeeze",
+        "angle": "Roasted garlic drops into the pan as a visual hook."
+      },
+      {
+        "title": "The Bread Pull",
+        "angle": "A short believable cheese pull closes the recipe."
+      },
+      {
+        "title": "One Loaf, Four Textures",
+        "angle": "Show crisp crust, soft crumb, sweet shallot and melted cheese."
+      }
+    ],
+    "title": "Brown-Butter Shallot Garlic Bread",
+    "hook": "One golden Gruyere-topped baguette slice cracks at the edge in a tight macro shot.",
+    "payoff": "One finished shallot and roasted garlic bread slice is lifted from the same tray and served warm with a short believable cheese stretch.",
+    "shots": [
+      {
+        "seconds": 3,
+        "narration": "The crisp crust breaks open.",
+        "imagePrompt": "Extreme macro of one of six thick baguette slices, golden and topped with melted Gruyere, browned-butter gloss, shallot and thyme flecks. Two adult natural-nailed hands hold its crisp edge above a dark walnut board; the other five slices are beyond the shallow focus. Same copper skillet and cream counter softly behind, warm side light, believable anatomy, photoreal food commercial, no text.",
+        "motionPrompt": "The two hands gently flex this one finished baguette slice until the crisp edge cracks once and a short cheese strand appears. The other slices stay on the board in soft focus. Camera makes one restrained macro push toward the crack. No extra fingers, cuts or shape change.",
+        "sound": "one crisp crust crunch over quiet kitchen room tone"
+      },
+      {
+        "seconds": 4,
+        "narration": "Roasted garlic joins sweet shallots in brown butter.",
+        "imagePrompt": "Same copper skillet in the warm kitchen. Two diced shallots soften in foaming browned butter with thyme while one hand squeezes a roasted garlic clove into the pan. The six plain thick baguette slices wait together on the dark walnut board behind in soft focus. Cream stone counter, brass bowl, natural-nailed hand, realistic texture, no text.",
+        "motionPrompt": "One natural-nailed hand squeezes one roasted garlic clove into the copper skillet; a wooden spoon folds it through softened shallots, thyme and lightly foaming brown butter. Camera stays close to the spoon tip; the pan and kitchen remain fixed in one continuous take.",
+        "sound": "gentle shallot sizzle and wooden spoon scrape over room tone"
+      },
+      {
+        "seconds": 4,
+        "narration": "The aromatic butter fills every cut in the loaf.",
+        "imagePrompt": "Six thick baguette slices from the same loaf arranged in one row on a parchment-lined dark tray on the walnut board. One natural-nailed hand uses a brass spoon to spread browned-butter shallots, roasted garlic and thyme over the near slice; restrained grated Gruyere waits in a small bowl. Same copper skillet, cream counter and warm side light, realistic crumbs, no text.",
+        "motionPrompt": "The brass spoon presses shallot garlic butter across two adjacent baguette slices, then the hand scatters a small pinch of grated Gruyere on them. All six slices remain on the same tray. Camera tracks the spoon a few centimeters; no instant baking or teleporting tools.",
+        "sound": "wooden spoon scraping crust and light cutlery clink over room tone"
+      },
+      {
+        "seconds": 4,
+        "narration": "The dressed loaf bakes until the cheese bubbles.",
+        "imagePrompt": "The same six prepared baguette slices, each with browned-butter shallots, roasted garlic, thyme and Gruyere, lie on the parchment-lined dark tray. One natural-nailed hand holds the tray at the open warm oven in the same cream-and-walnut kitchen. Copper skillet and brass bowl remain behind, realistic oven light, no finished bread yet, no text.",
+        "motionPrompt": "The hand slides the tray of six dressed baguette slices straight into the oven and withdraws. The slices stay aligned on the tray while the camera follows from the side. One continuous take; oven and counter geometry remain stable, no instant browning, no cuts.",
+        "sound": "soft tray and oven clink over quiet kitchen room tone"
+      },
+      {
+        "seconds": 5,
+        "narration": "One golden slice tears open and is served warm.",
+        "imagePrompt": "The same six baked baguette slices, golden with moderate melted Gruyere and small shallot and thyme flecks, rest together on parchment on the dark walnut board in the same warm copper-and-stone kitchen. Two natural-nailed hands lift the near slice; short plausible cheese strand, crisp blistered edge, soft crumb, steam, brass bowl nearby, photoreal, no text.",
+        "motionPrompt": "The two hands lift one hot slice from the same row of six, gently pull its crisp edge apart to show a short cheese strand and soft crumb, then set that piece on a small ceramic plate beside the board. Camera tracks the piece in one continuous motion; the other five slices stay in place.",
+        "sound": "crisp crust crunch, gentle cutlery clink, kitchen room tone"
+      }
+    ],
+    "claimsToCheck": [
+      "Creative structure reference only: https://www.youtube.com/shorts/LV3mChwupF8 ; all imagery and audio must be original"
+    ]
+  },
+  "recipe": {
+    "status": "creative kitchen formulation; cook and taste before publishing as a tested recipe",
+    "ingredients": [
+      "1 baguette cut into six thick slices",
+      "2 shallots, finely diced",
+      "1 roasted garlic head",
+      "85 g unsalted butter, browned gently",
+      "1 tsp fresh thyme leaves",
+      "75 g grated Gruyere",
+      "pinch of flaky sea salt"
+    ],
+    "method": [
+      "Soften diced shallots in gently browned butter with thyme and stir in squeezed roasted garlic.",
+      "Spread the aromatic butter over six baguette slices and add a restrained layer of Gruyere.",
+      "Bake the slices on one tray until the edges crisp and cheese bubbles, then finish with flaky salt and serve warm."
+    ]
+  },
+  "audioPlan": {
+    "music": "none",
+    "voice": "none",
+    "subtitles": "none",
+    "foley": "Recorded kitchen ambience and declared action Foley; listen and replace any mismatch before release.",
+    "sfxPolicy": "recordings-only",
+    "foleySamples": {
+      "room": {
+        "file": "assets/foley/public-domain/ambient-kitchen.ogg",
+        "offsetSeconds": 12,
+        "gain": 1.4,
+        "recordedAction": "kitchen ambience",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ambient_Kitchen_Sounds.wav",
+        "license": "CC0"
+      },
+      "crunch": {
+        "file": "assets/foley/public-domain/crunching.ogg",
+        "offsetSeconds": 0,
+        "gain": 0.7,
+        "recordedAction": "dry pistachio husks crushed; approximate bread crust Foley",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Crunching_munching_grinding.ogg",
+        "license": "public domain"
+      },
+      "sizzle": {
+        "file": "assets/foley/public-domain/frying-fries.ogg",
+        "offsetSeconds": 5,
+        "gain": 0.6,
+        "recordedAction": "food frying in oil; approximate shallot pan Foley",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Frying_fries_going_in_and_out_of_oil.ogg",
+        "license": "public domain"
+      },
+      "scrape": {
+        "file": "assets/foley/public-domain/wood-and-cutlery.ogg",
+        "offsetSeconds": 0,
+        "gain": 0.5,
+        "recordedAction": "cutlery on wooden board; approximate spoon contact",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Wood_and_cutlery.ogg",
+        "license": "public domain"
+      },
+      "clink": {
+        "file": "assets/foley/public-domain/wood-and-cutlery.ogg",
+        "offsetSeconds": 0,
+        "gain": 0.5,
+        "recordedAction": "cutlery on wooden board",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Wood_and_cutlery.ogg",
+        "license": "public domain"
+      }
+    }
+  },
+  "sourceReview": {
+    "checkedAt": "2026-11-16",
+    "trendLabel": "One successful garlic-bread reference guided structure; no view forecast.",
+    "sources": [
+      "https://www.youtube.com/shorts/LV3mChwupF8"
+    ]
+  },
+  "template": "hand-written-recipe-asmr"
+}

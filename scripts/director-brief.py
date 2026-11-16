@@ -35,6 +35,16 @@ def idea_defaults(idea_id):
             'ending': idea['payoff'], 'audio': sound}
 
 
+def studio_defaults(studio_id):
+    path = ROOT / 'data/studios' / f'{studio_id}.json'
+    if not studio_id.isascii() or not all(part.isalnum() or part == '-' for part in studio_id):
+        raise ValueError('Studio name must contain only letters, numbers and hyphens')
+    if not path.is_file():
+        raise ValueError(f'Unknown studio: {studio_id}')
+    studio = json.loads(path.read_text())
+    return {'style': studio['style'], 'set': studio['set']}
+
+
 def collect(initial=None):
     initial = initial or {}
     answers = {}
@@ -83,11 +93,13 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--model', help='Local story model (defaults to installed Gemma, else qwen3:1.7b)')
     p.add_argument('--idea', help='Prefill the director questions from an original idea in npm run ideas:bank')
+    p.add_argument('--studio', help='Prefill the style and set from data/studios/ID.json (example: luxury-kitchen)')
     p.add_argument('--answers', type=Path, help='Use saved answer JSON instead of interactive questions')
     p.add_argument('--dry-run', action='store_true', help='Validate and show the brief without calling a model')
     args = p.parse_args()
     try:
-        defaults = idea_defaults(args.idea) if args.idea else {}
+        defaults = {**(studio_defaults(args.studio) if args.studio else {}),
+                    **(idea_defaults(args.idea) if args.idea else {})}
         brief = validate({**defaults, **json.loads(args.answers.read_text())} if args.answers else collect(defaults))
     except (ValueError, json.JSONDecodeError, OSError) as error:
         p.error(str(error))

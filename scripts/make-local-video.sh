@@ -6,8 +6,8 @@ usage() {
   cat <<'USAGE'
 Usage:
   bash scripts/make-local-video.sh
-  bash scripts/make-local-video.sh --draft-only [--model gemma-local] [--idea BANK_ID] [--answers brief.json]
-  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--chain-images] [--best-of-3-stills] [--cache-only] [--stills FOLDER] [--anchor-image IMAGE] [--allow-repeat] [--allow-silence] [--allow-bad-first]
+  bash scripts/make-local-video.sh --draft-only [--model gemma-local] [--idea BANK_ID] [--studio luxury-kitchen] [--answers brief.json]
+  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--editor auto|filmcraft|ffmpeg] [--chain-images] [--best-of-3-stills] [--cache-only] [--stills FOLDER] [--anchor-image IMAGE] [--allow-repeat] [--allow-silence] [--allow-bad-first]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json [--watch]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json --preview
 
@@ -18,7 +18,7 @@ USAGE
 
 default_model='qwen3:1.7b'
 [[ -s storage/setup/gemma-model-dir.txt ]] && default_model='gemma-local'
-scenario=''; status=''; chain=''; stills=''; anchor_image=''; allow_repeat=''; cache_only=''; best_of_3=''; idea=''; answers=''; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
+scenario=''; status=''; chain=''; stills=''; anchor_image=''; allow_repeat=''; cache_only=''; best_of_3=''; idea=''; studio=''; answers=''; editor='auto'; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
 while (($#)); do
   case "$1" in
     --scenario) scenario="${2:?Missing scenario path}"; shift 2 ;;
@@ -30,17 +30,20 @@ while (($#)); do
     --best-of-3-stills) best_of_3='--best-of-3-stills'; shift ;;
     --stills) stills="$2"; shift 2 ;;
     --anchor-image) anchor_image="$2"; shift 2 ;;
+    --editor) editor="${2:?Missing editor}"; shift 2 ;;
     --allow-repeat) allow_repeat='--allow'; shift ;;
     --allow-silence) allow_silence='--allow-silence'; shift ;;
     --allow-bad-first) allow_bad_first='--allow-bad-first'; shift ;;
     --draft-only) draft_only=1; shift ;;
     --model) model="${2:?Missing model name}"; shift 2 ;;
     --idea) idea="${2:?Missing bank idea ID}"; shift 2 ;;
+    --studio) studio="${2:?Missing studio ID}"; shift 2 ;;
     --answers) answers="${2:?Missing brief JSON path}"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) usage; exit 2 ;;
   esac
 done
+[[ "$editor" == auto || "$editor" == filmcraft || "$editor" == ffmpeg ]] || { echo 'Editor must be auto, filmcraft, or ffmpeg.' >&2; exit 2; }
 
 if [[ -n "$status" ]]; then
   [[ -z "$scenario" ]] || { echo 'Use --status or --scenario, not both.' >&2; exit 2; }
@@ -60,6 +63,7 @@ fi
 if [[ -z "$scenario" ]]; then
   brief_args=(--model "$model")
   [[ -z "$idea" ]] || brief_args+=(--idea "$idea")
+  [[ -z "$studio" ]] || brief_args+=(--studio "$studio")
   [[ -z "$answers" ]] || brief_args+=(--answers "$answers")
   scenario="$(python3 scripts/director-brief.py "${brief_args[@]}")"
   [[ -f "$scenario" ]] || { echo 'The director brief did not save a scenario.' >&2; exit 3; }
@@ -87,7 +91,7 @@ PY
   [[ "$proceed" == 'y' || "$proceed" == 'yes' ]] || { echo "Plan saved. Edit it, then run: bash scripts/make-local-video.sh --scenario '$scenario'"; exit 0; }
 else
   ((draft_only == 0)) || { echo '--draft-only cannot be combined with --scenario.' >&2; exit 2; }
-  [[ -z "$idea" && -z "$answers" ]] || { echo '--idea and --answers are for interactive drafting, not --scenario.' >&2; exit 2; }
+  [[ -z "$idea" && -z "$studio" && -z "$answers" ]] || { echo '--idea, --studio and --answers are for interactive drafting, not --scenario.' >&2; exit 2; }
 fi
 
 [[ -f "$scenario" ]] || { echo "Missing scenario: $scenario" >&2; exit 2; }
@@ -111,9 +115,24 @@ echo "Step 4/4  Shot-synced ASMR, captions, upload pack and quality check"
 storage/tools/ComfyUI/.venv/bin/python scripts/add-sfx.py --scenario "$scenario" --video "$output"
 finished_video="${output%.mp4}.sfx.mp4"
 python3 scripts/finish-local-video.py --scenario "$scenario" --video "$finished_video" && echo "Captioned ASMR video and upload pack are next to $finished_video"
-python3 scripts/qa-local-video.py --video "${finished_video%.mp4}.captioned.mp4" --scenario "$scenario" --expected-seconds "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["settings"]["seconds"])' "$scenario")" --work-dir "storage/any-local/$(basename "$scenario" .json)" || { echo "Technical QA failed: read ${finished_video%.mp4}.pack.json before uploading." >&2; exit 5; }
-python3 scripts/log-local-run.py --scenario "$scenario" --video "${finished_video%.mp4}.captioned.mp4" --pack "${finished_video%.mp4}.pack.json"
-python3 scripts/score-local-video.py --scenario "$scenario" --pack "${finished_video%.mp4}.pack.json" || echo 'Release gate is blocked or needs editorial review; inspect the quality report.' >&2
+pack="${finished_video%.mp4}.pack.json"
+final_video="${finished_video%.mp4}.captioned.mp4"
+if [[ "$editor" == filmcraft || ( "$editor" == auto && -x storage/tools/artcraft/filmcraft-cli ) ]]; then
+  python3 scripts/filmcraft-finish.py --video "$final_video"
+  final_video="${final_video%.mp4}.filmcraft.mp4"
+  python3 - "$pack" "$final_video" <<'PY'
+import json,sys
+from pathlib import Path
+pack,video=map(Path,sys.argv[1:])
+data=json.loads(pack.read_text())
+data['video']=video.name
+data['finishingEditor']='FilmCraft'
+pack.write_text(json.dumps(data,indent=2)+'\n')
+PY
+fi
+python3 scripts/qa-local-video.py --video "$final_video" --pack "$pack" --scenario "$scenario" --expected-seconds "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["settings"]["seconds"])' "$scenario")" --work-dir "storage/any-local/$(basename "$scenario" .json)" || { echo "Technical QA failed: read $pack before uploading." >&2; exit 5; }
+python3 scripts/log-local-run.py --scenario "$scenario" --video "$final_video" --pack "$pack"
+python3 scripts/score-local-video.py --scenario "$scenario" --pack "$pack" --video "$final_video" || echo 'Release gate is blocked or needs editorial review; inspect the quality report.' >&2
 t_end=$SECONDS
 checks_s=$((t_checks - t_start)); render_s=$((t_render - t_checks)); finish_s=$((t_end - t_render)); total_s=$((t_end - t_start))
 printf 'Timing: checks %ds, render %dm%02ds, captions+QA %ds, total %dm%02ds\n' "$checks_s" $((render_s / 60)) $((render_s % 60)) "$finish_s" $((total_s / 60)) $((total_s % 60))

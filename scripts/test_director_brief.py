@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 ROOT = Path(__file__).resolve().parents[1]
 DIRECTOR = runpy.run_path(str(Path(__file__).with_name('director-brief.py')))
 draft_command, validate = DIRECTOR['draft_command'], DIRECTOR['validate']
+studio_defaults = DIRECTOR['studio_defaults']
 creative_brief_problems = runpy.run_path(str(Path(__file__).with_name('audit-local-story.py')))['creative_brief_problems']
 physical_action = runpy.run_path(str(Path(__file__).with_name('audit-local-story.py')))['physical_action']
 near_duplicate = runpy.run_path(str(Path(__file__).with_name('audit-local-story.py')))['near_duplicate']
@@ -19,6 +20,16 @@ hook_score = runpy.run_path(str(Path(__file__).with_name('preflight-short.py')))
 
 
 class DirectorBriefTests(unittest.TestCase):
+    def test_luxury_kitchen_studio_prefills_one_locked_set(self):
+        defaults = studio_defaults('luxury-kitchen')
+        brief = validate({**defaults, 'topic': 'roasted tomato toast'})
+        self.assertIn('cream stone counter', brief['set'])
+        self.assertIn('same window light', brief['set'])
+        self.assertIn('warm side light', brief['style'])
+        self.assertEqual(draft_command(brief, 'test-id', 'gemma-local')[7], brief['set'])
+        with self.assertRaisesRegex(ValueError, 'Unknown studio'):
+            studio_defaults('missing')
+
     def test_brief_builds_model_command_and_checks_options(self):
         brief = validate({'topic': 'crispy cabbage dumplings', 'set': 'sunlit walnut kitchen',
                           'hook': 'one dumpling cracks open', 'mustShow': 'steam escapes from the crisp skirt',

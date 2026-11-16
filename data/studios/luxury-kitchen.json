@@ -1,0 +1,12 @@
+{
+  "id": "luxury-kitchen",
+  "name": "Warm Copper Kitchen",
+  "style": "photoreal cinematic macro food photography, warm side light, natural textures, restrained camera movement",
+  "set": "One warm kitchen: cream stone counter, dark walnut board, copper skillet rear left, small brass bowl right, parchment-lined dark tray, brushed steel knife, one pair of natural-nailed adult hands; same window light and oven in every shot",
+  "continuity": "Keep surfaces, tool placement, hands, light direction and food count fixed. Show food moving through prep, heat, assembly and service in the same kitchen. Do not introduce a new wall, table, glove or chef between shots.",
+  "referenceFrames": {
+    "pan": "assets/studios/luxury-kitchen/pan.png",
+    "prep": "assets/studios/luxury-kitchen/prep.png",
+    "oven": "assets/studios/luxury-kitchen/oven.png"
+  }
+}

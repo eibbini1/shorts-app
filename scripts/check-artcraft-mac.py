@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 TOOLS = ('PhotoCraft', 'FilmCraft', 'EffectCraft', 'SoundCraft')
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
@@ -26,7 +27,8 @@ def main():
         else:
             print(f'{name}: desktop missing')
         key = f'SHORTS_{name.upper()}_CLI'
-        cli = os.environ.get(key) or shutil.which(f'{name.lower()}-cli')
+        bundled = ROOT / 'storage/tools/artcraft' / f'{name.lower()}-cli'
+        cli = os.environ.get(key) or (str(bundled) if bundled.is_file() else None) or shutil.which(f'{name.lower()}-cli')
         if cli and Path(cli).is_file():
             result = subprocess.run([cli, '--version'], capture_output=True, text=True, timeout=15)
             detail = (result.stdout or result.stderr).strip().splitlines()
