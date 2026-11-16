@@ -1,5 +1,13 @@
 # AI handoff
 
+## 2026-11-16 — Owner reference mix for Arabic recipe (Codex)
+
+- Branch: `feature/arabic-artcraft-recipe`; previous remote HEAD `048b858`. Working tree before this entry: modified recipe JSON and Arabic recipe guide, plus untracked local `outputs/` previews. No change to Claude's checkout or render.
+- VERIFIED: the two owner-supplied stills suggest different emphases. The first has a tight avocado-and-egg macro; the second shows avocado, egg and potatoes in a wider plate. The recipe now combines these as an original warm ivory-bowl treatment, with potato pieces and egg wedges remaining visible.
+- IMPLEMENTED BUT UNTESTED IN FILM: the manifest now introduces two tablespoons mayonnaise, one tablespoon lemon juice and one teaspoon olive oil as a light dressing, with the mayonnaise visible in the ingredients shot and real whisk/pour action. Arabic narration, draft captions, visual prompts and visual questions were changed together. The three focused tests pass and draft ASS generation succeeds; voice timing remains draft.
+- BLOCKERS: no six scene clips, recorded/licensed Jordanian female voice, kitchen sound bed or finished 60-second export. Image references were not imported as footage; rights and motion are not established.
+- NEXT: obtain/record the assets, visually inspect ingredient/action continuity, time captions to recorded speech, run the ArtCraft finish and final QA, then watch/listen before any release verdict.
+
 ## 2026-11-16 — Arabic recipe ArtCraft pilot (Codex)
 
 - Branch: `feature/arabic-artcraft-recipe`, isolated worktree under `/Users/eibbini/Documents/Codex/2026-11-06/python-3-12-is-already-installed/shorts-app-arabic-artcraft`. Code commit before this handoff: `a7a192b`; draft [PR #21](https://github.com/eibbini1/shorts-app/pull/21) targets `feature/artcraft-title-polish`. Working tree after that commit: only untracked `outputs/` local preview files; do not commit them. Claude's original checkout and GPU render were not changed.

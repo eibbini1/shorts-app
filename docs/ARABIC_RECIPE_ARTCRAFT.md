@@ -2,6 +2,8 @@
 
 Status: **implementation pilot, not a finished recipe film** (2026-11-16). This work is isolated on `feature/arabic-artcraft-recipe`; Claude's active checkout and GPU render were not changed.
 
+Visual direction updated from the owner's two references: use the first image's warm macro of avocado and egg, and the second image's clearly visible potato, egg and avocado distribution. The dressing is now a light mix of two tablespoons mayonnaise, one tablespoon lemon juice and one teaspoon olive oil. The sauce is shown as an ingredient and in the whisk/pour action; the final egg wedges and potato pieces remain distinct. These references guide original footage and plating; their image files are not part of the film or Git.
+
 ## What is ready
 
 - `examples/recipes/avocado-egg-salad-ar-60.json` defines six contiguous scenes, the same warm kitchen, exact ingredients, Arabic narration, food-action checks, and draft captions. The visual and audio paths are an inventory of assets still needed.

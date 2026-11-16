@@ -6,7 +6,15 @@
   "width": 1080,
   "height": 1920,
   "fps": 30,
-  "setBible": "One warm kitchen throughout: cream stone counter, oak board, matte ivory ceramic bowl, natural-nailed adult hands, soft side-window light. Keep the same avocado, three boiled eggs, one boiled potato, parsley and green onions from preparation to serving. No new food appears after dressing.",
+  "setBible": "One warm kitchen throughout: cream stone counter, oak board, matte ivory ceramic bowl, natural-nailed adult hands, soft side-window light. Keep the same avocado, three boiled eggs, one boiled potato, parsley and green onions from preparation to serving. Add only the measured lemon-mayonnaise dressing in the dressing scene. Final plating keeps distinct avocado cubes, potato pieces and several egg wedges visible; no new garnish appears after dressing.",
+  "visualDirection": "Combine the first owner's reference's close macro, creamy avocado texture and visible egg yolks with the second reference's clear potato-and-egg distribution. Use one original ivory-bowl composition in the same kitchen; treat the images as visual references, not licensed footage or exact shots to copy.",
+  "dressing": {
+    "mayonnaiseTablespoons": 2,
+    "lemonJuiceTablespoons": 1,
+    "oliveOilTeaspoons": 1,
+    "saltAndPepper": "to taste",
+    "note": "Light coating, not a thick pool; this addition must appear in the ingredients shot and the dressing action."
+  },
   "voice": {
     "requirement": "Natural female Jordanian Arabic cooking presenter",
     "source": "recorded-or-licensed-voice-required",
@@ -31,9 +39,9 @@
       "media": "assets/recipes/avocado-egg-salad-ar/scene-01.mp4",
       "voiceFile": "assets/recipes/avocado-egg-salad-ar/voice-01.wav",
       "sourcePriority": ["recorded-footage", "licensed-footage", "verified-local-image-to-video"],
-      "visual": "Finished creamy avocado and egg salad in the matte ivory bowl. A spoon lifts a bite, with recognizable avocado cubes and boiled egg pieces; 50 mm macro, warm side light, restrained push-in. No extra ingredients, no floating utensils.",
-      "narration": "إذا بتحبي الأكل الصحي والطيب، عندي إلك وصفة رح تعجبك!",
-      "visualQuestion": "Are avocado cubes and boiled egg pieces visible in the same ivory salad bowl?"
+      "visual": "Finished salad in the matte ivory bowl: distinct avocado cubes, bite-size potato pieces and boiled egg wedges with yellow yolks. A spoon lifts one coated bite; creamy lemon-mayonnaise dressing is a light sheen, not a pool. 50 mm macro, warm side light, restrained push-in. No extra ingredients or floating utensils.",
+      "narration": "إذا بتحبي السلطات الكريمية والطيبة، عندي إلك وصفة رح تعجبك!",
+      "visualQuestion": "Are avocado cubes, potato pieces and egg wedges visible together in one ivory bowl without a sauce pool?"
     },
     {
       "id": "02-ingredients",
@@ -42,9 +50,9 @@
       "media": "assets/recipes/avocado-egg-salad-ar/scene-02.mp4",
       "voiceFile": "assets/recipes/avocado-egg-salad-ar/voice-02.wav",
       "sourcePriority": ["recorded-footage", "licensed-footage", "verified-local-image-to-video"],
-      "visual": "Overhead on the same oak board: one whole avocado, exactly three boiled eggs, one boiled potato, parsley and green onions. Natural hands gently arrange each item. Cream stone counter and ivory bowl remain in view. No lemon, oil or seasoning yet.",
-      "narration": "حبة أفوكادو، ثلاث بيضات مسلوقات، حبة بطاطا مسلوقة، بقدونس وبصل أخضر.",
-      "visualQuestion": "Are one avocado, three boiled eggs, one boiled potato, parsley and green onions visible?"
+      "visual": "Overhead on the same oak board: one whole avocado, exactly three boiled eggs, one boiled potato, parsley and green onions. A small ramekin holds two tablespoons of mayonnaise beside one lemon and a small olive-oil bottle, all visibly separate before mixing. Natural hands arrange them; cream stone counter and ivory bowl stay in view.",
+      "narration": "حبة أفوكادو، ثلاث بيضات مسلوقات، حبة بطاطا، وبقدونس وبصل أخضر.",
+      "visualQuestion": "Are one avocado, three boiled eggs, one potato, herbs, and a separate small mayonnaise ramekin visible?"
     },
     {
       "id": "03-chop",
@@ -53,9 +61,9 @@
       "media": "assets/recipes/avocado-egg-salad-ar/scene-03.mp4",
       "voiceFile": "assets/recipes/avocado-egg-salad-ar/voice-03.wav",
       "sourcePriority": ["recorded-footage", "licensed-footage", "verified-local-image-to-video"],
-      "visual": "Close overhead on the same board and hands. Knife cuts the avocado, boiled eggs and potato into small cubes; parsley and green onions are chopped finely. Show actual blade contact and ingredient transformation in a few motivated cuts, no morphing or instant pre-chopped food.",
-      "narration": "بنقطّع الأفوكادو والبيض والبطاطا لمكعبات، وبنفرم البقدونس والبصل الأخضر ناعم.",
-      "visualQuestion": "Do the avocado, boiled egg and potato appear cut into cubes on the same board?"
+      "visual": "Close overhead on the same board and hands. Knife cuts avocado into cubes and boiled potato into bite-size pieces; the three boiled eggs are sliced into wedges so their yolks remain visible. Parsley and green onions are chopped finely. Show actual blade contact and ingredient transformation in motivated cuts, no morphing or instant pre-chopped food.",
+      "narration": "بنقطّع الأفوكادو والبطاطا، ومنقطّع البيض شرائح، وبنفرم الخضرة ناعم.",
+      "visualQuestion": "Are avocado cubes, potato pieces and egg wedges visibly cut on the same board with their yolks intact?"
     },
     {
       "id": "04-dress",
@@ -64,9 +72,9 @@
       "media": "assets/recipes/avocado-egg-salad-ar/scene-04.mp4",
       "voiceFile": "assets/recipes/avocado-egg-salad-ar/voice-04.wav",
       "sourcePriority": ["recorded-footage", "licensed-footage", "verified-local-image-to-video"],
-      "visual": "Same ivory bowl now contains the chopped avocado, egg, potato, parsley and green onions. A real lemon is squeezed, then olive oil pours in a thin stream; salt and black pepper are added. Warm close side angle and clear hand-to-food contact.",
-      "narration": "منحط كل المكونات بوعاء، ومنضيف عصرة ليمون، زيت زيتون، ملح وفلفل حسب الرغبة.",
-      "visualQuestion": "Are lemon juice and olive oil being added to the same bowl of chopped ingredients?"
+      "visual": "In a small ramekin, natural hands whisk exactly two tablespoons mayonnaise with one tablespoon fresh lemon juice and one teaspoon olive oil, then season with salt and black pepper. The same ivory salad bowl with avocado, potato, egg wedges, parsley and green onions remains nearby. Pour the thin dressing over it; show real whisk and pour contact, no new ingredients.",
+      "narration": "وللصوص: ملعقتين مايونيز، عصرة ليمون، رشة زيت زيتون، ملح وفلفل.",
+      "visualQuestion": "Is a light mayonnaise, lemon and olive-oil dressing visibly whisked and poured onto the same prepared salad?"
     },
     {
       "id": "05-mix",
@@ -75,9 +83,9 @@
       "media": "assets/recipes/avocado-egg-salad-ar/scene-05.mp4",
       "voiceFile": "assets/recipes/avocado-egg-salad-ar/voice-05.wav",
       "sourcePriority": ["recorded-footage", "licensed-footage", "verified-local-image-to-video"],
-      "visual": "A spoon gently folds the same five prepared ingredients with the lemon-oil dressing in the same ivory bowl. Show a real mixing action, then a warm macro of the creamy but still distinct avocado and egg texture. Do not turn it into puree.",
-      "narration": "منقلّبهم بشويش، وهيك بتصير عنا سلطة كريمية، طيبة ومشبعة!",
-      "visualQuestion": "Is the same salad being gently mixed while avocado and egg pieces remain distinct?"
+      "visual": "A spoon gently folds the same prepared ingredients with the light lemon-mayonnaise dressing in the ivory bowl. Show a real mixing action, then a warm macro of creamy but distinct avocado cubes, potato pieces and egg wedges. Keep yolks visible and do not mash the salad into puree.",
+      "narration": "منقلّب المكونات مع الصوص بشويش، ونخلّي قطع البيض واضحة.",
+      "visualQuestion": "Is the salad gently coated without mashing the avocado, potato or egg wedges?"
     },
     {
       "id": "06-serve",
@@ -86,22 +94,22 @@
       "media": "assets/recipes/avocado-egg-salad-ar/scene-06.mp4",
       "voiceFile": "assets/recipes/avocado-egg-salad-ar/voice-06.wav",
       "sourcePriority": ["recorded-footage", "licensed-footage", "verified-local-image-to-video"],
-      "visual": "Final beauty shot of the same ivory bowl in the same warm kitchen. One spoon lifts a bite with avocado and boiled egg visible; slow controlled pullback. Leave a clean upper safe zone for a small Arabic call to action. No new garnish or ingredient appears.",
+      "visual": "Final beauty shot of the same ivory bowl in the warm kitchen. Arrange the existing egg wedges visibly over the coated avocado and potato, with existing parsley only. One spoon lifts a bite showing avocado, potato and boiled egg; slow controlled pullback. Leave a clean upper safe zone for a small Arabic call to action. No new garnish or ingredient appears.",
       "narration": "جرّبيها واحكيلي شو رأيك، ولا تنسي تحفظي الوصفة!",
-      "visualQuestion": "Does the final spoonful visibly contain avocado and boiled egg from the same salad?"
+      "visualQuestion": "Does the final spoonful visibly contain avocado, potato and boiled egg from the same lightly dressed salad?"
     }
   ],
   "captionCues": [
-    {"startSeconds": 0.2, "endSeconds": 2.9, "text": "إذا بتحبي الأكل الصحي والطيب"},
+    {"startSeconds": 0.2, "endSeconds": 2.9, "text": "إذا بتحبي السلطات الكريمية والطيبة"},
     {"startSeconds": 2.9, "endSeconds": 5.8, "text": "عندي إلك وصفة رح تعجبك!"},
     {"startSeconds": 6.2, "endSeconds": 11.8, "text": "حبة أفوكادو، ثلاث بيضات مسلوقات"},
     {"startSeconds": 11.8, "endSeconds": 17.8, "text": "حبة بطاطا، بقدونس وبصل أخضر"},
-    {"startSeconds": 18.2, "endSeconds": 23.8, "text": "بنقطّع الأفوكادو والبيض والبطاطا"},
-    {"startSeconds": 23.8, "endSeconds": 29.8, "text": "وبنفرم البقدونس والبصل الأخضر"},
-    {"startSeconds": 30.2, "endSeconds": 35.8, "text": "منحط كل المكونات بوعاء"},
-    {"startSeconds": 35.8, "endSeconds": 41.8, "text": "عصرة ليمون، زيت زيتون، ملح وفلفل"},
-    {"startSeconds": 42.2, "endSeconds": 47.8, "text": "منقلّبهم بشويش"},
-    {"startSeconds": 47.8, "endSeconds": 52.8, "text": "سلطة كريمية، طيبة ومشبعة!"},
+    {"startSeconds": 18.2, "endSeconds": 23.8, "text": "بنقطّع الأفوكادو والبطاطا"},
+    {"startSeconds": 23.8, "endSeconds": 29.8, "text": "والبيض شرائح، والخضرة ناعم"},
+    {"startSeconds": 30.2, "endSeconds": 35.8, "text": "ملعقتين مايونيز، عصرة ليمون"},
+    {"startSeconds": 35.8, "endSeconds": 41.8, "text": "رشة زيت زيتون، ملح وفلفل"},
+    {"startSeconds": 42.2, "endSeconds": 47.8, "text": "منقلّب المكونات مع الصوص بشويش"},
+    {"startSeconds": 47.8, "endSeconds": 52.8, "text": "ونخلّي قطع البيض واضحة"},
     {"startSeconds": 53.2, "endSeconds": 56.2, "text": "جرّبيها واحكيلي شو رأيك"},
     {"startSeconds": 56.2, "endSeconds": 59.8, "text": "ولا تنسي تحفظي الوصفة!"}
   ]
