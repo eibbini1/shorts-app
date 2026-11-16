@@ -146,3 +146,13 @@ Do not commit generated media, model weights, credentials or scratch outputs. So
 - Frame review of v3 (contact sheet, Claude): one warm kitchen throughout, the brick-wall still is gone. Defects: the pan shows whole garlic cloves, no shallots; bread on the tray changes from long slices to six round pieces inside the oven; the hook bread does not match the final pull. Audio: none yet, so nothing heard.
 - The four ArtCraft CLIs sit under `storage/tools/artcraft/` (via the storage symlink, about 635 MB, outside Git). Smoke drafts and generated media left untracked.
 - NEXT: run add-sfx/finish/QA on v3 or re-render the oven shot first; shot-level FilmCraft vs FFmpeg comparison on the same five clips; then decide the default editor. Push only with owner approval.
+
+## 2026-11-16 12:25 +03 — Claude: shallot v4 (oven still fixed) and shot-level FilmCraft vs FFmpeg test
+
+- Branch `feature/evidence-gates-local` after `e2541cf`; only this entry is new in Git. Not pushed. Owner approved the oven re-render and the comparison.
+- VERIFIED: new `outputs/shallot-garlic-bread-stills/shot-04.png` (FLUX edit of the dressing still, seed 431) shows long slices in a row at the oven; shot 4 motion re-rendered (256 s), other clips reused. `outputs/shallot-garlic-bread-20-v4.sfx.mp4` (A, FFmpeg hard cuts) passes final-file QA: 20.0 s, -18.75 LUFS, peak -1.14 dB, no black/frozen/silent span.
+- VERIFIED: shot-level FilmCraft edit (B) works headless: 5 segments placed back to back, 8-frame cross dissolves at 4 cuts, contrast 8 + unsharp mask 40 per clip, SFX wav on A1, 480 frames exported in ~7 s. Project `outputs/shallot-garlic-bread-20-v4.filmcraft-shots.fcproj`; throwaway driver was `/private/tmp/fc_shots.py` (not in Git).
+- Frame review (Claude, contact sheets): B's dissolves ghost one scene over the next (tray over pan, oven over counter) and read worse than A's hard cuts for these scene changes; B's grade/sharpen gives no visible gain at 720x1280. B audio: the raw `.sfx.wav` is -33 LUFS (the FFmpeg mux normalises it); +11.7 dB in FilmCraft reached -18.8 LUFS but true peak +4.76 dB, so B ships at -24.8 LUFS / -1.27 dB and FAILS the loudness check. FilmCraft path needs a limiter or the normalised track. B is 20.01 s.
+- Remaining picture defects in both: pan shows garlic cloves, no diced shallots; oven-shot toppings (brown rounds) differ from the dressing shot; hook bread differs from the final pull. No assistant has heard either file.
+- Review copies for the owner: `storage/p9/review/shallot-v4-A-ffmpeg.mp4`, `-B-filmcraft.mp4`, `-A-vs-B.mp4`.
+- RECOMMENDATION pending owner verdict: keep FFmpeg as default editor; use FilmCraft only for titles/motion graphics or same-scene transitions, with a loudness step.
