@@ -92,8 +92,8 @@ Added a selectable **Codex dark** Studio theme with charcoal surfaces, soft-gray
 
 1. Add a distinct state for `rendered; creative review required`; keep a 50/100 result blocked from “ready” or release wording while leaving the file playable for review.
 2. Improve risky-action review: require sampled motion evidence for hand/tool/food actions, and stop or request a human choice when the local vision model cannot confirm the intended action. Treat model judgments as conservative flags, not proof of realism.
-3. Verify the new local-AI idea-refinement flow on the owner Mac with Ollama available, then add same-prompt project continuation and distinct-action retry fixes with regression tests.
-4. Fix same-prompt session continuation/duplicate warnings and distinct-action retries in isolated source with regression tests.
+3. Verify local-AI refinement in the owner Mac Studio with Ollama available; deterministic validation cannot establish story quality.
+4. Add cross-shot first-frame continuity review and human review feedback to the image-to-motion gate.
 5. Reconcile local checkouts only after reviewing every dirty worktree. Do not deploy this branch over the live Studio without a separate release review.
 
 ## Idea refinement implementation (2026-11-18)
@@ -101,4 +101,11 @@ Added a selectable **Codex dark** Studio theme with charcoal surfaces, soft-gray
 - **IMPLEMENTED, local only:** Studio has a “Refine idea with local AI” action. It preserves the original text until the user explicitly selects a proposed version. For a filmable idea the local Ollama model returns one polished prompt and ending; when the story intent/action is materially ambiguous it returns one focused question and 2–3 distinct alternatives.
 - **Gate behavior:** suggestions do not start planning or rendering. Malformed model output is rejected, active renders block refinement, and the examples/refinement calls share a local-model busy lock. Editing the prompt, look, or ending discards stale suggestions; a late response cannot overwrite the edited idea.
 - **Limits:** local Ollama was unavailable in this Codex environment (`127.0.0.1:11434` refused the connection), so live prompt quality and Studio browser interaction remain **untested**. Deterministic response-shape tests and both production builds passed. The feature is not deployed to the running Studio.
+
+## Duplicate-project and action-gate follow-up (2026-11-18)
+
+- **IMPLEMENTED, not deployed:** repeated sidebar names now show their creation time; the Studio detects a matching prompt and offers to open the existing project or intentionally create a separate one. Automatic Up Next remains able to repeat a user-queued idea without an interruption.
+- **IMPLEMENTED, locally tested:** the story builder now rejects camera-only pan/zoom/beauty-shot language as the sole shot motion, asks the model for one subject action plus a changed end state, retries once, then uses its beat-specific fallback or blocks saving if no physical action remains.
+- **Limits:** this is a conservative English verb check. It does not establish correct physics, realistic hand/tool contact, continuity, or quality, and it may need expansion for other languages. No Ollama-backed scenario was generated because the service was unavailable here. First-frame visual continuity remains a separate missing gate.
+- **Validation:** action gate 3/3, idea refinement 6/6 Node tests, focused Studio tests 11/11, root build/lint/script checks and Studio build pass. Full video-render integration was not rerun.
 

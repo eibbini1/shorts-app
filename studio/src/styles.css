@@ -138,6 +138,9 @@ select { background:var(--panel); color:var(--text); border:1px solid var(--line
 .refine-choice { border:1px solid var(--line); border-radius:9px; padding:10px; background:var(--panel); }
 .refine-choice h4 { margin:0 0 6px; }
 .idea-refinement .small { font-size:11px; }
+.duplicate-project { text-align:start; margin:8px 0; border:1px solid var(--acc); }
+.duplicate-project p { margin:0 0 8px; }
+.duplicate-project .row { display:flex; gap:8px; flex-wrap:wrap; }
 @media (max-width:760px) {
   .shell { display:block; }
   .projects-toggle { display:inline-block; padding:4px 8px; }

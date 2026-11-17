@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { LearnedCard, RenderTimer, IdeaHelper, Player, ComparePanel, FramesBlock, clipsOf, planEstimate, fmt, LookChips, DirectorsChair, guessResult, BlockedCard, StepTrack, UpNext, readQueue, writeQueue, StageBar, ShotPlan, ExportReview, jobState } from './extras.jsx';
+import { findMatchingSession, sessionDisplayName } from './session-label.js';
 
 const post = (url, body) =>
   fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }).then(async (r) => {
@@ -72,7 +73,7 @@ function Sidebar({ sessions, selectedId, liveId, onSelect, onNew, onRename, onDe
                   <input autoFocus onFocus={(e) => e.target.select()} value={draftName} onChange={(e) => setDraftName(e.target.value)} onClick={(e) => e.stopPropagation()}
                     onKeyDown={(e) => { if (e.key === 'Enter') commit(x.id); if (e.key === 'Escape') setEditing(null); }} onBlur={() => commit(x.id)} />
                 ) : (
-                  <button className="name" aria-current={x.id === selectedId ? "true" : undefined} onClick={() => onSelect(x.id)}>{x.name}{x.hasVideo ? ' 🎬' : ''}</button>
+                  <button className="name" aria-current={x.id === selectedId ? "true" : undefined} title={`${x.status} · ${x.prompt || x.name}`} onClick={() => onSelect(x.id)}>{sessionDisplayName(x, sessions)}{x.hasVideo ? ' 🎬' : ''}</button>
                 )}
                 {editing !== x.id && (
                   <span className="acts" onClick={(e) => e.stopPropagation()}>
@@ -223,6 +224,7 @@ export default function App() {
   };
   const [stored, setStored] = useState(null);
   const [sessions, setSessions] = useState([]);
+  const [duplicateSession, setDuplicateSession] = useState(null);
   const job = selectedId == null ? { status: 'idle' } : selectedId === live.id ? live : stored?.id === selectedId ? stored : { status: 'idle' };
   const anyRunning = ['running', 'stopping'].includes(live.status);
   const maxSeconds = me?.maxSeconds ?? 60;
@@ -350,7 +352,7 @@ export default function App() {
     const key = job.id + ':' + job.kind + ':' + job.status; if (nextSeen.current === key) return; nextSeen.current = key;
     if (autoRef.current && job.status === 'done') return; // Auto mode will continue this video first
     const q = readQueue(); if (!q.length) return;
-    const t = setTimeout(() => { writeQueue(q.slice(1)); setPrompt(q[0]); draftWith({ prompt: q[0] }); }, 1500);
+    const t = setTimeout(() => { writeQueue(q.slice(1)); setPrompt(q[0]); draftWith({ prompt: q[0] }, { ignoreDuplicate: true }); }, 1500);
     return () => clearTimeout(t);
   }, [job.status, job.kind, job.id, autoNext, anyRunning]);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [job.steps?.length, job.status, job.video]);
@@ -364,11 +366,19 @@ export default function App() {
     try { await fn(); } catch (e) { setErr(e.message); }
     finally { submitting.current = false; setSending(false); }
   };
-  const draftWith = (extra = {}) => run(async () => {
+  const draftWith = (extra = {}, { ignoreDuplicate = false } = {}) => {
     if (planDisabled) return;
-    const runUnattended = me?.canRunUnattended && unattended;
-    const r = await post('/api/draft', { prompt, seconds, orientation, audio, ending, look, setting, unattended: runUnattended, ...extra });
-    autoRef.current = autoOn && !runUnattended; autoSeen.current = ''; pickProject(r.id); })();
+    if (!ignoreDuplicate) {
+      const duplicate = findMatchingSession(extra.prompt || prompt, sessions, selectedId);
+      if (duplicate) { setDuplicateSession(duplicate); return; }
+    }
+    setDuplicateSession(null);
+    return run(async () => {
+      const runUnattended = me?.canRunUnattended && unattended;
+      const r = await post('/api/draft', { prompt, seconds, orientation, audio, ending, look, setting, unattended: runUnattended, ...extra });
+      autoRef.current = autoOn && !runUnattended; autoSeen.current = ''; pickProject(r.id);
+    })();
+  };
   const draft = () => draftWith();
   const render = run(async () => { const r = await post('/api/render', { scenario: job.scenario, sessionId: job.id }); pickProject(r.id); });
   const stills = run(async () => { const r = await post('/api/stills', { scenario: job.scenario, sessionId: job.id }); pickProject(r.id); });
@@ -392,6 +402,7 @@ export default function App() {
   }, [job.id, job.status, job.video]);
   const cancel = run(async () => { await post('/api/cancel'); });
   const select = async (id) => {
+    setDuplicateSession(null);
     exampleRequest.current++; setExampleBusy(false); setExampleInfo(null);
     const request = ++projectRequest.current;
     setErr(''); pickProject(id); setProjectsOpen(false);
@@ -404,7 +415,7 @@ export default function App() {
     setAudio(j.options?.audio || 'asmr'); setEnding(j.options?.ending || ''); setLook(j.options?.look || 'food'); setSetting(j.options?.setting || ''); setShowLog(false);
   };
   useEffect(() => { if (restoreId.current) select(restoreId.current); }, []);
-  const newChat = () => { invalidateRefinement(); exampleRequest.current++; setExampleBusy(false); setExampleInfo(null); projectRequest.current++; pickProject(null); setProjectsOpen(false); setStored(null); setExampleContext(false); setPrompt(''); setEnding(''); setSetting(''); setErr(''); };
+  const newChat = () => { invalidateRefinement(); setDuplicateSession(null); exampleRequest.current++; setExampleBusy(false); setExampleInfo(null); projectRequest.current++; pickProject(null); setProjectsOpen(false); setStored(null); setExampleContext(false); setPrompt(''); setEnding(''); setSetting(''); setErr(''); };
   const rename = run2(async (id, name) => { await post('/api/sessions/rename', { id, name }); await loadSessions(); });
   const remove = run2(async (id) => { await post('/api/sessions/delete', { id }); if (id === selectedId) newChat(); await loadSessions(); });
   const onKey = (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && prompt.trim() && !busy && !planDisabled) { e.preventDefault(); draft(); } };
@@ -480,6 +491,7 @@ export default function App() {
         <div className="composer">
           <textarea id="video-brief" dir="auto" value={prompt} onChange={(e) => {
             invalidateRefinement();
+            setDuplicateSession(null);
             setPrompt(e.target.value);
             setExampleInfo(null);
             if (exampleContext) { setEnding(''); setSetting(''); setExampleContext(false); }
@@ -489,6 +501,14 @@ export default function App() {
             ? <button className="primary" disabled={!prompt.trim()} title="Your Mac is busy with another video. This adds your idea to Up next." onClick={() => { writeQueue([...readQueue(), prompt.trim()].slice(0, 10)); setAutoNext(true); setPrompt(''); }}>Add to Up next</button>
             : <button className="primary" onClick={draft} disabled={!prompt.trim() || sending || planDisabled}>{unattended && me?.canRunUnattended ? 'Create video automatically' : 'Plan video'}</button>}
         </div>
+        {duplicateSession && <div className="hint duplicate-project" role="status">
+          <p><b>{duplicateSession.id === selectedId ? 'This project is already open.' : 'You already have a project with this idea.'}</b> “{sessionDisplayName(duplicateSession, sessions)}” · {duplicateSession.status}{duplicateSession.hasVideo ? ' · video available' : ''}</p>
+          {duplicateSession.id === selectedId && <p>Continue with the current plan above, or create a separate project.</p>}
+          <div className="row wrap">
+            {duplicateSession.id !== selectedId && <button className="primary" type="button" onClick={() => { const id = duplicateSession.id; setDuplicateSession(null); select(id); }}>Open existing project</button>}
+            <button className="ghost" type="button" onClick={() => draftWith({}, { ignoreDuplicate: true })}>Create a separate project</button>
+          </div>
+        </div>}
         <div className="refine-row">
           <button className="link" type="button" onClick={refineIdea} disabled={!prompt.trim() || refining || anyRunning || sending}>
             {refining ? 'Checking the story with your local model…' : 'Refine idea with local AI'}
