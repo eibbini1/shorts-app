@@ -191,7 +191,7 @@ export default function App() {
   const [stored, setStored] = useState(null);
   const [sessions, setSessions] = useState([]);
   const job = selectedId == null ? { status: 'idle' } : selectedId === live.id ? live : stored?.id === selectedId ? stored : { status: 'idle' };
-  const anyRunning = live.status === 'running';
+  const anyRunning = ['running', 'stopping'].includes(live.status);
   const maxSeconds = me?.maxSeconds ?? 60;
   const loadSessions = () => fetch('/api/sessions').then((r) => r.json()).then(setSessions).catch(() => {});
   useEffect(() => {
@@ -208,6 +208,8 @@ export default function App() {
   const [theme, setTheme] = useState(() => { try { return localStorage.getItem('studio-theme') || 'studio'; } catch { return 'studio'; } });
   useEffect(() => { document.documentElement.dataset.theme = theme; try { localStorage.setItem('studio-theme', theme); } catch {} }, [theme]);
   const [setting, setSetting] = useState('');
+  const [exampleContext, setExampleContext] = useState(false);
+  const [unattended, setUnattended] = useState(false);
   const [auto, setAuto] = useState(false);
   const [mode, setMode] = useState(() => { try { return localStorage.getItem('studio-mode') || 'simple'; } catch { return 'simple'; } });
   useEffect(() => { try { localStorage.setItem('studio-mode', mode); } catch {} }, [mode]);
@@ -249,7 +251,7 @@ export default function App() {
 
   // Auto mode: plan -> first frames -> (optional pause) -> render. Stops on any BLOCKED note or failure.
   useEffect(() => {
-    if (!autoRef.current || !['done', 'failed', 'cancelled'].includes(job.status)) return;
+    if ((job.options?.unattended && !retake.current) || !autoRef.current || !['done', 'failed', 'cancelled'].includes(job.status)) return;
     const key = job.id + ':' + job.kind + ':' + job.status; if (autoSeen.current === key) return; autoSeen.current = key;
     if (job.status !== 'done' || blocked || !job.scenario) { autoRef.current = false; return; }
     const go = (url) => post(url, { scenario: job.scenario, sessionId: job.id }).then((r) => pickProject(r.id)).catch((e) => { autoRef.current = false; setErr(e.message); });
@@ -260,13 +262,13 @@ export default function App() {
   // Up next: when a job ends and Auto mode is not still chaining it, start the first queued idea.
   const nextSeen = useRef('');
   useEffect(() => {
-    if (!autoNext || job.status === 'running' || !job.status || job.status === 'idle') return;
+    if (!autoNext || anyRunning || !job.status || job.status === 'idle') return;
     const key = job.id + ':' + job.kind + ':' + job.status; if (nextSeen.current === key) return; nextSeen.current = key;
     if (autoRef.current && job.status === 'done') return; // Auto mode will continue this video first
     const q = readQueue(); if (!q.length) return;
     const t = setTimeout(() => { writeQueue(q.slice(1)); setPrompt(q[0]); draftWith({ prompt: q[0] }); }, 1500);
     return () => clearTimeout(t);
-  }, [job.status, job.kind, job.id, autoNext]);
+  }, [job.status, job.kind, job.id, autoNext, anyRunning]);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [job.steps?.length, job.status, job.video]);
 
   const run2 = (fn) => async (...a) => { setErr(''); try { await fn(...a); } catch (e) { setErr(e.message); } };
@@ -280,8 +282,9 @@ export default function App() {
   };
   const draftWith = (extra = {}) => run(async () => {
     if (planDisabled) return;
-    const r = await post('/api/draft', { prompt, seconds, orientation, audio, ending, look, setting, ...extra });
-    autoRef.current = autoOn; autoSeen.current = ''; pickProject(r.id); })();
+    const runUnattended = me?.canRunUnattended && unattended;
+    const r = await post('/api/draft', { prompt, seconds, orientation, audio, ending, look, setting, unattended: runUnattended, ...extra });
+    autoRef.current = autoOn && !runUnattended; autoSeen.current = ''; pickProject(r.id); })();
   const draft = () => draftWith();
   const render = run(async () => { const r = await post('/api/render', { scenario: job.scenario, sessionId: job.id }); pickProject(r.id); });
   const stills = run(async () => { const r = await post('/api/stills', { scenario: job.scenario, sessionId: job.id }); pickProject(r.id); });
@@ -301,10 +304,11 @@ export default function App() {
     if (!j) { setErr('Could not load that project.'); return; }
     if (id !== live.id) setStored(j);
     setPrompt(j.prompt || ''); setSeconds(j.options?.seconds || 10); setOrientation(j.options?.orientation || 'vertical');
+    setExampleContext(Boolean(j.options?.ending));
     setAudio(j.options?.audio || 'asmr'); setEnding(j.options?.ending || ''); setLook(j.options?.look || 'food'); setSetting(j.options?.setting || ''); setShowLog(false);
   };
   useEffect(() => { if (restoreId.current) select(restoreId.current); }, []);
-  const newChat = () => { projectRequest.current++; pickProject(null); setProjectsOpen(false); setStored(null); setPrompt(''); setEnding(''); setSetting(''); setErr(''); };
+  const newChat = () => { projectRequest.current++; pickProject(null); setProjectsOpen(false); setStored(null); setExampleContext(false); setPrompt(''); setEnding(''); setSetting(''); setErr(''); };
   const rename = run2(async (id, name) => { await post('/api/sessions/rename', { id, name }); await loadSessions(); });
   const remove = run2(async (id) => { await post('/api/sessions/delete', { id }); if (id === selectedId) newChat(); await loadSessions(); });
   const onKey = (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && prompt.trim() && !busy && !planDisabled) { e.preventDefault(); draft(); } };
@@ -366,17 +370,27 @@ export default function App() {
       </main>
       <footer>
         {err && <div className="bad" role="alert">{err}</div>}
-        <LookChips look={look} setLook={setLook} onExample={(l) => { setLook(l.id); setPrompt(l.ex); setEnding(l.ending); }} />
+        <LookChips look={look} setLook={(value) => {
+          setLook(value);
+          if (exampleContext) { setEnding(''); setSetting(''); setExampleContext(false); }
+        }} onExample={(l) => { setLook(l.id); setPrompt(l.ex); setEnding(l.ending); setExampleContext(true); }} />
         <IdeaHelper text={prompt} look={look} quiet={simple} />
         {anyRunning && <div className="hint tip">Your Mac is making another video right now{live.prompt ? ` ("${live.prompt.slice(0, 40)}...")` : ''}. Up next is saved in this browser. Leave Studio open for automatic start.</div>}
         <label htmlFor="video-brief" className="brief-label">Video idea</label>
         <div className="composer">
-          <textarea id="video-brief" dir="auto" value={prompt} onChange={(e) => setPrompt(e.target.value)} onKeyDown={onKey} rows={2}
+          <textarea id="video-brief" dir="auto" value={prompt} onChange={(e) => {
+            setPrompt(e.target.value);
+            if (exampleContext) { setEnding(''); setSetting(''); setExampleContext(false); }
+          }} onKeyDown={onKey} rows={2}
             placeholder="A baker cracks a chocolate shell to reveal pistachio cream." />
           {anyRunning
             ? <button className="primary" disabled={!prompt.trim()} title="Your Mac is busy with another video. This adds your idea to Up next." onClick={() => { writeQueue([...readQueue(), prompt.trim()].slice(0, 10)); setAutoNext(true); setPrompt(''); }}>Add to Up next</button>
-            : <button className="primary" onClick={draft} disabled={!prompt.trim() || sending || planDisabled}>Plan video</button>}
+            : <button className="primary" onClick={draft} disabled={!prompt.trim() || sending || planDisabled}>{unattended && me?.canRunUnattended ? 'Create video automatically' : 'Plan video'}</button>}
         </div>
+        {me?.canRunUnattended && <div className="opts">
+          <label><input type="checkbox" checked={unattended} onChange={(e) => setUnattended(e.target.checked)} /> Run unattended</label>
+          {unattended && <span>Studio checks the plan and first frames, then renders and runs QA. You can close this tab. Leave the Mac and Studio server running.</span>}
+        </div>}
         {simple ? (
           <div className="opts simpleopts">
             <span className="lenchips">{[10, 20, 30].filter((n) => n <= maxSeconds).map((n) => <button key={n} aria-pressed={seconds === n} className={seconds === n ? 'on' : ''} onClick={() => setSeconds(n)}>{n}s</button>)}</span>
@@ -392,7 +406,7 @@ export default function App() {
           <label title="Runs plan, first frames and the automatic checks by itself, and stops if any check fails."><input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} /> Auto mode</label>
           {auto && <label title="Recommended: you see the first frames before the long motion render."><input type="checkbox" checked={pauseFrames} onChange={(e) => setPauseFrames(e.target.checked)} /> pause at first frames</label>}
           <label className="brief-setting">Setting (optional)<input className="ending" dir="auto" value={setting} onChange={(e) => setSetting(e.target.value)} placeholder="Setting (hint, optional), e.g. a rainy rooftop garden" title="A hint: shapes the prompts, and the audit only notes shots that leave it out." /></label>
-          <label className="brief-setting">Required ending (optional)<input className="ending" dir="auto" value={ending} onChange={(e) => setEnding(e.target.value)} placeholder="Ending (checked, optional), e.g. onions glistening in the copper pan" title="Checked: the plan is blocked unless the payoff and final shot match this ending. Auto-filled from your last 'then...' part." /></label>
+          <label className="brief-setting">Required ending (optional)<input className="ending" dir="auto" value={ending} onChange={(e) => { setEnding(e.target.value); setExampleContext(false); }} placeholder="Ending (checked, optional), e.g. onions glistening in the copper pan" title="Checked: the plan is blocked unless the payoff and final shot match this ending. Auto-filled from your last 'then...' part." /></label>
         </div>
         )}
         {me?.role === 'creator' && <p className="muted">{me.draftsLeft} plans and {me.rendersLeft} renders left today · Up to {maxSeconds}s</p>}

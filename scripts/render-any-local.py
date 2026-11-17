@@ -12,6 +12,7 @@ import wave
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from local_video_progress import snapshot
+from studio_frames import read_manifest, write_manifest
 from first_checks import check_still, check_clip
 from presentation_mode import choose as choose_presentation
 from select_still_local import select as select_still_local
@@ -275,11 +276,15 @@ def main():
     progress_state.write_text(json.dumps({'scenarioSha256': file_hash(scenario),
         'output': str(output.resolve()), 'completed': []}) + '\n')
     print(progress(), flush=True)
+    references = []
+    pinned = read_manifest(work, scenario, len(plan['shots'])) if os.environ.get('SHORTS_STUDIO_PIN_FRAMES') == '1' else None
     segments = []
     previous = None
     gate = None if args.allow_bad_first else True
     for index, shot in enumerate(plan['shots']):
-        reference = own_still(args.stills.expanduser().resolve(), work, index, width, height) if args.stills else None
+        reference = pinned[index] if pinned else None
+        if reference is None and args.stills:
+            reference = own_still(args.stills.expanduser().resolve(), work, index, width, height)
         if reference is None:
             source = previous if args.chain_images and previous else (muse if muse_shots is None or index + 1 in muse_shots else None)
             if source is None and shot.get('studioFrame'):
@@ -316,6 +321,7 @@ def main():
             except subprocess.CalledProcessError:
                 parser.error(f'Shot {index + 1} still failed local vision review before LTX. '
                              f'Inspect {reference} and the vision report in {work / "refs"}; correct the still or prompt.')
+        references.append(reference)
         previous = reference
         if args.stills_only:
             print(f'First frame ready for shot {index + 1}: {reference.name}', flush=True)
@@ -340,6 +346,7 @@ def main():
                 print('First clip check passed', flush=True)
             segments.append({'file': str(previous_clip), 'seconds': frames / FPS})
     if args.stills_only:
+        write_manifest(work, scenario, references)
         print('First frames ready; no motion generated.', flush=True)
         return
     manifest = {'aspect': aspect, 'shots': segments,

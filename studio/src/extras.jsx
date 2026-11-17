@@ -219,13 +219,13 @@ export function ComparePanel({ onClose }) {
 }
 
 /* ---------- feedback + what the Studio has learned ---------- */
-export function Feedback({ sessionId, onRated }) {
+export function Feedback({ sessionId, video, onRated }) {
   const [sent, setSent] = useState('');
   const [note, setNote] = useState('');
   useEffect(() => { setSent(''); setNote(''); }, [sessionId]);
-  const send = (rating) => fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, rating, note }) })
+  const send = (rating) => fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, video, rating, note }) })
     .then((r) => { if (r.ok) { setSent(rating); if (onRated) onRated(rating); } else setSent('err'); }).catch(() => setSent('err'));
-  if (sent === 'up' || sent === 'down') return <p className="muted small">Saved to the learning log ({sent === 'up' ? 'good result' : 'needs work'}). Future time estimates and tips use these notes.</p>;
+  if (sent === 'up' || sent === 'down') return <p className="muted small">Saved to the learning log ({sent === 'up' ? 'good result' : 'needs work'}). This is creator feedback.</p>;
   return (
     <div className="plbar">
       <span>How is this video?</span>
@@ -449,6 +449,7 @@ export function jobState(job, blocked, busyElsewhere) {
   const st = job.status;
   if (!st || st === 'idle') return busyElsewhere ? { k: 'waiting', t: 'The Mac is busy with another video. New ideas wait in Up next.' } : { k: 'idle', t: '' };
   if (st === 'running') return { k: 'running', t: job.kind === 'draft' ? 'Planning your video.' : job.kind === 'stills' ? 'Making first frames.' : 'Rendering motion. This takes several minutes; you can leave this page open.' };
+  if (st === 'stopping') return { k: 'waiting', t: 'Stopping the current job. Studio will be available when it exits.' };
   if (st === 'cancelled') return { k: 'stopped', t: 'Stopped. Your idea is kept; plan again when ready.' };
   if (st === 'interrupted') return { k: 'failed', t: 'The Mac restarted this job. Your idea is kept; try again.' };
   if (st === 'failed') return blocked ? { k: 'blocked', t: 'Blocked by a check. Nothing was rendered. Fix the point below or try again.' } : { k: 'failed', t: 'Something went wrong. Your idea is kept; try again.' };
@@ -498,7 +499,7 @@ export function ExportReview({ job, weak, notes, busy, onRetake, onCompare }) {
         <dd>{rated ? `Rated by you: ${rated === 'up' ? 'good' : 'needs work'}.` : 'Picture and sound have not been reviewed by a person yet.'}</dd>
       </dl>
       {weak.length > 0 && <div className="retake"><p><b>Make a new take.</b> A new take uses a new seed and re-renders by itself (about 5 minutes).</p>{weak.map((n) => <button key={n} type="button" className="ghost" disabled={busy} onClick={() => onRetake(n)}>Make a new take of shot {n}</button>)}</div>}
-      <Feedback sessionId={job.id} onRated={setRated} />
+      <Feedback sessionId={job.id} video={job.video} onRated={setRated} />
       <p className="muted small">{job.video}</p>
     </section>
   );
