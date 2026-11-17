@@ -44,7 +44,7 @@ const dayLabel = (t) => {
   return d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: d.getFullYear() === today.getFullYear() ? undefined : 'numeric' });
 };
 
-const THEMES = [['studio', 'Studio'], ['night', 'Night'], ['white', 'White']];
+const THEMES = [['studio', 'Studio'], ['night', 'Night'], ['white', 'White'], ['codex', 'Codex dark']];
 
 function Sidebar({ sessions, selectedId, liveId, onSelect, onNew, onRename, onDelete, open }) {
   const [editing, setEditing] = useState(null);
@@ -419,7 +419,7 @@ export default function App() {
           if (exampleContext) { setEnding(''); setSetting(''); setExampleContext(false); }
         }} exampleBusy={exampleBusy} onExample={suggestExample} />
         {exampleInfo && <p className="muted" role="status">{exampleInfo.title} · {exampleInfo.note} {exampleInfo.trend?.sourceUrl && <a href={exampleInfo.trend.sourceUrl} target="_blank" rel="noreferrer">Search source</a>}</p>}
-        <IdeaHelper text={prompt} look={look} quiet={simple} />
+        <IdeaHelper text={prompt} look={look} ending={ending} quiet={simple} />
         {anyRunning && <div className="hint tip">Your Mac is making another video right now{live.prompt ? ` ("${live.prompt.slice(0, 40)}...")` : ''}. Up next is saved in this browser. Leave Studio open for automatic start.</div>}
         <label htmlFor="video-brief" className="brief-label">Video idea</label>
         <div className="composer">
