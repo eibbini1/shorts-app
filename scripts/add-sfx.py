@@ -196,7 +196,7 @@ def cues_for(text):
 
 
 FOOD_ONLY = {'clink', 'sizzle', 'crunch', 'chew', 'pour', 'slice', 'scrape', 'fizz'}
-FOOD_WORDS = re.compile(r'\b(food|dish|plate|bowl|meal|cook\w*|chef|kitchen|steak|burger|kebab|sushi|pasta|pizza|cake|dessert|sauce|soup|salad|egg|bread|wagyu|truffle|caviar|drink|coffee|champagne|cheese|fries|taco)\b', re.I)
+FOOD_WORDS = re.compile(r'\b(food|dish|plate|bowl|meal|cook\w*|chef|kitchen|steak|beef|burger|kebab|sushi|pasta|pizza|cake|dessert|sauce|soup|salad|egg|bread|wagyu|truffle|caviar|drink|coffee|champagne|cheese|fries|taco)\b', re.I)
 
 
 def is_food(shot):
@@ -254,7 +254,10 @@ def audit_cues(data):
         preview, _ = build(shots, total, foley_samples=samples,
                            continuous_room=True, recordings_only=recordings_only)
         window = RATE // 5
-        floor = max(0.001, float(np.max(np.abs(preview))) * 0.02)
+        # Judge silence against how loud the film normally is, not its single loudest
+        # transient (a sizzle pop made quiet-but-audible rustles look like gaps).
+        levels = [float(np.sqrt(np.mean(preview[i:i + window] ** 2))) for i in range(0, len(preview) - window + 1, window)]
+        floor = max(0.001, float(np.percentile(levels, 95)) * 0.08) if levels else 0.001
         quiet = 0
         for start in range(0, len(preview), window):
             segment = preview[start:start + window]

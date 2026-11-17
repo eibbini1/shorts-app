@@ -151,6 +151,21 @@ def summarize(report):
     return {'status': status, 'issues': issues, 'report': report.get('reportPath')}
 
 
+MIN_MOTION = 2.0  # mean 0-255 change between frames 1/8 s apart; real shots here measured 3.7-18.9, a frozen fox shot 1.7
+
+
+def shot_motion(video, start, end, width=96, height=170, fps=8):
+    """How much the picture changes inside one shot; a near-zero value means the motion model returned an almost still clip."""
+    raw = subprocess.run(['ffmpeg', '-v', 'error', '-ss', f'{start + 0.1:.2f}', '-t', f'{max(0.5, end - start - 0.2):.2f}', '-i', str(video),
+                          '-vf', f'fps={fps},scale={width}:{height},format=gray', '-f', 'rawvideo', '-'], capture_output=True).stdout
+    size = width * height
+    frames = [raw[i:i + size] for i in range(0, len(raw) - size + 1, size)]
+    if len(frames) < 3:
+        return None
+    total = sum(sum(abs(a - b) for a, b in zip(f1, f2)) / size for f1, f2 in zip(frames, frames[1:]))
+    return round(total / (len(frames) - 1), 2)
+
+
 def ask(vision, image, questions, cache):
     report, path = vision.review(image, '', questions=tuple(questions), cache_dir=cache)
     report['reportPath'] = str(path)
@@ -179,6 +194,7 @@ def main():
     integrated, peak = loudness(video)
     means = [shot_mean_volume(video, a, b) for a, b in windows]
     audio = audio_flags(integrated, peak, means)
+    motion = [shot_motion(video, a, b) for a, b in windows]
     shot_results, payoff, continuity = [], None, None
     if not args.skip_vision:
         vision = load_vision()
@@ -194,15 +210,18 @@ def main():
             continuity = ask(vision, side_by_side(mids[0], ends[-1], work / 'food.png'),
                              [CONTINUITY_QUESTION if is_food_film(scenario) else SUBJECT_QUESTION], cache)
     flags, unchecked = categorize(shot_results, payoff, continuity, audio)
+    for number, value in enumerate(motion, 1):
+        if value is not None and value < MIN_MOTION:
+            flags['realism'].append(f'shot {number} barely moves (motion {value}, real shots here measure 3.7-18.9): regenerate it for a new take')
     likely_low = [key for key in CATEGORIES if flags[key]]
     report = {
         'checkedAt': datetime.now(timezone.utc).isoformat(), 'video': str(video),
         'videoSha256': hashlib.sha256(video.read_bytes()).hexdigest(),
         'contactSheet': str(sheet), 'loudnessLUFS': integrated, 'truePeakDBTP': peak,
-        'shotMeanVolumeDB': means, 'shots': shot_results, 'payoffFrame': payoff, 'foodContinuity': continuity,
+        'shotMeanVolumeDB': means, 'shotMotion': motion, 'shots': shot_results, 'payoffFrame': payoff, 'foodContinuity': continuity,
         'visionChecked': not args.skip_vision,
         'flags': flags, 'likelyBelow4': likely_low, 'unchecked': unchecked,
-        'notMachineChecked': ['story', 'same kitchen across shots (use the contact sheet)', 'narration naturalness', 'sound cue timing by ear', 'motion believability'],
+        'notMachineChecked': ['story', 'same kitchen across shots (use the contact sheet)', 'narration naturalness', 'sound cue timing by ear', 'whether the motion looks believable (only the amount of motion is measured)'],
         'note': 'Advisory screen of the final file. It adds no score; a person must still watch and listen.',
     }
     output.write_text(json.dumps(report, indent=2) + '\n')

@@ -5,7 +5,7 @@ Usage: studio-draft.py --answers FILE [--allow-repeat] [--tries 3]
 Never shows a dead end for a fixable problem. Exit 0 = a plan that passed every gate;
 exit 3 = still blocked (the last BLOCKED lines say why; NEEDS-CHOICE lines name a user decision).
 """
-import argparse, re, subprocess, sys
+import argparse, os, re, subprocess, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -25,7 +25,30 @@ def checks(scn, allow_repeat):
         found += [l[9:] for l in out.splitlines() if l.startswith('BLOCKED: ')]
     if allow_repeat:
         found = [p for p in found if p != 'repeat topic']
-    return found
+    return found + polish(scn)
+
+
+_polished = set()
+
+
+def polish(scn):
+    """Food films must pass the picture-prompt score (85) before any FLUX/LTX time; the refiner lifts most plans past it."""
+    if os.environ.get('SHORTS_MIN_PROMPT_SCORE') == '0':
+        return []  # the Studio sets this for non-food looks, where the food-prompt score does not apply
+    lint = ['--min-prompts=85']
+    first = subprocess.run([sys.executable, str(ROOT / 'scripts/prompt-lint.py'), scn, *lint], cwd=ROOT, capture_output=True, text=True)
+    if first.returncode == 0:
+        return []
+    before = re.search(r'prompts (\d+)', first.stdout)
+    subprocess.run([sys.executable, str(ROOT / 'scripts/refine-prompts.py'), scn, '--studio', 'luxury-kitchen', '--in-place'], cwd=ROOT, capture_output=True, text=True)
+    second = subprocess.run([sys.executable, str(ROOT / 'scripts/prompt-lint.py'), scn, *lint], cwd=ROOT, capture_output=True, text=True)
+    after = re.search(r'prompts (\d+)', second.stdout)
+    if second.returncode == 0:
+        if scn not in _polished:
+            _polished.add(scn)
+            say(f"Fixed automatically: picture prompts polished ({before.group(1) if before else '?'} to {after.group(1) if after else '?'})")
+        return []
+    return [f"picture prompts score {after.group(1) if after else '?'} (need 85)"]
 
 
 def main():

@@ -185,6 +185,7 @@ python3 scripts/log-local-run.py --scenario "$scenario" --video "$final_video" -
 # It awards no points; it tells the reviewer which ratings are likely to fall below 4/5.
 python3 scripts/prereview-local-video.py --scenario "$scenario" --video "$final_video" ${skip_vision_gate:+--skip-vision} || echo 'Pre-review flagged likely weak categories; fix them before the editorial review.' >&2
 python3 scripts/score-local-video.py --scenario "$scenario" --pack "$pack" --video "$final_video" || echo 'Release gate is blocked or needs editorial review; inspect the quality report.' >&2
+printf 'Studio verified export: %s\n' "$final_video"
 echo "Editorial review (watch and listen, about 2 minutes): npm run review:video:mac -- --scenario '$scenario' --pack '$pack' --video '$final_video'"
 t_end=$SECONDS
 checks_s=$((t_checks - t_start)); render_s=$((t_render - t_checks)); finish_s=$((t_end - t_render)); total_s=$((t_end - t_start))

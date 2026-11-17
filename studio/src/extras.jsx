@@ -94,14 +94,20 @@ export const THEME_SW = { studio: ['#0f1115', '#e0b04a'], night: ['#0b1630', '#f
 
 export function LookChips({ look, setLook, onExample }) {
   const cur = LOOKS.find((l) => l.id === look) || LOOKS[0];
+  const move = (e, i) => {
+    const d = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+    if (!d) return; e.preventDefault();
+    const n = LOOKS[(i + d + LOOKS.length) % LOOKS.length]; setLook(n.id);
+    e.currentTarget.parentElement.querySelector(`[data-look="${n.id}"]`)?.focus();
+  };
   return (
-    <div className="lookchips">
-      {LOOKS.map((l) => (
-        <button key={l.id} className={look === l.id ? 'on' : ''} onClick={() => setLook(l.id)} aria-pressed={look === l.id}>
+    <div className="lookchips" role="radiogroup" aria-label="Film look">
+      {LOOKS.map((l, i) => (
+        <button key={l.id} type="button" role="radio" data-look={l.id} aria-checked={look === l.id} tabIndex={look === l.id ? 0 : -1} className={look === l.id ? 'on' : ''} onClick={() => setLook(l.id)} onKeyDown={(e) => move(e, i)}>
           <span className="sw"><i style={{ background: l.sw[0] }} /><i style={{ background: l.sw[1] }} /></span>{l.name}
         </button>
       ))}
-      <button className="link" onClick={() => onExample(cur)} title={cur.ex}>Try an example</button>
+      <button type="button" className="link" onClick={() => onExample(cur)}>Try an example</button>
     </div>
   );
 }
@@ -213,12 +219,12 @@ export function ComparePanel({ onClose }) {
 }
 
 /* ---------- feedback + what the Studio has learned ---------- */
-export function Feedback({ sessionId }) {
+export function Feedback({ sessionId, onRated }) {
   const [sent, setSent] = useState('');
   const [note, setNote] = useState('');
   useEffect(() => { setSent(''); setNote(''); }, [sessionId]);
   const send = (rating) => fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: sessionId, rating, note }) })
-    .then((r) => (r.ok ? setSent(rating) : setSent('err'))).catch(() => setSent('err'));
+    .then((r) => { if (r.ok) { setSent(rating); if (onRated) onRated(rating); } else setSent('err'); }).catch(() => setSent('err'));
   if (sent === 'up' || sent === 'down') return <p className="muted small">Saved to the learning log ({sent === 'up' ? 'good result' : 'needs work'}). Future time estimates and tips use these notes.</p>;
   return (
     <div className="plbar">
@@ -268,8 +274,8 @@ export function FramesReview({ job, plan, files, onRegen, onRender, busy, blocke
           </div>
         ))}
       </div>
-      <p><button className="primary" onClick={onRender} disabled={busy || blocked || !all}>Looks good: render video</button>
-        <span className="muted small"> about {fmt(est.mid)} ({fmt(est.low)} to {fmt(est.high)}); reuses these frames.</span></p>
+      <p><button className="primary" onClick={onRender} disabled={busy || blocked || !all}>Approve frames and render video</button>
+        <span className="muted small"> about {fmt(est.mid)} ({fmt(est.low)} to {fmt(est.high)}); reuses these frames. This is the long step: nothing is sent to motion until you press it.</span></p>
     </div>
   );
 }
@@ -414,4 +420,86 @@ export function guessResult(job) {
   if (!g || job.status !== 'done' || !job.updatedAt) return null;
   const real = (job.updatedAt - g.at) / 60000; const off = Math.abs(real - g.min);
   return off < 1 ? `🎯 Your bet of ${g.min} min was spot on!` : `Your bet: ${g.min} min. Actual: ${real.toFixed(1)} min (${off.toFixed(1)} min ${real > g.min ? 'longer' : 'shorter'}).`;
+}
+
+
+/* ---------- stages: Plan video -> Review first frames -> Render video -> Review export ---------- */
+export const STAGE_NAMES = ['Plan video', 'Review first frames', 'Render video', 'Review export'];
+export function stageIndex(job) {
+  if (!job.status || job.status === 'idle') return -1;
+  if (job.kind === 'draft') return job.status === 'done' && job.plan ? 1 : 0;
+  if (job.kind === 'stills') return 1;
+  if (job.kind === 'render') return job.status === 'done' && job.video ? 3 : 2;
+  return 0;
+}
+export function StageBar({ job }) {
+  const cur = stageIndex(job);
+  if (cur < 0) return null;
+  return (
+    <ol className="stagebar" aria-label="Progress through the film">
+      {STAGE_NAMES.map((n, i) => (
+        <li key={n} aria-current={i === cur ? 'step' : undefined} className={i < cur ? 'done' : i === cur ? 'now' : ''}><span className="n">{i < cur ? '✓' : i + 1}</span> {n}</li>
+      ))}
+    </ol>
+  );
+}
+// One honest state per job: waiting / running / awaiting approval / blocked / failed / complete.
+// "Awaiting approval" is derived from a finished plan or first-frames job, because the server only reports running/done/failed.
+export function jobState(job, blocked, busyElsewhere) {
+  const st = job.status;
+  if (!st || st === 'idle') return busyElsewhere ? { k: 'waiting', t: 'The Mac is busy with another video. New ideas wait in Up next.' } : { k: 'idle', t: '' };
+  if (st === 'running') return { k: 'running', t: job.kind === 'draft' ? 'Planning your video.' : job.kind === 'stills' ? 'Making first frames.' : 'Rendering motion. This takes several minutes; you can leave this page open.' };
+  if (st === 'cancelled') return { k: 'stopped', t: 'Stopped. Your idea is kept; plan again when ready.' };
+  if (st === 'interrupted') return { k: 'failed', t: 'The Mac restarted this job. Your idea is kept; try again.' };
+  if (st === 'failed') return blocked ? { k: 'blocked', t: 'Blocked by a check. Nothing was rendered. Fix the point below or try again.' } : { k: 'failed', t: 'Something went wrong. Your idea is kept; try again.' };
+  if (job.kind === 'draft') return blocked ? { k: 'blocked', t: 'Blocked by a check. Nothing was rendered.' } : { k: 'approval', t: 'Plan ready. Next: make first frames, then check them before the long render.' };
+  if (job.kind === 'stills') return blocked ? { k: 'blocked', t: 'Blocked by a check. Fix it before rendering.' } : { k: 'approval', t: 'First frames ready. Approve them to start the render, or regenerate any frame.' };
+  return blocked ? { k: 'blocked', t: 'Final file failed a check. It is not ready.' } : { k: 'complete', t: 'Video rendered. Review the export below before using it.' };
+}
+
+/* ---------- plan review: every shot with its action, picture, length and sound ---------- */
+export function ShotPlan({ shots, notes }) {
+  const fixes = (n) => (notes || []).filter((l) => /^BLOCKED/.test(l) && new RegExp('shots?\\s*' + n + '\\b', 'i').test(l)).map((l) => plainBlock(l.replace(/^BLOCKED:\s*/, '')));
+  return (
+    <ol className="shotplan">
+      {shots.map((s, i) => (
+        <li key={i} className="shotcard">
+          <div className="shothead"><b>Shot {i + 1}</b><span className="muted">{s.seconds}s</span></div>
+          <p><span className="k">Action</span> {s.motionPrompt || s.imagePrompt}</p>
+          {s.imagePrompt && s.motionPrompt && <p className="muted"><span className="k">First frame</span> {s.imagePrompt}</p>}
+          {s.sound && <p className="muted"><span className="k">Sound</span> {s.sound}</p>}
+          {s.narration && <p className="muted"><span className="k">Voice</span> {s.narration}</p>}
+          {fixes(i + 1).map((f) => <p key={f} className="shotfix"><span className="k">Fix</span> {f}</p>)}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/* ---------- export review: file gates, shot flags and human review are three different things ---------- */
+export function ExportReview({ job, weak, notes, busy, onRetake, onCompare }) {
+  const [rated, setRated] = useState('');
+  useEffect(() => { setRated(''); }, [job.id]);
+  const failed = notes.filter((n) => n.startsWith('BLOCKED')).map((n) => plainBlock(n.replace(/^BLOCKED:\s*/, '')));
+  const passed = job.technicalQa?.status === 'passed';
+  const src = '/media?p=' + encodeURIComponent(job.video);
+  return (
+    <section className="card export" aria-labelledby="exp-h">
+      <h3 id="exp-h">Review export</h3>
+      <p className={'readystate ' + (failed.length ? 'bad' : 'ok')} role="status">{failed.length ? 'Not ready: the final file failed a check.' : passed ? 'Technical checks passed. Watch and listen before publishing.' : 'Technical checks have not been confirmed for this export.'}</p>
+      <Player src={src} />
+      <p className="row"><a className="btn" href={src} download>Download video</a>{onCompare && <button type="button" className="ghost" onClick={onCompare}>Compare with another video</button>}</p>
+      <dl className="gates">
+        <dt>Technical checks on the final file</dt>
+        <dd>{failed.length ? <ul>{failed.map((f) => <li key={f} className="bad">{f}</li>)}</ul> : passed ? 'Passed for this exact export.' : 'No check result was recorded for this file.'}</dd>
+        <dt>Automatic shot flags</dt>
+        <dd>{weak.length ? `${weak.length === 1 ? 'Shot ' + weak[0] + ' barely moves' : 'Shots ' + weak.join(', ') + ' barely move'}. This is a machine measure, not a verdict.` : 'No shot was flagged by the motion measure.'}</dd>
+        <dt>Human editorial review</dt>
+        <dd>{rated ? `Rated by you: ${rated === 'up' ? 'good' : 'needs work'}.` : 'Picture and sound have not been reviewed by a person yet.'}</dd>
+      </dl>
+      {weak.length > 0 && <div className="retake"><p><b>Make a new take.</b> A new take uses a new seed and re-renders by itself (about 5 minutes).</p>{weak.map((n) => <button key={n} type="button" className="ghost" disabled={busy} onClick={() => onRetake(n)}>Make a new take of shot {n}</button>)}</div>}
+      <Feedback sessionId={job.id} onRated={setRated} />
+      <p className="muted small">{job.video}</p>
+    </section>
+  );
 }

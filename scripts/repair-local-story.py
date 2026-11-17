@@ -76,7 +76,7 @@ def main():
             j = int(m.group(2)) - 1
             lead = first_sentence(shots[j]['motionPrompt']) or 'A later moment'
             rest = shots[j]['imagePrompt'].split('.', 1)
-            shots[j]['imagePrompt'] = sentence('Later moment: ' + lead) + (' ' + rest[1].strip() if len(rest) > 1 else '')
+            shots[j]['imagePrompt'] = sentence('Moments later, ' + (lead[:1].lower() + lead[1:])) + (' ' + rest[1].strip() if len(rest) > 1 else '')
             fixed.append(f'shot {j+1} first frame now shows a different moment from shot {j}')
     if not fixed:
         print('No safe automatic repair for: ' + '; '.join(found))

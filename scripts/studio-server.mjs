@@ -46,10 +46,13 @@ const STEP_RULES = [
   [/final-file|qa\b|verified|contact sheet/i, 'Quality checks'],
 ];
 
-const snap = (x = job) => x && { id: x.id, name: x.name, prompt: x.prompt, options: x.options, createdAt: x.createdAt, updatedAt: x.updatedAt, kind: x.kind, status: x.status, startedAt: x.startedAt, steps: x.steps, lines: x.lines.slice(-200), scenario: x.scenario, plan: x.plan, video: x.video, error: x.error };
+const snap = (x = job) => x && { id: x.id, user: x.user, name: x.name, prompt: x.prompt, options: x.options, createdAt: x.createdAt, updatedAt: x.updatedAt, kind: x.kind, status: x.status, startedAt: x.startedAt, steps: x.steps, lines: x.lines.slice(-200), scenario: x.scenario, plan: x.plan, video: x.video, previousVideo: x.previousVideo, technicalQa: x.technicalQa, error: x.error };
 const persist = (x, touch = true) => { if (touch) x.updatedAt = Date.now(); x.lastSave = Date.now(); try { fs.writeFileSync(path.join(SESS_DIR, x.id + '.json'), JSON.stringify(snap(x))); } catch { /* disk issue: keep running */ } };
-const summary = (x) => ({ id: x.id, name: x.name, prompt: x.prompt, createdAt: x.createdAt, updatedAt: x.updatedAt, status: x.status, kind: x.kind, hasVideo: Boolean(x.video) });
-const emit = () => { const d = `data: ${JSON.stringify(snap() || { status: 'idle' })}\n\n`; for (const c of clients) c.write(d); };
+const summary = (x) => ({ id: x.id, name: x.name, prompt: x.prompt, createdAt: x.createdAt, updatedAt: x.updatedAt, status: x.status, kind: x.kind, hasVideo: Boolean(x.video || x.previousVideo) });
+const canSee = (user, x) => !x || !user || user.role === 'owner' || x.user === user.name;
+const view = (user, x = job) => !x ? { status: 'idle' } : canSee(user, x) ? snap(x)
+  : { id: 'other', name: 'Another video', prompt: '', options: {}, status: x.status, kind: x.kind, startedAt: x.startedAt, steps: [], lines: [], busyElsewhere: true };
+const emit = () => { for (const c of clients) c.write(`data: ${JSON.stringify(view(c.user))}\n\n`); };
 
 function busyReason() {
   if (job && job.status === 'running') return 'A studio job is already running.';
@@ -80,16 +83,22 @@ function start(kind, args, extra = {}) {
   const startedAt = Date.now();
   let x = extra.session;
   if (!x) {
-    x = { id: String(startedAt), name: (extra.prompt || 'New video').slice(0, 48), prompt: extra.prompt || '', options: extra.options || {}, createdAt: startedAt, plan: null, scenario: null, video: null };
+    x = { id: String(startedAt), user: extra.user, name: (extra.prompt || 'New video').slice(0, 48), prompt: extra.prompt || '', options: extra.options || {}, createdAt: startedAt, plan: null, scenario: null, video: null };
     sessions.set(x.id, x);
   }
   Object.assign(x, { kind, status: 'running', startedAt, steps: [], lines: [], error: null });
-  if (kind === 'render' || kind === 'stills') { if (kind === 'render') x.video = null; x.scenario = extra.scenario || x.scenario; } else { x.plan = null; x.scenario = null; }
+  if (kind === 'render' || kind === 'stills') { if (kind === 'render') {
+      if (x.video && x.technicalQa?.status === 'passed') x.previousVideo = x.video;
+      x.video = null;
+      x.technicalQa = { status: 'pending' };
+    } x.scenario = extra.scenario || x.scenario; } else { x.plan = null; x.scenario = null; }
   job = x;
   const proc = spawn(extra.cmd ? extra.cmd[0] : 'bash', extra.cmd ? [...extra.cmd.slice(1), ...args] : ['scripts/make-local-video.sh', ...args], { cwd: ROOT, detached: true, env: { ...process.env, PYTHONUNBUFFERED: '1', // the prompt gate scores food close-ups and a luxury-kitchen look; it does not apply to cartoon/custom looks
     ...(x.options && x.options.look && x.options.look !== 'food' ? { SHORTS_MIN_PROMPT_SCORE: '0' } : {}) } });
   x.proc = proc; // not serialised: snap() copies named fields only
   let buf = '';
+  let verifiedExport = null;
+  let failedQa = false;
   const onData = (chunk) => {
     buf += chunk.toString();
     const parts = buf.split(/\r|\n/); buf = parts.pop();
@@ -97,6 +106,9 @@ function start(kind, args, extra = {}) {
       const line = raw.replace(/\x1b\[[0-9;]*[A-Za-z]/g, '').trim();
       if (!line) continue;
       x.lines.push(line);
+      const verified = /^Studio verified export: (outputs\/[^/\\]+\.mp4)$/.exec(line);
+      if (verified) verifiedExport = verified[1];
+      if (line.startsWith('Technical QA failed:')) failedQa = true;
       for (const [re, label] of STEP_RULES) if (re.test(line)) { if (x.steps[x.steps.length - 1] !== label) x.steps.push(label); break; }
       const sc = line.match(/(drafts\/generated\/[^\s'"]+\.local-scenario\.json)/);
       if (sc) x.scenario = sc[1];
@@ -114,7 +126,16 @@ function start(kind, args, extra = {}) {
       x.scenario ||= newest('drafts/generated', '.local-scenario.json', startedAt);
       if (x.scenario) { try { x.plan = JSON.parse(fs.readFileSync(path.join(ROOT, x.scenario), 'utf8')); } catch { /* keep raw log */ } }
     } else if (x.status !== 'cancelled' && kind === 'render') {
-      x.video = newest('outputs', '.mp4', startedAt);
+      if (code === 0 && verifiedExport && fs.existsSync(path.join(ROOT, verifiedExport))) {
+        x.video = verifiedExport;
+        x.technicalQa = { status: 'passed' };
+      } else {
+        x.technicalQa = { status: failedQa ? 'failed' : 'unverified' };
+        if (code === 0) {
+          x.status = 'failed';
+          x.error = 'No verified final export was reported.';
+        }
+      }
     }
     persist(x);
     logRun(x, code);
@@ -133,7 +154,7 @@ function logRun(x, code) {
   const plan = x.plan?.plan || x.plan || {};
   const shots = plan.shots || [];
   const lines = x.lines || [];
-  ledger({ type: 'run', session: x.id, kind: x.kind, status: x.status, exitCode: code, prompt: x.prompt, look: x.options?.look, setting: x.options?.setting, ending: x.options?.ending, audio: x.options?.audio, seconds: x.options?.seconds,
+  ledger({ type: 'run', user: x.user || 'owner', session: x.id, kind: x.kind, status: x.status, exitCode: code, prompt: x.prompt, look: x.options?.look, setting: x.options?.setting, ending: x.options?.ending, audio: x.options?.audio, seconds: x.options?.seconds,
     shots: shots.length, shotSeconds: shots.map((s) => s.seconds), title: plan.title, scenario: x.scenario, video: x.video,
     durationSec: Math.round((Date.now() - x.startedAt) / 1000),
     blocked: lines.filter((l) => /^BLOCKED/.test(l)).map((l) => l.slice(0, 160)), fixed: lines.filter((l) => /^Fixed automatically/.test(l)).map((l) => l.slice(21, 160)), tries: lines.filter((l) => /^Attempt \d+\/\d+/.test(l)).length || undefined, reviews: lines.filter((l) => /^REVIEW/.test(l)).length });
@@ -169,14 +190,41 @@ function serveFile(req, res, file, roots) {
   fs.createReadStream(real).pipe(res);
 }
 
-// Optional private remote access (for example `tailscale serve` in front of this server).
+// Optional private remote access (for example `tailscale serve` or `tailscale funnel` in front of this server).
 // STUDIO_ALLOWED_ORIGINS=https://mac.tailnet.ts.net  lets that exact page call the API.
-// STUDIO_TOKEN=long-random-string  requires a cookie (set by opening /?token=...) on every request.
+// STUDIO_TOKEN=...  the owner's token. storage/studio-users.json lists relatives: {"users":[{"name":"Mum","token":"...","dailyRenders":3}]}.
+// With either set, every request needs the cookie that opening /?token=... sets; relatives only see their own videos.
 const EXTRA_ORIGINS = (process.env.STUDIO_ALLOWED_ORIGINS || '').split(',').map(x => x.trim().replace(/\/$/, '')).filter(Boolean);
 const TOKEN = process.env.STUDIO_TOKEN || '';
-function tokenOk(candidate) {
-  const a = Buffer.from(String(candidate || '')), b = Buffer.from(TOKEN);
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
+const USERS_FILE = process.env.STUDIO_USERS_FILE || path.join(ROOT, 'storage', 'studio-users.json');
+const CREATOR_MAX_SECONDS = 20, CREATOR_DAILY_DRAFTS = 12;
+function sameToken(a, b) {
+  const x = Buffer.from(String(a || '')), y = Buffer.from(String(b || ''));
+  return x.length === y.length && x.length > 0 && crypto.timingSafeEqual(x, y);
+}
+function readUsers() { try { return (JSON.parse(fs.readFileSync(USERS_FILE, 'utf8')).users || []).filter((u) => u.name && u.token); } catch { return []; } }
+const authOn = () => Boolean(TOKEN) || readUsers().length > 0;
+function userFor(candidate) {
+  if (TOKEN && sameToken(candidate, TOKEN)) return { name: 'owner', role: 'owner' };
+  for (const u of readUsers()) if (sameToken(candidate, u.token)) return { name: String(u.name).slice(0, 40), role: 'creator', dailyRenders: Number(u.dailyRenders) || 3 };
+  return null;
+}
+// A relative can use only files that belong to their own sessions. Every file of a video shares the plan's id.
+const keyOf = (scenario) => scenario ? path.basename(String(scenario)).replace(/\.local-scenario\.json$/, '').replace(/\.json$/, '') : null;
+function ownKeys(user) { return [...sessions.values()].filter((x) => x.user === user.name && x.scenario).map((x) => keyOf(x.scenario)).filter(Boolean); }
+function mayUse(user, value) {
+  if (user.role === 'owner') return true;
+  const file = String(value);
+  if (path.isAbsolute(file) || path.normalize(file) !== file) return false;
+  const keys = ownKeys(user);
+  if (file.startsWith('drafts/generated/')) return keys.includes(keyOf(file));
+  if (file.startsWith('storage/any-local/')) return keys.includes(file.split('/')[2]);
+  const output = file.startsWith('outputs/') ? file.slice('outputs/'.length) : file;
+  return !output.includes('/') && keys.some((key) => output.startsWith(key + '-'));
+}
+function today(user, kind) {
+  const day = new Date().toDateString();
+  return readLedger().filter((r) => r.type === 'run' && r.user === user.name && r.kind === kind && new Date(r.ts).toDateString() === day).length;
 }
 
 http.createServer(async (req, res) => {
@@ -184,29 +232,40 @@ http.createServer(async (req, res) => {
   // Block cross-site requests: only same-origin pages on this host may call the API.
   const origin = req.headers.origin;
   if (origin && !/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(origin) && !EXTRA_ORIGINS.includes(origin)) return json(res, 403, { error: 'Bad origin' });
-  if (TOKEN) {
+  req.user = { name: 'owner', role: 'owner' };
+  if (authOn()) {
     const cookie = /(?:^|;\s*)studio_token=([^;]+)/.exec(req.headers.cookie || '')?.[1];
     const given = url.searchParams.get('token');
-    if (given && tokenOk(given)) {
+    if (given && userFor(given)) {
       res.writeHead(302, { 'Set-Cookie': `studio_token=${encodeURIComponent(given)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=2592000`, Location: url.pathname });
       return res.end();
     }
     let decoded = '';
     try { decoded = decodeURIComponent(cookie || ''); } catch { /* malformed cookie is unauthorized */ }
-    if (!tokenOk(decoded)) {
+    const who = userFor(decoded);
+    if (!who) {
       res.writeHead(401, { 'Content-Type': 'text/plain' });
-      return res.end('Studio is locked. Open it once with ?token=YOUR_TOKEN.');
+      return res.end('Studio is locked. Open it once with the private link you were given.');
     }
+    req.user = who;
   }
-  if (url.pathname === '/api/state') return json(res, 200, snap() || { status: 'idle' });
+  const me = req.user, isOwner = me.role === 'owner';
+  if (url.pathname === '/api/me') {
+    const owner = me.role === 'owner';
+    return json(res, 200, { name: me.name, role: me.role, maxSeconds: owner ? 60 : CREATOR_MAX_SECONDS,
+      rendersLeft: owner ? null : Math.max(0, me.dailyRenders - today(me, 'render')), draftsLeft: owner ? null : Math.max(0, CREATOR_DAILY_DRAFTS - today(me, 'draft')),
+      canCompare: owner, canSeeLog: owner });
+  }
+  if (url.pathname === '/api/state') return json(res, 200, view(me));
   if (url.pathname === '/api/events') {
     res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
-    res.write(`data: ${JSON.stringify(snap() || { status: 'idle' })}\n\n`);
-    clients.add(res); req.on('close', () => clients.delete(res)); return;
+    res.write(`data: ${JSON.stringify(view(me))}\n\n`);
+    res.user = me; clients.add(res); req.on('close', () => clients.delete(res)); return;
   }
   if (url.pathname === '/api/draft' && req.method === 'POST') {
     const b = await body(req); const why = busyReason();
     if (why) return json(res, 409, { error: why });
+    if (!isOwner && today(me, 'draft') >= CREATOR_DAILY_DRAFTS) return json(res, 429, { error: `That is today's limit of ${CREATOR_DAILY_DRAFTS} new ideas. Try again tomorrow.` });
     const prompt = String(b.prompt || '').trim().slice(0, 600);
     if (!prompt) return json(res, 400, { error: 'Write a prompt first.' });
     // Split "A, then B" into first action (hook) and last action (ending) so the story audit can match both.
@@ -222,10 +281,10 @@ http.createServer(async (req, res) => {
     const setting = String(b.setting || '').trim().slice(0, 200);
     const answers = { topic: prompt, style: LOOKS[look].style, set: setting || LOOKS[look].set, hook: parts[0], mustShow: prompt,
       ending: String(b.ending || '').trim().slice(0, 300) || (parts.length > 1 ? parts[parts.length - 1] : prompt), audio: ['asmr', 'voiced', 'auto'].includes(b.audio) ? b.audio : 'asmr',
-      seconds: Math.min(60, Math.max(10, Number(b.seconds) || 10)), orientation: b.orientation === 'wide' ? 'wide' : 'vertical' };
+      seconds: Math.min(isOwner ? 60 : CREATOR_MAX_SECONDS, Math.max(10, Number(b.seconds) || 10)), orientation: b.orientation === 'wide' ? 'wide' : 'vertical' };
     const f = path.join(ROOT, 'storage', 'studio-answers-' + Date.now() + '.json');
     fs.writeFileSync(f, JSON.stringify(answers, null, 1));
-    const x = start('draft', ['--answers', path.relative(ROOT, f), ...(b.allowRepeat ? ['--allow-repeat'] : [])], { cmd: ['python3', 'scripts/studio-draft.py'], prompt, options: { look, setting, seconds: answers.seconds, orientation: answers.orientation, audio: answers.audio, ending: String(b.ending || '').trim().slice(0, 300), allowRepeat: Boolean(b.allowRepeat) } });
+    const x = start('draft', ['--answers', path.relative(ROOT, f), ...(b.allowRepeat ? ['--allow-repeat'] : [])], { cmd: ['python3', 'scripts/studio-draft.py'], user: me.name, prompt, options: { look, setting, seconds: answers.seconds, orientation: answers.orientation, audio: answers.audio, ending: String(b.ending || '').trim().slice(0, 300), allowRepeat: Boolean(b.allowRepeat), chain: look !== 'food' } });
     return json(res, 202, snap(x));
   }
   if ((url.pathname === '/api/stills' || url.pathname === '/api/regen') && req.method === 'POST') {
@@ -234,16 +293,18 @@ http.createServer(async (req, res) => {
     if (why) return json(res, 409, { error: why });
     const sc = String(b.scenario || '');
     if (!/^drafts\/generated\/[\w.-]+\.local-scenario\.json$/.test(sc) || !fs.existsSync(path.join(ROOT, sc))) return json(res, 400, { error: 'Unknown plan.' });
+    if (!isOwner) { const o = ID_RE.test(String(b.sessionId)) ? sessions.get(String(b.sessionId)) : null; if (!o || !canSee(me, o) || !mayUse(me, sc)) return json(res, 403, { error: 'That video belongs to someone else.' }); }
     if (url.pathname === '/api/regen') {
       const shot = Number(b.shot);
       if (!Number.isInteger(shot) || shot < 1 || shot > 60) return json(res, 400, { error: 'Unknown shot.' });
       const refs = path.join(ROOT, 'storage', 'any-local', path.basename(sc, '.json'), 'refs'); fs.mkdirSync(refs, { recursive: true });
       const f = path.join(refs, 'seed-bumps.json'); let bumps = {}; try { bumps = JSON.parse(fs.readFileSync(f, 'utf8')); } catch { /* none yet */ }
       bumps[String(shot - 1)] = (Number(bumps[String(shot - 1)]) || 0) + 1; fs.writeFileSync(f, JSON.stringify(bumps));
-      ledger({ type: 'regenerate', session: b.sessionId, shot, scenario: sc });
+      ledger({ type: 'regenerate', user: me.name, session: b.sessionId, shot, scenario: sc });
     }
     const owner = ID_RE.test(String(b.sessionId)) ? sessions.get(String(b.sessionId)) : null;
-    const x = start('stills', ['--scenario', sc, '--stills-only', ...(owner?.options?.allowRepeat ? ['--allow-repeat'] : [])], owner ? { session: owner, scenario: sc } : { scenario: sc, prompt: 'First frames ' + sc.split('/').pop() });
+    if (!isOwner && (!owner || !canSee(me, owner) || !mayUse(me, sc))) return json(res, 403, { error: 'That video belongs to someone else.' });
+    const x = start('stills', ['--scenario', sc, '--stills-only', ...(owner?.options?.allowRepeat ? ['--allow-repeat'] : []), ...(owner?.options?.chain ? ['--chain-images'] : [])], owner ? { session: owner, scenario: sc } : { scenario: sc, user: me.name, prompt: 'First frames ' + sc.split('/').pop() });
     return json(res, 202, snap(x));
   }
   if (url.pathname === '/api/render' && req.method === 'POST') {
@@ -252,26 +313,28 @@ http.createServer(async (req, res) => {
     const sc = String(b.scenario || '');
     if (!/^drafts\/generated\/[\w.-]+\.local-scenario\.json$/.test(sc) || !fs.existsSync(path.join(ROOT, sc))) return json(res, 400, { error: 'Unknown plan.' });
     const owner = ID_RE.test(String(b.sessionId)) ? sessions.get(String(b.sessionId)) : null;
-    const x = start('render', ['--scenario', sc, ...(owner?.options?.allowRepeat ? ['--allow-repeat'] : [])], owner ? { session: owner, scenario: sc } : { scenario: sc, prompt: 'Render ' + sc.split('/').pop() });
+    if (!isOwner && (!owner || !canSee(me, owner) || !mayUse(me, sc))) return json(res, 403, { error: 'That video belongs to someone else.' });
+    if (!isOwner && today(me, 'render') >= me.dailyRenders) return json(res, 429, { error: `That is today's limit of ${me.dailyRenders} videos. Try again tomorrow.` });
+    const x = start('render', ['--scenario', sc, ...(owner?.options?.allowRepeat ? ['--allow-repeat'] : []), ...(owner?.options?.chain ? ['--chain-images'] : [])], owner ? { session: owner, scenario: sc } : { scenario: sc, user: me.name, prompt: 'Render ' + sc.split('/').pop() });
     return json(res, 202, snap(x));
   }
   if (url.pathname === '/api/cancel' && req.method === 'POST') {
-    if (job && job.status === 'running') { job.status = 'cancelled'; try { process.kill(-job.proc.pid, 'SIGTERM'); } catch { /* gone */ } persist(job); emit(); }
-    return json(res, 200, snap() || { status: 'idle' });
+    if (job && job.status === 'running' && canSee(me, job)) { job.status = 'cancelled'; try { process.kill(-job.proc.pid, 'SIGTERM'); } catch { /* gone */ } persist(job); emit(); }
+    return json(res, 200, view(me));
   }
   if (url.pathname === '/api/sessions' && req.method === 'GET') {
-    return json(res, 200, [...sessions.values()].map(summary).sort((p, q) => q.updatedAt - p.updatedAt));
+    return json(res, 200, [...sessions.values()].filter((x) => canSee(me, x)).map(summary).sort((p, q) => q.updatedAt - p.updatedAt));
   }
   const one = url.pathname.match(/^\/api\/sessions\/(\d{10,16})$/);
-  if (one && req.method === 'GET') { const x = sessions.get(one[1]); return x ? json(res, 200, snap(x)) : json(res, 404, { error: 'Unknown session' }); }
+  if (one && req.method === 'GET') { const x = sessions.get(one[1]); return x && canSee(me, x) ? json(res, 200, snap(x)) : json(res, 404, { error: 'Unknown session' }); }
   if (url.pathname === '/api/sessions/rename' && req.method === 'POST') {
     const b = await body(req); const x = sessions.get(String(b.id)); const name = String(b.name || '').trim().slice(0, 80);
-    if (!x || !name) return json(res, 400, { error: 'Need an existing session and a name.' });
+    if (!x || !name || !canSee(me, x)) return json(res, 400, { error: 'Need an existing session and a name.' });
     x.name = name; persist(x, false); return json(res, 200, summary(x));
   }
   if (url.pathname === '/api/sessions/delete' && req.method === 'POST') {
     const b = await body(req); const id = String(b.id); const x = sessions.get(id);
-    if (!x || !ID_RE.test(id)) return json(res, 404, { error: 'Unknown session' });
+    if (!x || !ID_RE.test(id) || !canSee(me, x)) return json(res, 404, { error: 'Unknown session' });
     if (x.status === 'running') return json(res, 409, { error: 'Stop this job before deleting it.' });
     sessions.delete(id); if (job === x) job = null;
     try { fs.unlinkSync(path.join(SESS_DIR, id + '.json')); } catch { /* already gone */ } // media and drafts are never touched
@@ -280,22 +343,36 @@ http.createServer(async (req, res) => {
   if (url.pathname === '/api/live-files') { // stills and clips made so far for the scenario being rendered
     const sc = String(url.searchParams.get('scenario') || '');
     if (!/^drafts\/generated\/[\w.-]+\.local-scenario\.json$/.test(sc)) return json(res, 400, { error: 'Unknown plan.' });
+    if (!isOwner && !mayUse(me, sc)) return json(res, 403, { error: 'Not yours.' });
     const work = path.join('storage', 'any-local', path.basename(sc, '.json'));
     const list = (sub, re) => { try { return fs.readdirSync(path.join(ROOT, work, sub)).filter((n) => re.test(n)).map((n) => ({ n, shot: Number(n.match(re)[1]) + 1, p: path.join(work, sub, n), t: fs.statSync(path.join(ROOT, work, sub, n)).mtimeMs })).sort((x, y) => x.shot - y.shot || x.t - y.t); } catch { return []; } };
     return json(res, 200, { stills: list('refs', /^shot-(\d+)-[0-9a-f]+\.png$/), clips: list('motion', /^shot-(\d+)-part-\d+-[0-9a-f]+\.mp4$/) });
   }
-  if (url.pathname === '/api/learning') return json(res, 200, learning());
+  if (url.pathname === '/api/learning') { const l = learning(); if (!isOwner) l.recentNotes = []; return json(res, 200, l); }
   if (url.pathname === '/api/feedback' && req.method === 'POST') {
     const b = await body(req); const sess = ID_RE.test(String(b.id)) ? sessions.get(String(b.id)) : null;
-    if (!sess || !['up', 'down'].includes(b.rating)) return json(res, 400, { error: 'Unknown chat or rating.' });
-    ledger({ type: 'feedback', session: sess.id, rating: b.rating, note: String(b.note || '').slice(0, 400), look: sess.options?.look, prompt: sess.prompt, video: sess.video });
+    if (!sess || !canSee(me, sess) || !['up', 'down'].includes(b.rating)) return json(res, 400, { error: 'Unknown chat or rating.' });
+    ledger({ type: 'feedback', user: me.name, session: sess.id, rating: b.rating, note: String(b.note || '').slice(0, 400), look: sess.options?.look, prompt: sess.prompt, video: sess.video });
     return json(res, 200, { ok: true });
+  }
+  if (url.pathname === '/api/prereview') { // advisory checks on the finished video; shots that barely move can be retaken
+    const x = sessions.get(String(url.searchParams.get('id') || ''));
+    if (!x || !x.scenario || !canSee(me, x)) return json(res, 404, {});
+    const key = keyOf(x.scenario); let best = null;
+    try { for (const n of fs.readdirSync(path.join(ROOT, 'outputs'))) if (n.includes(key) && n.endsWith('.prereview.json')) { const t = fs.statSync(path.join(ROOT, 'outputs', n)).mtimeMs; if (!best || t > best.t) best = { n, t }; } } catch { /* none yet */ }
+    if (!best) return json(res, 200, { weak: [] });
+    try {
+      const r = JSON.parse(fs.readFileSync(path.join(ROOT, 'outputs', best.n), 'utf8'));
+      const MIN_MOTION = 2.0; // same threshold as scripts/prereview-local-video.py
+      return json(res, 200, { shotMotion: r.shotMotion || [], weak: (r.shotMotion || []).map((v, i) => (v != null && v < MIN_MOTION ? i + 1 : 0)).filter(Boolean), flags: r.flags || {} });
+    } catch { return json(res, 200, { weak: [] }); }
   }
   if (url.pathname === '/api/videos') { // finished videos for the compare view, newest first
     let out = [];
-    try { out = fs.readdirSync(path.join(ROOT, 'outputs')).filter((n) => n.endsWith('.mp4')).map((n) => ({ n, p: 'outputs/' + n, t: fs.statSync(path.join(ROOT, 'outputs', n)).mtimeMs })).sort((x, y) => y.t - x.t).slice(0, 60); } catch { /* no outputs yet */ }
+    try { out = fs.readdirSync(path.join(ROOT, 'outputs')).filter((n) => n.endsWith('.mp4')).map((n) => ({ n, p: 'outputs/' + n, t: fs.statSync(path.join(ROOT, 'outputs', n)).mtimeMs })).sort((x, y) => y.t - x.t).filter((v) => isOwner || mayUse(me, v.n)).slice(0, 60); } catch { /* no outputs yet */ }
     return json(res, 200, out);
   }
+  if (url.pathname === '/media' && !isOwner && !mayUse(me, url.searchParams.get('p') || '')) return json(res, 403, { error: 'Not yours.' });
   if (url.pathname === '/media') return serveFile(req, res, path.join(ROOT, url.searchParams.get('p') || ''), MEDIA_ROOTS);
   // Static React build
   if (fs.existsSync(DIST)) {

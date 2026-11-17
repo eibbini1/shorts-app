@@ -41,3 +41,8 @@ The render now prepares Kokoro narration and the original soundtrack concurrentl
 - IMPLEMENTED BUT UNTESTED end to end: First frames step (stills-only + Regenerate), live render timer, done chime, blind compare (no scoring sheet), learning log ratings.
 - PLANNED: rain/splash/footstep sound cues in add-sfx.py; reference loader (own stills as `shot-0N.png`, one anchor character image) with ffprobe checks; reference shelf; blind scoring sheet with separate key file; queue the next idea while a render runs; plan-vs-prompt match check; rule/prompt improvements driven by the learning log; viewer/loader per `Studio media viewer and loader` research (custom native-video controller, node:sqlite index, ffmpeg thumbnails).
 - BLOCKED / needs owner: PR #21 push (gh account), commit of PR #20 work, hosted-video Phase 1 provider and cap, food benchmark resume (Mac plugged in).
+
+## Later goal (stated by the owner 2026-11-17): Google Flow-style capability
+- PLANNED: a studio "rich with capability to create anything described", comparable to Google Flow, on top of the Seedance-level goal. Not started.
+- Needs: a gap analysis against Flow's CURRENT feature set from fresh sources (not memory), then a mapping to what the local Mac pipeline can and cannot do. Local M1 16 GB (LTX-2.3, ~4.5 min per 5 s clip) will not match it; hosted GPUs (Phase 1, needs owner decision on provider and monthly cap) are the likely route.
+- Already moving that way: guided plans with self-repair, first-frames review, per-shot retake, chained frames for scene continuity, private/relative access for testing and learning.

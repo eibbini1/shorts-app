@@ -484,3 +484,37 @@ Next: implement audio fixes first (cheap, no GPU), then ending check.
 
 - Consolidated the Arabic voice preparation and review commands, pronunciation reference data, Creative Learning pilot, and documentation on `feature/arabic-artcraft-recipe` for PR #21. Verified npm script checks, all three Arabic recipe tests and the TypeScript build.
 - Generated review media, recordings and model caches are local. Future work: native review of new takes, validation of additional audience profiles and caption alignment after a take is selected.
+
+## 2026-11-17 ~15:00 — Claude (relatives access, live)
+- IMPLEMENTED + TESTED on spare port 8799, then restarted live Studio (8787): scripts/studio-server.mjs now has named users (storage/studio-users.json, managed by scripts/studio-users.mjs add/list/remove). Creators see only their own sessions/videos/media/plans (403/404 otherwise), seconds capped at 20, defaults 3 videos + 12 ideas per day (caps not tested), others' running job shown only as "busy", ledger records `user`. Owner token in ~/.shorts-studio-token. Backups /tmp/studio-server.before-users.mjs, before-remote.mjs.
+- LIVE: `tailscale serve` + `tailscale funnel --bg 8787` -> the configured private-link host is on the public internet, locked (401 without a personal token). Public reachability NOT verified from outside the Mac. Off switch: `tailscale funnel --https=443 off`.
+- NOT BUILT: UI changes for relatives (Simple mode already default; no "signed in as" label), per-user learning dashboards, no relatives added yet. Mac must stay awake. One job at a time on the Mac, so relatives queue.
+- Working tree uncommitted, nothing pushed.
+
+## 2026-11-17 ~15:10 — Claude (food prompt gate in draft loop)
+- Found: food plans passed the story checks but the render stopped at the picture-prompt gate (71 vs 85, exit 3) — wagyu session 1794916414392. IMPLEMENTED: scripts/studio-draft.py polish() runs refine-prompts.py (luxury-kitchen) then re-lints (>=85) inside checks(); skipped for non-food (SHORTS_MIN_PROMPT_SCORE=0). TESTED on the wagyu plan copy: 71 -> 88. Not yet seen in a live Studio draft. The failed wagyu plan was refined in place (original /tmp/wagyu-before-refine.json). Backup /tmp/studio-draft.before-polish.py.
+
+## 2026-11-17 ~15:20 — Claude (motion check + retake in the Studio)
+- IMPLEMENTED + VERIFIED live: prereview-local-video.py measures per-shot motion (MIN_MOTION 2.0; real shots 3.7-18.9; frozen fox shot 1.66); /api/prereview in studio-server.mjs; Studio shows "Make a new take of shot N" on a finished video (retake chains regen -> stills -> render without the first-frames pause). repair-local-story.py now writes "Moments later," instead of "Later moment:" (tested on a real plan).
+- VERIFIED by retake of fox shot 2 (5m47s total): motion 1.66 -> 2.34, picture now shows the boat gliding with consistent moon/boat. One retake helped but is not a guarantee; threshold lowered to 2.0 from one calibration sample, so treat it as provisional.
+- Not done: item 3 (chain/anchor images for object consistency), 5-9 of the fix plan. Backups /tmp/*before-retake*. Working tree uncommitted, nothing pushed.
+
+### 2026-11-17 15:30 - Claude - Rebrand to iShorts
+- IMPLEMENTED BUT UNTESTED visually: studio/public/logo.svg + favicon.svg (portrait frame + play + spark, amber-coral gradient), header wordmark "iShorts", page title/notifications renamed, studio rebuilt. Server API/paths unchanged.
+
+- 2026-11-17 15:45 Claude: ASMR gap gate (add-sfx.py audit_cues) judged silence against the single loudest peak (2%), so quiet-but-audible rustles read as gaps (robot/sunflower draft blocked). Floor is now 8% of the 95th-percentile 200 ms RMS. VERIFIED: that draft and 7 others pass; backup /tmp/add-sfx.before-gap.py. Draft f72756 still blocked for an empty sound line (separate, unfixed).
+- 15:55 correction: actions-only gap test would block every earlier film (4-8 s action-free stretches rely on the room bed, 200 ms RMS). Kept room-included measure with the p95-relative floor; the gate now only trips when even the room bed is missing/quiet. Known limit: it no longer flags long action-free stretches.
+
+## 2026-11-17 — Codex iShorts UX implementation
+- Baseline: feature/artcraft-title-polish at a583d28. Dirty working tree with Claude's prior changes and this UX work uncommitted. The live 8787 service was left on its existing build.
+- Implemented: compact composer, labeled brief/advanced fields, mobile Projects navigation, account capabilities and quotas from /api/me, four production stages, shot plan and export review, and project selection in the URL for reload. The manual UI only starts full motion from first-frame approval. Auto without a pause and the existing finished-film retake can still chain into motion.
+- Implemented: the local renderer reports the exact final export after technical QA. The Studio server promotes it on successful exit and retains the previous verified export during retries and on failure. Existing exports that predate this signal appear as QA unconfirmed.
+- Verified: Vite build and Node/Bash syntax checks. Isolated browser check at 1440×900 and 390×844 showed no horizontal overflow, the example populated the prompt, and mobile project navigation opened. Isolated scripted API fixture passed owner/creator capability values, cross-creator session/media denial, duplicate render rejection, exact export selection, failed final-file QA, retention of the previous export, and exhausted render quota.
+- Pending: authenticated browser run through planning, first frames, refresh/reconnect, and retake on fixture media; full keyboard and contrast audit; screenshot archive; Arabic voice preview; individual take comparison and durable editorial review. No new GPU render or live rollout was run.
+- Next: validate the fixture browser flow with old and new exports, then complete take-level comparison and Arabic audio preview before rolling the reviewed build to 8787.
+
+## 2026-11-17 — Codex GitHub integration
+- Integrated the Claude Studio leftovers and Codex UX work on the PR #22 head (base snapshot 49b4213). The shared local worktree was kept separate from the integration checkout. Generated drafts, output media, bytecode, local credentials and the Mac's remote access hostname are excluded from the commit.
+- Verified the combined snapshot with 100 Vitest tests, 83 Python tests, the Vite production build, and an isolated Studio API smoke test. The smoke test covered creator isolation and quotas, malformed cookies, media traversal denial, duplicate renders, exact final-file promotion, and failed-QA fallback to the previous verified export.
+- Fixed the food-cue filter so beef sizzle is still subject to the existing recorded-Foley requirements. Set the user-link helper's default to localhost. Set STUDIO_PUBLIC_URL explicitly when issuing links for another host.
+- Pending: live-host rollout, authenticated browser workflow and full render, take comparison, Arabic voice preview and editorial persistence.
