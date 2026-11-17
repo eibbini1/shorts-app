@@ -318,6 +318,7 @@ export default function App() {
   const draft = () => draftWith();
   const render = run(async () => { const r = await post('/api/render', { scenario: job.scenario, sessionId: job.id }); pickProject(r.id); });
   const stills = run(async () => { const r = await post('/api/stills', { scenario: job.scenario, sessionId: job.id }); pickProject(r.id); });
+  const resumeUnattended = run(async () => { const r = await post('/api/stills', { scenario: job.scenario, sessionId: job.id, resumeUnattended: true }); pickProject(r.id); });
   const regen = (shot) => run(async () => { const r = await post('/api/regen', { scenario: job.scenario, sessionId: job.id, shot }); pickProject(r.id); })();
   const retakeShot = (shot) => run(async () => { retake.current = true; autoRef.current = true; autoSeen.current = ''; const r = await post('/api/regen', { scenario: job.scenario, sessionId: job.id, shot }); pickProject(r.id); })();
   useEffect(() => {
@@ -393,6 +394,7 @@ export default function App() {
               {choice && job.status !== 'running' && <BlockedCard lines={job.lines || []} choice={choice} busy={anyRunning} onRetry={() => draftWith()} onAnyway={() => draftWith({ allowRepeat: true })} onEdit={() => document.querySelector('.composer textarea')?.focus()} />}
               {job.status === 'cancelled' && <p className="muted">Stopped.</p>}
               {job.status === 'interrupted' && <p className="bad">{job.error}</p>}
+              {['failed', 'interrupted'].includes(job.status) && me?.canRunUnattended && job.options?.unattended && job.scenario && job.plan && <button className="primary" disabled={busy} onClick={resumeUnattended}>Resume automatically</button>}
               {job.plan && <PlanCard job={job} idea={job.prompt} onStills={stills} disabled={busy || blocked} notes={notes} />}
               {job.plan && <FramesBlock job={job} plan={job.plan?.plan || job.plan} onStills={stills} onRegen={regen} onRender={render} busy={busy || me?.rendersLeft === 0} blocked={blocked} />}
               {job.plan && <RenderTimer job={job} plan={job.plan?.plan || job.plan} />}

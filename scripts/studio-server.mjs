@@ -376,7 +376,7 @@ http.createServer(async (req, res) => {
     }
     const owner = ID_RE.test(String(b.sessionId)) ? sessions.get(String(b.sessionId)) : null;
     if (!isOwner && (!owner || !canSee(me, owner) || !mayUse(me, sc))) return json(res, 403, { error: 'That video belongs to someone else.' });
-    const x = start('stills', ['--scenario', sc, '--stills-only', ...(owner?.options?.allowRepeat ? ['--allow-repeat'] : []), ...(owner?.options?.chain ? ['--chain-images'] : [])], owner ? { session: owner, scenario: sc } : { scenario: sc, user: me.name, prompt: 'First frames ' + sc.split('/').pop() });
+    const x = start('stills', ['--scenario', sc, '--stills-only', ...(owner?.options?.allowRepeat ? ['--allow-repeat'] : []), ...(owner?.options?.chain ? ['--chain-images'] : [])], owner ? { session: owner, scenario: sc, unattended: isOwner && b.resumeUnattended === true && owner.options?.unattended === true } : { scenario: sc, user: me.name, prompt: 'First frames ' + sc.split('/').pop() });
     return json(res, 202, snap(x));
   }
   if (url.pathname === '/api/render' && req.method === 'POST') {
