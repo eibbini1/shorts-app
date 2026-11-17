@@ -1,0 +1,19 @@
+{
+  "id": "food-motion-testset-v1",
+  "status": "draft - owner to review shot list before baseline run",
+  "format": {"aspect": "9:16", "baseline_local": "576x1024, 65 frames, LTX-2.3 MLX q4", "still_model": "FLUX.2 Klein"},
+  "scoring": {"scale": "0-3", "axes": ["hand_integrity", "object_permanence", "liquid_plausibility", "texture_fidelity", "prompt_adherence"], "blind": true},
+  "shots": [
+    {"id": "t01-knife-cut-tomato", "action": "a chef's knife slices a ripe tomato; slice falls away", "first_frame": "whole tomato on board, knife above", "last_frame": "tomato cut in two, slice separated", "stress": ["knife-hand contact", "object splitting"]},
+    {"id": "t02-pour-olive-oil", "action": "olive oil pours from a bottle onto a salad", "first_frame": "bottle tilted, no oil yet", "last_frame": "oil pooled on greens", "stress": ["liquid", "volume continuity"]},
+    {"id": "t03-whisk-eggs", "action": "a whisk beats eggs in a glass bowl", "first_frame": "two yolks in bowl", "last_frame": "uniform pale beaten eggs", "stress": ["circular motion", "texture change"]},
+    {"id": "t04-cheese-pull", "action": "a slice of pizza lifted, cheese stretches", "first_frame": "pizza on tray", "last_frame": "slice lifted with cheese strand", "stress": ["stretch physics"]},
+    {"id": "t05-sauce-drizzle", "action": "dark chocolate sauce drizzled over a dessert", "first_frame": "plain dessert", "last_frame": "drizzle pattern on top", "stress": ["viscous liquid"]},
+    {"id": "t06-hand-mash-avocado", "action": "a fork mashes ripe avocado in a bowl, hand visible", "first_frame": "halved avocado in bowl", "last_frame": "mashed avocado", "stress": ["fingers", "soft deformation"]},
+    {"id": "t07-steam-soup", "action": "steam rises from soup as a ladle lifts", "first_frame": "soup in pot", "last_frame": "ladle above pot", "stress": ["steam", "ladle-liquid"]},
+    {"id": "t08-plating-herbs", "action": "fingers sprinkle chopped herbs onto a plated dish", "first_frame": "plain plated dish, hand above", "last_frame": "herbs scattered", "stress": ["fingers", "particles"]},
+    {"id": "t09-crack-egg", "action": "an egg is cracked into a bowl", "first_frame": "egg held above bowl", "last_frame": "yolk in bowl, shell halves in hand", "stress": ["hand", "shell splitting", "liquid"]},
+    {"id": "t10-slice-bread", "action": "a serrated knife slices a crusty loaf", "first_frame": "whole loaf", "last_frame": "slice cut, crumbs on board", "stress": ["knife", "crumb detail"]}
+  ],
+  "engines_to_score": ["local-ltx-2.3", "wan-2.2-hosted (phase 1)", "wan-3.0-hosted (phase 1)", "wan-2.2-distilled-selfhost (phase 2)", "minimax-h3 / ltx-2.5 (phase 2)"]
+}

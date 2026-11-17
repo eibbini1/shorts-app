@@ -1,0 +1,122 @@
+{
+  "id": "avocado-egg-salad-ar",
+  "title": "سلطة الأفوكادو بالبيض — Avocado & Egg Salad",
+  "width": 1080, "height": 1920, "fps": 30,
+  "style": "Photorealistic food photography, 85mm lens, shallow depth of field, soft warm natural window light from the left, light oak kitchen table, softly blurred warm home-kitchen background, realistic natural food textures, appetizing, sharp focus on the food. No text, no logos, no people.",
+  "scenes": [
+    {
+      "id": "s1", "seconds": 6, "voice_offset": 0.15,
+      "tts": "إذا بتحبي الأكل الصحي والطيب، عندي إلك وصفة رح تعجبك كتير.",
+      "captions": ["إذا بتحبي الأكل الصحي والطيب،", "عندي إلك وصفة رح تعجبك كتير!"],
+      "shots": [
+        {"id": "s1a", "kind": "existing", "file": "storage/arabic-sample/scene1-motion.mp4", "max_slow": 1.0}
+      ]
+    },
+    {
+      "id": "s2", "seconds": 12, "voice_offset": 2.2,
+      "tts": "حبة أفوكادو، ثلاث بيضات مسلوقات، حبة بطاطا مسلوقة، بقدونس وبصل أخضر.",
+      "captions": ["حبة أفوكادو،", "ثلاث بيضات مسلوقات،", "حبة بطاطا مسلوقة،", "بقدونس وبصل أخضر."],
+      "shots": [
+        {"id": "s2a", "kind": "still", "move": "push", "seed": 2101,
+         "prompt": "Overhead top-down flat-lay on a light oak table: one whole ripe avocado and one halved avocado, three peeled boiled eggs, one boiled potato, a bunch of flat-leaf parsley, three green onions, neatly arranged with space between them, soft daylight.",
+         "must_show": "an avocado, boiled eggs, a potato, parsley and green onions from above"},
+        {"id": "s2b", "kind": "still", "move": "push", "seed": 2102, "at_phrase": 0,
+         "prompt": "Close-up of two halves of a ripe Hass avocado, one with the pit, creamy green flesh, on a light wooden cutting board, a few water drops shimmering.",
+         "must_show": "a halved avocado"},
+        {"id": "s2c", "kind": "still", "move": "panr", "seed": 2103, "at_phrase": 1,
+         "prompt": "Close-up of three peeled boiled eggs on a small cream ceramic plate, one cut in half showing a soft bright yellow yolk.",
+         "must_show": "boiled eggs, one cut in half with a yellow yolk"},
+        {"id": "s2d", "kind": "still", "move": "push", "seed": 2104, "at_phrase": 2,
+         "prompt": "Close-up of one boiled potato with golden skin, a thin ribbon of steam, one half cut open showing fluffy pale yellow flesh, on a rustic wooden board.",
+         "must_show": "a boiled potato cut open"},
+        {"id": "s2e", "kind": "still", "move": "panl", "seed": 2105, "at_phrase": 3,
+         "prompt": "Close-up of a fresh bunch of flat-leaf parsley and three green onions with white roots lying on a wooden board, water droplets on the leaves.",
+         "must_show": "parsley and green onions"},
+        {"id": "s2f", "kind": "still", "move": "pull", "seed": 2106, "at": "voice_end",
+         "prompt": "Overhead top-down flat-lay on a light oak table: one halved avocado, three boiled eggs, one boiled potato, parsley and green onions arranged around an empty cream ceramic bowl, soft daylight.",
+         "must_show": "avocado, eggs, potato, parsley, green onions around a bowl from above"}
+      ]
+    },
+    {
+      "id": "s3", "seconds": 12, "voice_offset": 1.0,
+      "tts": "بنقطّع الأفوكادو والبيض والبطاطا لمكعبات، وبنفرم البقدونس والبصل الأخضر ناعم.",
+      "captions": ["بنقطّع الأفوكادو والبيض", "والبطاطا لمكعبات،", "وبنفرم البقدونس", "والبصل الأخضر ناعم."],
+      "shots": [
+        {"id": "s3a", "kind": "still", "move": "push", "seed": 3101,
+         "prompt": "Close-up of neatly diced ripe avocado cubes on a light wooden cutting board with a sharp chef's knife resting beside the cubes, no hands.",
+         "must_show": "diced avocado cubes on a cutting board with a knife"},
+        {"id": "s3b", "kind": "still", "move": "panr", "seed": 3102, "at_phrase": 1,
+         "prompt": "Close-up of diced boiled egg and diced boiled potato in two neat piles on a light wooden cutting board, soft yellow yolk visible, no hands.",
+         "must_show": "diced egg and diced potato on a cutting board"},
+        {"id": "s3c", "kind": "still", "move": "push", "seed": 3103, "at_phrase": 2,
+         "prompt": "Macro of finely chopped fresh parsley on a light wooden cutting board with a chef's knife resting nearby, no hands.",
+         "must_show": "finely chopped parsley on a cutting board"},
+        {"id": "s3d", "kind": "still", "move": "panl", "seed": 3104, "at_phrase": 3,
+         "prompt": "Macro of finely sliced green onion rings on a light wooden cutting board, no hands.",
+         "must_show": "sliced green onion rings"},
+        {"id": "s3e", "kind": "still", "move": "pull", "seed": 3105, "at": "voice_end",
+         "prompt": "Overhead top-down view of a wooden cutting board with neat separate piles of diced avocado, diced egg, diced potato, chopped parsley and sliced green onions.",
+         "must_show": "separate piles of diced avocado, egg, potato, parsley and green onion"}
+      ]
+    },
+    {
+      "id": "s4", "seconds": 12, "voice_offset": 0.8,
+      "tts": "منحط كل المكونات بوعاء، ومنضيف عصرة ليمون، زيت زيتون، ملح وفلفل حسب الرغبة.",
+      "captions": ["منحط كل المكونات بوعاء،", "ومنضيف عصرة ليمون،", "زيت زيتون،", "ملح وفلفل حسب الرغبة."],
+      "shots": [
+        {"id": "s4a", "kind": "still", "move": "push", "seed": 4101,
+         "prompt": "Diced avocado, diced boiled egg, diced potato, chopped parsley and sliced green onion piled in a large clear glass mixing bowl on a light oak table, three-quarter view.",
+         "must_show": "diced avocado, egg, potato and herbs in a glass bowl"},
+        {"id": "s4b", "kind": "motion", "seed": 4102, "at_phrase": 1,
+         "prompt": "A juicy lemon half held just above a clear glass mixing bowl of diced avocado, egg and potato, a single clear drop of lemon juice falling toward the salad.",
+         "motion": "A single drop of lemon juice falls into the bowl. The lemon half and the bowl stay still. Very slow gentle camera push-in.",
+         "must_show": "a lemon half above a glass bowl of diced avocado and egg"},
+        {"id": "s4c", "kind": "motion", "seed": 4103, "at_phrase": 2,
+         "prompt": "Golden extra-virgin olive oil pouring in a thin steady stream from a small glass jug into a clear glass mixing bowl of diced avocado, egg and potato, oil glistening.",
+         "motion": "The olive oil keeps pouring in a thin steady stream into the bowl. The bowl stays still. Very slow gentle camera push-in.",
+         "must_show": "olive oil pouring into a glass bowl of diced avocado and egg"},
+        {"id": "s4d", "kind": "still", "move": "push", "seed": 4104, "at_phrase": 3,
+         "prompt": "Macro of coarse sea salt crystals and freshly cracked black pepper falling over diced avocado and egg in a glass bowl.",
+         "must_show": "salt and black pepper over diced avocado and egg"},
+        {"id": "s4e", "kind": "still", "move": "pull", "seed": 4105, "at": "voice_end",
+         "prompt": "Glass mixing bowl of dressed diced avocado, egg and potato glistening with olive oil and lemon, a wooden spoon resting in the bowl, three-quarter view.",
+         "must_show": "a glass bowl of dressed avocado and egg salad with a wooden spoon"}
+      ]
+    },
+    {
+      "id": "s5", "seconds": 11, "voice_offset": 0.8,
+      "tts": "منقلّبهم بشويش، وهيك بتصير عنا سلطة كريمية، طيبة ومشبعة.",
+      "captions": ["منقلّبهم بشويش،", "وهيك بتصير عنا سلطة كريمية،", "طيبة ومشبعة!"],
+      "shots": [
+        {"id": "s5a", "kind": "motion", "seed": 5101,
+         "prompt": "Top-down view of a wooden spoon already gently folding creamy avocado and egg salad in a cream ceramic bowl on a light oak table.",
+         "motion": "The wooden spoon slowly folds the creamy salad over once with a smooth gentle motion. The bowl stays still. Slow camera push-in.",
+         "must_show": "a wooden spoon in a bowl of creamy avocado and egg salad from above"},
+        {"id": "s5b", "kind": "motion", "seed": 5102, "at_phrase": 1,
+         "prompt": "Extreme macro close-up of creamy mashed avocado salad with chunks of boiled egg, potato and green onion, glossy and appetizing.",
+         "motion": "Very slow smooth push-in on the creamy salad. Everything else stays perfectly still.",
+         "must_show": "creamy avocado salad with chunks of egg"},
+        {"id": "s5c", "kind": "still", "move": "push", "seed": 5103, "at_phrase": 2,
+         "prompt": "Cinematic macro of the finished creamy avocado and egg salad with chopped parsley on top, glossy, in a cream ceramic bowl.",
+         "must_show": "finished creamy avocado and egg salad"},
+        {"id": "s5d", "kind": "still", "move": "pull", "seed": 5104, "at": "voice_end",
+         "prompt": "Overhead top-down of the finished avocado and egg salad in a cream ceramic bowl with a wooden spoon, a lemon wedge and a parsley sprig beside it on a light oak table.",
+         "must_show": "finished avocado and egg salad in a bowl from above"}
+      ]
+    },
+    {
+      "id": "s6", "seconds": 7, "voice_offset": 0.4,
+      "tts": "جرّبيها واحكيلي شو رأيك، ولا تنسي تحفظي الوصفة.",
+      "captions": ["جرّبيها واحكيلي شو رأيك،", "ولا تنسي تحفظي الوصفة!"],
+      "shots": [
+        {"id": "s6a", "kind": "motion", "seed": 6101,
+         "prompt": "A silver spoon lifting a scoop of creamy avocado and egg salad out of a cream ceramic bowl, the salad piled on the spoon, warm window light.",
+         "motion": "The spoon lifts slowly and smoothly upward with the scoop of salad. The bowl stays still. Slow camera push-in.",
+         "must_show": "a spoon lifting a scoop of avocado and egg salad from a bowl"},
+        {"id": "s6b", "kind": "still", "move": "pull", "seed": 6102, "at_phrase": 1,
+         "prompt": "Final beauty shot of the avocado and egg salad in a cream ceramic bowl with a silver spoon resting in it, a lemon half and a parsley sprig beside it, warm window light, three-quarter view.",
+         "must_show": "avocado and egg salad in a ceramic bowl with a spoon, lemon and parsley"}
+      ]
+    }
+  ]
+}

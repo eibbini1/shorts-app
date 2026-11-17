@@ -281,3 +281,103 @@ CAUTIONS: scripts/_retired/ holds old generators incl. another session's story_m
 - VERIFIED on the shallot v7 film (1m35s): audio clear (−15.4 LUFS, −1.8 dBTP, all shots −17 to −18 dB). Flag: payoff — the last second moves the slice onto a plate in a different-looking corner (new bowls, no tray). An end-frame oven false positive (door closed hides the tray) led to the middle-frame rule. Claude's own look at the sheet also sees round bread behind the pan (shot 2) and a shallot topping that reads as beans (shot 3); the model did not flag those.
 - Tests: Python 80/80 (9 new in `test_editorial_review.py`), Node 100/100, `npm run scripts:verify`, `bash -n`, `git diff --check`. The recorder was NOT run end to end on real scores, to keep fake reviews out of `storage/learning/quality-scores.jsonl`.
 - NEXT: owner runs `npm run review:video:mac` on the shallot film; to target 90, re-render shots 2, 3 and 5 (background bread shape, shallot topping, final plate/setting) from the studio plates.
+
+## 2026-11-17 08:55 +03 — Claude: 60 s Arabic avocado-and-egg Reel built (recipe pipeline), voice fix pending
+
+- Branch `feature/artcraft-title-polish` (PR #20 draft), HEAD `a583d28`. Working tree DIRTY: new untracked `data/recipes/` (spec + pron.json), `scripts/render-arabic-recipe.py`, `scripts/arabic-caption-png.sh`; tracked `.pyc` files show modified. Nothing committed or pushed. Media, models and the Sofelia install stay in ignored `storage/`.
+- VERIFIED (run, output inspected): `storage/arabic-recipe/avocado-egg-salad-ar/final/avocado-egg-salad-ar.mp4` — 60.000 s, 1080x1920, 30 fps, h264+aac, -16.0 LUFS, true peak -1.4 dBFS, no black or frozen segments, no caption overlaps (`qa-report.json`). Contact sheet inspected: Arabic RTL captions render correctly; copies in `/Users/eibbini/Documents/shorts-app/storage/arabic-recipe-out/`. Assemble 88 s, QA seconds.
+- Design: `python3 scripts/render-arabic-recipe.py data/recipes/avocado-egg-salad-ar.json --stage voice|assets|assemble|qa|all` (resumable). 22 FLUX.2 Klein stills (576x1024, qwen3-vl gate, 3 tries) + 5 LTX-2.3 motion clips (65 frames: s4b, s4c, s5a, s5b, s6a) + ffmpeg zoompan Ken Burns; scene 1 reuses the earlier 6 s motion clip. Captions are Pango-rendered PNG overlays (this ffmpeg has no working fribidi, so libass gave wrong word order). Music: Kevin MacLeod, CC BY 4.0 — credit in `final/credits.txt`.
+- MEASURED: stills about 50-120 s each; LTX 65-frame clips about 400-410 s each (s4b 412 s, s5b 402 s). Four shots never passed the gate and were kept flagged: s3e, s4a, s6a, s6b — they look acceptable on the contact sheet but need a human check.
+- FIXED: the assets stage crashed with `KeyError: 's5b'` when FLUX produced no image; it now stops with a clear message. Cause of that run of failures: the image generator refuses to start below 5% battery (Mac was at 4%); it resumed after the Mac was charged. Finished shots are reused on restart.
+- NOT VERIFIED: no assistant has heard the voice. The video uses the ORIGINAL Sofelia TTS (`speak.py`), which puts a stray "ka" on words ending in ك (تعجبك, إلك, رأيك, وهيك) and guesses vowels in unvowelled text. IMPLEMENTED BUT UNTESTED: `storage/tools/sofelia/model/speak2.py` + `data/recipes/avocado-egg-salad-ar.pron.json` (about 60 word-to-IPA overrides written from linguistic knowledge, not validated by ear; أفوكادو probably needs a long final vowel). v2 scene 1 runs 6.47 s vs a 6 s scene, so timing needs adjusting. `stage_voice` is NOT yet switched to speak2.
+- Limits: stills are upscaled from 576x1024 (softer than true 1080p); Sofelia is a single female Palestinian/Levantine-style voice, its data licence is not stated; machine QA is not editorial or cinematic quality.
+- Research (deep-research report, in the Claude chat as "Slideshow vs AI video for food Shorts"): a still-plus-Ken-Burns slideshow is much faster than LTX motion, but YouTube's inauthentic-content policy names templated slideshows and generic AI templates at channel level; no study compares Ken Burns with motion for retention; hybrid (mostly stills plus a few motion shots, varied structure, AI-use disclosure) is the recommended safe path. Vendor prices came from secondary sources. A claimed Feb 2027 Partner Program change (10M Shorts views in 90 days) is single-source and unverified.
+- NEXT: (1) owner watches and listens; (2) owner sends the six narration lines with correct vowels; build a vowelled-Arabic-to-IPA path, update pron.json, switch `stage_voice` to speak2, rerun voice -> assemble -> qa (voice must not run while assets run: manifest race); (3) re-check the four flagged shots; (4) set "AI use: Yes" on upload and credit the music; (5) commit the recipe files only after approval; do not push without authorization.
+
+
+## 2026-11-17 11:35 +03 — Claude: local web studio + chat history sidebar (IMPLEMENTED, uncommitted)
+- Branch `feature/artcraft-title-polish`, HEAD a583d28, working tree dirty (all of the below untracked/uncommitted).
+- Added `scripts/studio-server.mjs` (dependency-free, 127.0.0.1:8787, `npm run studio`) and `studio/` (Vite + React UI, `npm run studio:build`; install needs `--userconfig /dev/null --registry=https://registry.npmjs.org/` because the global npm token is expired).
+- Server runs `scripts/make-local-video.sh` (draft-only, then render). One job at a time; refuses while another model job holds the GPU.
+- Sessions: persisted as `storage/studio-sessions/<id>.json` (storage is a symlink to the main checkout, not tracked by git). API: GET /api/sessions, GET /api/sessions/:id, POST /api/sessions/rename, POST /api/sessions/delete. Delete removes the session record only, never drafts/stills/outputs. A session that was running when the server died loads as `interrupted`.
+- VERIFIED (real server + built-in browser, synthetic sessions): list/load/rename/delete over API; sidebar day grouping; click restores prompt, options, plan card; rename persists and keeps the original day; two-step delete; bad ids 404, cross-origin 403, media untouched.
+- NOT VERIFIED: a full live draft/render through a session with the new sidebar (GPU was kept free), session load while a different job runs, narrow-screen layout (sidebar hidden under 760 px), no automated tests exist for the server or UI.
+- Also changed: `scripts/audit-local-story.py` now folds British/American spellings (caramelised/caramelized) in `words()`; the Phase 0 food benchmark (`scripts/run-food-motion-baseline.py`) is PAUSED after 20/20 stills, 0/10 motion clips; resume by re-running it.
+- Next: run one real draft + render from the UI, then resume the benchmark.
+
+## 2026-11-17 11:55 +03 — Claude: Studio looks, themes, live panel (IMPLEMENTED, uncommitted)
+Branch feature/artcraft-title-polish, HEAD a583d28, working tree dirty (uncommitted).
+- VERIFIED in browser: Look selector (Food / Cartoon / Night cartoon / Custom) + Setting box; fox draft had no food-kitchen leak and passed the story gate (10 s, 2 shots). Themes Studio / Night (navy+cream) / White (white+navy) switch and persist. Opening a saved chat that has an error now works.
+- VERIFIED: non-food looks set SHORTS_MIN_PROMPT_SCORE=0 for renders (the prompt gate scores food close-ups). Fox plan's sound lines were hand-edited to supported cues (add-sfx.py has no rain/splash/footstep cues: PLANNED).
+- IN PROGRESS: fox render (session 1794904555863), 1 of 2 clips done at last check; final length/codec NOT yet verified.
+- IMPLEMENTED BUT UNTESTED: "Behind the scenes" panel (/api/live-files + RenderLive in App.jsx). Server needs a restart (not done, render running).
+- PLANNED: rain/splash/footstep Foley cues; viewer + loader per research report (/home/claude/reports/Studio media viewer and loader.md); Phase 0 food benchmark resume.
+
+## 2026-11-17 12:20 +03 — Claude: Studio timer, look cards, idea helper, player, compare (uncommitted)
+Branch feature/artcraft-title-polish, HEAD a583d28, dirty. New: studio/src/extras.jsx; /api/live-files, /api/videos in scripts/studio-server.mjs.
+- VERIFIED: first Studio render "Moonlit Voyage" finished: 10.005 s, 1080x1920, 24 fps, H.264+AAC, 6.6 MB. Measured timings: clip 262/245 s, still 24/21 s, finishing 65 s, total 617 s (fox); other runs 223-259 s per clip. Estimate model = 10 + n_shots*274 + 70 s (range 240-315 s per shot).
+- VERIFIED in browser (finished render): Behind-the-scenes panel with real stills/clips, plan-card estimate (10:28), idea helper (mood / ok / no ending), look cards, frame stepping (exact +-1 frame after floor fix), compare panel loads 2 clips, right video stays within ~0.05 s of left.
+- IMPLEMENTED BUT UNTESTED: live RenderTimer during a running render (countdown re-fit after first clip), done chime, Blind mode in Compare (no scoring sheet yet).
+- KNOWN: shot 2 of the fox clip has a stray cream rectangle in the sky and the moon changes shape (model artifact). Estimate excludes retries/vision-gate regeneration. Not 100% exact: expect roughly +-10% before the first clip, +-6% after.
+
+## 2026-11-17 13:15 +03 — Claude (Opus 5.5) — Studio self-repair loop (slice 1)
+- Branch `feature/artcraft-title-polish`, HEAD a583d28, all work uncommitted (PR #20 draft).
+- Found: the story model is random; the same Try-example passed one run and blocked the next (night fox: near-identical imagePrompt; wagyu: repeat topic).
+- NEW `scripts/repair-local-story.py`: deterministic fixes for audit blocks (title subject, payoff/final shot ending, opening hook, required action, per-shot action, near-identical imagePrompt). Keeps `*.before-repair.json`. VERIFIED on 3 real blocked plans (fox 1 block, robot 1 block, 112514 with 4 blocks) → all pass.
+- NEW `scripts/studio-draft.py`: Studio draft loop: draft → preflight+audit → repair → redraft, max 3 tries; stops early on repeat topic; prints `NEEDS-CHOICE: repeat-topic|still-blocked`. `--allow-repeat` supported.
+- `studio-server.mjs`: drafts run through studio-draft.py; `allowRepeat` stored in options and passed to stills/render as `--allow-repeat`; new step labels ("Fixing the story automatically", "Checking the plan"); provisional-score lines excluded from learned blockers.
+- UI: "Plan" → "Create video"; plain-language BlockedCard (Try again / Make it anyway / Edit my idea); ✓ "Fixed automatically" notes; provisional 50/100 shown as "waiting for your rating"; learned list left-aligned; Ending/Setting labelled checked/hint; Auto mode + pause-at-first-frames (UNTESTED end to end); cartoon example replaced with the validated robot-seed idea.
+- VERIFIED live: night fox draft passed attempt 1 (183 s); wagyu → repeat topic, stopped after 1 try, card shown in browser.
+- UNTESTED: live redraft (attempt 2/3) path through the server; "Make it anyway" click; Auto mode full run; slices 2 (media retries), 3 (auto end-to-end), rest of 4 (waiting-screen additions).
+- Next: slice 4 waiting-screen additions + slice 2 media retries; validate all 4 Try examples 3× each.
+
+## 2026-11-17 13:30 +03 — Claude (Opus 5.5) — Simple mode, waiting room, full-cycle review, tools audit
+Branch `feature/artcraft-title-polish`, HEAD a583d28, uncommitted. Server restarted 13:2x with new code.
+### Built (UI verified in browser unless noted)
+- Simple mode (default, `localStorage studio-mode`): look chips + one "Try an example", idea box, length chips 10/20/30, "More options" → Advanced (old controls). Simple always runs Auto mode with pause at first frames; hides log, "Render full video now", stats card; helper speaks only when it has advice. Fixed a crash (pauseFrames used before declaration) that blanked the page in Advanced.
+- Step bar (Story → First frames → Motion → Sound → Finishing, current step pulses, "try n/3").
+- Up next queue (localStorage `studio-up-next`), optional auto-start when a job ends. UNTESTED end to end.
+- Director's chair during stills/render: pick cover frame (localStorage `thumb-<id>`), bet on finish time (result shown after), pick a title, rate an earlier video (writes /api/feedback), clapper + click sound per finished clip; stills "develop" like a polaroid. Verified live: cover-frame mission and take counter.
+- Ledger now records `fixed` and `tries` per run; new record type `review` (source claude) for watch-and-listen findings.
+### Research delivered
+- `Brand music for Shorts Studio.md` (deep-research): default local model Stable Audio 3 Small Music (licensed training data, <$1M revenue commercial OK, mlx-audio) or ACE-Step 1.5 turbo (MIT, BPM/key control, ~45 s per 30 s on M1 Pro); never use titles/artists/lyrics/trend audio as input; Chromaprint + basic-pitch melody check + unlisted Content ID test; duck under SFX, -14 LUFS. Music option = PLANNED, needs install approval.
+### Full-cycle review #1 (paper plane, session 1794910436829, render 533 s vs estimate 628 s)
+- Ending missed: shot 2 plane on a pier, not the boat deck; story gate is text-only.
+- Boat identity changes between shots (no chain/anchor used by Studio).
+- Shot 1 plane never lands; shot 2 near-static push-in.
+- Audio: pop at 5.00 s cut; shot 2 cue "plate tap/clink" (food sound) for paper; constant hiss + rumble bed; -15.5 LUFS, LRA 1.1, peak -5.8 dBFS.
+- Food-only gates still advise close-ups/claims on non-food looks; repair prefix "Later moment:" leaks into prompts.
+### Tools audit: installed but NOT used by the Studio path
+- `--chain-images` / `--anchor-image` (identity continuity) → would address the boat change.
+- `--best-of-3-stills` + `select_still_local.py` (Qwen picks best still).
+- `review-storyboard-local.py` (vision review of stills vs plan) → could check the ending frame.
+- `record-editorial-review.py` (fills editorial 0/50 from a human review) → Studio 👍/👎 does not call it.
+- `make-thumbnail.py` (Director's chair cover pick could feed it), `brand-extras.py` / `composite-crumb.sh` (Crumb mascot), `qa-visual.py`, `scene-cuts.py`, `tighten-shot-tails.py`.
+- Idea sources: `idea-picker-local.py`, `trend-brief.py`, `fetch-trends.py`, `creative-bank.mjs` (Try-example / idea suggestions).
+- Connectors available but unused here: vidIQ (trending/keywords, read-only), Higgsfield/EVERYGEN/Canva (paid: not to be called without approval).
+### Next
+- Finish cycle 2 (night fox, Simple flow) and review; then fix plan covering both cycles.
+
+## 2026-11-17 ~14:00 — Claude (cycle 2 review + fix plan)
+Branch feature/artcraft-title-polish @ a583d28, working tree dirty (uncommitted, nothing pushed).
+- VERIFIED: cycle 2 (night fox, Simple mode, Auto chain, regenerate shot 2, render) done in 9:49. Step bar no longer jumps to "Finishing" (stage now from job kind + pipeline markers).
+- IMPLEMENTED BUT UNTESTED in browser: while a job runs, primary button becomes "Add to Up next" (+ hint); Up-next auto-start end-to-end not tested.
+- Review findings (cycles 1+2): (a) final picture never checked against requested ending (fox never catches/sails the boat); (b) object identity drifts between shots (boat, moon phase); (c) shot 2 too static; (d) audio: click at 5.00 s cut, periodic transients, steady hiss, ~-15.5 LUFS vs -14 target, cues "plate tap/clink" wrong for non-food (add-sfx.py:181, story.py:275, template_to_scenario.py:105); (e) food-only gates on non-food; (f) repair prefix "Later moment:" leaks into image prompts; (g) editorial 0/50 stays provisional.
+- PLANNED fixes: last-frame vs ending vision check; --chain-images/--anchor-image; motion prompts with real travel; short crossfade at cut + loudnorm -14 + bed trim + non-food cue map; wire Studio rating to record-editorial-review.py.
+- Publishing: not done, needs explicit user approval.
+Next: implement audio fixes first (cheap, no GPU), then ending check.
+
+## 2026-11-17 ~14:15 — Claude (audio fixes + ending check)
+- IMPLEMENTED, measured on cycle-2 re-mix in /tmp (not re-rendered in repo outputs): scripts/add-sfx.py — 30 ms fades on every cue, 70 Hz highpass + afftdn on base, loudnorm I=-14 (fox measured -14.5 LUFS, was -16.4), food-only cues (clink/sizzle/crunch/chew/pour/slice/scrape/fizz) dropped unless imagePrompt/motionPrompt mention food. Not listened to; click/hiss reduction not confirmed in spectrum. Backup /tmp/add-sfx.before-audio.py.
+- IMPLEMENTED, run once on the fox video: scripts/prereview-local-video.py — payoff frame now also asks the requestedEnding question; continuity question is generic (same character/object) for non-food films instead of "same food". Backup /tmp/prereview.before-ending.py.
+- FINDING: qwen3-vl:4b answered "yes" to "fox sails away in the paper boat" on the fox final frame (fox sitting in boat, street not water, no travel). A single still cannot prove an ending that is motion; the check is advisory only. NEXT: motion-travel check on the last shot (frame difference / flow) and retry with new seed; story model still writes food sound lines ("plate tap") for non-food.
+- Working tree uncommitted, nothing pushed.
+
+## 2026-11-17 ~14:30 — Claude (private remote access to the Studio)
+- IMPLEMENTED + TESTED on a throwaway instance (port 8799): scripts/studio-server.mjs now supports STUDIO_TOKEN (cookie lock; open /?token=... once; 401 otherwise) and STUDIO_ALLOWED_ORIGINS (extra exact origins for the API). Results: no/wrong token 401, right token 302+cookie, cookie 200, allowed origin 200, other origin 403. Default behaviour unchanged when env vars are unset. Backup /tmp/studio-server.before-remote.mjs. Real server on 8787 not restarted yet.
+- PLANNED, needs user: install Tailscale (not installed; ngrok exists but is public — do not use without the token), sign in, run `tailscale serve --bg 8787`, restart Studio with STUDIO_TOKEN + STUDIO_ALLOWED_ORIGINS=<https tailnet URL>. Mac must stay awake; generation still runs on the Mac.
+
+## 2026-11-17 — Codex: Studio source snapshot and verification
+
+- Copied Claude's Studio and related source from the dirty `feature/artcraft-title-polish` checkout into an isolated integration branch. Generated drafts, videos, caches, session history and dependency folders were excluded. The source worktree stayed in place.
+- VERIFIED: Vite production build, script checks and a local browser smoke test of Simple mode and expanded format/audio controls. Fixed malformed authentication cookies so they return 401. Remote Tailscale access and a new full render were outside this smoke test.

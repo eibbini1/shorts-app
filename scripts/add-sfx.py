@@ -140,7 +140,41 @@ def scrape_food(seconds, rng):
     return friction * pressure * 2.0
 
 
-CUES = [(r'\bsizzl', 'sizzle'), (r'\b(crunch|crispy|crisp|bite|biting|crack|snap)\b', 'crunch'),
+def rain(seconds, rng):
+    """Soft steady rain: high-passed noise bed with faint droplet ticks."""
+    bed = highpass(noise(seconds, rng), 0.93) * 0.30
+    drops = (rng.random(len(bed)) > 0.9994).astype(np.float32)
+    return (bed + np.convolve(drops, np.exp(-np.arange(300) / 40.0), 'same') * 0.5) * np.minimum(1, t_axis(seconds) * 2)
+
+
+def splash(seconds, rng):
+    t = t_axis(seconds)
+    return lowpass(highpass(noise(seconds, rng), 0.7), 0.35) * np.exp(-6 * t) * 1.4
+
+
+def click_cue(seconds, rng):
+    """Small mechanical ticks (robots, switches, gears)."""
+    out = np.zeros(round(seconds * RATE), dtype=np.float32)
+    for at in np.arange(0.2, seconds - 0.1, 0.45):
+        tick = pop(0.025) * 0.9
+        start = round((at + rng.uniform(-0.04, 0.04)) * RATE)
+        out[start:start + len(tick)] += tick[:max(0, len(out) - start)]
+    return out
+
+
+def rustle(seconds, rng):
+    """Leaves or fabric: band-limited noise with slow irregular swelling."""
+    t = t_axis(seconds)
+    swell = 0.5 + 0.5 * np.sin(2 * np.pi * (1.3 + 0.7 * rng.random()) * t + rng.random() * 6)
+    return lowpass(highpass(noise(seconds, rng), 0.88), 0.4) * swell * np.minimum(1, t * 4) * 1.2
+
+
+CUES = [(r'\brain', 'rain'), (r'\b(splash\w*|puddle\w*|ripple\w*)\b', 'splash'),
+        (r'\b(click\w*|tick\w*|mechanical|gear\w*|servo\w*|beep\w*)\b', 'click'),
+        (r'\b(rustl\w*|leaves|foliage|grass|bloom\w*|sprout\w*)\b', 'rustle'),
+        (r'\b(footstep\w*|pitter\w*|paws?|stomp\w*|hoof\w*|paddl\w*)\b', 'pat'),
+        (r'\b(breez\w*|wind\w*|gust\w*)\b', 'whoosh'),
+        (r'\bsizzl', 'sizzle'), (r'\b(crunch|crispy|crisp|bite|biting|crack|snap)\b', 'crunch'),
         (r'\b(chew\w*|munch\w*)\b', 'chew'), (r'\b(pour\w*|drizzl\w*|stream of sauce)\b', 'pour'),
         (r'\b(slice|slicing|chop|chopping|knife cut)\b', 'slice'),
         (r'\b(scrap\w*|spread\w*|drag\w*)\b', 'scrape'),
@@ -149,7 +183,8 @@ CUES = [(r'\bsizzl', 'sizzle'), (r'\b(crunch|crispy|crisp|bite|biting|crack|snap
         (r'\bsqueak', 'squeak'), (r'\b(whoosh|glide|sweep)', 'whoosh'), (r'\b(pop|popped|popping)\b', 'pop'), (r'\b(fizz|champagne)', 'fizz'),
         (r'\b(ambience|ambient|room tone|hum)\b', 'room')]
 GAIN = {'sizzle': 0.15, 'crunch': 0.16, 'chew': 0.08, 'pour': 0.13, 'slice': 0.12, 'scrape': 0.10, 'clink': 0.10,
-        'shimmer': 0.16, 'chime': 0.18, 'pat': 0.18, 'squeak': 0.12, 'pop': 0.18, 'whoosh': 0.06, 'fizz': 0.13, 'room': 0.08}
+        'shimmer': 0.16, 'chime': 0.18, 'pat': 0.18, 'squeak': 0.12, 'pop': 0.18, 'whoosh': 0.06, 'fizz': 0.13, 'room': 0.08,
+        'rain': 0.12, 'splash': 0.14, 'click': 0.16, 'rustle': 0.12}
 
 
 def cues_for(text):
@@ -160,10 +195,20 @@ def cues_for(text):
     return found
 
 
+FOOD_ONLY = {'clink', 'sizzle', 'crunch', 'chew', 'pour', 'slice', 'scrape', 'fizz'}
+FOOD_WORDS = re.compile(r'\b(food|dish|plate|bowl|meal|cook\w*|chef|kitchen|steak|burger|kebab|sushi|pasta|pizza|cake|dessert|sauce|soup|salad|egg|bread|wagyu|truffle|caviar|drink|coffee|champagne|cheese|fries|taco)\b', re.I)
+
+
+def is_food(shot):
+    return bool(FOOD_WORDS.search(' '.join(str(shot.get(k, '')) for k in ('imagePrompt', 'motionPrompt'))))
+
+
 def planned_cues(shot):
     names = cues_for(shot.get('sound', ''))
     if not names:
         names = cues_for(shot.get('motionPrompt', '') + ' ' + shot.get('imagePrompt', ''))
+    if not is_food(shot):  # paper boats and foxes do not clink plates
+        names = [n for n in names if n not in FOOD_ONLY]
     if not shot.get('sound', '').strip() and name_hint(shot) and 'fizz' not in names:
         names.append('fizz')
     return names
@@ -255,7 +300,12 @@ def build(shots, total, seed=311, foley_samples=None, continuous_room=False, rec
         start = round(at * RATE)
         count = min(len(signal), len(mix) - start)
         if count > 0:
-            mix[start:start + count] += signal[:count] * gain
+            piece = signal[:count].astype(np.float32).copy()
+            ramp = min(count // 2, round(0.03 * RATE))
+            if ramp > 1:  # 30 ms fades: no hard edges, so no clicks at shot boundaries
+                piece[:ramp] *= np.linspace(0, 1, ramp, dtype=np.float32)
+                piece[-ramp:] *= np.linspace(1, 0, ramp, dtype=np.float32)
+            mix[start:start + count] += piece * gain
 
     if continuous_room:
         # An ASMR film still has an acoustic floor between discrete actions.
@@ -295,6 +345,10 @@ def build(shots, total, seed=311, foley_samples=None, continuous_room=False, rec
             elif name == 'pop': put(pop(), at + length - 1.2, GAIN[name])
             elif name == 'fizz': put(fizz(length, rng), at, GAIN[name])
             elif name == 'room': put(room(length, rng), at, GAIN[name])
+            elif name == 'rain': put(rain(length, rng), at, GAIN[name])
+            elif name == 'splash': put(splash(min(length, 1.2), rng), at + 0.5, GAIN[name])
+            elif name == 'click': put(click_cue(min(length, 3.0), rng), at + 0.2, GAIN[name])
+            elif name == 'rustle': put(rustle(min(length, 3.0), rng), at + 0.3, GAIN[name])
             plan.append((number, name))
         at += length
     return mix, plan
@@ -346,7 +400,7 @@ def main():
     voice = work / 'voice-timeline.wav'
     graph = ('[1:a]aresample=48000[fx];[2:a]aresample=48000[key];'
              '[fx][key]sidechaincompress=threshold=0.003:ratio=20:attack=8:release=350[duck];'
-             '[0:a][duck]amix=inputs=2:normalize=0:duration=first,loudnorm=I=-16:TP=-1.5:LRA=11[a]')
+             '[0:a]highpass=f=70,afftdn=nr=6:nf=-45[base];[base][duck]amix=inputs=2:normalize=0:duration=first,loudnorm=I=-14:TP=-1.5:LRA=11[a]')
     subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(video), '-i', str(sfx), '-i', str(voice), '-filter_complex', graph,
                     '-map', '0:v', '-map', '[a]', '-t', str(total), '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', str(out)], check=True)
     print(f'Wrote {out.name}. Effects placed: ' + ', '.join(f'shot {n} {name}' for n, name in plan))

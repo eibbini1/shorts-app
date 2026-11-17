@@ -25,6 +25,19 @@ TARGET_LUFS, LUFS_TOLERANCE, MAX_TRUE_PEAK = -15.0, 2.0, -1.0
 QUIET_SHOT_GAP_DB = 12.0
 CONTINUITY_QUESTION = ('The left half and the right half are two moments from one cooking video. '
                        'Do both halves show the same kind of food with the same kind of topping?')
+SUBJECT_QUESTION = ('The left half and the right half are two moments from one short film. '
+                    'Do both halves show the same main character or object, looking the same?')
+FOOD_RE = re.compile(r'\b(food|dish|plate|bowl|meal|cook\w*|chef|kitchen|steak|burger|kebab|sushi|pasta|pizza|cake|dessert|sauce|soup|salad|egg|bread|wagyu|truffle|caviar|cheese|fries|taco)\b', re.I)
+
+
+def is_food_film(scenario):
+    text = ' '.join(str(shot.get('imagePrompt', '')) for shot in scenario['plan']['shots']) + ' ' + str(scenario.get('topic', ''))
+    return bool(FOOD_RE.search(text))
+
+
+def ending_question(scenario):
+    ending = str(scenario.get('requestedEnding') or '').strip()
+    return f'The film should end like this: "{ending[:180]}". Does this final image already show that outcome, not just the build-up to it?' if ending else None
 # A same-kitchen comparison was tried and dropped: qwen3-vl:4b never finished a verdict on it (2026-11-16).
 
 
@@ -175,9 +188,11 @@ def main():
         # legitimately hides the subject by the last frame, so only the final shot is checked at its end.
         for index, frame in enumerate(mids):
             shot_results.append(ask(vision, frame, questions[index], cache))
-        payoff = ask(vision, ends[-1], questions[-1], cache)
+        extra = ending_question(scenario)
+        payoff = ask(vision, ends[-1], questions[-1] + ([extra] if extra else []), cache)
         if len(windows) > 1:
-            continuity = ask(vision, side_by_side(mids[0], ends[-1], work / 'food.png'), [CONTINUITY_QUESTION], cache)
+            continuity = ask(vision, side_by_side(mids[0], ends[-1], work / 'food.png'),
+                             [CONTINUITY_QUESTION if is_food_film(scenario) else SUBJECT_QUESTION], cache)
     flags, unchecked = categorize(shot_results, payoff, continuity, audio)
     likely_low = [key for key in CATEGORIES if flags[key]]
     report = {

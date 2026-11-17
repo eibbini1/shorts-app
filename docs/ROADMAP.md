@@ -35,3 +35,9 @@ The render now prepares Kokoro narration and the original soundtrack concurrentl
 - ArtCraft does not generate footage or shorten FLUX/LTX time.
 - 2026-11-16: master-prompt refiner + prompt gate, yes/no still gate, one-kitchen studio plates (`docs/MASTER_PROMPTS.md`). Next: first full film from the studio plates.
 - 2026-11-16: final-film pre-review (contact sheet, shot questions on final frames, loudness) and one-command editorial review recorder. Next: owner reviews; re-render weak shots toward 90.
+
+## Studio roadmap (2026-11-17)
+- VERIFIED: look selector, themes, plan/render flow in the browser, 10 s Night-cartoon fox video rendered (10.005 s, 1080x1920, H.264+AAC).
+- IMPLEMENTED BUT UNTESTED end to end: First frames step (stills-only + Regenerate), live render timer, done chime, blind compare (no scoring sheet), learning log ratings.
+- PLANNED: rain/splash/footstep sound cues in add-sfx.py; reference loader (own stills as `shot-0N.png`, one anchor character image) with ffprobe checks; reference shelf; blind scoring sheet with separate key file; queue the next idea while a render runs; plan-vs-prompt match check; rule/prompt improvements driven by the learning log; viewer/loader per `Studio media viewer and loader` research (custom native-video controller, node:sqlite index, ffmpeg thumbnails).
+- BLOCKED / needs owner: PR #21 push (gh account), commit of PR #20 work, hosted-video Phase 1 provider and cap, food benchmark resume (Mac plugged in).

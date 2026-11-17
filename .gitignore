@@ -39,3 +39,6 @@ __pycache__/
 *.pyc
 D:/
 .vscode/
+
+studio/node_modules
+studio/dist

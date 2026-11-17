@@ -73,7 +73,9 @@
     "image:flux:mac": "python3 scripts/create-flux-image.py",
     "review:shot:local": "python3 scripts/record-shot-review.py",
     "prereview:video:mac": "python3 scripts/prereview-local-video.py",
-    "review:video:mac": "python3 scripts/record-editorial-review.py"
+    "review:video:mac": "python3 scripts/record-editorial-review.py",
+    "studio": "node scripts/studio-server.mjs",
+    "studio:build": "cd studio && npm install --userconfig /dev/null --registry=https://registry.npmjs.org/ && npm run build"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.65",

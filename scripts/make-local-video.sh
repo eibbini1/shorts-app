@@ -30,6 +30,7 @@ while (($#)); do
     --best-of-3-stills) best_of_3='--best-of-3-stills'; shift ;;
     --skip-vision-gate) skip_vision_gate='--skip-vision-gate'; shift ;;
     --stills) stills="$2"; shift 2 ;;
+    --stills-only) stills_only='--stills-only'; shift ;;
     --anchor-image) anchor_image="$2"; shift 2 ;;
     --editor) editor="${2:?Missing editor}"; shift 2 ;;
     --title) title="${2:?Missing title}"; shift 2 ;;
@@ -135,7 +136,8 @@ if [[ -n "$cache_only" ]]; then
 else
   echo "Step 3/4  Rendering local video to $output (about 5 min per shot on an M1: still, motion, voice, assembly)"
 fi
-python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" $([[ "$editor" == artcraft ]] && echo --prep-stills) ${chain:+$chain} ${cache_only:+$cache_only} ${best_of_3:+$best_of_3} ${skip_vision_gate:+$skip_vision_gate} ${allow_silence:+$allow_silence} ${allow_bad_first:+$allow_bad_first} ${stills:+--stills "$stills"} ${anchor_image:+--anchor-image "$anchor_image"}
+python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" $([[ "$editor" == artcraft ]] && echo --prep-stills) ${chain:+$chain} ${cache_only:+$cache_only} ${best_of_3:+$best_of_3} ${skip_vision_gate:+$skip_vision_gate} ${allow_silence:+$allow_silence} ${allow_bad_first:+$allow_bad_first} ${stills:+--stills "$stills"} ${anchor_image:+--anchor-image "$anchor_image"} ${stills_only:+$stills_only}
+if [[ -n "${stills_only:-}" ]]; then echo "First frames ready (no motion generated yet)"; exit 0; fi
 t_render=$SECONDS
 echo "Base render complete: $output (not release approved)"
 echo "Step 4/4  Shot-synced ASMR, captions, upload pack and quality check"
