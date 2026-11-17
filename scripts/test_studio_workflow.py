@@ -116,6 +116,11 @@ if [ "$3" = '--stills-only' ]; then
         for look in ['food', 'cartoon', 'night', 'custom']:
             code, idea = req('/api/idea','creator-a',{'look':look})
             assert code==200 and idea['source']=='sample' and idea['look']==look and idea['trend'] is None
+        history = [json.loads(line) for line in (root/'storage/studio-learning/runs.jsonl').read_text().splitlines()]
+        prior_food = next(item['prompt'] for item in history if item.get('type')=='idea' and item['look']=='food')
+        code, fresh_food = req('/api/idea','creator-a',{'look':'food'})
+        assert code==200 and fresh_food['prompt']!=prior_food
+
         assert req('/api/cancel','creator-b',{'test':True})[1]['busyElsewhere']
         assert req('/api/cancel','creator-a',{'test':True})[1]['status']=='stopping'
         immediate=req('/api/render','fixture-owner',payload)[0]

@@ -323,9 +323,17 @@ http.createServer(async (req, res) => {
     const input = await body(req);
     if (!['food', 'cartoon', 'night', 'custom'].includes(input.look)) return json(res, 400, { error: 'Choose a film look.' });
     const seconds = Math.min(isOwner ? 60 : CREATOR_MAX_SECONDS, Math.max(10, Number(input.seconds) || 10));
-    const result = await ideaService.suggest({ look: input.look, seconds, exclude: input.exclude,
-      busy: Boolean(busyReason()) });
-    return json(res, 200, result);
+    const history = readLedger().filter((item) => item.type === 'idea' && item.user === me.name && item.look === input.look).slice(-16).map((item) => item.prompt);
+    const projects = [...sessions.values()].filter((item) => canSee(me, item) && item.options?.look === input.look).slice(-8).map((item) => item.prompt);
+    try {
+      const result = await ideaService.suggest({ look: input.look, seconds,
+        exclude: [...(Array.isArray(input.exclude) ? input.exclude.slice(-8) : []), ...projects, ...history],
+        busy: Boolean(busyReason()) });
+      if (!ledger({ type: 'idea', user: me.name, look: input.look, ...result })) return json(res, 500, { error: 'Could not save idea history. Try again.' });
+      return json(res, 200, result);
+    } catch (error) {
+      return json(res, 503, { error: error.message });
+    }
   }
   if (url.pathname === '/api/state') return json(res, 200, view(me));
   if (url.pathname === '/api/events') {

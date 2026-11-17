@@ -338,6 +338,7 @@ export default function App() {
   }, [job.id, job.status, job.video]);
   const cancel = run(async () => { await post('/api/cancel'); });
   const select = async (id) => {
+    exampleRequest.current++; setExampleBusy(false); setExampleInfo(null);
     const request = ++projectRequest.current;
     setErr(''); pickProject(id); setProjectsOpen(false);
     const j = id === live.id ? live : await fetch('/api/sessions/' + id).then((r) => (r.ok ? r.json() : null)).catch(() => null);

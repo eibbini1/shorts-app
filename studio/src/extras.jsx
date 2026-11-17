@@ -107,7 +107,7 @@ export function LookChips({ look, setLook, onExample, exampleBusy }) {
           <span className="sw"><i style={{ background: l.sw[0] }} /><i style={{ background: l.sw[1] }} /></span>{l.name}
         </button>
       ))}
-      <button type="button" className="link" disabled={exampleBusy} onClick={() => onExample(cur)}>{exampleBusy ? 'Finding an idea…' : 'Try an example'}</button>
+      <button type="button" className="link" disabled={exampleBusy} onClick={() => onExample(cur)}>{exampleBusy ? 'Finding an idea…' : 'Suggest an idea'}</button>
     </div>
   );
 }
