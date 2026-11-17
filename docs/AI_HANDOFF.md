@@ -545,3 +545,10 @@ Next: implement audio fixes first (cheap, no GPU), then ending check.
 ## 2026-11-17 — Approved localhost rollout preparation
 - Owner approved live rollout. Read-only precheck found port 8787 idle at a completed stills job. Plan: dedicated release snapshot, reusing existing storage, drafts, output media and authentication/origin settings. Original worktree remains intact.
 - Added a recovery action for completed first-frame jobs created before manifests existed. Missing selection now offers Make first frames without bumping a seed. UI production build passed.
+
+## 2026-11-17 — Localhost rollout verified
+- Owner approved rollout. Live port 8787 now serves release source 941902a from ../ishorts-releases/941902a, PID 54046. The prior server was idle at a done/stills job before the restart.
+- Runtime storage, drafts and media use the existing locations. Owner token and allowed-origin settings were preserved without logging their values. The previous code/worktrees remain available. Release startup logs and rollout metadata are inside the release folder.
+- VERIFIED: spare-port startup/authentication check, live owner capabilities, updated asset build, 18 retained sessions, and authenticated browser refresh showing New project, Plan video and Run unattended. No generation was started.
+- Source 941902a additionally provides Make first frames recovery for legacy sessions with no verified frame manifest. Production UI build passed. Existing full tests at f58c9d7 passed 100 Vitest, 87 Python and 2 Node review regressions.
+- PR #22 remains open. Next: select an existing project to review, or enter a new concrete action/ending and choose guided or unattended mode. A new full model render and native editorial/listening assessment remain unverified.
