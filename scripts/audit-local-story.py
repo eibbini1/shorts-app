@@ -10,7 +10,7 @@ from pathlib import Path
 from presentation_mode import choose as choose_presentation
 
 STOP = {'the','and','with','from','into','that','this','one','same','scene','shot','film','video','warm','cinematic','real','local'}
-ACTION = re.compile(r'\b(place|drop|sear|bast|pour|squeeze|lift|lower|slide|sets|arrange|rotate|cut|slice|bite|stir|chop|melt|sizzle|open|close|pull|push|run|walk|jump|turn|catch|serve|mix|roll|spin|crack|break|assemble|brown|cook|garnish|add|present|adjust|smash|press|toast|stack)\w*\b', re.I)
+ACTION = re.compile(r'\b(place|drop|sear|bast|pour|squeeze|lift|lower|slide|sets|arrange|rotate|cut|slice|bite|stir|chop|melt|sizzle|open|close|pull|push|run|walk|jump|turn|catch|serve|mix|roll|spin|crack|break|assemble|brown|cook|garnish|add|present|adjust|smash|press|toast|stack|tilt|water|grow|rise|sprout|bloom|chase|paddle|sail|float|drift|glide|reach|wave|dance|hug|climb|swim|fly|ride|throw|kick|nod|shake|wag|stretch|bend|lean|sway|swing|splash|trickle|spray|flow|raise|hop|leap|crawl|wander|follow|carry|hold|grab|lift|land|dive|bounce|twirl|glow|unfold|open)\w*\b', re.I)
 CAMERA_ONLY = re.compile(r'^(?:the )?camera (?:slowly )?(?:pan|tilt|zoom|track)', re.I)
 ABSTRACT_MOTION = re.compile(r'physical obstacle blocks progress|visibly discovers a way|begins carrying out|comes close to .*without reaching|the subject moves visibly', re.I)
 FRAGMENT_END = re.compile(r'(?:\b(?:the|a|an|to|and|of|with|for)|\b(?:get|balance) that)\W*$', re.I)
@@ -33,8 +33,15 @@ def physical_action(motion):
     return bool(ACTION.search(action_text))
 
 
+def us_spelling(w):
+    """Fold British spellings (caramelised, colour) to American so the checks do not split on them.
+    Applied to both sides of every comparison, so unrelated words stay unrelated."""
+    w = re.sub(r'is(e|ed|es|ing|ation)$', r'iz\1', w)
+    return re.sub(r'(col|flav|savo|hono|neighbo)our', r'\1or', w)
+
+
 def words(value):
-    return {w for w in re.findall(r'[a-z]{4,}', str(value).lower()) if w not in STOP}
+    return {us_spelling(w) for w in re.findall(r'[a-z]{4,}', str(value).lower()) if w not in STOP}
 
 
 def concepts(value):

@@ -25,6 +25,19 @@ TARGET_LUFS, LUFS_TOLERANCE, MAX_TRUE_PEAK = -15.0, 2.0, -1.0
 QUIET_SHOT_GAP_DB = 12.0
 CONTINUITY_QUESTION = ('The left half and the right half are two moments from one cooking video. '
                        'Do both halves show the same kind of food with the same kind of topping?')
+SUBJECT_QUESTION = ('The left half and the right half are two moments from one short film. '
+                    'Do both halves show the same main character or object, looking the same?')
+FOOD_RE = re.compile(r'\b(food|dish|plate|bowl|meal|cook\w*|chef|kitchen|steak|burger|kebab|sushi|pasta|pizza|cake|dessert|sauce|soup|salad|egg|bread|wagyu|truffle|caviar|cheese|fries|taco)\b', re.I)
+
+
+def is_food_film(scenario):
+    text = ' '.join(str(shot.get('imagePrompt', '')) for shot in scenario['plan']['shots']) + ' ' + str(scenario.get('topic', ''))
+    return bool(FOOD_RE.search(text))
+
+
+def ending_question(scenario):
+    ending = str(scenario.get('requestedEnding') or '').strip()
+    return f'The film should end like this: "{ending[:180]}". Does this final image already show that outcome, not just the build-up to it?' if ending else None
 # A same-kitchen comparison was tried and dropped: qwen3-vl:4b never finished a verdict on it (2026-11-16).
 
 
@@ -138,6 +151,21 @@ def summarize(report):
     return {'status': status, 'issues': issues, 'report': report.get('reportPath')}
 
 
+MIN_MOTION = 2.0  # mean 0-255 change between frames 1/8 s apart; real shots here measured 3.7-18.9, a frozen fox shot 1.7
+
+
+def shot_motion(video, start, end, width=96, height=170, fps=8):
+    """How much the picture changes inside one shot; a near-zero value means the motion model returned an almost still clip."""
+    raw = subprocess.run(['ffmpeg', '-v', 'error', '-ss', f'{start + 0.1:.2f}', '-t', f'{max(0.5, end - start - 0.2):.2f}', '-i', str(video),
+                          '-vf', f'fps={fps},scale={width}:{height},format=gray', '-f', 'rawvideo', '-'], capture_output=True).stdout
+    size = width * height
+    frames = [raw[i:i + size] for i in range(0, len(raw) - size + 1, size)]
+    if len(frames) < 3:
+        return None
+    total = sum(sum(abs(a - b) for a, b in zip(f1, f2)) / size for f1, f2 in zip(frames, frames[1:]))
+    return round(total / (len(frames) - 1), 2)
+
+
 def ask(vision, image, questions, cache):
     report, path = vision.review(image, '', questions=tuple(questions), cache_dir=cache)
     report['reportPath'] = str(path)
@@ -166,6 +194,7 @@ def main():
     integrated, peak = loudness(video)
     means = [shot_mean_volume(video, a, b) for a, b in windows]
     audio = audio_flags(integrated, peak, means)
+    motion = [shot_motion(video, a, b) for a, b in windows]
     shot_results, payoff, continuity = [], None, None
     if not args.skip_vision:
         vision = load_vision()
@@ -175,19 +204,24 @@ def main():
         # legitimately hides the subject by the last frame, so only the final shot is checked at its end.
         for index, frame in enumerate(mids):
             shot_results.append(ask(vision, frame, questions[index], cache))
-        payoff = ask(vision, ends[-1], questions[-1], cache)
+        extra = ending_question(scenario)
+        payoff = ask(vision, ends[-1], questions[-1] + ([extra] if extra else []), cache)
         if len(windows) > 1:
-            continuity = ask(vision, side_by_side(mids[0], ends[-1], work / 'food.png'), [CONTINUITY_QUESTION], cache)
+            continuity = ask(vision, side_by_side(mids[0], ends[-1], work / 'food.png'),
+                             [CONTINUITY_QUESTION if is_food_film(scenario) else SUBJECT_QUESTION], cache)
     flags, unchecked = categorize(shot_results, payoff, continuity, audio)
+    for number, value in enumerate(motion, 1):
+        if value is not None and value < MIN_MOTION:
+            flags['realism'].append(f'shot {number} barely moves (motion {value}, real shots here measure 3.7-18.9): regenerate it for a new take')
     likely_low = [key for key in CATEGORIES if flags[key]]
     report = {
         'checkedAt': datetime.now(timezone.utc).isoformat(), 'video': str(video),
         'videoSha256': hashlib.sha256(video.read_bytes()).hexdigest(),
         'contactSheet': str(sheet), 'loudnessLUFS': integrated, 'truePeakDBTP': peak,
-        'shotMeanVolumeDB': means, 'shots': shot_results, 'payoffFrame': payoff, 'foodContinuity': continuity,
+        'shotMeanVolumeDB': means, 'shotMotion': motion, 'shots': shot_results, 'payoffFrame': payoff, 'foodContinuity': continuity,
         'visionChecked': not args.skip_vision,
         'flags': flags, 'likelyBelow4': likely_low, 'unchecked': unchecked,
-        'notMachineChecked': ['story', 'same kitchen across shots (use the contact sheet)', 'narration naturalness', 'sound cue timing by ear', 'motion believability'],
+        'notMachineChecked': ['story', 'same kitchen across shots (use the contact sheet)', 'narration naturalness', 'sound cue timing by ear', 'whether the motion looks believable (only the amount of motion is measured)'],
         'note': 'Advisory screen of the final file. It adds no score; a person must still watch and listen.',
     }
     output.write_text(json.dumps(report, indent=2) + '\n')

@@ -12,6 +12,7 @@ import wave
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from local_video_progress import snapshot
+from studio_frames import read_manifest, write_manifest
 from first_checks import check_still, check_clip
 from presentation_mode import choose as choose_presentation
 from select_still_local import select as select_still_local
@@ -169,6 +170,7 @@ def main():
     parser.add_argument('--stills', type=Path, default=os.environ.get('BB_STILLS') or None, help='Folder with your own stills named shot-01.png, shot-02.png ... (for example from Google Flow). Missing shots fall back to FLUX')
     parser.add_argument('--anchor-image', type=Path, default=os.environ.get('BB_ANCHOR_IMAGE') or None, help='Recurring character: edit this image into each shot so one face is reused across films (or set BB_ANCHOR_IMAGE)')
     parser.add_argument('--prep-stills', action='store_true', help='PhotoCraft auto contrast + unsharp mask on each still before motion (changes the motion cache key)')
+    parser.add_argument('--stills-only', action='store_true', help='Make (or reuse) the first-frame stills and the vision check, then stop before any motion')
     parser.add_argument('--cache-only', action='store_true', help='Reuse existing FLUX/LTX assets; fail rather than start a model job on a cache miss')
     parser.add_argument('--best-of-3-stills', action='store_true', help='Generate three stills per shot and require local Qwen hand/utensil review before motion')
     parser.add_argument('--skip-vision-gate', action='store_true', help='Explicitly skip local Qwen still review (release still needs human frame review)')
@@ -267,15 +269,22 @@ def main():
                 'output': str(output.resolve()), 'completed': self.completed}) + '\n')
         def __call__(self, active=None, elapsed=0):
             return snapshot(scenario, work, output, active, elapsed, self.observed)
+    bumps_file = work / 'refs' / 'seed-bumps.json'  # written by the Studio when you press Regenerate on a first frame
+    try: bumps = json.loads(bumps_file.read_text()) if bumps_file.is_file() else {}
+    except ValueError: bumps = {}
     progress = Progress()
     progress_state.write_text(json.dumps({'scenarioSha256': file_hash(scenario),
         'output': str(output.resolve()), 'completed': []}) + '\n')
     print(progress(), flush=True)
+    references = []
+    pinned = read_manifest(work, scenario, len(plan['shots'])) if os.environ.get('SHORTS_STUDIO_PIN_FRAMES') == '1' else None
     segments = []
     previous = None
     gate = None if args.allow_bad_first else True
     for index, shot in enumerate(plan['shots']):
-        reference = own_still(args.stills.expanduser().resolve(), work, index, width, height) if args.stills else None
+        reference = pinned[index] if pinned else None
+        if reference is None and args.stills:
+            reference = own_still(args.stills.expanduser().resolve(), work, index, width, height)
         if reference is None:
             source = previous if args.chain_images and previous else (muse if muse_shots is None or index + 1 in muse_shots else None)
             if source is None and shot.get('studioFrame'):
@@ -291,7 +300,7 @@ def main():
                                 'review': review, 'note': 'Advisory vision check; human inspection required.'}, indent=2) + '\n')
                 print(f'Best of 3 stills for shot {index + 1}: candidate {selected}', flush=True)
             else:
-                reference = still(work, index, shot, 1200 + index, source, width, height, args.cache_only)
+                reference = still(work, index, shot, 1200 + index + 7919 * int(bumps.get(str(index), 0)), source, width, height, args.cache_only)
         if gate and index == 0:
             problem = check_still(reference)
             if problem:
@@ -312,7 +321,11 @@ def main():
             except subprocess.CalledProcessError:
                 parser.error(f'Shot {index + 1} still failed local vision review before LTX. '
                              f'Inspect {reference} and the vision report in {work / "refs"}; correct the still or prompt.')
+        references.append(reference)
         previous = reference
+        if args.stills_only:
+            print(f'First frame ready for shot {index + 1}: {reference.name}', flush=True)
+            continue
         if args.prep_stills:
             reference = prep_still(work, reference)
         parts = math.ceil(shot['seconds'] / 5)
@@ -332,6 +345,10 @@ def main():
                     parser.error(f'First clip failed: {problem}. Stopped before the remaining clips (use --allow-bad-first to override)')
                 print('First clip check passed', flush=True)
             segments.append({'file': str(previous_clip), 'seconds': frames / FPS})
+    if args.stills_only:
+        write_manifest(work, scenario, references)
+        print('First frames ready; no motion generated.', flush=True)
+        return
     manifest = {'aspect': aspect, 'shots': segments,
                 'soundtrack': 'soundtrack.wav',
                 'voice': {'file': 'voice-timeline.wav', 'startSeconds': 0}}

@@ -15,7 +15,7 @@ from pathlib import Path
 
 
 MODEL = 'qwen3-vl:4b'
-PROMPT_VERSION = 8
+PROMPT_VERSION = 9
 URL = 'http://127.0.0.1:11434/api/chat'
 # One yes/no per question. The older {criticalMatches, missingOrWrong} format made qwen3-vl:4b echo the
 # alternative it was asked to rule out ("true" plus "halved baked potato"), which the gate had to treat as
@@ -55,7 +55,7 @@ def review(image, prompt, must_show=(), must_not_show=(), model=MODEL, cache_dir
         saved = json.loads(report_path.read_text())
         if saved.get('status') != 'unavailable':
             return saved, report_path
-    first_clause = prompt.split('.', 1)[0].split(',', 1)[0][:180]
+    first_clause = prompt.split('.', 1)[0][:180]
     first_clause = re.sub(r'^(?:extreme )?(?:macro|wide|close-up) (?:view|shot) of ', '', first_clause,
                           flags=re.I)
     checks = ([('direct', item) for item in questions] if questions else
@@ -63,6 +63,7 @@ def review(image, prompt, must_show=(), must_not_show=(), model=MODEL, cache_dir
               [('forbidden', item) for item in must_not_show])
     image_b64 = base64.b64encode(raw_image).decode()
     outcomes = []
+    diagnostics = []
     for kind, item in checks:
         question = (item[:300] if kind == 'direct' else
                     f'Does this image show {item[:180]}?' if kind == 'required' else
@@ -74,7 +75,7 @@ def review(image, prompt, must_show=(), must_not_show=(), model=MODEL, cache_dir
         # resident for Ollama's default five minutes and overlaps the LTX motion job (swap was ~97% full).
         body = {'model': model, 'stream': False, 'think': False, 'format': SCHEMA,
                 'keep_alive': 0 if last else '30s',
-                'options': {'temperature': 0, 'num_predict': 650, 'num_ctx': 4096},
+                'options': {'temperature': 0, 'num_predict': 2048, 'num_ctx': 4096},
                 'messages': [{'role': 'user', 'content': question, 'images': [image_b64]}]}
         request = urllib.request.Request(URL, data=json.dumps(body).encode(),
                                          headers={'Content-Type': 'application/json'})
@@ -82,6 +83,9 @@ def review(image, prompt, must_show=(), must_not_show=(), model=MODEL, cache_dir
             with urllib.request.urlopen(request, timeout=240) as response:
                 result = json.load(response)
             raw = result.get('message', {}).get('content', '')
+            diagnostics.append({'criterion': item, 'doneReason': result.get('done_reason'),
+                                'generatedTokens': result.get('eval_count'),
+                                'thinkingCharacters': len(result.get('message', {}).get('thinking', ''))})
             if not raw or result.get('done_reason') == 'length':
                 raise ValueError('local vision model returned no complete verdict')
             answer = json.loads(raw)
@@ -103,7 +107,7 @@ def review(image, prompt, must_show=(), must_not_show=(), model=MODEL, cache_dir
         status = 'pass'
     report = {'checkedAt': datetime.now(timezone.utc).isoformat(), 'model': model,
               'image': str(image), 'imageSha256': hashlib.sha256(raw_image).hexdigest(),
-              'status': status, 'verdict': verdict, 'checks': outcomes,
+              'status': status, 'verdict': verdict, 'checks': outcomes, 'diagnostics': diagnostics,
               'note': 'Local vision is a pre-motion screen; inspect the still and rendered motion yourself.'}
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(json.dumps(report, indent=2) + '\n')

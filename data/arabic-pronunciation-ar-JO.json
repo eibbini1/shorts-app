@@ -1,0 +1,13 @@
+{
+  "locale": "ar-JO",
+  "register": "conversational",
+  "audience": "singular-feminine",
+  "engine": "sofelia",
+  "phrases": [
+    {"text": "إذا بتحبي الأكل الصحي والطيب", "ipa": "ʔiza bitħibbi lʔakl isˤsˤiħħi witˤtˤajjib", "note": "Double the emphatic ط and the ي. No formal case endings."},
+    {"text": "جرّبي، راح تعجبك كتير", "ipa": "dʒarribi, raːħ tiʕʒibik ktiːr", "note": "Feminine -ik, no vowel after ك."},
+    {"text": "ملح وفلفل حسب الرغبة", "ipa": "milħ wfilfil ħasab irːaɣbe", "note": "Everyday Jordanian pronunciation."},
+    {"text": "طيبة ومشبعة", "ipa": "tˤajjbe wmuʃbiʕa", "note": "Keep the emphatic ط and doubled ي, without formal endings."},
+    {"text": "جرّبيها واحكيلي شو رأيك", "ipa": "dʒarribiːha waħkiːli ʃuː raʔjik", "note": "Feminine -ik, no vowel after ك."}
+  ]
+}

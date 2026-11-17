@@ -1,5 +1,21 @@
 # AI handoff
 
+## 2026-11-16 — Owner reference mix for Arabic recipe (Codex)
+
+- Branch: `feature/arabic-artcraft-recipe`; previous remote HEAD `048b858`. Working tree before this entry: modified recipe JSON and Arabic recipe guide, plus untracked local `outputs/` previews. No change to Claude's checkout or render.
+- VERIFIED: the two owner-supplied stills suggest different emphases. The first has a tight avocado-and-egg macro; the second shows avocado, egg and potatoes in a wider plate. The recipe now combines these as an original warm ivory-bowl treatment, with potato pieces and egg wedges remaining visible.
+- IMPLEMENTED BUT UNTESTED IN FILM: the manifest now introduces two tablespoons mayonnaise, one tablespoon lemon juice and one teaspoon olive oil as a light dressing, with the mayonnaise visible in the ingredients shot and real whisk/pour action. Arabic narration, draft captions, visual prompts and visual questions were changed together. The three focused tests pass and draft ASS generation succeeds; voice timing remains draft.
+- BLOCKERS: no six scene clips, recorded/licensed Jordanian female voice, kitchen sound bed or finished 60-second export. Image references were not imported as footage; rights and motion are not established.
+- NEXT: obtain/record the assets, visually inspect ingredient/action continuity, time captions to recorded speech, run the ArtCraft finish and final QA, then watch/listen before any release verdict.
+
+## 2026-11-16 — Arabic recipe ArtCraft pilot (Codex)
+
+- Branch: `feature/arabic-artcraft-recipe`, isolated worktree under `/Users/eibbini/Documents/Codex/2026-11-06/python-3-12-is-already-installed/shorts-app-arabic-artcraft`. Code commit before this handoff: `a7a192b`; draft [PR #21](https://github.com/eibbini1/shorts-app/pull/21) targets `feature/artcraft-title-polish`. Working tree after that commit: only untracked `outputs/` local preview files; do not commit them. Claude's original checkout and GPU render were not changed.
+- VERIFIED: a pre-existing two-shot film was re-exported through FilmCraft at 1080×1920, 30 fps, 300 frames, 10.005 s. Its source footage was 24 fps, so this demonstrates an export setting only. A rendered Arabic Cairo caption frame at an active cue showed connected RTL text, punctuation and top safe placement. `python3 scripts/test_arabic_recipe.py` passed 3 tests; `npm run scripts:verify` passed 68 npm entries and script syntax; `git diff --cached --check` passed. `npm run recipe:arabic:check` correctly blocked the missing media and unverified reviews.
+- IMPLEMENTED BUT UNTESTED END TO END: the six-scene recipe manifest, bundled OFL Cairo font, ArtCraft 30-fps and source-dimension handling, voice/caption/media preflight, and staging adapter. The 60-second recipe has **no finished film**. `scripts/arabic_recipe.py --output` has not been run with real assets. Final 60-second QA and full watch/listen remain required.
+- BLOCKERS: six actual scene videos, six recorded or commercially licensed natural Jordanian female voice lines, a 60-second rights-cleared kitchen audio bed, and caption timing verified against that recording. Installed Kokoro voices are English and macOS `say` currently exposes only a male Arabic voice; neither meets the brief. Separate music is deliberately blocked by this first adapter rather than silently ignored. Windows ArtCraft and bundled font operation are not tested.
+- NEXT: obtain/record the six scenes and voice without competing with Claude's active GPU render; inspect food actions and continuity; time captions to the recorded speech; run the ArtCraft adapter; add final-file QA, contact sheet and owner picture/sound review before any release claim. See `docs/ARABIC_RECIPE_ARTCRAFT.md`.
+
 Updated: 2026-11-14. Review branch: `feature/unified-shorts-pipeline`, based on `feature/phase4-trend-intelligence` at `2d7b162`. This branch lives in an isolated worktree under `/Users/eibbini/Documents/Codex/2026-11-06/python-3-12-is-already-installed/shorts-app-unify`. The original checkout is `/Users/eibbini/Documents/shorts-app`; do not switch it while other agents may use it.
 
 Draft pull request: [#17](https://github.com/eibbini1/shorts-app/pull/17). The branch includes commit `52a94a4`; the 10-second presentation-mode work is still local until its real render passes.
@@ -281,3 +297,288 @@ CAUTIONS: scripts/_retired/ holds old generators incl. another session's story_m
 - VERIFIED on the shallot v7 film (1m35s): audio clear (−15.4 LUFS, −1.8 dBTP, all shots −17 to −18 dB). Flag: payoff — the last second moves the slice onto a plate in a different-looking corner (new bowls, no tray). An end-frame oven false positive (door closed hides the tray) led to the middle-frame rule. Claude's own look at the sheet also sees round bread behind the pan (shot 2) and a shallot topping that reads as beans (shot 3); the model did not flag those.
 - Tests: Python 80/80 (9 new in `test_editorial_review.py`), Node 100/100, `npm run scripts:verify`, `bash -n`, `git diff --check`. The recorder was NOT run end to end on real scores, to keep fake reviews out of `storage/learning/quality-scores.jsonl`.
 - NEXT: owner runs `npm run review:video:mac` on the shallot film; to target 90, re-render shots 2, 3 and 5 (background bread shape, shallot topping, final plate/setting) from the studio plates.
+
+## 2026-11-17 08:55 +03 — Claude: 60 s Arabic avocado-and-egg Reel built (recipe pipeline), voice fix pending
+
+- Branch `feature/artcraft-title-polish` (PR #20 draft), HEAD `a583d28`. Working tree DIRTY: new untracked `data/recipes/` (spec + pron.json), `scripts/render-arabic-recipe.py`, `scripts/arabic-caption-png.sh`; tracked `.pyc` files show modified. Nothing committed or pushed. Media, models and the Sofelia install stay in ignored `storage/`.
+- VERIFIED (run, output inspected): `storage/arabic-recipe/avocado-egg-salad-ar/final/avocado-egg-salad-ar.mp4` — 60.000 s, 1080x1920, 30 fps, h264+aac, -16.0 LUFS, true peak -1.4 dBFS, no black or frozen segments, no caption overlaps (`qa-report.json`). Contact sheet inspected: Arabic RTL captions render correctly; copies in `/Users/eibbini/Documents/shorts-app/storage/arabic-recipe-out/`. Assemble 88 s, QA seconds.
+- Design: `python3 scripts/render-arabic-recipe.py data/recipes/avocado-egg-salad-ar.json --stage voice|assets|assemble|qa|all` (resumable). 22 FLUX.2 Klein stills (576x1024, qwen3-vl gate, 3 tries) + 5 LTX-2.3 motion clips (65 frames: s4b, s4c, s5a, s5b, s6a) + ffmpeg zoompan Ken Burns; scene 1 reuses the earlier 6 s motion clip. Captions are Pango-rendered PNG overlays (this ffmpeg has no working fribidi, so libass gave wrong word order). Music: Kevin MacLeod, CC BY 4.0 — credit in `final/credits.txt`.
+- MEASURED: stills about 50-120 s each; LTX 65-frame clips about 400-410 s each (s4b 412 s, s5b 402 s). Four shots never passed the gate and were kept flagged: s3e, s4a, s6a, s6b — they look acceptable on the contact sheet but need a human check.
+- FIXED: the assets stage crashed with `KeyError: 's5b'` when FLUX produced no image; it now stops with a clear message. Cause of that run of failures: the image generator refuses to start below 5% battery (Mac was at 4%); it resumed after the Mac was charged. Finished shots are reused on restart.
+- NOT VERIFIED: no assistant has heard the voice. The video uses the ORIGINAL Sofelia TTS (`speak.py`), which puts a stray "ka" on words ending in ك (تعجبك, إلك, رأيك, وهيك) and guesses vowels in unvowelled text. IMPLEMENTED BUT UNTESTED: `storage/tools/sofelia/model/speak2.py` + `data/recipes/avocado-egg-salad-ar.pron.json` (about 60 word-to-IPA overrides written from linguistic knowledge, not validated by ear; أفوكادو probably needs a long final vowel). v2 scene 1 runs 6.47 s vs a 6 s scene, so timing needs adjusting. `stage_voice` is NOT yet switched to speak2.
+- Limits: stills are upscaled from 576x1024 (softer than true 1080p); Sofelia is a single female Palestinian/Levantine-style voice, its data licence is not stated; machine QA is not editorial or cinematic quality.
+- Research (deep-research report, in the Claude chat as "Slideshow vs AI video for food Shorts"): a still-plus-Ken-Burns slideshow is much faster than LTX motion, but YouTube's inauthentic-content policy names templated slideshows and generic AI templates at channel level; no study compares Ken Burns with motion for retention; hybrid (mostly stills plus a few motion shots, varied structure, AI-use disclosure) is the recommended safe path. Vendor prices came from secondary sources. A claimed Feb 2027 Partner Program change (10M Shorts views in 90 days) is single-source and unverified.
+- NEXT: (1) owner watches and listens; (2) owner sends the six narration lines with correct vowels; build a vowelled-Arabic-to-IPA path, update pron.json, switch `stage_voice` to speak2, rerun voice -> assemble -> qa (voice must not run while assets run: manifest race); (3) re-check the four flagged shots; (4) set "AI use: Yes" on upload and credit the music; (5) commit the recipe files only after approval; do not push without authorization.
+
+
+## 2026-11-17 11:35 +03 — Claude: local web studio + chat history sidebar (IMPLEMENTED, uncommitted)
+- Branch `feature/artcraft-title-polish`, HEAD a583d28, working tree dirty (all of the below untracked/uncommitted).
+- Added `scripts/studio-server.mjs` (dependency-free, 127.0.0.1:8787, `npm run studio`) and `studio/` (Vite + React UI, `npm run studio:build`; install needs `--userconfig /dev/null --registry=https://registry.npmjs.org/` because the global npm token is expired).
+- Server runs `scripts/make-local-video.sh` (draft-only, then render). One job at a time; refuses while another model job holds the GPU.
+- Sessions: persisted as `storage/studio-sessions/<id>.json` (storage is a symlink to the main checkout, not tracked by git). API: GET /api/sessions, GET /api/sessions/:id, POST /api/sessions/rename, POST /api/sessions/delete. Delete removes the session record only, never drafts/stills/outputs. A session that was running when the server died loads as `interrupted`.
+- VERIFIED (real server + built-in browser, synthetic sessions): list/load/rename/delete over API; sidebar day grouping; click restores prompt, options, plan card; rename persists and keeps the original day; two-step delete; bad ids 404, cross-origin 403, media untouched.
+- NOT VERIFIED: a full live draft/render through a session with the new sidebar (GPU was kept free), session load while a different job runs, narrow-screen layout (sidebar hidden under 760 px), no automated tests exist for the server or UI.
+- Also changed: `scripts/audit-local-story.py` now folds British/American spellings (caramelised/caramelized) in `words()`; the Phase 0 food benchmark (`scripts/run-food-motion-baseline.py`) is PAUSED after 20/20 stills, 0/10 motion clips; resume by re-running it.
+- Next: run one real draft + render from the UI, then resume the benchmark.
+
+## 2026-11-17 11:55 +03 — Claude: Studio looks, themes, live panel (IMPLEMENTED, uncommitted)
+Branch feature/artcraft-title-polish, HEAD a583d28, working tree dirty (uncommitted).
+- VERIFIED in browser: Look selector (Food / Cartoon / Night cartoon / Custom) + Setting box; fox draft had no food-kitchen leak and passed the story gate (10 s, 2 shots). Themes Studio / Night (navy+cream) / White (white+navy) switch and persist. Opening a saved chat that has an error now works.
+- VERIFIED: non-food looks set SHORTS_MIN_PROMPT_SCORE=0 for renders (the prompt gate scores food close-ups). Fox plan's sound lines were hand-edited to supported cues (add-sfx.py has no rain/splash/footstep cues: PLANNED).
+- IN PROGRESS: fox render (session 1794904555863), 1 of 2 clips done at last check; final length/codec NOT yet verified.
+- IMPLEMENTED BUT UNTESTED: "Behind the scenes" panel (/api/live-files + RenderLive in App.jsx). Server needs a restart (not done, render running).
+- PLANNED: rain/splash/footstep Foley cues; viewer + loader per research report (/home/claude/reports/Studio media viewer and loader.md); Phase 0 food benchmark resume.
+
+## 2026-11-17 12:20 +03 — Claude: Studio timer, look cards, idea helper, player, compare (uncommitted)
+Branch feature/artcraft-title-polish, HEAD a583d28, dirty. New: studio/src/extras.jsx; /api/live-files, /api/videos in scripts/studio-server.mjs.
+- VERIFIED: first Studio render "Moonlit Voyage" finished: 10.005 s, 1080x1920, 24 fps, H.264+AAC, 6.6 MB. Measured timings: clip 262/245 s, still 24/21 s, finishing 65 s, total 617 s (fox); other runs 223-259 s per clip. Estimate model = 10 + n_shots*274 + 70 s (range 240-315 s per shot).
+- VERIFIED in browser (finished render): Behind-the-scenes panel with real stills/clips, plan-card estimate (10:28), idea helper (mood / ok / no ending), look cards, frame stepping (exact +-1 frame after floor fix), compare panel loads 2 clips, right video stays within ~0.05 s of left.
+- IMPLEMENTED BUT UNTESTED: live RenderTimer during a running render (countdown re-fit after first clip), done chime, Blind mode in Compare (no scoring sheet yet).
+- KNOWN: shot 2 of the fox clip has a stray cream rectangle in the sky and the moon changes shape (model artifact). Estimate excludes retries/vision-gate regeneration. Not 100% exact: expect roughly +-10% before the first clip, +-6% after.
+
+## 2026-11-17 13:15 +03 — Claude (Opus 5.5) — Studio self-repair loop (slice 1)
+- Branch `feature/artcraft-title-polish`, HEAD a583d28, all work uncommitted (PR #20 draft).
+- Found: the story model is random; the same Try-example passed one run and blocked the next (night fox: near-identical imagePrompt; wagyu: repeat topic).
+- NEW `scripts/repair-local-story.py`: deterministic fixes for audit blocks (title subject, payoff/final shot ending, opening hook, required action, per-shot action, near-identical imagePrompt). Keeps `*.before-repair.json`. VERIFIED on 3 real blocked plans (fox 1 block, robot 1 block, 112514 with 4 blocks) → all pass.
+- NEW `scripts/studio-draft.py`: Studio draft loop: draft → preflight+audit → repair → redraft, max 3 tries; stops early on repeat topic; prints `NEEDS-CHOICE: repeat-topic|still-blocked`. `--allow-repeat` supported.
+- `studio-server.mjs`: drafts run through studio-draft.py; `allowRepeat` stored in options and passed to stills/render as `--allow-repeat`; new step labels ("Fixing the story automatically", "Checking the plan"); provisional-score lines excluded from learned blockers.
+- UI: "Plan" → "Create video"; plain-language BlockedCard (Try again / Make it anyway / Edit my idea); ✓ "Fixed automatically" notes; provisional 50/100 shown as "waiting for your rating"; learned list left-aligned; Ending/Setting labelled checked/hint; Auto mode + pause-at-first-frames (UNTESTED end to end); cartoon example replaced with the validated robot-seed idea.
+- VERIFIED live: night fox draft passed attempt 1 (183 s); wagyu → repeat topic, stopped after 1 try, card shown in browser.
+- UNTESTED: live redraft (attempt 2/3) path through the server; "Make it anyway" click; Auto mode full run; slices 2 (media retries), 3 (auto end-to-end), rest of 4 (waiting-screen additions).
+- Next: slice 4 waiting-screen additions + slice 2 media retries; validate all 4 Try examples 3× each.
+
+## 2026-11-17 13:30 +03 — Claude (Opus 5.5) — Simple mode, waiting room, full-cycle review, tools audit
+Branch `feature/artcraft-title-polish`, HEAD a583d28, uncommitted. Server restarted 13:2x with new code.
+### Built (UI verified in browser unless noted)
+- Simple mode (default, `localStorage studio-mode`): look chips + one "Try an example", idea box, length chips 10/20/30, "More options" → Advanced (old controls). Simple always runs Auto mode with pause at first frames; hides log, "Render full video now", stats card; helper speaks only when it has advice. Fixed a crash (pauseFrames used before declaration) that blanked the page in Advanced.
+- Step bar (Story → First frames → Motion → Sound → Finishing, current step pulses, "try n/3").
+- Up next queue (localStorage `studio-up-next`), optional auto-start when a job ends. UNTESTED end to end.
+- Director's chair during stills/render: pick cover frame (localStorage `thumb-<id>`), bet on finish time (result shown after), pick a title, rate an earlier video (writes /api/feedback), clapper + click sound per finished clip; stills "develop" like a polaroid. Verified live: cover-frame mission and take counter.
+- Ledger now records `fixed` and `tries` per run; new record type `review` (source claude) for watch-and-listen findings.
+### Research delivered
+- `Brand music for Shorts Studio.md` (deep-research): default local model Stable Audio 3 Small Music (licensed training data, <$1M revenue commercial OK, mlx-audio) or ACE-Step 1.5 turbo (MIT, BPM/key control, ~45 s per 30 s on M1 Pro); never use titles/artists/lyrics/trend audio as input; Chromaprint + basic-pitch melody check + unlisted Content ID test; duck under SFX, -14 LUFS. Music option = PLANNED, needs install approval.
+### Full-cycle review #1 (paper plane, session 1794910436829, render 533 s vs estimate 628 s)
+- Ending missed: shot 2 plane on a pier, not the boat deck; story gate is text-only.
+- Boat identity changes between shots (no chain/anchor used by Studio).
+- Shot 1 plane never lands; shot 2 near-static push-in.
+- Audio: pop at 5.00 s cut; shot 2 cue "plate tap/clink" (food sound) for paper; constant hiss + rumble bed; -15.5 LUFS, LRA 1.1, peak -5.8 dBFS.
+- Food-only gates still advise close-ups/claims on non-food looks; repair prefix "Later moment:" leaks into prompts.
+### Tools audit: installed but NOT used by the Studio path
+- `--chain-images` / `--anchor-image` (identity continuity) → would address the boat change.
+- `--best-of-3-stills` + `select_still_local.py` (Qwen picks best still).
+- `review-storyboard-local.py` (vision review of stills vs plan) → could check the ending frame.
+- `record-editorial-review.py` (fills editorial 0/50 from a human review) → Studio 👍/👎 does not call it.
+- `make-thumbnail.py` (Director's chair cover pick could feed it), `brand-extras.py` / `composite-crumb.sh` (Crumb mascot), `qa-visual.py`, `scene-cuts.py`, `tighten-shot-tails.py`.
+- Idea sources: `idea-picker-local.py`, `trend-brief.py`, `fetch-trends.py`, `creative-bank.mjs` (Try-example / idea suggestions).
+- Connectors available but unused here: vidIQ (trending/keywords, read-only), Higgsfield/EVERYGEN/Canva (paid: not to be called without approval).
+### Next
+- Finish cycle 2 (night fox, Simple flow) and review; then fix plan covering both cycles.
+
+## 2026-11-17 ~14:00 — Claude (cycle 2 review + fix plan)
+Branch feature/artcraft-title-polish @ a583d28, working tree dirty (uncommitted, nothing pushed).
+- VERIFIED: cycle 2 (night fox, Simple mode, Auto chain, regenerate shot 2, render) done in 9:49. Step bar no longer jumps to "Finishing" (stage now from job kind + pipeline markers).
+- IMPLEMENTED BUT UNTESTED in browser: while a job runs, primary button becomes "Add to Up next" (+ hint); Up-next auto-start end-to-end not tested.
+- Review findings (cycles 1+2): (a) final picture never checked against requested ending (fox never catches/sails the boat); (b) object identity drifts between shots (boat, moon phase); (c) shot 2 too static; (d) audio: click at 5.00 s cut, periodic transients, steady hiss, ~-15.5 LUFS vs -14 target, cues "plate tap/clink" wrong for non-food (add-sfx.py:181, story.py:275, template_to_scenario.py:105); (e) food-only gates on non-food; (f) repair prefix "Later moment:" leaks into image prompts; (g) editorial 0/50 stays provisional.
+- PLANNED fixes: last-frame vs ending vision check; --chain-images/--anchor-image; motion prompts with real travel; short crossfade at cut + loudnorm -14 + bed trim + non-food cue map; wire Studio rating to record-editorial-review.py.
+- Publishing: not done, needs explicit user approval.
+Next: implement audio fixes first (cheap, no GPU), then ending check.
+
+## 2026-11-17 ~14:15 — Claude (audio fixes + ending check)
+- IMPLEMENTED, measured on cycle-2 re-mix in /tmp (not re-rendered in repo outputs): scripts/add-sfx.py — 30 ms fades on every cue, 70 Hz highpass + afftdn on base, loudnorm I=-14 (fox measured -14.5 LUFS, was -16.4), food-only cues (clink/sizzle/crunch/chew/pour/slice/scrape/fizz) dropped unless imagePrompt/motionPrompt mention food. Not listened to; click/hiss reduction not confirmed in spectrum. Backup /tmp/add-sfx.before-audio.py.
+- IMPLEMENTED, run once on the fox video: scripts/prereview-local-video.py — payoff frame now also asks the requestedEnding question; continuity question is generic (same character/object) for non-food films instead of "same food". Backup /tmp/prereview.before-ending.py.
+- FINDING: qwen3-vl:4b answered "yes" to "fox sails away in the paper boat" on the fox final frame (fox sitting in boat, street not water, no travel). A single still cannot prove an ending that is motion; the check is advisory only. NEXT: motion-travel check on the last shot (frame difference / flow) and retry with new seed; story model still writes food sound lines ("plate tap") for non-food.
+- Working tree uncommitted, nothing pushed.
+
+## 2026-11-17 ~14:30 — Claude (private remote access to the Studio)
+- IMPLEMENTED + TESTED on a throwaway instance (port 8799): scripts/studio-server.mjs now supports STUDIO_TOKEN (cookie lock; open /?token=... once; 401 otherwise) and STUDIO_ALLOWED_ORIGINS (extra exact origins for the API). Results: no/wrong token 401, right token 302+cookie, cookie 200, allowed origin 200, other origin 403. Default behaviour unchanged when env vars are unset. Backup /tmp/studio-server.before-remote.mjs. Real server on 8787 not restarted yet.
+- PLANNED, needs user: install Tailscale (not installed; ngrok exists but is public — do not use without the token), sign in, run `tailscale serve --bg 8787`, restart Studio with STUDIO_TOKEN + STUDIO_ALLOWED_ORIGINS=<https tailnet URL>. Mac must stay awake; generation still runs on the Mac.
+
+## 2026-11-17 — Codex: Studio source snapshot and verification
+
+- Copied Claude's Studio and related source from the dirty `feature/artcraft-title-polish` checkout into an isolated integration branch. Generated drafts, videos, caches, session history and dependency folders were excluded. The source worktree stayed in place.
+- VERIFIED: Vite production build, script checks and a local browser smoke test of Simple mode and expanded format/audio controls. Fixed malformed authentication cookies so they return 401. Remote Tailscale access and a new full render were outside this smoke test.
+## 2026-11-16 23:16 +03 — Codex: Arabic ASMR salad, ArtCraft versus FFmpeg pilot
+
+- Branch `feature/arabic-artcraft-recipe`, code/docs commit `9681d83`. Working tree after the source commit has only untracked `outputs/` preview artifacts; they are not staged or pushed. Original `/Users/eibbini/Documents/shorts-app` checkout was not switched or modified.
+- VERIFIED: user selected Arabic step captions plus kitchen ASMR, no recorded voice or music. Two original FLUX stills were animated locally by MLX LTX into a 4.04-second salad spoon lift and an ingredient placement. LTX took 268.9 and 270.4 seconds respectively. Contact frames revealed that the second clip invents a fourth egg late; the kept insert ends at 1.7 seconds with three visible eggs. This is a 5.74-second **two-shot preview**, not the 60-second recipe.
+- VERIFIED: `outputs/avocado-recipe/two-shot-artcraft-asmr.mp4` was edited by FilmCraft, mastered by SoundCraft and captioned with FFmpeg/libass because the Mac transparent Arabic overlay corrupted or hid glyphs. Mid-frame visual check showed joined Arabic text. Final-file QA passed 6/6: 5.74 seconds, −17.67 LUFS, −0.55 dBTP. SoundCraft's stricter −16 ±0.6 LUFS and ≤−1 dBTP target **failed**, so this is not release-ready.
+- VERIFIED: `outputs/avocado-recipe/two-shot-ffmpeg-script.mp4` uses the same local FLUX/LTX motion and raw Mixkit kitchen effects, but FFmpeg does all finishing: concatenation, scaling, libass captions, loudness normalization and export. This exercises new `ffmpeg_finish` in `scripts/arabic_recipe.py`. Mid-frame visual check passed; final-file QA passed 6/6: 5.74 seconds, −16.78 LUFS, −2.79 dBTP. The source motion is 384×640 / 24 fps, exported at 1080×1920 / 30 fps; no native-resolution claim. Assistant has **not listened** to either mix, and no full editorial review is recorded.
+- VERIFIED: three Arabic recipe tests, `npm run scripts:verify` (68 npm entries, 93 Python, 17 shell, 32 Node scripts), Python syntax and `git diff --check` passed. The full manifest preflight correctly blocks six missing 60-second scenes, the missing kitchen audio bed and unverified picture-to-caption timing. New `--editor ffmpeg` choice and final-file QA are wired into the recipe adapter but **untested as a full 60-second run**. The ArtCraft adapter also runs final-file QA after export.
+- BLOCKERS: no moving chopping, dressing, mixing or serving clips; no 60-second sound bed aligned to all actions; no reviewed 60-second caption timing; no full watch/listen or release score. The current short preview cannot be stretched into a truthful cooking story. Source SFX provenance is local under `outputs/avocado-recipe/audio/sources.json`, and the WAVs must remain out of Git. Mixkit's free SFX license allows commercial social use but no standalone redistribution.
+- NEXT: generate or record physically credible action clips in the locked warm kitchen, reject ingredient morphs at the clip gate, assemble a full 60-second bed, verify caption cue times against the picture, render both `--editor artcraft` and `--editor ffmpeg`, inspect every transition, listen, and run final-file QA and editorial release review. Do not claim 90+ or publish from the pilot score.
+
+## 2026-11-17 — Codex: Creative Learning Engine design
+
+- Branch `feature/arabic-artcraft-recipe`, base commit `c1d0570`; main Mac checkout `integrate/claude-codex` at `a332abd` remains dirty. The design worktree has the proposal and handoff changes plus prior local `outputs/`. No production code, other worktrees, or render defaults changed.
+- VERIFIED: reviewed the existing reference bank, shot-review retrieval, director, editing, Foley, QA, editorial review and analytics storage. PySceneDetect in its dedicated environment detected the shallot film’s planned cuts at 3, 7, 11 and 15 seconds. Final-file QA passed 6/6 at 20.01 seconds. Process inspection was unavailable in this sandbox.
+- PLANNED: [Creative Learning Engine proposal](CREATIVE_LEARNING_ENGINE.md) defines the local SQLite schema, rights and evidence contracts, director/QA handoff, and a CPU-only comparison using cached footage. No implementation, enhanced output, new human preference result or live analytics access was verified. The previous salad Reel remains at the two-shot preview stage.
+- NEXT: get approval for the standalone slice, confirm the local reference set and its rights, then run the single-variable A/B with the existing renderer and ask for a human watch/listen review. No paid or GPU work was started.
+
+## 2026-11-17 — Codex: approved standalone Creative Learning pilot
+
+- Branch `feature/arabic-artcraft-recipe`, base `c1d0570`; local changes are `scripts/creative-learning.mjs`, its npm alias, proposal and handoff, plus local outputs. Production rendering entry points and other worktrees were left in place.
+- VERIFIED: Node SQLite sidecar tracks reference rights, timestamped analysis, technique revisions, retrieval, named experiment evidence and optional human preference. CPU-only fixture identified its 2.000 s cut and 2.100 s audio energy rise. Negative checks rejected withdrawn or missing permission and QA for a different file. The existing shallot storyboard passed scenario validation and story audit.
+- VERIFIED: `outputs/creative-learning/comparison-02/` holds the 20.01-second shallot comparison and SQLite-backed evidence references. Picture streams are identical, scheduled audio onset moves from 8.75 to 10.25 seconds, and decoded audio differs in those windows. Both passed six checks, −15.56 LUFS, peaks −1.83 and −1.86 dBTP. FFmpeg finishing took under one second per cut, excluding QA. No paid or GPU work. Use comparison-02: the first comparison sampled leading silence and produced identical files.
+- UNTESTED: real human preference entry, perceived sound and exact action sync, other genres, and authorized analytics ingestion. The prior salad Reel has no new footage from this CPU-only milestone.
+- NEXT: watch/listen to both comparison-02 cuts, record honest human feedback, then add a rights-cleared real reference with independent shot/audio annotations before expanding retrieval or wiring it into production.
+
+## 2026-11-17 — Codex: Arabic recording availability
+
+- Branch `feature/arabic-artcraft-recipe`, base `c1d0570`; local proposal, CLI, npm alias, handoff, and prior outputs remain uncommitted.
+- Owner can now provide Arabic narration. VERIFIED by file inspection: the salad pilot used Arabic captions with ASMR and contains no narration sample. SoundCraft voice processing has prior technical evidence on the red curry film. Arabic recording quality and the voiced salad export remain untested.
+- NEXT: take an owner-provided dry Arabic WAV, compare the same take raw versus gently processed, align captions to the chosen delivery, and record exact-file QA and an Arabic-speaking reviewer’s preference. The new protocol is in the Creative Learning Engine guide.
+
+## 2026-11-17 — Codex: recorded Arabic voice comparison ready
+
+- Branch `feature/arabic-artcraft-recipe`, base `c1d0570`, with local Creative Learning changes and new `npm run voice:arabic:compare` command. No changes to production finishing commands.
+- VERIFIED: same-input raw/SoundCraft comparison with a temporary synthetic audio fixture, identical salad preview video stream, shared kitchen bed, export levels −19.27 and −19.26 LUFS, and peaks below −1 dBTP. Corrected the bounce channel layout before loudness matching. Static npm script checks passed.
+- NEXT: owner supplies their local recording file or path. Then compare real takes, check the preferred delivery and caption timing, and save the human review. No Arabic voice performance was assessed with the fixture.
+
+- Arabic review follow-up: added word-level pronunciation, sentence rhythm, regional variation and retake criteria. A real recording and native listen remain pending.
+
+## 2026-11-17 — Codex: evaluated Arabic speech tools
+
+- Branch `feature/arabic-artcraft-recipe`, base `c1d0570`, with local Creative Learning and Arabic audio edits. Added the opt-in `voice:arabic:review` command for local whisper.cpp or imported JSON.
+- VERIFIED: fixture detected an Arabic ingredient substitution at the expected segment timestamp while leaving native pronunciation pending. Chatterbox Multilingual Arabic support and Apple Silicon package were verified upstream. Piper Kareem's dataset rights remain unresolved, and released Qwen3-TTS omits Arabic.
+- NEXT: use the owner's take for an actual multilingual Whisper sample. Use a stock Chatterbox voice on the same script only for a narrow Mac benchmark before adopting it. No model was installed or promoted here.
+
+## 2026-11-17 — Codex: Chatterbox, Kokoro and Sofelia voice benchmark
+
+- Branch `feature/arabic-artcraft-recipe`, base `c1d0570`. Local Creative Learning, Arabic audio, docs and ignore changes remain uncommitted. Original app checkout and active model settings were preserved.
+- VERIFIED on Mac: cached Chatterbox 4-bit ran offline with MLX Audio 0.4.7. Arabic 7.60 s in 10.16 s; English 6.48 s in 3.69 s after the Arabic run. Load 12.73 s and peak MLX allocations 2.63 GB. English Kokoro af_heart and Arabic Sofelia generated the matched script. Four gain-only comparison copies measure about −24 LUFS. Both Arabic WAVs passed the existing SoundCraft raw/processed level and peak checks. Outputs and benchmark-only downloads are local under ignored `outputs/arabic-chatterbox-pilot/`.
+- VERIFIED: removed redundant async handling and duplicate FFmpeg stream-hash construction in the new Creative Learning CLI; reran the actual edit comparison successfully. TypeScript build, npm script verification and whitespace checks passed. Legacy pipelines were outside this scoped cleanup.
+- NEXT: have a native Jordanian listener check every word and sentence in both synthetic Arabic samples and compare against the owner's take. Listen to both English files for completeness and pacing. No editorial winner or production voice change has been recorded.
+
+## 2026-11-17 — Codex: female Chatterbox dub for supplied salad film
+
+- Branch `feature/arabic-artcraft-recipe`, base `c1d0570`, with previous local Creative Learning and review changes. The supplied Downloads MP4 matched the existing Arabic recipe export by SHA-256. The original stayed in place. Dub assets and scripts are under ignored `outputs/arabic-chatterbox-pilot/salad-film/`.
+- VERIFIED: locally generated all 19 original caption phrases with Chatterbox 4-bit and synthetic Sofelia Eliaa female conditioning. Reused the source picture, burned captions, licensed music and effects stems. FFmpeg stream hashing verified identical video before and after. The refined dub `avocado-egg-salad-ar-chatterbox-female-refined.mp4` passed final-file QA 6/6 at 60.0 seconds, −16.99 LUFS and −1.64 dBTP. Credit and QA sidecars are beside the MP4.
+- The two longest cues got alternate takes, lowering maximum tempo adjustment from 1.717× to 1.443×. Native listen, pronunciation, perceived voice, and phrase-level intelligibility remain unverified. Review the phrase around 23 seconds first if the delivery feels fast. No code changes to the production pipeline.
+
+## 2026-11-17 — Codex: Jordanian pronunciation A/B for the Chatterbox salad dub
+
+- The owner heard several pronunciation errors in the otherwise clear female Chatterbox voice. Compared the original caption text with the actual synthesis input. Most original cues lacked vowel marks and a few already had shadda. Added a separate dialect pronunciation script for all 19 cues. With vowel marks stripped, every cue matches the original caption wording.
+- VERIFIED: the actual Chatterbox tokenizer produced different sequences for all 19 marked cues. Reused the same model, female conditioning, original cue slots, seeds and sampling settings of the refined dub. Compared video stream hashes against the supplied original and found identical picture and on-screen captions. The new 60-second file passed final-file QA 6/6 at −17.10 LUFS and −1.59 dBTP. Cue 9 required up to 1.471× timing adjustment to fit the original window.
+- New MP4 and pronunciation script are under ignored `outputs/arabic-chatterbox-pilot/salad-film/`. The timestamped `pronunciation-review-ar.md` is for native feedback. No linguistic verdict was assigned merely because input tokens changed. Next, record problem words and sentence context, retake affected phrases, and promote confirmed spellings to the local pronunciation guide.
+
+- Opening ingredient card: prepared and frame-checked a separate 6.6-second preview, with a Cairo Arabic title, warm gold divider and four ingredient lines above the existing subtitles. Local files are `ingredients-opening-readable.mp4` and `ingredients-ar-readable.ass` beside the Arabic dub. Add to the full export after pronunciation approval. The 60-second dub was not changed in this preview.
+
+- Native review correction 1: address one female viewer throughout. The owner flagged the second opening phrase. Added an explicit feminine kasra in `إِلِكِ`, `تِعْجِبِكِ`, and the closing `رَأْيِكِ`. Opening `بِتْحِبِّي` and closing imperatives already address a woman; the recipe steps use inclusive first-person plural. Regenerated cues 2 and 18 only. The new 60-second `avocado-egg-salad-ar-chatterbox-female-feminine-address.mp4` passed all six technical checks and has an identical picture stream. Native pronunciation confirmation and the ingredient card on the full film are pending.
+
+- Native review correction 2: keep everyday Jordanian `ملح وفلفل` without added diacritics or formal endings. Regenerated cue 14 at 35.57 s while retaining the feminine-address corrections. The new `avocado-egg-salad-ar-chatterbox-female-colloquial-review.mp4` is 60 seconds, passes 6/6 technical checks and matches the original video stream. Local pronunciation notes record selective shaping and are pending validation by listening. The opening card remains a separate preview.
+
+- Added the ingredient card to the 60-second `avocado-egg-salad-ar-chatterbox-ingredients-review.mp4` and updated the second spoken cue and caption to `جرّبي، راح تعجبك كتير`, with a final sukun in the spoken input. Visual review of the revised opening frame passed; final technical QA passed 6/6.
+- Added opt-in `voice:arabic:review -- --before-shoot` validation. It requires live ASR on the recording, a matching audio/script hash and a native Arabic review. Local Whisper Base ran on the new opening and produced an unreliable transcript, so the pronunciation gate remains blocked. The full export is a review copy.
+
+- Compared the existing Sofelia Eliaa Palestinian voice on the complete revised salad. Regenerated 19 cues on CPU using the latest script. Passed explicit phonemes to Sofelia for the feminine /ik/ in `تعجبكْ` and the colloquial `ملح وفلفل`. The new `avocado-egg-salad-ar-chatterbox-sofelia-ingredients-review.mp4` uses the exact same picture stream and ingredient card as the Chatterbox review copy. Passed 6/6 technical QA, 60.0 s, −17.04 LUFS and −1.60 dBTP. Sofelia needed tempo adjustments in two cues. Actual pronunciation and preference await a native listen. Kept both review copies.
+
+- Native review follow-up: regenerated Sofelia closing cue 18 at 53.35 s as `جرّبيها واحكيلي شو رَأْيِكْ`. Used explicit `raʔjik` with no vowel after /k/. The new `avocado-egg-salad-ar-sofelia-ending-review.mp4` retains the other 18 voice takes, original caption pixels and ingredient card. Video stream hash matches the previous Sofelia copy. Passed final-file QA 6/6 at 60.00 s, −16.99 LUFS, −1.60 dBTP. The `sofelia-ending-listen.wav` excerpt is ready for native listening.
+
+- Native pronunciation follow-up: reviewed all 19 Arabic cue texts for a single feminine addressee and colloquial register. The Cairo Arabic Academy dictionary confirms the spelling `الطَّيِّب`. Added a reusable exact-phrase Jordanian Sofelia pronunciation dictionary under `data/arabic-pronunciation-ar-JO.json` and exercised it for the opening and `طيبة ومشبعة`. The recipe pilot uses explicit emphatic doubled /tˤ/ in `والطيب` and doubled /j/ in `طيّب`. The new full edit and opening audio excerpt remain in the local ignored pilot folder. Production narration does not yet call the dictionary. Native listening remains pending.
+
+- Native feedback rejected the latest Sofelia manual phoneme take for `والطيّب`. Investigation confirmed the same checkpoint as the original. Original used the native frontend and full scene delivered at 1.0×; the recent take replaced the whole opening phrase with manual phonemes, split by subtitle, and required 1.304× tempo. The gate did not measure phoneme correctness and no native approval was recorded. User's preferred original audio is the listening baseline. The local `avocado-egg-salad-original-voice-ingredients.mp4` adds only the ingredient card to the original audiovisual edit; the original AAC stream hash matches. Keep experimental overrides out of production until a matched listen approves them.
+
+- Added `voice:arabic:prepare`, a reusable conversational Jordanian singular-feminine profile and a six-scene sample. Verified real Sofelia generation on all six salad scenes at 1.0× with no timing overruns and verified that masculine wording exits 3 before generation. The procedure preserves scene context and lists prior pronunciation notes for review. Automated caption alignment and other audience profiles remain unimplemented. Do not promote unverified manual IPA overrides to production. The preferred full Reel review copy retains its original audio plus the ingredients card.
+
+## 2026-11-17 — Codex: Arabic voice and Creative Learning PR handoff
+
+- Consolidated the Arabic voice preparation and review commands, pronunciation reference data, Creative Learning pilot, and documentation on `feature/arabic-artcraft-recipe` for PR #21. Verified npm script checks, all three Arabic recipe tests and the TypeScript build.
+- Generated review media, recordings and model caches are local. Future work: native review of new takes, validation of additional audience profiles and caption alignment after a take is selected.
+
+## 2026-11-17 ~15:00 — Claude (relatives access, live)
+- IMPLEMENTED + TESTED on spare port 8799, then restarted live Studio (8787): scripts/studio-server.mjs now has named users (storage/studio-users.json, managed by scripts/studio-users.mjs add/list/remove). Creators see only their own sessions/videos/media/plans (403/404 otherwise), seconds capped at 20, defaults 3 videos + 12 ideas per day (caps not tested), others' running job shown only as "busy", ledger records `user`. Owner token in ~/.shorts-studio-token. Backups /tmp/studio-server.before-users.mjs, before-remote.mjs.
+- LIVE: `tailscale serve` + `tailscale funnel --bg 8787` -> the configured private-link host is on the public internet, locked (401 without a personal token). Public reachability NOT verified from outside the Mac. Off switch: `tailscale funnel --https=443 off`.
+- NOT BUILT: UI changes for relatives (Simple mode already default; no "signed in as" label), per-user learning dashboards, no relatives added yet. Mac must stay awake. One job at a time on the Mac, so relatives queue.
+- Working tree uncommitted, nothing pushed.
+
+## 2026-11-17 ~15:10 — Claude (food prompt gate in draft loop)
+- Found: food plans passed the story checks but the render stopped at the picture-prompt gate (71 vs 85, exit 3) — wagyu session 1794916414392. IMPLEMENTED: scripts/studio-draft.py polish() runs refine-prompts.py (luxury-kitchen) then re-lints (>=85) inside checks(); skipped for non-food (SHORTS_MIN_PROMPT_SCORE=0). TESTED on the wagyu plan copy: 71 -> 88. Not yet seen in a live Studio draft. The failed wagyu plan was refined in place (original /tmp/wagyu-before-refine.json). Backup /tmp/studio-draft.before-polish.py.
+
+## 2026-11-17 ~15:20 — Claude (motion check + retake in the Studio)
+- IMPLEMENTED + VERIFIED live: prereview-local-video.py measures per-shot motion (MIN_MOTION 2.0; real shots 3.7-18.9; frozen fox shot 1.66); /api/prereview in studio-server.mjs; Studio shows "Make a new take of shot N" on a finished video (retake chains regen -> stills -> render without the first-frames pause). repair-local-story.py now writes "Moments later," instead of "Later moment:" (tested on a real plan).
+- VERIFIED by retake of fox shot 2 (5m47s total): motion 1.66 -> 2.34, picture now shows the boat gliding with consistent moon/boat. One retake helped but is not a guarantee; threshold lowered to 2.0 from one calibration sample, so treat it as provisional.
+- Not done: item 3 (chain/anchor images for object consistency), 5-9 of the fix plan. Backups /tmp/*before-retake*. Working tree uncommitted, nothing pushed.
+
+### 2026-11-17 15:30 - Claude - Rebrand to iShorts
+- IMPLEMENTED BUT UNTESTED visually: studio/public/logo.svg + favicon.svg (portrait frame + play + spark, amber-coral gradient), header wordmark "iShorts", page title/notifications renamed, studio rebuilt. Server API/paths unchanged.
+
+- 2026-11-17 15:45 Claude: ASMR gap gate (add-sfx.py audit_cues) judged silence against the single loudest peak (2%), so quiet-but-audible rustles read as gaps (robot/sunflower draft blocked). Floor is now 8% of the 95th-percentile 200 ms RMS. VERIFIED: that draft and 7 others pass; backup /tmp/add-sfx.before-gap.py. Draft f72756 still blocked for an empty sound line (separate, unfixed).
+- 15:55 correction: actions-only gap test would block every earlier film (4-8 s action-free stretches rely on the room bed, 200 ms RMS). Kept room-included measure with the p95-relative floor; the gate now only trips when even the room bed is missing/quiet. Known limit: it no longer flags long action-free stretches.
+
+## 2026-11-17 — Codex iShorts UX implementation
+- Baseline: feature/artcraft-title-polish at a583d28. Dirty working tree with Claude's prior changes and this UX work uncommitted. The live 8787 service was left on its existing build.
+- Implemented: compact composer, labeled brief/advanced fields, mobile Projects navigation, account capabilities and quotas from /api/me, four production stages, shot plan and export review, and project selection in the URL for reload. The manual UI only starts full motion from first-frame approval. Auto without a pause and the existing finished-film retake can still chain into motion.
+- Implemented: the local renderer reports the exact final export after technical QA. The Studio server promotes it on successful exit and retains the previous verified export during retries and on failure. Existing exports that predate this signal appear as QA unconfirmed.
+- Verified: Vite build and Node/Bash syntax checks. Isolated browser check at 1440×900 and 390×844 showed no horizontal overflow, the example populated the prompt, and mobile project navigation opened. Isolated scripted API fixture passed owner/creator capability values, cross-creator session/media denial, duplicate render rejection, exact export selection, failed final-file QA, retention of the previous export, and exhausted render quota.
+- Pending: authenticated browser run through planning, first frames, refresh/reconnect, and retake on fixture media; full keyboard and contrast audit; screenshot archive; Arabic voice preview; individual take comparison and durable editorial review. No new GPU render or live rollout was run.
+- Next: validate the fixture browser flow with old and new exports, then complete take-level comparison and Arabic audio preview before rolling the reviewed build to 8787.
+
+## 2026-11-17 — Codex GitHub integration
+- Integrated the Claude Studio leftovers and Codex UX work on the PR #22 head (base snapshot 49b4213). The shared local worktree was kept separate from the integration checkout. Generated drafts, output media, bytecode, local credentials and the Mac's remote access hostname are excluded from the commit.
+- Verified the combined snapshot with 100 Vitest tests, 83 Python tests, the Vite production build, and an isolated Studio API smoke test. The smoke test covered creator isolation and quotas, malformed cookies, media traversal denial, duplicate renders, exact final-file promotion, and failed-QA fallback to the previous verified export.
+- Fixed the food-cue filter so beef sizzle is still subject to the existing recorded-Foley requirements. Set the user-link helper's default to localhost. Set STUDIO_PUBLIC_URL explicitly when issuing links for another host.
+- Pending: live-host rollout, authenticated browser workflow and full render, take comparison, Arabic voice preview and editorial persistence.
+
+## 2026-11-17 — Codex Studio recovery and first-frame pinning
+- Isolated checkout shorts-app-studio-hardening, branch fix/studio-workflow-hardening, based on PR #22 at 218412c. Includes the previous isolated unattended/cancellation/range fixes plus this follow-up. Other worktrees, active render, credentials and shared caches preserved.
+- Added a bounded draft watchdog (15 min total, 5 min idle by default). Timed-out jobs retain their brief and stop the process group before becoming failed. Added an exact first-frame manifest linking each selected file/hash to the scenario hash. Studio displays it and the motion renderer consumes it. Changed manifests or frames block render.
+- Fixed inherited example/project endings when the brief is edited. Browser-verified that replacing the robot/sunflower example with the halloumi/steak prompt clears the sunflower ending and shows the unattended action. No render was submitted by that browser test.
+- VERIFIED: production UI build, 100 JavaScript tests and 86 Python tests. The new synthetic Studio regression covers the full manual API chain and unattended chain, saved session after restart, blocked plan, frame tampering, timeout, cancellation lock and malformed playback ranges.
+- Limits: full real-model render, full visual/listening review and formal editorial browser integration remain pending. Existing cache replay findings remain applicable. The code is prepared for review. Live 8787 has not been restarted or deployed, and PR #22 has not been merged.
+- Next: review the isolated branch, validate one short real-model run with approved runtime, then seek live rollout approval.
+
+## 2026-11-17 — Codex cinematic quality plan, awaiting approval
+- Inspected clean fix/studio-workflow-hardening at 20360f0, dirty Claude checkout at a583d28, architecture, roadmap and Creative Learning design/implementation. Verified via GitHub that PR #22 remains OPEN/CLEAN at 218412c and main is 4a1f4da.
+- Added docs/CINEMATIC_QUALITY_PLAN.md with current implementation limits, ten ranked quality issues, reuse map, module-level changes, evidence-based learning design, ninety-day milestones and a bounded Phase 1 proposal.
+- No production code was changed by this planning phase. Existing evidence remains 100 JavaScript and 86 Python passing tests on 20360f0, the cached export technical QA and the prior browser stale-ending test. No new playback or listening verdict was assigned.
+- Proposed Phase 1: reconcile the tested hardening; bind advisory reports to the selected export; show pending/unavailable/stale checks; report native clip size separately from delivery size. The larger action/continuity, sound and editorial integration work follows after this result can be evaluated.
+- Next action: obtain Phase 1 approval, then implement and test with two different takes and existing cached/synthetic media. Real generation, live rollout and cloud spend remain subject to their existing approval constraints.
+
+## 2026-11-17 — Codex approved cinematic Phase 1
+- User approved Phase 1. Work is on fix/studio-workflow-hardening, building on 20360f0. PR #22 was rechecked open at 218412c before integration.
+- Added scripts/studio-export-review.mjs and replaced newest-scenario prereview selection with exact-export SHA-256 validation. Studio now distinguishes loading, missing/unavailable, stale, incomplete motion and complete advisory results. Async responses from a previous selected take are ignored.
+- Added scripts/export-provenance.py after final technical QA. It probes each original motion clip and delivery file, records hashes and dimensions, and binds the report to the final export. The UI labels native motion sources and upscaling, leaving older exports unverified.
+- Verified two Node regressions, a real FFmpeg source/upscale fixture, existing Studio recovery tests, the production UI build, and release-evidence tests. Browser verification confirmed 384×640 source clips / 720×1280 delivery on the cached replay, and withheld flags for a second take with a stale report. Cached replay again passed 6/6 technical QA (-14.72 LUFS, -1.54 dBTP, 10.000 s).
+- No new artistic quality or audio listening verdict was recorded. Formal Studio editorial integration and controlled Foley comparison remain the next creative phase. Live rollout and a new model render still require their existing approvals. No merge or deployment was performed.
+- Final regression results on this Phase 1 snapshot: 100 Vitest tests, 87 Python tests and 2 exact-export Node tests passed. Integration is a normal fast-forward update to PR #22, retaining the prior hardening commit in history. Generated media stays local.
+
+## 2026-11-17 — Approved localhost rollout preparation
+- Owner approved live rollout. Read-only precheck found port 8787 idle at a completed stills job. Plan: dedicated release snapshot, reusing existing storage, drafts, output media and authentication/origin settings. Original worktree remains intact.
+- Added a recovery action for completed first-frame jobs created before manifests existed. Missing selection now offers Make first frames without bumping a seed. UI production build passed.
+
+## 2026-11-17 — Localhost rollout verified
+- Owner approved rollout. Live port 8787 now serves release source 941902a from ../ishorts-releases/941902a, PID 54046. The prior server was idle at a done/stills job before the restart.
+- Runtime storage, drafts and media use the existing locations. Owner token and allowed-origin settings were preserved without logging their values. The previous code/worktrees remain available. Release startup logs and rollout metadata are inside the release folder.
+- VERIFIED: spare-port startup/authentication check, live owner capabilities, updated asset build, 18 retained sessions, and authenticated browser refresh showing New project, Plan video and Run unattended. No generation was started.
+- Source 941902a additionally provides Make first frames recovery for legacy sessions with no verified frame manifest. Production UI build passed. Existing full tests at f58c9d7 passed 100 Vitest, 87 Python and 2 Node review regressions.
+- PR #22 remains open. Next: select an existing project to review, or enter a new concrete action/ending and choose guided or unattended mode. A new full model render and native editorial/listening assessment remain unverified.
+
+## 2026-11-17 — Dynamic examples and real unattended test
+- Owner requested category-aware fresh examples before the real unattended test. The initial own test 1794940001800 was cancelled during drafting to refine the idea first.
+- Added /api/idea and scripts/studio-ideas.mjs. It uses the existing Google search-trend brief and installed Ollama Qwen3 8B, with exact physical story outlines and endings. Food, Cartoon and Night cartoon are category-specific; Custom chooses a random filmable subject. Busy model/render state uses rotating samples so examples do not contend with video generation.
+- Source labels distinguish local-model ideas, samples and fresh matched search signals. No match is labelled trending. Exclusions reduce repeated ideas. A stale request cannot overwrite an edited brief or another selected category. New examples clear old settings/endings, and model residency is released after generation.
+- Real local tests generated one idea in each category in approximately 6–11 seconds with Qwen3 8B. Earlier Qwen3 1.7B produced incoherent physical actions, so it was not selected. All four samples had no matching fresh search evidence and were labelled original local-model ideas.
+- Unit tests cover category rotation, fresh versus stale evidence, repeated model output and busy fallback. Production UI build passed. Next: deploy this reviewed improvement while idle, select a refined Food idea, and monitor the approved 10-second unattended real-model run through final QA.
+
+### Real unattended test — prompt length failure repaired
+- Refined-example session 1794940431083 drafted a two-shot dumpling film, then the still renderer rejected image prompts of 1066 and 1073 characters. The prompt refiner appended style text beyond the shared schema's 1000-character limit, and draft checks did not re-run schema validation after refinement.
+- Added sentence-boundary prompt limits and final schema validation to the draft checks. On a copied saved plan, prompt score remained 92 and the shared scenario validator passed. A regression now covers overlength refinements. Next: keep the original rejected draft for evidence and resume the fixed plan through existing still and motion gates.
+
+### Real unattended test — vision verdict repaired
+- The first FLUX frame was generated and passed the basic image check, but Qwen3-VL returned no complete verdict under the old 650-token cap. The installed tag resolves to a 4B thinking model. A bounded direct retry with 2048 tokens produced a valid visible yes/no verdict.
+- The generic question previously stopped at the first comma, reducing the actual dumpling prompt to "A chef's hand". The gate now includes the full first sentence, uses the bounded larger budget, and records completion/token diagnostics. Cache prompt version raised to 9. Five vision regression tests passed and the cached frame passed the updated gate. No vision bypass was used.
+
+### Completed real 10-second unattended production
+- Session 1794940431083 produced guided-20261117-213351-78c9c1-20261117-214639.sfx.artcraft.mp4. After the two documented fixes, Resume automatically ran first-frame checks, both fresh LTX clips, FFmpeg assembly, SoundCraft/FilmCraft finishing and final QA without additional phase approval.
+- Final-file QA passed 6/6: 10.01 s, -15.55 LUFS, -4.38 dBTP, no measured freeze, black-frame or silence interval. Motion measures were 11.33 and 10.08. Native clips are 384x640, delivery is an upscaled 1080x1920. Render/finish pass took 649 s (553 s model/render, 95 s finishing/QA, 1 s checks). This excludes the earlier failed attempts, idea research and repair time.
+- AI inspection of the contact sheet showed a dumpling held over the bowl followed by chili-oil pouring. The initial placement is not established by those samples. No assistant listening verdict or full human editorial record was supplied.
+- Release remains BLOCKED with provisional 50/100, including no human editorial points and empty published-signatures history. The technical pass is not a publishing or artistic approval.
+- Repetition follow-up: the first generator used a small fixed outline pool. Replaced that restriction with new model-proposed subjects, category-specific creative directions and persistent idea history in the existing learning ledger. Similar saved projects and earlier suggestions are excluded, including after browser refresh. Busy/offline samples are labelled and exhausted samples return a clear unavailable result instead of silently repeating. Button label is now Suggest an idea.
+- Five local generation trials produced new subject matter; their artistic quality remains a draft for review. Search evidence was absent for the tested subjects, so none was labelled a verified trend. rss-parser was researched as an optional feed library; the existing feed reader was reused. vidIQ research skill was inspected; no credit-charged discovery call was made.
+- Tests after the real-run repairs: 100 Vitest, 89 Python and 4 Node tests passed. Additional variety tests cover new subjects, exhausted samples and persistent history. UI build passed. Next: native editorial/listening review, a controlled Foley comparison and further action-completion checks on short clips.
+- Final repetition fix validation: 5 Node tests passed; the isolated Studio workflow additionally verified suggestions are recorded in the shared learning ledger and a subsequent request omitting browser history still avoids the previous Food suggestion. The UI production build passed.
+
+### Live rollout and evidence store
+- Live release is now 0da719c under ../ishorts-releases/0da719c. Existing projects, media, authentication and allowed origins were retained. The approved real test remains accessible as session 1794940431083.
+- Live /api/prereview returned complete with matching final-file identity, no weak motion flags and verified 384x640 native / 1080x1920 delivery. Two successive /api/idea Food requests produced different local-model ideas without a browser exclude list, demonstrating persistent history on the live server.
+- Saved studio-run-1794940431083 using the existing creative-learning.mjs record command into shared storage/learning/creative.sqlite. Exact video, QA and plan hashes were checked. Technical evidence is stored with editorialStatus pending, 649 s production runtime, and zero paid API/GPU-rental cost. No preference, artistic improvement or human score was fabricated.

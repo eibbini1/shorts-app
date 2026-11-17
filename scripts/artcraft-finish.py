@@ -6,6 +6,7 @@ render-any-local.py already wrote. Never overwrites an existing output.
 """
 import argparse
 import json
+import re
 import subprocess
 import tempfile
 import time
@@ -58,7 +59,9 @@ def soundcraft_mix(source, target, lufs=-16.0, peak=-1.0):
                       '"release":60,"knee":0,"makeup":0,"lookahead":2}}',
              '--bounce', target])
         got, tp = loudness(target)
-        best = {'gainDb': round(gain, 1), 'lufs': got, 'truePeakDb': tp}
+        best = {'gainDb': round(gain, 1), 'lufs': got, 'truePeakDb': tp,
+                'targetLufs': lufs, 'targetTruePeakDb': peak,
+                'passesTarget': abs(got - lufs) <= 0.6 and tp <= peak}
         if abs(got - lufs) <= 0.6 and tp <= peak:
             break
         gain += (lufs - got) if tp <= peak else -1.5
@@ -103,12 +106,12 @@ def stem_premix(voice, beds, target):
     run(cmd + ['-filter_complex', graph, '-map', '[a]', '-c:a', 'pcm_s24le', target])
 
 
-def effectcraft_title(text, target, work, seconds=3.0):
+def effectcraft_title(text, target, work, seconds=3.0, fps=24):
     """A short top-of-frame title with a fade and settle, rendered as ProRes 4444 with alpha."""
     cli = tool('effectcraft')
     project = work / 'title.ecproj'
     run([cli, '--empty', '--save-as', project, 'exec', 'comp.new', '--params',
-         json.dumps({'name': 'Title', 'width': 1080, 'height': 1920, 'frameRate': 24, 'duration': seconds}), '--save'],
+         json.dumps({'name': 'Title', 'width': 1080, 'height': 1920, 'frameRate': fps, 'duration': seconds}), '--save'],
         cwd=work)
     code = ("var c=app.project.item(1);var t=c.layers.addText(%s);var p=t.property('Source Text');var d=p.value;"
             "d.fontSize=82;d.applyFill=true;d.fillColor=[0.24,0.12,0.065];try{d.font='Georgia';}catch(e){}d.justification=ParagraphJustification.CENTER_JUSTIFY;"
@@ -125,16 +128,18 @@ def effectcraft_title(text, target, work, seconds=3.0):
          '--prores', '4444', '--channels', 'rgba', '--audio', 'off'], cwd=work)
 
 
-def captions_overlay(ass, target, seconds):
-    """The pipeline's own Lora gold-word captions, drawn at 1080x1920 on a transparent layer (not upscaled)."""
+def captions_overlay(ass, target, seconds, fps=24):
+    """Draw ASS captions at 1080x1920 on an alpha layer for FilmCraft."""
     def esc(path):
         return str(path).replace('\\', '/').replace(':', '\\:').replace("'", "\\'")
+    # This alpha overlay is used for non-Arabic captions. Arabic captions are
+    # burned onto the finished FilmCraft export below to preserve shaping.
     vf = f"subtitles='{esc(ass)}':fontsdir='{esc(ROOT / 'assets/fonts')}':alpha=1"
     run(['ffmpeg', '-y', '-v', 'error', '-f', 'lavfi', '-i',
-         f'color=c=0x00000000:s=1080x1920:r=24:d={seconds},format=rgba', '-vf', vf, '-c:v', 'prores_ks', '-profile:v', '4444', '-pix_fmt', 'yuva444p10le', target])
+         f'color=c=0x00000000:s=1080x1920:r={fps}:d={seconds},format=rgba', '-vf', vf, '-c:v', 'prores_ks', '-profile:v', '4444', '-pix_fmt', 'yuva444p10le', target])
 
 
-def filmcraft_edit(segments, mix, overlays, output, project, sharpen):
+def filmcraft_edit(segments, mix, overlays, output, project, sharpen, fps=24):
     cli = tool('filmcraft')
 
     def call(*parts, new=False, save=True):
@@ -144,12 +149,19 @@ def filmcraft_edit(segments, mix, overlays, output, project, sharpen):
         return as_json(run(cmd + list(parts)))
 
     call('exec', 'file.newProject', f'name={output.stem}', new=True)
-    call('exec', 'file.newSequence', f'name={output.stem}', 'width=1080', 'height=1920', 'fps=24',
+    call('exec', 'file.newSequence', f'name={output.stem}', 'width=1080', 'height=1920', f'fps={fps}',
          f'video={1 + len(overlays)}', 'audio=1')
     items = call('import', *segments)['items']
     clips = call('exec', 'timeline.place', json.dumps({'items': items, 'frame': 0, 'audio': False}))['clips']
-    for clip in clips:                                   # 720x1280 shots fill the 1080x1920 frame
-        call('exec', 'effects.setParam', json.dumps({'clip': clip, 'effect': 'motion', 'param': 'scale', 'value': 150}))
+    for clip, segment in zip(clips, segments):
+        metadata = as_json(run(['ffprobe', '-v', 'error', '-select_streams', 'v:0',
+                                '-show_entries', 'stream=width,height', '-of', 'json', segment]))
+        stream = (metadata.get('streams') or [{}])[0]
+        width, height = stream.get('width'), stream.get('height')
+        if not width or not height or abs(width / height - 1080 / 1920) > 0.01:
+            raise SystemExit(f'FilmCraft scene is not portrait 9:16: {segment}')
+        scale = round(1080 / width * 100, 3)
+        call('exec', 'effects.setParam', json.dumps({'clip': clip, 'effect': 'motion', 'param': 'scale', 'value': scale}))
         if sharpen:
             index = call('exec', 'effects.apply', json.dumps({'clips': [clip], 'effect': 'unsharp_mask'}))['applied'][0]['index']
             call('exec', 'effects.setParam', json.dumps({'clip': clip, 'effect': index, 'param': 'amount', 'value': sharpen}))
@@ -172,15 +184,18 @@ def main():
     p.add_argument('--output', required=True, type=Path)
     p.add_argument('--title', help='Optional short top-of-frame title for the first three seconds')
     p.add_argument('--sharpen', type=float, default=30, help='FilmCraft unsharp mask amount after the upscale, 0 = off')
+    p.add_argument('--fps', type=int, choices=[24, 25, 30], default=24, help='FilmCraft export frame rate; resampling 24-fps source does not add motion detail')
     args = p.parse_args()
     segments = sorted(args.assembly.resolve().glob('segment-*.mp4'))
     output = args.output.resolve()
     project = output.with_suffix('.fcproj')
-    source_audio = args.audio or args.sfx
+    source_audio = args.audio or args.sfx or (args.bed if args.voice else None)
     if not segments or not source_audio or not source_audio.is_file():
         p.error('Need segment-*.mp4 files and --sfx or --audio')
     if output.exists() or project.exists():
         p.error('Use a new output path; this tool never overwrites a film')
+    arabic_captions = bool(args.captions and args.captions.is_file() and
+                           re.search(r'[\u0600-\u06ff]', args.captions.read_text(encoding='utf-8-sig')))
     started = time.monotonic()
     with tempfile.TemporaryDirectory(prefix='artcraft-finish-') as tmp:
         work = Path(tmp)
@@ -197,23 +212,34 @@ def main():
                  '-c:a', 'pcm_s24le', raw])
         mixed = soundcraft_mix(raw, mix)
         overlays = []
-        if args.captions:
+        if args.captions and not arabic_captions:
             if not args.captions.is_file():
                 p.error(f'No captions file: {args.captions}')
             seconds = sum(float(subprocess.check_output(['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
                                                          '-of', 'csv=p=0', str(s)], text=True)) for s in segments)
             layer = output.with_suffix('.captions.mov')
-            captions_overlay(args.captions.resolve(), layer, round(seconds, 3))
+            captions_overlay(args.captions.resolve(), layer, round(seconds, 3), args.fps)
             overlays.append(layer)
         if args.title:
             layer = output.with_suffix('.title.mov')
-            effectcraft_title(args.title, layer, work)
+            effectcraft_title(args.title, layer, work, fps=args.fps)
             overlays.append(layer)
-        exported = filmcraft_edit(segments, mix, overlays, output, project, args.sharpen)
+        filmcraft_output = work / 'filmcraft-base.mp4' if arabic_captions else output
+        exported = filmcraft_edit(segments, mix, overlays, filmcraft_output, project, args.sharpen, args.fps)
+        if arabic_captions:
+            def esc(path):
+                return str(path).replace('\\', '/').replace(':', '\\:').replace("'", "\\'")
+            # libass shapes Arabic correctly when burned on the edited picture.
+            # Its transparent ProRes overlay corrupted glyphs in the Mac pilot.
+            run(['ffmpeg', '-y', '-v', 'error', '-i', filmcraft_output,
+                 '-vf', f"ass='{esc(args.captions.resolve())}':fontsdir='{esc(ROOT / 'assets/fonts')}'",
+                 '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18', '-c:a', 'copy', output])
     if not output.is_file() or not output.stat().st_size:
         raise SystemExit(f'FilmCraft export failed: {exported}')
     report = {'output': str(output), 'project': str(project), 'segments': [s.name for s in segments],
-              'soundcraftMix': mixed, 'voice': voice_report, 'title': args.title, 'captions': str(args.captions) if args.captions else None, 'sharpen': args.sharpen,
+              'soundcraftMix': mixed, 'voice': voice_report, 'title': args.title, 'captions': str(args.captions) if args.captions else None,
+              'captionRender': 'post-filmcraft-ass' if arabic_captions else ('filmcraft-overlay' if args.captions else None),
+              'sharpen': args.sharpen, 'fps': args.fps,
               'elapsedSeconds': round(time.monotonic() - started, 1), 'export': exported.get('result')}
     output.with_suffix('.artcraft.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report, indent=2))

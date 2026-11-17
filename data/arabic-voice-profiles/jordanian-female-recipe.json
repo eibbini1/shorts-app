@@ -1,0 +1,9 @@
+{
+  "locale": "ar-JO",
+  "register": "conversational",
+  "audience": "singular-feminine",
+  "voice": "sofelia-eliaa",
+  "addressExamples": ["بتحبّي", "جرّبي", "احكيلي", "لا تنسي"],
+  "checkForAddress": ["بتحب", "جرب", "لا تنسى", "جربوا", "بتحبوا", "لا تنسوا", "عندكم", "يعجبكم"],
+  "direction": "Use Jordanian cooking language and singular feminine address. Keep inclusive first-person steps such as بنقطّع. Use selective vowels only where they help. Keep ملح وفلفل as spoken. Preserve each complete sentence at natural speed and time captions after recording."
+}

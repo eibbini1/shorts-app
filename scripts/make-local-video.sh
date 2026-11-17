@@ -30,6 +30,7 @@ while (($#)); do
     --best-of-3-stills) best_of_3='--best-of-3-stills'; shift ;;
     --skip-vision-gate) skip_vision_gate='--skip-vision-gate'; shift ;;
     --stills) stills="$2"; shift 2 ;;
+    --stills-only) stills_only='--stills-only'; shift ;;
     --anchor-image) anchor_image="$2"; shift 2 ;;
     --editor) editor="${2:?Missing editor}"; shift 2 ;;
     --title) title="${2:?Missing title}"; shift 2 ;;
@@ -135,7 +136,8 @@ if [[ -n "$cache_only" ]]; then
 else
   echo "Step 3/4  Rendering local video to $output (about 5 min per shot on an M1: still, motion, voice, assembly)"
 fi
-python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" $([[ "$editor" == artcraft ]] && echo --prep-stills) ${chain:+$chain} ${cache_only:+$cache_only} ${best_of_3:+$best_of_3} ${skip_vision_gate:+$skip_vision_gate} ${allow_silence:+$allow_silence} ${allow_bad_first:+$allow_bad_first} ${stills:+--stills "$stills"} ${anchor_image:+--anchor-image "$anchor_image"}
+python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" $([[ "$editor" == artcraft ]] && echo --prep-stills) ${chain:+$chain} ${cache_only:+$cache_only} ${best_of_3:+$best_of_3} ${skip_vision_gate:+$skip_vision_gate} ${allow_silence:+$allow_silence} ${allow_bad_first:+$allow_bad_first} ${stills:+--stills "$stills"} ${anchor_image:+--anchor-image "$anchor_image"} ${stills_only:+$stills_only}
+if [[ -n "${stills_only:-}" ]]; then echo "First frames ready (no motion generated yet)"; exit 0; fi
 t_render=$SECONDS
 echo "Base render complete: $output (not release approved)"
 echo "Step 4/4  Shot-synced ASMR, captions, upload pack and quality check"
@@ -178,11 +180,13 @@ pack.write_text(json.dumps(data,indent=2)+'\n')
 PY
 fi
 python3 scripts/qa-local-video.py --video "$final_video" --pack "$pack" --scenario "$scenario" --expected-seconds "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["settings"]["seconds"])' "$scenario")" --work-dir "storage/any-local/$(basename "$scenario" .json)" || { echo "Technical QA failed: read $pack before uploading." >&2; exit 5; }
+python3 scripts/export-provenance.py --manifest "storage/any-local/$(basename "$scenario" .json)/film-manifest.json" --video "$final_video"
 python3 scripts/log-local-run.py --scenario "$scenario" --video "$final_video" --pack "$pack"
 # Advisory screen of the exact final file (shot questions on middle frames, final payoff, dish continuity, loudness).
 # It awards no points; it tells the reviewer which ratings are likely to fall below 4/5.
 python3 scripts/prereview-local-video.py --scenario "$scenario" --video "$final_video" ${skip_vision_gate:+--skip-vision} || echo 'Pre-review flagged likely weak categories; fix them before the editorial review.' >&2
 python3 scripts/score-local-video.py --scenario "$scenario" --pack "$pack" --video "$final_video" || echo 'Release gate is blocked or needs editorial review; inspect the quality report.' >&2
+printf 'Studio verified export: %s\n' "$final_video"
 echo "Editorial review (watch and listen, about 2 minutes): npm run review:video:mac -- --scenario '$scenario' --pack '$pack' --video '$final_video'"
 t_end=$SECONDS
 checks_s=$((t_checks - t_start)); render_s=$((t_render - t_checks)); finish_s=$((t_end - t_render)); total_s=$((t_end - t_start))

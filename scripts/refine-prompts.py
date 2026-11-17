@@ -46,6 +46,16 @@ def lighting_parts(text):
     return [name for name, rx in lint.LIGHT_PARTS.items() if rx.search(text)]
 
 
+
+def bounded_prompt(text, limit=1000):
+    parts = sentences(text)
+    while len(' '.join(parts)) > limit and len(parts) > 1:
+        parts.pop()
+    result = ' '.join(parts)
+    if len(result) > limit:
+        raise ValueError('The main shot sentence exceeds the schema limit; shorten it before refinement.')
+    return result
+
 def refine_image(prompt, studio):
     text = strip_negations(prompt)
     extra = []
@@ -61,7 +71,7 @@ def refine_image(prompt, studio):
         tail.append(f"Style: {studio['style'].rstrip('.')}.")
     if studio.get('mood') and 'Mood:' not in text:
         tail.append(f"Mood: {studio['mood'].rstrip('.')}.")
-    return ' '.join([text] + extra + tail)
+    return bounded_prompt(' '.join([text] + extra + tail))
 
 
 def refine_motion(prompt, studio):
@@ -71,7 +81,7 @@ def refine_motion(prompt, studio):
         extra.append(studio['cameraMove'].rstrip('.') + '.')
     if not re.search(r'continuous (?:take|motion)|one take', text, re.I):
         extra.append('Everything happens in one continuous take.')
-    return ' '.join([text] + extra)
+    return bounded_prompt(' '.join([text] + extra))
 
 
 FRAME_HINTS = (('oven', r'\b(?:in|into|out of|from) the (?:\w+ )?oven\b|\boven (?:door|rack)\b|\bopen (?:\w+ )?oven\b'),

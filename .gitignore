@@ -14,6 +14,7 @@ dist/
 
 # generated media and caches (large, reproducible)
 out/
+/outputs/arabic-chatterbox-pilot/
 storage/
 storage
 *.mp4
@@ -39,3 +40,6 @@ __pycache__/
 *.pyc
 D:/
 .vscode/
+
+studio/node_modules
+studio/dist
