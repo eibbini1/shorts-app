@@ -5,6 +5,7 @@
 // GET  /api/events (SSE) | /api/state | POST /api/cancel | GET /media?p=outputs/x.mp4
 import http from 'node:http';
 import { createIdeaService } from './studio-ideas.mjs';
+import { createIdeaRefiner } from './studio-refine-idea.mjs';
 import { inspectExport } from './studio-export-review.mjs';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -14,6 +15,8 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ideaService = createIdeaService({ root: ROOT });
+const ideaRefiner = createIdeaRefiner();
+let localIdeaBusy = false;
 const PORT = Number(process.env.STUDIO_PORT || 8787);
 const DIST = path.join(ROOT, 'studio', 'dist');
 const MEDIA_ROOTS = ['outputs', 'storage/any-local', 'storage/benchmarks', 'drafts/generated'].map((d) => path.join(ROOT, d));
@@ -325,15 +328,32 @@ http.createServer(async (req, res) => {
     const seconds = Math.min(isOwner ? 60 : CREATOR_MAX_SECONDS, Math.max(10, Number(input.seconds) || 10));
     const history = readLedger().filter((item) => item.type === 'idea' && item.user === me.name && item.look === input.look).slice(-16).map((item) => item.prompt);
     const projects = [...sessions.values()].filter((item) => canSee(me, item) && item.options?.look === input.look).slice(-8).map((item) => item.prompt);
+    if (localIdeaBusy) return json(res, 409, { error: 'The local idea helper is busy. Try again in a moment.' });
+    const isBusy = Boolean(busyReason());
+    if (!isBusy) localIdeaBusy = true;
     try {
       const result = await ideaService.suggest({ look: input.look, seconds,
         exclude: [...(Array.isArray(input.exclude) ? input.exclude.slice(-8) : []), ...projects, ...history],
-        busy: Boolean(busyReason()) });
+        busy: isBusy });
       if (!ledger({ type: 'idea', user: me.name, look: input.look, ...result })) return json(res, 500, { error: 'Could not save idea history. Try again.' });
       return json(res, 200, result);
     } catch (error) {
       return json(res, 503, { error: error.message });
-    }
+    } finally { if (!isBusy) localIdeaBusy = false; }
+  }
+  if (url.pathname === '/api/refine-idea' && req.method === 'POST') {
+    const input = await body(req);
+    if (typeof input.prompt !== 'string' || input.prompt.trim().length < 4) return json(res, 400, { error: 'Write a little about your idea first.' });
+    if (busyReason()) return json(res, 409, { error: 'Your Mac is making a video. Refine the idea after the current job finishes.' });
+    if (localIdeaBusy || ideaRefiner.active) return json(res, 409, { error: 'The local idea helper is busy. Try again in a moment.' });
+    localIdeaBusy = true;
+    try {
+      const result = await ideaRefiner.refine(input);
+      return json(res, 200, result);
+    } catch (error) {
+      const status = /Write a little|incomplete refinement|unreadable refinement/.test(error.message) ? 422 : 503;
+      return json(res, status, { error: error.message || 'Could not refine this idea. Your original sentence is unchanged.' });
+    } finally { localIdeaBusy = false; }
   }
   if (url.pathname === '/api/state') return json(res, 200, view(me));
   if (url.pathname === '/api/events') {

@@ -111,6 +111,39 @@ function PlanCard({ job, idea, onStills, disabled, notes }) {
   );
 }
 
+function IdeaRefinement({ result, onUse }) {
+  if (!result) return null;
+  const ready = result.decision === 'ready';
+  return (
+    <section className="card idea-refinement" aria-live="polite">
+      <h3>{ready ? 'Suggested story' : 'Choose the story direction'}</h3>
+      <p className="muted">{result.message}</p>
+      {ready ? (
+        <div className="refined-copy">
+          <p><b>Refined idea</b><br />{result.refinedPrompt}</p>
+          <p><b>Ending</b><br />{result.ending}</p>
+          <button className="primary" onClick={() => onUse({ prompt: result.refinedPrompt, ending: result.ending })}>Use this version</button>
+        </div>
+      ) : (
+        <>
+          <p><b>{result.question}</b></p>
+          <div className="refine-choices">
+            {result.choices.map((choice, index) => (
+              <article className="refine-choice" key={choice.label + index}>
+                <h4>{choice.label}</h4>
+                <p>{choice.prompt}</p>
+                <p className="muted"><b>Ending:</b> {choice.ending}</p>
+                <button className="ghost" onClick={() => onUse({ prompt: choice.prompt, ending: choice.ending })}>Choose this story</button>
+              </article>
+            ))}
+          </div>
+        </>
+      )}
+      <p className="muted small">Your original sentence stays in the idea box until you choose a version. Nothing starts rendering from this suggestion.</p>
+    </section>
+  );
+}
+
 const TIPS = [
   'Tip: name who does what, then the ending. "A fox chases a paper boat, then sails away" plans far better than a mood.',
   'Tip: Look sets the style. Cartoon and Night cartoon skip the food-kitchen defaults.',
@@ -204,10 +237,15 @@ export default function App() {
   const [orientation, setOrientation] = useState('vertical');
   const [audio, setAudio] = useState('asmr');
   const [ending, setEnding] = useState('');
+  const [refining, setRefining] = useState(false);
+  const [refinement, setRefinement] = useState(null);
+  const refinementRequest = useRef(0);
   const [look, setLook] = useState('food');
   const [theme, setTheme] = useState(() => { try { return localStorage.getItem('studio-theme') || 'studio'; } catch { return 'studio'; } });
   useEffect(() => { document.documentElement.dataset.theme = theme; try { localStorage.setItem('studio-theme', theme); } catch {} }, [theme]);
   const [setting, setSetting] = useState('');
+  const refinementInputs = useRef({});
+  refinementInputs.current = { prompt, look, seconds, orientation, setting, ending };
   const [exampleContext, setExampleContext] = useState(false);
   const [exampleBusy, setExampleBusy] = useState(false);
   const [exampleInfo, setExampleInfo] = useState(null);
@@ -217,8 +255,10 @@ export default function App() {
   const lookRef = useRef(look);
   briefRef.current = prompt;
   lookRef.current = look;
+  const invalidateRefinement = () => { refinementRequest.current++; setRefinement(null); };
   const suggestExample = async (selected) => {
     if (exampleBusy) return;
+    invalidateRefinement();
     const request = ++exampleRequest.current;
     const before = briefRef.current;
     setExampleBusy(true);
@@ -237,6 +277,20 @@ export default function App() {
     } finally {
       if (request === exampleRequest.current) setExampleBusy(false);
     }
+  };
+  const refineIdea = async () => {
+    if (refining || !prompt.trim() || anyRunning) return;
+    const request = ++refinementRequest.current;
+    const original = JSON.stringify(refinementInputs.current);
+    setRefining(true); setRefinement(null); setErr('');
+    try {
+      const result = await post('/api/refine-idea', refinementInputs.current);
+      if (request === refinementRequest.current && JSON.stringify(refinementInputs.current) === original) setRefinement(result);
+    } catch (error) { if (request === refinementRequest.current) setErr(error.message); }
+    finally { setRefining(false); }
+  };
+  const useRefinedIdea = ({ prompt: nextPrompt, ending: nextEnding }) => {
+    setPrompt(nextPrompt); setEnding(nextEnding); setExampleContext(false); setRefinement(null); setExampleInfo(null);
   };
   const [unattended, setUnattended] = useState(false);
   const [auto, setAuto] = useState(false);
@@ -350,7 +404,7 @@ export default function App() {
     setAudio(j.options?.audio || 'asmr'); setEnding(j.options?.ending || ''); setLook(j.options?.look || 'food'); setSetting(j.options?.setting || ''); setShowLog(false);
   };
   useEffect(() => { if (restoreId.current) select(restoreId.current); }, []);
-  const newChat = () => { exampleRequest.current++; setExampleBusy(false); setExampleInfo(null); projectRequest.current++; pickProject(null); setProjectsOpen(false); setStored(null); setExampleContext(false); setPrompt(''); setEnding(''); setSetting(''); setErr(''); };
+  const newChat = () => { invalidateRefinement(); exampleRequest.current++; setExampleBusy(false); setExampleInfo(null); projectRequest.current++; pickProject(null); setProjectsOpen(false); setStored(null); setExampleContext(false); setPrompt(''); setEnding(''); setSetting(''); setErr(''); };
   const rename = run2(async (id, name) => { await post('/api/sessions/rename', { id, name }); await loadSessions(); });
   const remove = run2(async (id) => { await post('/api/sessions/delete', { id }); if (id === selectedId) newChat(); await loadSessions(); });
   const onKey = (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && prompt.trim() && !busy && !planDisabled) { e.preventDefault(); draft(); } };
@@ -414,6 +468,7 @@ export default function App() {
       <footer>
         {err && <div className="bad" role="alert">{err}</div>}
         <LookChips look={look} setLook={(value) => {
+          invalidateRefinement();
           setLook(value);
           setExampleInfo(null);
           if (exampleContext) { setEnding(''); setSetting(''); setExampleContext(false); }
@@ -424,6 +479,7 @@ export default function App() {
         <label htmlFor="video-brief" className="brief-label">Video idea</label>
         <div className="composer">
           <textarea id="video-brief" dir="auto" value={prompt} onChange={(e) => {
+            invalidateRefinement();
             setPrompt(e.target.value);
             setExampleInfo(null);
             if (exampleContext) { setEnding(''); setSetting(''); setExampleContext(false); }
@@ -433,26 +489,33 @@ export default function App() {
             ? <button className="primary" disabled={!prompt.trim()} title="Your Mac is busy with another video. This adds your idea to Up next." onClick={() => { writeQueue([...readQueue(), prompt.trim()].slice(0, 10)); setAutoNext(true); setPrompt(''); }}>Add to Up next</button>
             : <button className="primary" onClick={draft} disabled={!prompt.trim() || sending || planDisabled}>{unattended && me?.canRunUnattended ? 'Create video automatically' : 'Plan video'}</button>}
         </div>
+        <div className="refine-row">
+          <button className="link" type="button" onClick={refineIdea} disabled={!prompt.trim() || refining || anyRunning || sending}>
+            {refining ? 'Checking the story with your local model…' : 'Refine idea with local AI'}
+          </button>
+          <span className="muted small">Keeps your wording until you choose a refinement.</span>
+        </div>
+        <IdeaRefinement result={refinement} onUse={useRefinedIdea} />
         {me?.canRunUnattended && <div className="opts">
           <label><input type="checkbox" checked={unattended} onChange={(e) => setUnattended(e.target.checked)} /> Run unattended</label>
           {unattended && <span>Studio checks the plan and first frames, then renders and runs QA. You can close this tab. Leave the Mac and Studio server running.</span>}
         </div>}
         {simple ? (
           <div className="opts simpleopts">
-            <span className="lenchips">{[10, 20, 30].filter((n) => n <= maxSeconds).map((n) => <button key={n} aria-pressed={seconds === n} className={seconds === n ? 'on' : ''} onClick={() => setSeconds(n)}>{n}s</button>)}</span>
+            <span className="lenchips">{[10, 20, 30].filter((n) => n <= maxSeconds).map((n) => <button key={n} aria-pressed={seconds === n} className={seconds === n ? 'on' : ''} onClick={() => { invalidateRefinement(); setSeconds(n); }}>{n}s</button>)}</span>
             <span className="muted small">{seconds}s · {orientation === 'vertical' ? 'Vertical' : 'Wide'} · {audio === 'asmr' ? 'ASMR' : audio === 'voiced' ? 'Voice' : 'Automatic audio'}</span>
             <button className="link" onClick={() => setMode('advanced')}>Advanced settings</button>
           </div>
         ) : (
         <div className="opts">
           <button className="link" onClick={() => setMode('simple')}>Close advanced settings</button>
-          <label>Length <select value={seconds} onChange={(e) => setSeconds(+e.target.value)}>{[10, 20, 30, 45, 60].filter((n) => n <= maxSeconds).map((n) => <option key={n} value={n}>{n}s</option>)}</select></label>
-          <label>Shape <select value={orientation} onChange={(e) => setOrientation(e.target.value)}><option value="vertical">Vertical 9:16</option><option value="wide">Wide 16:9</option></select></label>
+          <label>Length <select value={seconds} onChange={(e) => { invalidateRefinement(); setSeconds(+e.target.value); }}>{[10, 20, 30, 45, 60].filter((n) => n <= maxSeconds).map((n) => <option key={n} value={n}>{n}s</option>)}</select></label>
+          <label>Shape <select value={orientation} onChange={(e) => { invalidateRefinement(); setOrientation(e.target.value); }}><option value="vertical">Vertical 9:16</option><option value="wide">Wide 16:9</option></select></label>
           <label>Sound <select value={audio} onChange={(e) => setAudio(e.target.value)}><option value="asmr">ASMR (no voice)</option><option value="voiced">Voiced</option><option value="auto">Auto</option></select></label>
           <label title="Runs plan, first frames and the automatic checks by itself, and stops if any check fails."><input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} /> Auto mode</label>
           {auto && <label title="Recommended: you see the first frames before the long motion render."><input type="checkbox" checked={pauseFrames} onChange={(e) => setPauseFrames(e.target.checked)} /> pause at first frames</label>}
-          <label className="brief-setting">Setting (optional)<input className="ending" dir="auto" value={setting} onChange={(e) => setSetting(e.target.value)} placeholder="Setting (hint, optional), e.g. a rainy rooftop garden" title="A hint: shapes the prompts, and the audit only notes shots that leave it out." /></label>
-          <label className="brief-setting">Required ending (optional)<input className="ending" dir="auto" value={ending} onChange={(e) => { setEnding(e.target.value); setExampleContext(false); }} placeholder="Ending (checked, optional), e.g. onions glistening in the copper pan" title="Checked: the plan is blocked unless the payoff and final shot match this ending. Auto-filled from your last 'then...' part." /></label>
+          <label className="brief-setting">Setting (optional)<input className="ending" dir="auto" value={setting} onChange={(e) => { invalidateRefinement(); setSetting(e.target.value); }} placeholder="Setting (hint, optional), e.g. a rainy rooftop garden" title="A hint: shapes the prompts, and the audit only notes shots that leave it out." /></label>
+          <label className="brief-setting">Required ending (optional)<input className="ending" dir="auto" value={ending} onChange={(e) => { invalidateRefinement(); setEnding(e.target.value); setExampleContext(false); }} placeholder="Ending (checked, optional), e.g. onions glistening in the copper pan" title="Checked: the plan is blocked unless the payoff and final shot match this ending. Auto-filled from your last 'then...' part." /></label>
         </div>
         )}
         {me?.role === 'creator' && <p className="muted">{me.draftsLeft} plans and {me.rendersLeft} renders left today · Up to {maxSeconds}s</p>}

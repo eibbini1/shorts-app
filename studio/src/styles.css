@@ -129,6 +129,15 @@ select { background:var(--panel); color:var(--text); border:1px solid var(--line
 .export .gates dt { font-weight:650; }
 .export a { color:var(--acc); }
 .bubble, .hint { overflow-wrap:anywhere; }
+.refine-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:4px 0 8px; }
+.refine-row .link { color:var(--acc); opacity:1; font-size:13px; }
+.idea-refinement { text-align:start; border-color:color-mix(in srgb, var(--acc) 55%, var(--line)); }
+.idea-refinement h3 { margin-top:0; }
+.refined-copy { padding:10px; border-radius:9px; background:var(--panel); }
+.refine-choices { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:8px; }
+.refine-choice { border:1px solid var(--line); border-radius:9px; padding:10px; background:var(--panel); }
+.refine-choice h4 { margin:0 0 6px; }
+.idea-refinement .small { font-size:11px; }
 @media (max-width:760px) {
   .shell { display:block; }
   .projects-toggle { display:inline-block; padding:4px 8px; }

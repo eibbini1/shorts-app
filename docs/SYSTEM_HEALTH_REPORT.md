@@ -92,7 +92,13 @@ Added a selectable **Codex dark** Studio theme with charcoal surfaces, soft-gray
 
 1. Add a distinct state for `rendered; creative review required`; keep a 50/100 result blocked from “ready” or release wording while leaving the file playable for review.
 2. Improve risky-action review: require sampled motion evidence for hand/tool/food actions, and stop or request a human choice when the local vision model cannot confirm the intended action. Treat model judgments as conservative flags, not proof of realism.
-3. Add the agreed idea-refinement step: preserve the user's sentence; propose one clearer story; proceed only when the goal/action/payoff remain coherent; otherwise show 2–3 targeted alternatives or brainstorming prompts for user selection/editing.
+3. Verify the new local-AI idea-refinement flow on the owner Mac with Ollama available, then add same-prompt project continuation and distinct-action retry fixes with regression tests.
 4. Fix same-prompt session continuation/duplicate warnings and distinct-action retries in isolated source with regression tests.
 5. Reconcile local checkouts only after reviewing every dirty worktree. Do not deploy this branch over the live Studio without a separate release review.
+
+## Idea refinement implementation (2026-11-18)
+
+- **IMPLEMENTED, local only:** Studio has a “Refine idea with local AI” action. It preserves the original text until the user explicitly selects a proposed version. For a filmable idea the local Ollama model returns one polished prompt and ending; when the story intent/action is materially ambiguous it returns one focused question and 2–3 distinct alternatives.
+- **Gate behavior:** suggestions do not start planning or rendering. Malformed model output is rejected, active renders block refinement, and the examples/refinement calls share a local-model busy lock. Editing the prompt, look, or ending discards stale suggestions; a late response cannot overwrite the edited idea.
+- **Limits:** local Ollama was unavailable in this Codex environment (`127.0.0.1:11434` refused the connection), so live prompt quality and Studio browser interaction remain **untested**. Deterministic response-shape tests and both production builds passed. The feature is not deployed to the running Studio.
 
