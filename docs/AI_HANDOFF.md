@@ -563,3 +563,7 @@ Next: implement audio fixes first (cheap, no GPU), then ending check.
 ### Real unattended test — prompt length failure repaired
 - Refined-example session 1794940431083 drafted a two-shot dumpling film, then the still renderer rejected image prompts of 1066 and 1073 characters. The prompt refiner appended style text beyond the shared schema's 1000-character limit, and draft checks did not re-run schema validation after refinement.
 - Added sentence-boundary prompt limits and final schema validation to the draft checks. On a copied saved plan, prompt score remained 92 and the shared scenario validator passed. A regression now covers overlength refinements. Next: keep the original rejected draft for evidence and resume the fixed plan through existing still and motion gates.
+
+### Real unattended test — vision verdict repaired
+- The first FLUX frame was generated and passed the basic image check, but Qwen3-VL returned no complete verdict under the old 650-token cap. The installed tag resolves to a 4B thinking model. A bounded direct retry with 2048 tokens produced a valid visible yes/no verdict.
+- The generic question previously stopped at the first comma, reducing the actual dumpling prompt to "A chef's hand". The gate now includes the full first sentence, uses the bounded larger budget, and records completion/token diagnostics. Cache prompt version raised to 9. Five vision regression tests passed and the cached frame passed the updated gate. No vision bypass was used.
