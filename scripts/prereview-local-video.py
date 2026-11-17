@@ -57,6 +57,21 @@ def shot_windows(scenario):
     return windows
 
 
+def sample_timeline(windows):
+    """Return safely inset start/middle/end timestamps for each planned shot."""
+    timeline = []
+    for index, (start, end) in enumerate(windows, 1):
+        duration = max(0.0, end - start)
+        inset = min(0.12, duration / 5)
+        timeline.append({
+            'shot': index,
+            'startSeconds': round(start + inset, 3),
+            'middleSeconds': round((start + end) / 2, 3),
+            'endSeconds': round(end - inset, 3),
+        })
+    return timeline
+
+
 def shot_questions(scenario, checks, index):
     questions = (checks[index] if index < len(checks) else {}).get('questions') or []
     if questions:
@@ -118,12 +133,18 @@ def side_by_side(left, right, target):
     return Path(target)
 
 
-def contact_sheet(frames, target):
+def contact_sheet(frames, labels, target):
+    if len(frames) != len(labels) or not frames or len(frames) % 3:
+        raise ValueError('contact sheet needs three labeled samples per shot')
     inputs = [arg for frame in frames for arg in ('-i', frame)]
-    rows = len(frames) // 2
-    layout = '|'.join(f'{col * 270}_{row * 480}' for row in range(rows) for col in range(2))
-    scaled = ''.join(f'[{i}:v]scale=270:480[s{i}];' for i in range(len(frames)))
-    graph = scaled + ''.join(f'[s{i}]' for i in range(len(frames))) + f'xstack=inputs={len(frames)}:layout={layout}'
+    columns, rows = 3, (len(frames) + 2) // 3
+    layout = '|'.join(f'{(i % columns) * 270}_{(i // columns) * 480}' for i in range(len(frames)))
+    tiles = []
+    for i, label in enumerate(labels):
+        safe_label = re.sub(r'[^A-Z0-9 .:-]', '', label.upper())[:48]
+        tiles.append(f'[{i}:v]scale=270:480,drawbox=x=0:y=0:w=iw:h=30:color=black@0.68:t=fill,'
+                     f"drawtext=text='{safe_label}':fontcolor=white:fontsize=14:x=8:y=8[s{i}]")
+    graph = ';'.join(tiles) + ';' + ''.join(f'[s{i}]' for i in range(len(frames))) + f'xstack=inputs={len(frames)}:layout={layout}'
     result = ffmpeg('-y', *inputs, '-filter_complex', graph, target)
     if result.returncode:
         raise RuntimeError('could not build the contact sheet')
@@ -187,10 +208,16 @@ def main():
     work = Path(tempfile.mkdtemp(prefix='prereview-'))
     windows = shot_windows(scenario)
     checks = scenario.get('visualChecks') or [{}] * len(windows)
-    mids = [grab(video, (a + b) / 2, work / f'shot{i}-mid.png') for i, (a, b) in enumerate(windows, 1)]
-    ends = [grab(video, b - 0.25, work / f'shot{i}-end.png') for i, (a, b) in enumerate(windows, 1)]
-    sheet = contact_sheet([frame for pair in zip(mids, ends) for frame in pair],
-                          video.with_suffix('.contact.png'))
+    timeline = sample_timeline(windows)
+    starts, mids, ends, samples, sample_labels = [], [], [], [], []
+    for item in timeline:
+        shot = scenario['plan']['shots'][item['shot'] - 1]
+        item['plannedAction'] = str(shot.get('motionPrompt') or shot.get('imagePrompt') or '')[:400]
+        for stage, key, bucket in (('START', 'startSeconds', starts), ('MIDDLE', 'middleSeconds', mids), ('END', 'endSeconds', ends)):
+            frame = grab(video, item[key], work / f"shot{item['shot']}-{stage.lower()}.png")
+            bucket.append(frame); samples.append(frame)
+            sample_labels.append(f"SHOT {item['shot']} {stage} {item[key]:.1f}s")
+    sheet = contact_sheet(samples, sample_labels, video.with_suffix('.contact.png'))
     integrated, peak = loudness(video)
     means = [shot_mean_volume(video, a, b) for a, b in windows]
     audio = audio_flags(integrated, peak, means)
@@ -207,7 +234,7 @@ def main():
         extra = ending_question(scenario)
         payoff = ask(vision, ends[-1], questions[-1] + ([extra] if extra else []), cache)
         if len(windows) > 1:
-            continuity = ask(vision, side_by_side(mids[0], ends[-1], work / 'food.png'),
+            continuity = ask(vision, side_by_side(starts[0], ends[-1], work / 'food.png'),
                              [CONTINUITY_QUESTION if is_food_film(scenario) else SUBJECT_QUESTION], cache)
     flags, unchecked = categorize(shot_results, payoff, continuity, audio)
     for number, value in enumerate(motion, 1):
@@ -217,7 +244,8 @@ def main():
     report = {
         'checkedAt': datetime.now(timezone.utc).isoformat(), 'video': str(video),
         'videoSha256': hashlib.sha256(video.read_bytes()).hexdigest(),
-        'contactSheet': str(sheet), 'loudnessLUFS': integrated, 'truePeakDBTP': peak,
+        'contactSheet': str(sheet), 'contactSheetSha256': hashlib.sha256(sheet.read_bytes()).hexdigest(),
+        'sampleTimeline': timeline, 'loudnessLUFS': integrated, 'truePeakDBTP': peak,
         'shotMeanVolumeDB': means, 'shotMotion': motion, 'shots': shot_results, 'payoffFrame': payoff, 'foodContinuity': continuity,
         'visionChecked': not args.skip_vision,
         'flags': flags, 'likelyBelow4': likely_low, 'unchecked': unchecked,

@@ -24,6 +24,15 @@ class PrereviewTests(unittest.TestCase):
         scenario = {'plan': {'shots': [{'seconds': 3}, {'seconds': 4}, {'seconds': 5}]}}
         self.assertEqual(pre.shot_windows(scenario), [(0.0, 3.0), (3.0, 7.0), (7.0, 12.0)])
 
+    def test_start_middle_end_samples_stay_inside_each_shot(self):
+        timeline = pre.sample_timeline([(0.0, 3.0), (3.0, 4.0)])
+        self.assertEqual(timeline, [
+            {'shot': 1, 'startSeconds': 0.12, 'middleSeconds': 1.5, 'endSeconds': 2.88},
+            {'shot': 2, 'startSeconds': 3.12, 'middleSeconds': 3.5, 'endSeconds': 3.88},
+        ])
+        for item, (start, end) in zip(timeline, [(0, 3), (3, 4)]):
+            self.assertTrue(start < item['startSeconds'] < item['middleSeconds'] < item['endSeconds'] < end)
+
     def test_audio_flags_loudness_peak_and_silent_shot(self):
         self.assertEqual(pre.audio_flags(-15.4, -1.8, [-17, -18, -18]), [])
         flags = pre.audio_flags(-22.0, -0.2, [-17, -18, -40])

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { LearnedCard, RenderTimer, IdeaHelper, Player, ComparePanel, FramesBlock, clipsOf, planEstimate, fmt, LookChips, DirectorsChair, guessResult, BlockedCard, StepTrack, UpNext, readQueue, writeQueue, StageBar, ShotPlan, ExportReview, jobState } from './extras.jsx';
+import { findMatchingSession, sessionDisplayName } from './session-label.js';
 
 const post = (url, body) =>
   fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }).then(async (r) => {
@@ -44,7 +45,7 @@ const dayLabel = (t) => {
   return d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: d.getFullYear() === today.getFullYear() ? undefined : 'numeric' });
 };
 
-const THEMES = [['studio', 'Studio'], ['night', 'Night'], ['white', 'White']];
+const THEMES = [['studio', 'Studio'], ['night', 'Night'], ['white', 'White'], ['codex', 'Codex dark']];
 
 function Sidebar({ sessions, selectedId, liveId, onSelect, onNew, onRename, onDelete, open }) {
   const [editing, setEditing] = useState(null);
@@ -72,7 +73,7 @@ function Sidebar({ sessions, selectedId, liveId, onSelect, onNew, onRename, onDe
                   <input autoFocus onFocus={(e) => e.target.select()} value={draftName} onChange={(e) => setDraftName(e.target.value)} onClick={(e) => e.stopPropagation()}
                     onKeyDown={(e) => { if (e.key === 'Enter') commit(x.id); if (e.key === 'Escape') setEditing(null); }} onBlur={() => commit(x.id)} />
                 ) : (
-                  <button className="name" aria-current={x.id === selectedId ? "true" : undefined} onClick={() => onSelect(x.id)}>{x.name}{x.hasVideo ? ' 🎬' : ''}</button>
+                  <button className="name" aria-current={x.id === selectedId ? "true" : undefined} title={`${x.status} · ${x.prompt || x.name}`} onClick={() => onSelect(x.id)}>{sessionDisplayName(x, sessions)}{x.hasVideo ? ' 🎬' : ''}</button>
                 )}
                 {editing !== x.id && (
                   <span className="acts" onClick={(e) => e.stopPropagation()}>
@@ -108,6 +109,39 @@ function PlanCard({ job, idea, onStills, disabled, notes }) {
       <ShotPlan shots={shots} notes={notes} />
       {job.kind === 'draft' && job.status === 'done' && <button className="primary" onClick={onStills} disabled={disabled}>Make first frames</button>}
     </div>
+  );
+}
+
+function IdeaRefinement({ result, onUse }) {
+  if (!result) return null;
+  const ready = result.decision === 'ready';
+  return (
+    <section className="card idea-refinement" aria-live="polite">
+      <h3>{ready ? 'Suggested story' : 'Choose the story direction'}</h3>
+      <p className="muted">{result.message}</p>
+      {ready ? (
+        <div className="refined-copy">
+          <p><b>Refined idea</b><br />{result.refinedPrompt}</p>
+          <p><b>Ending</b><br />{result.ending}</p>
+          <button className="primary" onClick={() => onUse({ prompt: result.refinedPrompt, ending: result.ending })}>Use this version</button>
+        </div>
+      ) : (
+        <>
+          <p><b>{result.question}</b></p>
+          <div className="refine-choices">
+            {result.choices.map((choice, index) => (
+              <article className="refine-choice" key={choice.label + index}>
+                <h4>{choice.label}</h4>
+                <p>{choice.prompt}</p>
+                <p className="muted"><b>Ending:</b> {choice.ending}</p>
+                <button className="ghost" onClick={() => onUse({ prompt: choice.prompt, ending: choice.ending })}>Choose this story</button>
+              </article>
+            ))}
+          </div>
+        </>
+      )}
+      <p className="muted small">Your original sentence stays in the idea box until you choose a version. Nothing starts rendering from this suggestion.</p>
+    </section>
   );
 }
 
@@ -190,6 +224,7 @@ export default function App() {
   };
   const [stored, setStored] = useState(null);
   const [sessions, setSessions] = useState([]);
+  const [duplicateSession, setDuplicateSession] = useState(null);
   const job = selectedId == null ? { status: 'idle' } : selectedId === live.id ? live : stored?.id === selectedId ? stored : { status: 'idle' };
   const anyRunning = ['running', 'stopping'].includes(live.status);
   const maxSeconds = me?.maxSeconds ?? 60;
@@ -204,10 +239,15 @@ export default function App() {
   const [orientation, setOrientation] = useState('vertical');
   const [audio, setAudio] = useState('asmr');
   const [ending, setEnding] = useState('');
+  const [refining, setRefining] = useState(false);
+  const [refinement, setRefinement] = useState(null);
+  const refinementRequest = useRef(0);
   const [look, setLook] = useState('food');
   const [theme, setTheme] = useState(() => { try { return localStorage.getItem('studio-theme') || 'studio'; } catch { return 'studio'; } });
   useEffect(() => { document.documentElement.dataset.theme = theme; try { localStorage.setItem('studio-theme', theme); } catch {} }, [theme]);
   const [setting, setSetting] = useState('');
+  const refinementInputs = useRef({});
+  refinementInputs.current = { prompt, look, seconds, orientation, setting, ending };
   const [exampleContext, setExampleContext] = useState(false);
   const [exampleBusy, setExampleBusy] = useState(false);
   const [exampleInfo, setExampleInfo] = useState(null);
@@ -217,8 +257,10 @@ export default function App() {
   const lookRef = useRef(look);
   briefRef.current = prompt;
   lookRef.current = look;
+  const invalidateRefinement = () => { refinementRequest.current++; setRefinement(null); };
   const suggestExample = async (selected) => {
     if (exampleBusy) return;
+    invalidateRefinement();
     const request = ++exampleRequest.current;
     const before = briefRef.current;
     setExampleBusy(true);
@@ -237,6 +279,20 @@ export default function App() {
     } finally {
       if (request === exampleRequest.current) setExampleBusy(false);
     }
+  };
+  const refineIdea = async () => {
+    if (refining || !prompt.trim() || anyRunning) return;
+    const request = ++refinementRequest.current;
+    const original = JSON.stringify(refinementInputs.current);
+    setRefining(true); setRefinement(null); setErr('');
+    try {
+      const result = await post('/api/refine-idea', refinementInputs.current);
+      if (request === refinementRequest.current && JSON.stringify(refinementInputs.current) === original) setRefinement(result);
+    } catch (error) { if (request === refinementRequest.current) setErr(error.message); }
+    finally { setRefining(false); }
+  };
+  const useRefinedIdea = ({ prompt: nextPrompt, ending: nextEnding }) => {
+    setPrompt(nextPrompt); setEnding(nextEnding); setExampleContext(false); setRefinement(null); setExampleInfo(null);
   };
   const [unattended, setUnattended] = useState(false);
   const [auto, setAuto] = useState(false);
@@ -296,7 +352,7 @@ export default function App() {
     const key = job.id + ':' + job.kind + ':' + job.status; if (nextSeen.current === key) return; nextSeen.current = key;
     if (autoRef.current && job.status === 'done') return; // Auto mode will continue this video first
     const q = readQueue(); if (!q.length) return;
-    const t = setTimeout(() => { writeQueue(q.slice(1)); setPrompt(q[0]); draftWith({ prompt: q[0] }); }, 1500);
+    const t = setTimeout(() => { writeQueue(q.slice(1)); setPrompt(q[0]); draftWith({ prompt: q[0] }, { ignoreDuplicate: true }); }, 1500);
     return () => clearTimeout(t);
   }, [job.status, job.kind, job.id, autoNext, anyRunning]);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [job.steps?.length, job.status, job.video]);
@@ -310,11 +366,19 @@ export default function App() {
     try { await fn(); } catch (e) { setErr(e.message); }
     finally { submitting.current = false; setSending(false); }
   };
-  const draftWith = (extra = {}) => run(async () => {
+  const draftWith = (extra = {}, { ignoreDuplicate = false } = {}) => {
     if (planDisabled) return;
-    const runUnattended = me?.canRunUnattended && unattended;
-    const r = await post('/api/draft', { prompt, seconds, orientation, audio, ending, look, setting, unattended: runUnattended, ...extra });
-    autoRef.current = autoOn && !runUnattended; autoSeen.current = ''; pickProject(r.id); })();
+    if (!ignoreDuplicate) {
+      const duplicate = findMatchingSession(extra.prompt || prompt, sessions, selectedId);
+      if (duplicate) { setDuplicateSession(duplicate); return; }
+    }
+    setDuplicateSession(null);
+    return run(async () => {
+      const runUnattended = me?.canRunUnattended && unattended;
+      const r = await post('/api/draft', { prompt, seconds, orientation, audio, ending, look, setting, unattended: runUnattended, ...extra });
+      autoRef.current = autoOn && !runUnattended; autoSeen.current = ''; pickProject(r.id);
+    })();
+  };
   const draft = () => draftWith();
   const render = run(async () => { const r = await post('/api/render', { scenario: job.scenario, sessionId: job.id }); pickProject(r.id); });
   const stills = run(async () => { const r = await post('/api/stills', { scenario: job.scenario, sessionId: job.id }); pickProject(r.id); });
@@ -338,6 +402,7 @@ export default function App() {
   }, [job.id, job.status, job.video]);
   const cancel = run(async () => { await post('/api/cancel'); });
   const select = async (id) => {
+    setDuplicateSession(null);
     exampleRequest.current++; setExampleBusy(false); setExampleInfo(null);
     const request = ++projectRequest.current;
     setErr(''); pickProject(id); setProjectsOpen(false);
@@ -350,7 +415,7 @@ export default function App() {
     setAudio(j.options?.audio || 'asmr'); setEnding(j.options?.ending || ''); setLook(j.options?.look || 'food'); setSetting(j.options?.setting || ''); setShowLog(false);
   };
   useEffect(() => { if (restoreId.current) select(restoreId.current); }, []);
-  const newChat = () => { exampleRequest.current++; setExampleBusy(false); setExampleInfo(null); projectRequest.current++; pickProject(null); setProjectsOpen(false); setStored(null); setExampleContext(false); setPrompt(''); setEnding(''); setSetting(''); setErr(''); };
+  const newChat = () => { invalidateRefinement(); setDuplicateSession(null); exampleRequest.current++; setExampleBusy(false); setExampleInfo(null); projectRequest.current++; pickProject(null); setProjectsOpen(false); setStored(null); setExampleContext(false); setPrompt(''); setEnding(''); setSetting(''); setErr(''); };
   const rename = run2(async (id, name) => { await post('/api/sessions/rename', { id, name }); await loadSessions(); });
   const remove = run2(async (id) => { await post('/api/sessions/delete', { id }); if (id === selectedId) newChat(); await loadSessions(); });
   const onKey = (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && prompt.trim() && !busy && !planDisabled) { e.preventDefault(); draft(); } };
@@ -414,16 +479,19 @@ export default function App() {
       <footer>
         {err && <div className="bad" role="alert">{err}</div>}
         <LookChips look={look} setLook={(value) => {
+          invalidateRefinement();
           setLook(value);
           setExampleInfo(null);
           if (exampleContext) { setEnding(''); setSetting(''); setExampleContext(false); }
         }} exampleBusy={exampleBusy} onExample={suggestExample} />
         {exampleInfo && <p className="muted" role="status">{exampleInfo.title} · {exampleInfo.note} {exampleInfo.trend?.sourceUrl && <a href={exampleInfo.trend.sourceUrl} target="_blank" rel="noreferrer">Search source</a>}</p>}
-        <IdeaHelper text={prompt} look={look} quiet={simple} />
+        <IdeaHelper text={prompt} look={look} ending={ending} quiet={simple} />
         {anyRunning && <div className="hint tip">Your Mac is making another video right now{live.prompt ? ` ("${live.prompt.slice(0, 40)}...")` : ''}. Up next is saved in this browser. Leave Studio open for automatic start.</div>}
         <label htmlFor="video-brief" className="brief-label">Video idea</label>
         <div className="composer">
           <textarea id="video-brief" dir="auto" value={prompt} onChange={(e) => {
+            invalidateRefinement();
+            setDuplicateSession(null);
             setPrompt(e.target.value);
             setExampleInfo(null);
             if (exampleContext) { setEnding(''); setSetting(''); setExampleContext(false); }
@@ -433,26 +501,41 @@ export default function App() {
             ? <button className="primary" disabled={!prompt.trim()} title="Your Mac is busy with another video. This adds your idea to Up next." onClick={() => { writeQueue([...readQueue(), prompt.trim()].slice(0, 10)); setAutoNext(true); setPrompt(''); }}>Add to Up next</button>
             : <button className="primary" onClick={draft} disabled={!prompt.trim() || sending || planDisabled}>{unattended && me?.canRunUnattended ? 'Create video automatically' : 'Plan video'}</button>}
         </div>
+        {duplicateSession && <div className="hint duplicate-project" role="status">
+          <p><b>{duplicateSession.id === selectedId ? 'This project is already open.' : 'You already have a project with this idea.'}</b> “{sessionDisplayName(duplicateSession, sessions)}” · {duplicateSession.status}{duplicateSession.hasVideo ? ' · video available' : ''}</p>
+          {duplicateSession.id === selectedId && <p>Continue with the current plan above, or create a separate project.</p>}
+          <div className="row wrap">
+            {duplicateSession.id !== selectedId && <button className="primary" type="button" onClick={() => { const id = duplicateSession.id; setDuplicateSession(null); select(id); }}>Open existing project</button>}
+            <button className="ghost" type="button" onClick={() => draftWith({}, { ignoreDuplicate: true })}>Create a separate project</button>
+          </div>
+        </div>}
+        <div className="refine-row">
+          <button className="link" type="button" onClick={refineIdea} disabled={!prompt.trim() || refining || anyRunning || sending}>
+            {refining ? 'Checking the story with your local model…' : 'Refine idea with local AI'}
+          </button>
+          <span className="muted small">Keeps your wording until you choose a refinement.</span>
+        </div>
+        <IdeaRefinement result={refinement} onUse={useRefinedIdea} />
         {me?.canRunUnattended && <div className="opts">
           <label><input type="checkbox" checked={unattended} onChange={(e) => setUnattended(e.target.checked)} /> Run unattended</label>
           {unattended && <span>Studio checks the plan and first frames, then renders and runs QA. You can close this tab. Leave the Mac and Studio server running.</span>}
         </div>}
         {simple ? (
           <div className="opts simpleopts">
-            <span className="lenchips">{[10, 20, 30].filter((n) => n <= maxSeconds).map((n) => <button key={n} aria-pressed={seconds === n} className={seconds === n ? 'on' : ''} onClick={() => setSeconds(n)}>{n}s</button>)}</span>
+            <span className="lenchips">{[10, 20, 30].filter((n) => n <= maxSeconds).map((n) => <button key={n} aria-pressed={seconds === n} className={seconds === n ? 'on' : ''} onClick={() => { invalidateRefinement(); setSeconds(n); }}>{n}s</button>)}</span>
             <span className="muted small">{seconds}s · {orientation === 'vertical' ? 'Vertical' : 'Wide'} · {audio === 'asmr' ? 'ASMR' : audio === 'voiced' ? 'Voice' : 'Automatic audio'}</span>
             <button className="link" onClick={() => setMode('advanced')}>Advanced settings</button>
           </div>
         ) : (
         <div className="opts">
           <button className="link" onClick={() => setMode('simple')}>Close advanced settings</button>
-          <label>Length <select value={seconds} onChange={(e) => setSeconds(+e.target.value)}>{[10, 20, 30, 45, 60].filter((n) => n <= maxSeconds).map((n) => <option key={n} value={n}>{n}s</option>)}</select></label>
-          <label>Shape <select value={orientation} onChange={(e) => setOrientation(e.target.value)}><option value="vertical">Vertical 9:16</option><option value="wide">Wide 16:9</option></select></label>
+          <label>Length <select value={seconds} onChange={(e) => { invalidateRefinement(); setSeconds(+e.target.value); }}>{[10, 20, 30, 45, 60].filter((n) => n <= maxSeconds).map((n) => <option key={n} value={n}>{n}s</option>)}</select></label>
+          <label>Shape <select value={orientation} onChange={(e) => { invalidateRefinement(); setOrientation(e.target.value); }}><option value="vertical">Vertical 9:16</option><option value="wide">Wide 16:9</option></select></label>
           <label>Sound <select value={audio} onChange={(e) => setAudio(e.target.value)}><option value="asmr">ASMR (no voice)</option><option value="voiced">Voiced</option><option value="auto">Auto</option></select></label>
           <label title="Runs plan, first frames and the automatic checks by itself, and stops if any check fails."><input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} /> Auto mode</label>
           {auto && <label title="Recommended: you see the first frames before the long motion render."><input type="checkbox" checked={pauseFrames} onChange={(e) => setPauseFrames(e.target.checked)} /> pause at first frames</label>}
-          <label className="brief-setting">Setting (optional)<input className="ending" dir="auto" value={setting} onChange={(e) => setSetting(e.target.value)} placeholder="Setting (hint, optional), e.g. a rainy rooftop garden" title="A hint: shapes the prompts, and the audit only notes shots that leave it out." /></label>
-          <label className="brief-setting">Required ending (optional)<input className="ending" dir="auto" value={ending} onChange={(e) => { setEnding(e.target.value); setExampleContext(false); }} placeholder="Ending (checked, optional), e.g. onions glistening in the copper pan" title="Checked: the plan is blocked unless the payoff and final shot match this ending. Auto-filled from your last 'then...' part." /></label>
+          <label className="brief-setting">Setting (optional)<input className="ending" dir="auto" value={setting} onChange={(e) => { invalidateRefinement(); setSetting(e.target.value); }} placeholder="Setting (hint, optional), e.g. a rainy rooftop garden" title="A hint: shapes the prompts, and the audit only notes shots that leave it out." /></label>
+          <label className="brief-setting">Required ending (optional)<input className="ending" dir="auto" value={ending} onChange={(e) => { invalidateRefinement(); setEnding(e.target.value); setExampleContext(false); }} placeholder="Ending (checked, optional), e.g. onions glistening in the copper pan" title="Checked: the plan is blocked unless the payoff and final shot match this ending. Auto-filled from your last 'then...' part." /></label>
         </div>
         )}
         {me?.role === 'creator' && <p className="muted">{me.draftsLeft} plans and {me.rendersLeft} renders left today · Up to {maxSeconds}s</p>}

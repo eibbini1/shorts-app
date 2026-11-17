@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { ideaHint } from './idea-hint.js';
+import { exportReviewStatus } from './review-status.js';
 
 /* ---------- render time estimate ----------
    Calibrated from real timestamps on this Mac (LTX-2.3 MLX, 576x1024, plugged in):
@@ -60,25 +62,8 @@ export function RenderTimer({ job, plan }) {
 }
 
 /* ---------- idea helper ---------- */
-const MOOD = new Set('nice beautiful cool amazing good great best awesome story stories animation animated cartoon video short shorts film movie clip scene idea something thing cute funny epic'.split(' '));
-const STOP = new Set('a an the of in on at to and or with for from by is are was it its his her their this that some'.split(' '));
-const VERBS = new Set(('walk walks run runs chase chases chasing catch catches pour pours pouring slice slices cut cuts chop chops stir stirs mix mixes bake bakes fry fries cook cooks grill grills open opens close closes jump jumps fly flies swim swims climb climbs push pushes pull pulls throw throws grab grabs drop drops fall falls drizzle drizzles spread spreads flip flips whisk whisks sail sails dance dances hug hugs find finds follow follows meet meets build builds paint paints write writes ride rides drive drives sprint sprints paddle paddles carry carries lift lifts hold holds reach reaches turn turns smile smiles laugh laughs look looks wave waves sing sings sit sits stand stands roll rolls spin spins slide slides splash splashes melt melts glow glows grow grows glide glides land lands water waters rest rests').split(' '));
-
-export function ideaHint(text, look) {
-  const t = text.trim();
-  if (!t) return null;
-  const words = t.toLowerCase().replace(/[^a-z\s,'-]/g, ' ').split(/\s+/).filter(Boolean);
-  const content = words.filter((w) => !STOP.has(w) && !MOOD.has(w));
-  const hasVerb = words.some((w) => VERBS.has(w));
-  const hasEnding = /\bthen\b|;|\.\s*\w|,\s*(and\s+)?\w+/i.test(t);
-  if (words.length < 4 || content.length < 2) return { level: 'warn', msg: 'This reads like a mood, not a scene. Say who does what, then the ending. Example: "A small fox chases a paper boat, then sails away in it".' };
-  if (!hasVerb) return { level: 'warn', msg: 'No clear action found. Add what the subject physically does (chases, pours, slices, climbs...) so every shot has something to animate.' };
-  if (!hasEnding) return { level: 'tip', msg: 'Good start. Add an ending, e.g. ", then ..." or fill the Ending box, so the last shot has a target.' };
-  if (look === 'food' && !/(food|dish|steak|bread|onion|garlic|noodle|rice|sauce|cake|fruit|soup|kebab|tomato|cheese|egg|chicken|burger|pasta|cook|bake|chef|kitchen|pan|slice|pour|dumpling|curry|salad)/i.test(t)) return { level: 'tip', msg: 'Look is "Food film" but the idea has no food in it. Switch Look to Cartoon or Custom if this is not a food video.' };
-  return { level: 'ok', msg: 'Looks concrete: a subject, an action and an ending.' };
-}
-export function IdeaHelper({ text, look, quiet }) {
-  const h = ideaHint(text, look);
+export function IdeaHelper({ text, look, ending, quiet }) {
+  const h = ideaHint(text, look, ending);
   if (!h || (quiet && h.level === 'ok')) return null; // speak only when there is advice
   return <div className={'hint ' + h.level}>{h.level === 'ok' ? '✓ ' : h.level === 'warn' ? '! ' : '· '}{h.msg}</div>;
 }
@@ -90,7 +75,7 @@ export const LOOKS = [
   { id: 'night', name: 'Night cartoon', sw: ['#0b1630', '#f3ead6'], ex: 'A small fox chases a paper boat down a moonlit rainy street, then catches it and sails away', ending: 'the fox sails away in the paper boat under the moon' },
   { id: 'custom', name: 'Custom', sw: ['#444a5a', '#c9cedb'], ex: 'A paper plane glides over a quiet harbour, then lands on a fishing boat', ending: 'the paper plane rests on the boat deck' },
 ];
-export const THEME_SW = { studio: ['#0f1115', '#e0b04a'], night: ['#0b1630', '#f3ead6'], white: ['#ffffff', '#0b1630'] };
+export const THEME_SW = { studio: ['#0f1115', '#e0b04a'], night: ['#0b1630', '#f3ead6'], white: ['#ffffff', '#0b1630'], codex: ['#212121', '#5b9cff'] };
 
 export function LookChips({ look, setLook, onExample, exampleBusy }) {
   const cur = LOOKS.find((l) => l.id === look) || LOOKS[0];
@@ -484,11 +469,12 @@ export function ExportReview({ job, review, weak, notes, busy, onRetake, onCompa
   useEffect(() => { setRated(''); }, [job.id]);
   const failed = notes.filter((n) => n.startsWith('BLOCKED')).map((n) => plainBlock(n.replace(/^BLOCKED:\s*/, '')));
   const passed = job.technicalQa?.status === 'passed';
+  const reviewStatus = exportReviewStatus({ failed, technicalPassed: passed, review });
   const src = '/media?p=' + encodeURIComponent(job.video);
   return (
     <section className="card export" aria-labelledby="exp-h">
       <h3 id="exp-h">Review export</h3>
-      <p className={'readystate ' + (failed.length ? 'bad' : 'ok')} role="status">{failed.length ? 'Not ready: the final file failed a check.' : passed ? 'Technical checks passed. Watch and listen before publishing.' : 'Technical checks have not been confirmed for this export.'}</p>
+      <p className={'readystate ' + reviewStatus.tone} role="status">{reviewStatus.message}</p>
       <Player src={src} />
       <p className="row"><a className="btn" href={src} download>Download video</a>{onCompare && <button type="button" className="ghost" onClick={onCompare}>Compare with another video</button>}</p>
       <dl className="gates">
@@ -501,7 +487,15 @@ export function ExportReview({ job, review, weak, notes, busy, onRetake, onCompa
         <dt>Automatic shot flags</dt>
         <dd>{weak.length ? `${weak.length === 1 ? 'Shot ' + weak[0] + ' barely moves' : 'Shots ' + weak.join(', ') + ' barely move'}. This is a machine measure, not a verdict.` : review.status === 'complete' && review.motionChecked ? 'No shot was flagged by the motion measure.' : review.status === 'pending' ? 'Review results are loading.' : review.status === 'stale' ? 'The saved review belongs to a different version. Review this export again.' : review.status === 'complete' ? 'Motion measurement is incomplete.' : 'Review results are unavailable for this export.'}
           {review.status === 'complete' && <p className="muted">{review.visionChecked ? 'Vision screening ran.' : 'Vision screening is unverified or was skipped.'} {(review.unchecked || []).join(' ')} {(review.notMachineChecked || []).join(' ')}</p>}</dd>
-        {review.status === 'complete' && Object.values(review.flags || {}).some((items) => items.length > 0) && <><dt>Advisory findings</dt><dd><ul>{Object.entries(review.flags || {}).flatMap(([category, items]) => items.map((item, index) => <li key={category + index}>{category}: {item}</li>))}</ul></dd></>}
+        {review.status === 'complete' && Object.values(review.flags || {}).some((items) => items.length > 0) && <><dt>Automatic review flags (check these moments)</dt><dd><ul>{Object.entries(review.flags || {}).flatMap(([category, items]) => items.map((item, index) => <li key={category + index}>{category}: {item}</li>))}</ul></dd></>}
+        {review.status === 'complete' && review.sampleTimeline?.length > 0 && <><dt>Shot action checkpoints</dt><dd>
+          <p className="muted">Start, middle and end samples are provided for your review. The contact sheet is not an automatic realism verdict.</p>
+          {review.contactSheet && <details className="action-checkpoints">
+            <summary>Open timestamped frame sheet</summary>
+            <img src={'/media?p=' + encodeURIComponent(review.contactSheet)} alt="Timestamped start, middle and end frames for every shot" loading="lazy" />
+          </details>}
+          <ol>{review.sampleTimeline.map((item) => <li key={item.shot}><b>Shot {item.shot}</b> · {item.startSeconds.toFixed(1)}s / {item.middleSeconds.toFixed(1)}s / {item.endSeconds.toFixed(1)}s<br /><span className="muted">Planned: {item.plannedAction}</span></li>)}</ol>
+        </dd></>}
         <dt>Human editorial review</dt>
         <dd>{rated ? `Rated by you: ${rated === 'up' ? 'good' : 'needs work'}.` : 'Picture and sound have not been reviewed by a person yet.'}</dd>
       </dl>

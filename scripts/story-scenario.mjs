@@ -6,6 +6,7 @@ import {parseArgs} from 'node:util';
 import {z} from 'zod';
 import {scenarioSettings, verifyScenario} from './scenario-schema.mjs';
 import {fitOutlineIdeas, narrationWordBand} from './story-draft-utils.mjs';
+import {hasVisiblePhysicalAction} from './story-action-gate.mjs';
 
 const args=parseArgs({allowPositionals:true,options:{style:{type:'string',default:'cinematic'},ending:{type:'string',default:''},title:{type:'string',default:''},set:{type:'string',default:''},hook:{type:'string',default:''},'must-show':{type:'string',default:''},obstacle:{type:'string',default:''},turn:{type:'string',default:''},audio:{type:'string',default:'auto'},format:{type:'string',default:'short'},seconds:{type:'string',default:'30'},model:{type:'string',default:'qwen3:1.7b'}}});
 const execFileAsync=promisify(execFile);
@@ -233,12 +234,12 @@ for(let i=0;i<count;i++){
     shot=await ask(shotSchema,
       `Write ONE shot for ONE specific story beat. ${masterPrompts.shot} ${masterPrompts.footage} ${masterPrompts.sound} ${subjectRules} ${briefRules} Follow the beat directive literally. Keep the same subject, location, props and lighting progression from the outline. Do not include any event assigned to a later beat. The imagePrompt depicts the START of one distinct physical event, not its finished result. The motionPrompt must name the subject and describe a physical start, visible action and changed end state; include one camera move tracking that action in a single continuous take. No camera-only pans or zooms over a static pose, no cut or montage. Narration should be one speakable specific sentence, ideally ${Math.min(maxWords,Math.max(minWords,Math.ceil(beat.seconds*1.8)))} to ${maxWords} words for this ${beat.seconds}-second shot; a shorter line is acceptable only if the scene has a sound-led pause. For the hook, name the exact subject and a visible action, then add a truthful quantity, contrast, or question if natural; do not invent a fact. No unsupported facts or generic mood-only phrases. Sound names one localized effect synchronized with the action; for food use cues such as sizzle, slice, pour, crunch or utensil clink when physically appropriate. Output only JSON.`,
       {topic,style:args.values.style,creativeBrief,outline,beat,directive:beatDirective(beat),reviewedShotExamples,previousShots:shots.map((item,j)=>({beat:beats[j].label,imagePrompt:item.imagePrompt,motionPrompt:item.motionPrompt})),
-        correction:attempt>1?`The last answer repeated a scene, included a cut, changed the subject, or had unsuitable narration. The narration MUST contain ${minWords} to ${maxWords} words in one natural sentence. ${subjectRules} Make this beat visibly distinct and speakable.`:undefined});
+        correction:attempt>1?`The last answer repeated a scene, relied on a camera-only move, included a cut, changed the subject, or had unsuitable narration. The narration MUST contain ${minWords} to ${maxWords} words in one natural sentence. Give the focal subject one specific visible physical action and a changed end state; a pan, zoom, or camera track alone does not count. ${subjectRules} Make this beat visibly distinct and speakable.`:undefined});
     const words=shot.narration.split(/\s+/).length;
     issues=[];
     if(subjectIssue(Object.values(shot).join(' '))) issues.push('subject');
     if(seenImages.some(value=>similar(value,shot.imagePrompt,0.85))) issues.push('image');
-    if(seenMotion.some(value=>similar(value,shot.motionPrompt,0.85))||/\b(cut to|quick cut|montage|transition to)\b/i.test(shot.motionPrompt)) issues.push('motion');
+    if(seenMotion.some(value=>similar(value,shot.motionPrompt,0.85))||/\b(cut to|quick cut|montage|transition to)\b/i.test(shot.motionPrompt)||!hasVisiblePhysicalAction(shot.motionPrompt)) issues.push('motion');
     if(seenNarration.some(value=>similar(value,shot.narration,0.85))||words>maxWords||words<minWords) issues.push('narration');
     if(!issues.length) break;
     rewriteCount++;
@@ -258,6 +259,7 @@ for(let i=0;i<count;i++){
     `${shot.imagePrompt}${/consistent subject/i.test(shot.imagePrompt)?'':` Consistent subject: ${outline.protagonist.replace(/[.!?]+$/,'')}.`} Visual style: ${args.values.style}.`;
   let motion=issues.includes('motion')?`${action}. One continuous shot. The subject moves visibly while the camera tracks the action.`:
     `${shot.motionPrompt}${/one continuous take|no cuts/i.test(shot.motionPrompt)?'':' One continuous take, no cuts.'}`;
+  if(!hasVisiblePhysicalAction(motion)) throw new Error(`Beat ${i+1} has no clear physical action after repair. No scenario was saved or rendered; describe what the subject visibly does.`);
   if(i<count-2 && !['build','finish'].includes(beat.label.toLowerCase()) && /\b(pan|sear|bast|cook)\b/i.test(image) && /\b(plate|serv)\w*/i.test(outline.goal+' '+outline.payoff)){
     image+=' Cooking stage: keep this food inside the same pan, with no serving plate or finished plated dish visible yet.';
     motion+=' Keep the food in the pan for the whole take; plating occurs in a later shot.';
