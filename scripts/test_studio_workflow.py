@@ -8,6 +8,7 @@ def run_fixture():
         (root/folder).mkdir(parents=True)
     shutil.copy('scripts/studio-server.mjs',root/'scripts')
     shutil.copy('scripts/studio-export-review.mjs',root/'scripts')
+    shutil.copy('scripts/studio-ideas.mjs',root/'scripts')
     (root/'studio/dist').mkdir(parents=True)
     (root/'studio/dist/index.html').write_text('<html>Studio fixture</html>')
     (root/'bin/pgrep').write_text('#!/bin/sh\nexit 1\n')
@@ -54,6 +55,7 @@ def run_fixture():
         assert req('/','%ZZ')[0]==401
         assert req('/','fixture-owner')[0]==200
         assert req('/api/me','creator-a')[1]['maxSeconds']==20
+        assert req('/api/idea','creator-a',{'look':'invalid'})[0]==400
         (root/'scripts/studio-draft.py').write_text("import json\nfrom pathlib import Path\np=Path('drafts/generated/fresh.local-scenario.json')\np.write_text(json.dumps({'plan':{'title':'The Copper Kite','shots':[{'seconds':5},{'seconds':5}]}}))\nprint(p, flush=True)\n")
         status, draft=req('/api/draft','creator-a',{'prompt':'A copper kite lifts a paper star out of a puddle, then lands on a blue bicycle.', 'seconds':30,'look':'cartoon'})
         assert status==202 and draft['options']['seconds']==20, draft
@@ -111,6 +113,9 @@ if [ "$3" = '--stills-only' ]; then
             if (root/'armed').exists():break
             time.sleep(.02)
         assert (root/'armed').exists()
+        for look in ['food', 'cartoon', 'night', 'custom']:
+            code, idea = req('/api/idea','creator-a',{'look':look})
+            assert code==200 and idea['source']=='sample' and idea['look']==look and idea['trend'] is None
         assert req('/api/cancel','creator-b',{'test':True})[1]['busyElsewhere']
         assert req('/api/cancel','creator-a',{'test':True})[1]['status']=='stopping'
         immediate=req('/api/render','fixture-owner',payload)[0]

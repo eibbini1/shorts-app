@@ -4,6 +4,7 @@
 // POST /api/render {scenario}                              -> full local render
 // GET  /api/events (SSE) | /api/state | POST /api/cancel | GET /media?p=outputs/x.mp4
 import http from 'node:http';
+import { createIdeaService } from './studio-ideas.mjs';
 import { inspectExport } from './studio-export-review.mjs';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -12,6 +13,7 @@ import { spawn, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const ideaService = createIdeaService({ root: ROOT });
 const PORT = Number(process.env.STUDIO_PORT || 8787);
 const DIST = path.join(ROOT, 'studio', 'dist');
 const MEDIA_ROOTS = ['outputs', 'storage/any-local', 'storage/benchmarks', 'drafts/generated'].map((d) => path.join(ROOT, d));
@@ -316,6 +318,14 @@ http.createServer(async (req, res) => {
     return json(res, 200, { name: me.name, role: me.role, maxSeconds: owner ? 60 : CREATOR_MAX_SECONDS,
       rendersLeft: owner ? null : Math.max(0, me.dailyRenders - today(me, 'render')), draftsLeft: owner ? null : Math.max(0, CREATOR_DAILY_DRAFTS - today(me, 'draft')),
       canCompare: owner, canSeeLog: owner, canRunUnattended: owner });
+  }
+  if (url.pathname === '/api/idea' && req.method === 'POST') {
+    const input = await body(req);
+    if (!['food', 'cartoon', 'night', 'custom'].includes(input.look)) return json(res, 400, { error: 'Choose a film look.' });
+    const seconds = Math.min(isOwner ? 60 : CREATOR_MAX_SECONDS, Math.max(10, Number(input.seconds) || 10));
+    const result = await ideaService.suggest({ look: input.look, seconds, exclude: input.exclude,
+      busy: Boolean(busyReason()) });
+    return json(res, 200, result);
   }
   if (url.pathname === '/api/state') return json(res, 200, view(me));
   if (url.pathname === '/api/events') {

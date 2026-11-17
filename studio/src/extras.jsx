@@ -92,7 +92,7 @@ export const LOOKS = [
 ];
 export const THEME_SW = { studio: ['#0f1115', '#e0b04a'], night: ['#0b1630', '#f3ead6'], white: ['#ffffff', '#0b1630'] };
 
-export function LookChips({ look, setLook, onExample }) {
+export function LookChips({ look, setLook, onExample, exampleBusy }) {
   const cur = LOOKS.find((l) => l.id === look) || LOOKS[0];
   const move = (e, i) => {
     const d = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
@@ -107,7 +107,7 @@ export function LookChips({ look, setLook, onExample }) {
           <span className="sw"><i style={{ background: l.sw[0] }} /><i style={{ background: l.sw[1] }} /></span>{l.name}
         </button>
       ))}
-      <button type="button" className="link" onClick={() => onExample(cur)}>Try an example</button>
+      <button type="button" className="link" disabled={exampleBusy} onClick={() => onExample(cur)}>{exampleBusy ? 'Finding an idea…' : 'Try an example'}</button>
     </div>
   );
 }

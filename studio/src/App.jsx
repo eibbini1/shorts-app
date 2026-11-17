@@ -209,6 +209,35 @@ export default function App() {
   useEffect(() => { document.documentElement.dataset.theme = theme; try { localStorage.setItem('studio-theme', theme); } catch {} }, [theme]);
   const [setting, setSetting] = useState('');
   const [exampleContext, setExampleContext] = useState(false);
+  const [exampleBusy, setExampleBusy] = useState(false);
+  const [exampleInfo, setExampleInfo] = useState(null);
+  const exampleRequest = useRef(0);
+  const seenExamples = useRef([]);
+  const briefRef = useRef(prompt);
+  const lookRef = useRef(look);
+  briefRef.current = prompt;
+  lookRef.current = look;
+  const suggestExample = async (selected) => {
+    if (exampleBusy) return;
+    const request = ++exampleRequest.current;
+    const before = briefRef.current;
+    setExampleBusy(true);
+    setExampleInfo(null);
+    try {
+      const idea = await post('/api/idea', { look: selected.id, seconds, exclude: seenExamples.current });
+      if (request !== exampleRequest.current || lookRef.current !== selected.id || briefRef.current !== before) return;
+      seenExamples.current = [...seenExamples.current, idea.prompt].slice(-8);
+      setPrompt(idea.prompt);
+      setEnding(idea.ending);
+      setSetting('');
+      setExampleContext(true);
+      setExampleInfo(idea);
+    } catch (error) {
+      if (request === exampleRequest.current) setErr(error.message);
+    } finally {
+      if (request === exampleRequest.current) setExampleBusy(false);
+    }
+  };
   const [unattended, setUnattended] = useState(false);
   const [auto, setAuto] = useState(false);
   const [mode, setMode] = useState(() => { try { return localStorage.getItem('studio-mode') || 'simple'; } catch { return 'simple'; } });
@@ -319,7 +348,7 @@ export default function App() {
     setAudio(j.options?.audio || 'asmr'); setEnding(j.options?.ending || ''); setLook(j.options?.look || 'food'); setSetting(j.options?.setting || ''); setShowLog(false);
   };
   useEffect(() => { if (restoreId.current) select(restoreId.current); }, []);
-  const newChat = () => { projectRequest.current++; pickProject(null); setProjectsOpen(false); setStored(null); setExampleContext(false); setPrompt(''); setEnding(''); setSetting(''); setErr(''); };
+  const newChat = () => { exampleRequest.current++; setExampleBusy(false); setExampleInfo(null); projectRequest.current++; pickProject(null); setProjectsOpen(false); setStored(null); setExampleContext(false); setPrompt(''); setEnding(''); setSetting(''); setErr(''); };
   const rename = run2(async (id, name) => { await post('/api/sessions/rename', { id, name }); await loadSessions(); });
   const remove = run2(async (id) => { await post('/api/sessions/delete', { id }); if (id === selectedId) newChat(); await loadSessions(); });
   const onKey = (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && prompt.trim() && !busy && !planDisabled) { e.preventDefault(); draft(); } };
@@ -383,14 +412,17 @@ export default function App() {
         {err && <div className="bad" role="alert">{err}</div>}
         <LookChips look={look} setLook={(value) => {
           setLook(value);
+          setExampleInfo(null);
           if (exampleContext) { setEnding(''); setSetting(''); setExampleContext(false); }
-        }} onExample={(l) => { setLook(l.id); setPrompt(l.ex); setEnding(l.ending); setExampleContext(true); }} />
+        }} exampleBusy={exampleBusy} onExample={suggestExample} />
+        {exampleInfo && <p className="muted" role="status">{exampleInfo.title} · {exampleInfo.note} {exampleInfo.trend?.sourceUrl && <a href={exampleInfo.trend.sourceUrl} target="_blank" rel="noreferrer">Search source</a>}</p>}
         <IdeaHelper text={prompt} look={look} quiet={simple} />
         {anyRunning && <div className="hint tip">Your Mac is making another video right now{live.prompt ? ` ("${live.prompt.slice(0, 40)}...")` : ''}. Up next is saved in this browser. Leave Studio open for automatic start.</div>}
         <label htmlFor="video-brief" className="brief-label">Video idea</label>
         <div className="composer">
           <textarea id="video-brief" dir="auto" value={prompt} onChange={(e) => {
             setPrompt(e.target.value);
+            setExampleInfo(null);
             if (exampleContext) { setEnding(''); setSetting(''); setExampleContext(false); }
           }} onKeyDown={onKey} rows={2}
             placeholder="A baker cracks a chocolate shell to reveal pistachio cream." />
