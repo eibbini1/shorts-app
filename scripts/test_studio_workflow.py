@@ -7,6 +7,7 @@ def run_fixture():
     for folder in ['scripts','outputs','storage/studio-sessions','drafts/generated','bin']:
         (root/folder).mkdir(parents=True)
     shutil.copy('scripts/studio-server.mjs',root/'scripts')
+    shutil.copy('scripts/studio-export-review.mjs',root/'scripts')
     (root/'studio/dist').mkdir(parents=True)
     (root/'studio/dist/index.html').write_text('<html>Studio fixture</html>')
     (root/'bin/pgrep').write_text('#!/bin/sh\nexit 1\n')

@@ -31,3 +31,11 @@ The previous cached replay passed technical QA, with native motion at 384×640, 
 Run a new short original prompt through real local models with approved time allowance, watch and listen to the exact final export, and record the existing editorial review. Validate first-frame selection with PhotoCraft preparation and every supported still-source mode on actual assets. The Studio thumbs feedback remains separate from formal comparative Creative Learning evidence. No automatic claim of model improvement is made.
 
 Live rollout, PR merge and deployment require separate approval.
+
+## Phase 1 export review follow-up
+
+The Studio prereview endpoint now reads only the sidecar for the selected export and confirms its SHA-256. Missing, pending, stale and unavailable results have explicit UI messages. A browser request for an old export is rejected after a take changes, and stale fetch responses cannot replace the current take's view. Complete reports expose motion measurement availability, vision status and advisory findings. These checks add no editorial points.
+
+After final technical QA, export-provenance.py reads the actual source clip manifest and probes each source and the final file. It writes dimensions and hashes tied to the final export. Studio labels native motion source sizes, delivery size and upscaling. Older files with no matching provenance display unverified native resolution. Resolution is measured from encoded source clips and establishes no perceptual detail gain.
+
+Use node --test scripts/test-studio-export-review.mjs for exact-take, stale report and mixed-resolution regressions. The Python suite includes an actual FFmpeg source/upscale fixture, and the existing synthetic Studio workflow remains available. The cached Moonlit Voyage export was freshly checked and passed all six technical checks. Its UI showed 384×640 sources and 720×1280 delivery. A second browser fixture with a mismatched review hash showed the stale message and withheld motion flags.

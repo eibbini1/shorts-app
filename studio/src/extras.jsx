@@ -478,7 +478,7 @@ export function ShotPlan({ shots, notes }) {
 }
 
 /* ---------- export review: file gates, shot flags and human review are three different things ---------- */
-export function ExportReview({ job, weak, notes, busy, onRetake, onCompare }) {
+export function ExportReview({ job, review, weak, notes, busy, onRetake, onCompare }) {
   const [rated, setRated] = useState('');
   useEffect(() => { setRated(''); }, [job.id]);
   const failed = notes.filter((n) => n.startsWith('BLOCKED')).map((n) => plainBlock(n.replace(/^BLOCKED:\s*/, '')));
@@ -493,8 +493,14 @@ export function ExportReview({ job, weak, notes, busy, onRetake, onCompare }) {
       <dl className="gates">
         <dt>Technical checks on the final file</dt>
         <dd>{failed.length ? <ul>{failed.map((f) => <li key={f} className="bad">{f}</li>)}</ul> : passed ? 'Passed for this exact export.' : 'No check result was recorded for this file.'}</dd>
+        <dt>Source and export resolution</dt>
+        <dd>{review.resolution?.delivery ? `Export ${review.resolution.delivery.width}×${review.resolution.delivery.height}.` : 'Export dimensions unavailable.'} {review.resolution?.status === 'verified'
+          ? `Native motion sources: ${[...new Set(review.resolution.native.map((item) => item.width + '×' + item.height))].join(', ')}. ${review.resolution.native.some((item) => item.width < review.resolution.delivery.width || item.height < review.resolution.delivery.height) ? 'Delivery includes upscaling.' : ''}`
+          : 'Native motion resolution is unverified for this file.'}</dd>
         <dt>Automatic shot flags</dt>
-        <dd>{weak.length ? `${weak.length === 1 ? 'Shot ' + weak[0] + ' barely moves' : 'Shots ' + weak.join(', ') + ' barely move'}. This is a machine measure, not a verdict.` : 'No shot was flagged by the motion measure.'}</dd>
+        <dd>{weak.length ? `${weak.length === 1 ? 'Shot ' + weak[0] + ' barely moves' : 'Shots ' + weak.join(', ') + ' barely move'}. This is a machine measure, not a verdict.` : review.status === 'complete' && review.motionChecked ? 'No shot was flagged by the motion measure.' : review.status === 'pending' ? 'Review results are loading.' : review.status === 'stale' ? 'The saved review belongs to a different version. Review this export again.' : review.status === 'complete' ? 'Motion measurement is incomplete.' : 'Review results are unavailable for this export.'}
+          {review.status === 'complete' && <p className="muted">{review.visionChecked ? 'Vision screening ran.' : 'Vision screening is unverified or was skipped.'} {(review.unchecked || []).join(' ')} {(review.notMachineChecked || []).join(' ')}</p>}</dd>
+        {review.status === 'complete' && Object.values(review.flags || {}).some((items) => items.length > 0) && <><dt>Advisory findings</dt><dd><ul>{Object.entries(review.flags || {}).flatMap(([category, items]) => items.map((item, index) => <li key={category + index}>{category}: {item}</li>))}</ul></dd></>}
         <dt>Human editorial review</dt>
         <dd>{rated ? `Rated by you: ${rated === 'up' ? 'good' : 'needs work'}.` : 'Picture and sound have not been reviewed by a person yet.'}</dd>
       </dl>

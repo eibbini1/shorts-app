@@ -222,7 +222,8 @@ export default function App() {
   const autoRef = useRef(false);
   const autoSeen = useRef('');
   const retake = useRef(false); // a retake of one weak shot re-renders by itself, even when Auto mode pauses at first frames
-  const [weak, setWeak] = useState([]);
+  const [review, setReview] = useState({ status: 'pending' });
+  const weak = review.video === job.video ? review.weak || [] : [];
   const [compare, setCompare] = useState(false);
   const [err, setErr] = useState('');
   const [showLog, setShowLog] = useState(false);
@@ -291,9 +292,19 @@ export default function App() {
   const regen = (shot) => run(async () => { const r = await post('/api/regen', { scenario: job.scenario, sessionId: job.id, shot }); pickProject(r.id); })();
   const retakeShot = (shot) => run(async () => { retake.current = true; autoRef.current = true; autoSeen.current = ''; const r = await post('/api/regen', { scenario: job.scenario, sessionId: job.id, shot }); pickProject(r.id); })();
   useEffect(() => {
-    setWeak([]);
-    if (job.kind !== 'render' || job.status !== 'done' || !job.video || !job.id) return;
-    fetch('/api/prereview?id=' + job.id).then((r) => r.json()).then((d) => setWeak(d.weak || [])).catch(() => {});
+    let current = true;
+    setReview({ video: job.video, status: 'pending' });
+    if (!job.video || !job.id) return () => { current = false; };
+    const params = new URLSearchParams({ id: job.id, video: job.video });
+    fetch('/api/prereview?' + params).then(async (response) => {
+      if (!response.ok) throw new Error('Review unavailable');
+      return response.json();
+    }).then((data) => {
+      if (current) setReview({ ...data, video: job.video });
+    }).catch(() => {
+      if (current) setReview({ video: job.video, status: 'unavailable' });
+    });
+    return () => { current = false; };
   }, [job.id, job.status, job.video]);
   const cancel = run(async () => { await post('/api/cancel'); });
   const select = async (id) => {
@@ -359,7 +370,7 @@ export default function App() {
               {job.plan && <RenderLive job={job} plan={job.plan?.plan || job.plan} sessions={sessions} />}
               {job.status === 'done' && job.kind === 'draft' && !job.plan && <p className="muted">Plan saved: {job.scenario}</p>}
               {!job.video && job.previousVideo && <details className="card"><summary>Previous verified export</summary><Player src={'/media?p=' + encodeURIComponent(job.previousVideo)} /></details>}
-              {job.video && <ExportReview key={job.video} job={job} weak={weak} notes={notes} busy={busy || me?.rendersLeft === 0} onRetake={retakeShot} onCompare={me?.canCompare && sessions.filter((p) => p.hasVideo).length > 1 ? () => setCompare(true) : undefined} />}
+              {job.video && <ExportReview key={job.video} job={job} review={review.video === job.video ? review : { status: 'pending' }} weak={weak} notes={notes} busy={busy || me?.rendersLeft === 0} onRetake={retakeShot} onCompare={me?.canCompare && sessions.filter((p) => p.hasVideo).length > 1 ? () => setCompare(true) : undefined} />}
               <UpNext show={running} autoNext={autoNext} setAutoNext={setAutoNext} />
               {me?.canSeeLog && <button className="ghost" onClick={() => setShowLog(!showLog)}>{showLog ? 'Hide' : 'Show'} log</button>}
               {showLog && <pre className="log" ref={logRef}>{(job.lines || []).join('\n')}</pre>}

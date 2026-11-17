@@ -4,6 +4,7 @@
 // POST /api/render {scenario}                              -> full local render
 // GET  /api/events (SSE) | /api/state | POST /api/cancel | GET /media?p=outputs/x.mp4
 import http from 'node:http';
+import { inspectExport } from './studio-export-review.mjs';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -436,14 +437,16 @@ http.createServer(async (req, res) => {
   if (url.pathname === '/api/prereview') { // advisory checks on the finished video; shots that barely move can be retaken
     const x = sessions.get(String(url.searchParams.get('id') || ''));
     if (!x || !x.scenario || !canSee(me, x)) return json(res, 404, {});
-    const key = keyOf(x.scenario); let best = null;
-    try { for (const n of fs.readdirSync(path.join(ROOT, 'outputs'))) if (n.includes(key) && n.endsWith('.prereview.json')) { const t = fs.statSync(path.join(ROOT, 'outputs', n)).mtimeMs; if (!best || t > best.t) best = { n, t }; } } catch { /* none yet */ }
-    if (!best) return json(res, 200, { weak: [] });
+    const expected = url.searchParams.get('video');
+    if (expected && expected !== x.video) return json(res, 409, { status: 'stale', weak: [] });
+    if (!x.video) return json(res, 200, { status: x.status === 'running' ? 'pending' : 'unavailable', weak: [] });
     try {
-      const r = JSON.parse(fs.readFileSync(path.join(ROOT, 'outputs', best.n), 'utf8'));
-      const MIN_MOTION = 2.0; // same threshold as scripts/prereview-local-video.py
-      return json(res, 200, { shotMotion: r.shotMotion || [], weak: (r.shotMotion || []).map((v, i) => (v != null && v < MIN_MOTION ? i + 1 : 0)).filter(Boolean), flags: r.flags || {} });
-    } catch { return json(res, 200, { weak: [] }); }
+      const report = await inspectExport(ROOT, x.video, { running: x.status === 'running' });
+      if (expected && expected !== x.video) return json(res, 409, { status: 'stale', weak: [] });
+      return json(res, 200, report);
+    } catch {
+      return json(res, 200, { video: x.video, status: 'unavailable', weak: [] });
+    }
   }
   if (url.pathname === '/api/videos') { // finished videos for the compare view, newest first
     let out = [];
