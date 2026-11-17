@@ -7,7 +7,7 @@ usage() {
 Usage:
   bash scripts/make-local-video.sh
   bash scripts/make-local-video.sh --draft-only [--model gemma-local] [--idea BANK_ID] [--studio luxury-kitchen] [--answers brief.json]
-  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--editor ffmpeg|artcraft|filmcraft|auto] [--chain-images] [--best-of-3-stills] [--cache-only] [--stills FOLDER] [--anchor-image IMAGE] [--allow-repeat] [--allow-silence] [--allow-bad-first]
+  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--editor ffmpeg|artcraft|filmcraft|auto] [--title 'Optional film title'] [--chain-images] [--best-of-3-stills] [--cache-only] [--stills FOLDER] [--anchor-image IMAGE] [--allow-repeat] [--allow-silence] [--allow-bad-first] [--skip-vision-gate]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json [--watch]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json --preview
 
@@ -18,7 +18,7 @@ USAGE
 
 default_model='qwen3:1.7b'
 [[ -s storage/setup/gemma-model-dir.txt ]] && default_model='gemma-local'
-scenario=''; status=''; chain=''; stills=''; anchor_image=''; allow_repeat=''; cache_only=''; best_of_3=''; idea=''; studio=''; answers=''; editor="${SHORTS_EDITOR:-auto}"; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
+scenario=''; status=''; chain=''; stills=''; anchor_image=''; allow_repeat=''; cache_only=''; best_of_3=''; skip_vision_gate=''; idea=''; studio=''; answers=''; title=''; editor="${SHORTS_EDITOR:-auto}"; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
 while (($#)); do
   case "$1" in
     --scenario) scenario="${2:?Missing scenario path}"; shift 2 ;;
@@ -28,9 +28,11 @@ while (($#)); do
     --chain-images) chain='--chain-images'; shift ;;
     --cache-only) cache_only='--cache-only'; shift ;;
     --best-of-3-stills) best_of_3='--best-of-3-stills'; shift ;;
+    --skip-vision-gate) skip_vision_gate='--skip-vision-gate'; shift ;;
     --stills) stills="$2"; shift 2 ;;
     --anchor-image) anchor_image="$2"; shift 2 ;;
     --editor) editor="${2:?Missing editor}"; shift 2 ;;
+    --title) title="${2:?Missing title}"; shift 2 ;;
     --allow-repeat) allow_repeat='--allow'; shift ;;
     --allow-silence) allow_silence='--allow-silence'; shift ;;
     --allow-bad-first) allow_bad_first='--allow-bad-first'; shift ;;
@@ -50,6 +52,8 @@ if [[ "$editor" == auto ]]; then
     editor=artcraft
   fi
 fi
+[[ -z "$title" || "$editor" == artcraft ]] || { echo '--title requires the ArtCraft editor.' >&2; exit 2; }
+[[ ${#title} -le 48 ]] || { echo '--title must be 48 characters or fewer.' >&2; exit 2; }
 
 if [[ -n "$status" ]]; then
   [[ -z "$scenario" ]] || { echo 'Use --status or --scenario, not both.' >&2; exit 2; }
@@ -73,6 +77,10 @@ if [[ -z "$scenario" ]]; then
   [[ -z "$answers" ]] || brief_args+=(--answers "$answers")
   scenario="$(python3 scripts/director-brief.py "${brief_args[@]}")"
   [[ -f "$scenario" ]] || { echo 'The director brief did not save a scenario.' >&2; exit 3; }
+  if [[ -n "$studio" ]]; then
+    # Master-prompt pass: studio set, lighting, lens, camera move, mood and kitchen plate per shot (docs/MASTER_PROMPTS.md).
+    python3 scripts/refine-prompts.py "$scenario" --studio "$studio" --in-place || { echo 'Prompt refinement failed.' >&2; exit 3; }
+  fi
   echo "Review the shot plan: $scenario"
   python3 - "$scenario" <<'PY'
 import json,sys
@@ -110,15 +118,24 @@ echo "Finishing editor: $editor"
 if [[ "$editor" == artcraft ]]; then
   python3 scripts/check-artcraft-mac.py --require-cli || { echo 'ArtCraft version check failed before rendering.' >&2; exit 4; }
 fi
-python3 scripts/check-env.py || { echo "Fix the FAIL lines above, then run this again." >&2; exit 4; }
+env_args=()
+[[ -z "$cache_only" ]] || env_args+=(--skip-gpu)
+python3 scripts/check-env.py ${env_args[@]+"${env_args[@]}"} || { echo "Fix the FAIL lines above, then run this again." >&2; exit 4; }
 echo "Step 2/4  Pre-render check (topic, hook, length, currency, claims)"
+if [[ -z "$cache_only" ]]; then
+  python3 scripts/prompt-lint.py "$scenario" --min-prompts="${SHORTS_MIN_PROMPT_SCORE:-85}" || { echo "Prompt gate blocked this scenario before any FLUX/LTX time. Run: python3 scripts/refine-prompts.py '$scenario' --studio luxury-kitchen --in-place (or set SHORTS_MIN_PROMPT_SCORE)." >&2; exit 3; }
+fi
 python3 scripts/preflight-short.py "$scenario" --strict ${allow_repeat:+$allow_repeat} || { echo "Preflight blocked this scenario. Fix the listed problems before rendering." >&2; exit 3; }
 python3 scripts/audit-local-story.py "$scenario" || { echo 'Story gate blocked this scenario. Edit the plan before rendering.' >&2; exit 3; }
 python3 scripts/evidence_gate.py "$scenario" || { echo 'Evidence gate blocked this scenario. Correct claims, prices or variety before rendering.' >&2; exit 3; }
 storage/tools/ComfyUI/.venv/bin/python scripts/add-sfx.py --scenario "$scenario" --audit || { echo 'Sound cue gate blocked this scenario. Edit its shot sound lines before rendering.' >&2; exit 3; }
 t_checks=$SECONDS
-echo "Step 3/4  Rendering local video to $output (about 5 min per shot on an M1: still, motion, voice, assembly)"
-python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" $([[ "$editor" == artcraft ]] && echo --prep-stills) ${chain:+$chain} ${cache_only:+$cache_only} ${best_of_3:+$best_of_3} ${allow_silence:+$allow_silence} ${allow_bad_first:+$allow_bad_first} ${stills:+--stills "$stills"} ${anchor_image:+--anchor-image "$anchor_image"}
+if [[ -n "$cache_only" ]]; then
+  echo "Step 3/4  Reassembling cached local video to $output (no FLUX/LTX generation; missing cache stops the job)"
+else
+  echo "Step 3/4  Rendering local video to $output (about 5 min per shot on an M1: still, motion, voice, assembly)"
+fi
+python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" $([[ "$editor" == artcraft ]] && echo --prep-stills) ${chain:+$chain} ${cache_only:+$cache_only} ${best_of_3:+$best_of_3} ${skip_vision_gate:+$skip_vision_gate} ${allow_silence:+$allow_silence} ${allow_bad_first:+$allow_bad_first} ${stills:+--stills "$stills"} ${anchor_image:+--anchor-image "$anchor_image"}
 t_render=$SECONDS
 echo "Base render complete: $output (not release approved)"
 echo "Step 4/4  Shot-synced ASMR, captions, upload pack and quality check"
@@ -135,6 +152,7 @@ if [[ "$editor" == artcraft ]]; then
   [[ ! -f "$art_work/voice-timeline.wav" ]] || art_args+=(--voice "$art_work/voice-timeline.wav" --sfx "${output%.mp4}.sfx.wav")
   [[ ! -f "$art_work/soundtrack.wav" ]] || art_args+=(--bed "$art_work/soundtrack.wav")
   [[ ! -f "${finished_video%.mp4}.ass" ]] || art_args+=(--captions "${finished_video%.mp4}.ass")
+  [[ -z "$title" ]] || art_args+=(--title "$title")
   python3 scripts/artcraft-finish.py "${art_args[@]}"
   final_video="$art_video"
   python3 - "$pack" "$final_video" <<'PY2'
@@ -161,7 +179,11 @@ PY
 fi
 python3 scripts/qa-local-video.py --video "$final_video" --pack "$pack" --scenario "$scenario" --expected-seconds "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["settings"]["seconds"])' "$scenario")" --work-dir "storage/any-local/$(basename "$scenario" .json)" || { echo "Technical QA failed: read $pack before uploading." >&2; exit 5; }
 python3 scripts/log-local-run.py --scenario "$scenario" --video "$final_video" --pack "$pack"
+# Advisory screen of the exact final file (shot questions on middle frames, final payoff, dish continuity, loudness).
+# It awards no points; it tells the reviewer which ratings are likely to fall below 4/5.
+python3 scripts/prereview-local-video.py --scenario "$scenario" --video "$final_video" ${skip_vision_gate:+--skip-vision} || echo 'Pre-review flagged likely weak categories; fix them before the editorial review.' >&2
 python3 scripts/score-local-video.py --scenario "$scenario" --pack "$pack" --video "$final_video" || echo 'Release gate is blocked or needs editorial review; inspect the quality report.' >&2
+echo "Editorial review (watch and listen, about 2 minutes): npm run review:video:mac -- --scenario '$scenario' --pack '$pack' --video '$final_video'"
 t_end=$SECONDS
 checks_s=$((t_checks - t_start)); render_s=$((t_render - t_checks)); finish_s=$((t_end - t_render)); total_s=$((t_end - t_start))
 printf 'Timing: checks %ds, render %dm%02ds, captions+QA %ds, total %dm%02ds\n' "$checks_s" $((render_s / 60)) $((render_s % 60)) "$finish_s" $((total_s / 60)) $((total_s % 60))

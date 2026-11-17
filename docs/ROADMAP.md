@@ -33,3 +33,5 @@ The render now prepares Kokoro narration and the original soundtrack concurrentl
 - VERIFIED: a full 10-second `--editor artcraft` run passed six final-file technical QA checks. On a Mac with matching CLIs, `auto` selects PhotoCraft still prep, SoundCraft mastering and FilmCraft 1080x1920 export; voiced films get the 1080 caption layer. This does not certify creative quality or native 1080 detail. Details: `docs/ARTCRAFT_LOCAL_INTEGRATION.md`.
 - NEXT: (1) owner judges voiced red-curry and the still-prep A/B; (2) SoundCraft voice chain + three-track mix; (3) EffectCraft captions animation and price counter; (4) stub-CLI tests and version pin; (5) make ArtCraft the default only after one voiced and one silent film are approved.
 - ArtCraft does not generate footage or shorten FLUX/LTX time.
+- 2026-11-16: master-prompt refiner + prompt gate, yes/no still gate, one-kitchen studio plates (`docs/MASTER_PROMPTS.md`). Next: first full film from the studio plates.
+- 2026-11-16: final-film pre-review (contact sheet, shot questions on final frames, loudness) and one-command editorial review recorder. Next: owner reviews; re-render weak shots toward 90.

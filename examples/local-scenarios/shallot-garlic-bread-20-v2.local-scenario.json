@@ -194,6 +194,67 @@
       }
     }
   },
+  "visualChecks": [
+    {
+      "mustShow": [
+        "a thick baguette slice, not a potato",
+        "melted Gruyere on bread"
+      ],
+      "mustNotShow": [
+        "a halved baked potato"
+      ],
+      "questions": [
+        "Is this a thick slice of baguette bread topped with melted cheese? A potato does not count."
+      ]
+    },
+    {
+      "mustShow": [
+        "diced shallots visibly in the butter",
+        "one roasted garlic clove"
+      ],
+      "mustNotShow": [
+        "whole garlic pieces replacing the diced shallots"
+      ],
+      "questions": [
+        "Is the pan full of diced shallots? A whole garlic bulb or cloves do not count."
+      ]
+    },
+    {
+      "mustShow": [
+        "six baguette slices on one dark tray",
+        "shallot garlic butter on bread"
+      ],
+      "mustNotShow": [
+        "round potato halves"
+      ],
+      "questions": [
+        "Is a spoon spreading a topping onto bread slices that lie on a dark tray?"
+      ]
+    },
+    {
+      "mustShow": [
+        "the same six dressed baguette slices entering the oven"
+      ],
+      "mustNotShow": [
+        "a different bread shape"
+      ],
+      "questions": [
+        "Is a tray of topped baguette slices going into an open oven?"
+      ]
+    },
+    {
+      "mustShow": [
+        "six baked baguette slices",
+        "one lifted slice with melted cheese"
+      ],
+      "mustNotShow": [
+        "a different food from the opening shot"
+      ],
+      "questions": [
+        "Are baked baguette slices with melted cheese on the same board?"
+      ]
+    }
+  ],
   "sourceReview": {
     "checkedAt": "2026-11-16",
     "trendLabel": "One successful garlic-bread reference guided structure; no view forecast.",

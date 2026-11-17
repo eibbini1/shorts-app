@@ -7,11 +7,21 @@ Official-guide checks are marked [G]; checks that are my own heuristics are mark
 
 Usage: scripts/prompt-lint.py drafts/generated/A.local-scenario.json [B.json ...] [--json] [--min=90]
 --min=N prints PASS/FAIL per file and exits 1 if any film scores under N (the render gate).
+--min-prompts=N gates only on the guide-based image/motion prompt score (used by make-local-video.sh).
 """
 import json, re, sys
 from pathlib import Path
 
 NEG = re.compile(r"\b(no|not|without|never)\s+(faces?|text|logos?|people|labels?|watermarks?)\b", re.I)
+ANY_NEG = re.compile(r"(?:^|[.,;:]\s*)(?:no|not|without|never|avoid)\b", re.I)
+# FLUX.2 Klein guide (docs.bfl.ai, checked 2026-11-16): lighting is "the most important element";
+# name source, quality, direction and temperature. Two of the four is the minimum here.
+LIGHT_PARTS = {
+    "source": re.compile(r"\b(window|daylight|sun\w*|lamp|candle\w*|oven light|natural light|ambient|practical)\b", re.I),
+    "quality": re.compile(r"\b(soft|hard|harsh|diffused|direct|gentle|low[- ]key)\b", re.I),
+    "direction": re.compile(r"\b(side|back\w*|overhead|rim|top[- ]?light|from (?:the )?(?:left|right|behind|above))\b", re.I),
+    "temperature": re.compile(r"\b(warm|cool|golden|amber|blue|tungsten)\b", re.I),
+}
 QUALITY_TAGS = re.compile(r"\b(8k|4k|masterpiece|ultra[- ]detailed|trending on|best quality)\b", re.I)
 CAMERA = re.compile(r"\b(camera locked|static camera|tripod|dolly|camera pans|pans? (?:left|right|up|down|across)|camera tilts|tracking|handheld|push(?:es)?[- ]in|pull(?:s)? back|zoom|orbit|camera circles)\b", re.I)
 CHAOS = re.compile(r"\b(splash(es|ing)?|explod\w+|shatter\w*|crash\w*|tumbl\w+|flies|flying|spray\w*|burst\w*)\b", re.I)
@@ -44,8 +54,9 @@ def score_image(p, subject_hint):
         c -= 10; notes.append("[G] quality tags (8k, masterpiece) add nothing; describe light and texture")
     if p.count(",") > n * 0.22:
         c -= 10; notes.append("[G] reads like a keyword list; write flowing prose")
-    if not LIGHT.search(p):
-        c -= 10; notes.append("[G] no lighting direction/quality named")
+    lit = [name for name, rx in LIGHT_PARTS.items() if rx.search(p)]
+    if len(lit) < 2:
+        c -= 10; notes.append(f"[G] lighting names only {lit or 'nothing'}; give source, quality, direction and warmth (e.g. 'soft warm window light from the left')")
     if not LENS.search(p):
         c -= 6; notes.append("[G] no camera/depth-of-field cue")
     if not re.search(r"\b(macro|close|fill(?:s|ing) most of the frame)\b", p, re.I):
@@ -74,6 +85,15 @@ def score_motion(p, secs):
         c -= 6; notes.append("[H] motion is not close on the food: add a slow push in, or a close fixed view")
     if p.count("\n") or p.count(";") > 2:
         c -= 5; notes.append("[G] write one flowing paragraph")
+    # LTX guide (docs.ltx.io, checked 2026-11-16): a single shot is about 4-8 present-tense sentences, each with
+    # a verb that does something; from a first-frame image prefer one continuous take.
+    sentences = [x for x in re.split(r"(?<=[.!?])\s+", p.strip()) if words(x) >= 3]
+    if not 3 <= len(sentences) <= 8:
+        c -= 6; notes.append(f"[G] {len(sentences)} sentences; LTX suggests about 4-8 for one shot")
+    if re.search(r"\b(cut(?:s)? to|hard cut|new angle|switches to)\b", p, re.I):
+        c -= 8; notes.append("[G] a cut inside an image-to-video shot; prefer one continuous take")
+    if ANY_NEG.search(p):
+        c -= 4; notes.append("[H] negations in motion ('No extra fingers'); state the wanted result instead")
     return max(c, 0), notes
 
 
@@ -147,6 +167,8 @@ if __name__ == '__main__':
         print(json.dumps(results, indent=2)); sys.exit()
     mins = [int(a.split('=')[1]) for a in sys.argv if a.startswith('--min=')]
     gate = mins[0] if mins else None
+    prompt_mins = [int(a.split('=')[1]) for a in sys.argv if a.startswith('--min-prompts=')]
+    prompt_gate = prompt_mins[0] if prompt_mins else None
     for r in results:
         print(f"\n== {r['file']}  overall {r['overall']}  (prompts {r['prompt_avg']}, story {r['story']})")
         for s in r['shots']:
@@ -157,5 +179,11 @@ if __name__ == '__main__':
             print(f"  story: {n}")
         if gate is not None:
             print(f"  GATE {'PASS' if r['overall'] >= gate else 'FAIL'}: {r['overall']} vs minimum {gate}" + ('' if r['overall'] >= gate else ' -> fix the lines above, then rerun'))
+        if prompt_gate is not None:
+            ok = r['prompt_avg'] >= prompt_gate
+            print(f"  PROMPT GATE {'PASS' if ok else 'FAIL'}: {r['prompt_avg']} vs minimum {prompt_gate}" +
+                  ('' if ok else ' -> run scripts/refine-prompts.py SCENARIO --studio luxury-kitchen --in-place, then fix what is left'))
     if gate is not None and any(r['overall'] < gate for r in results):
+        sys.exit(1)
+    if prompt_gate is not None and any(r['prompt_avg'] < prompt_gate for r in results):
         sys.exit(1)
