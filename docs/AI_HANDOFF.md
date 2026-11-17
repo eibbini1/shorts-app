@@ -541,3 +541,7 @@ Next: implement audio fixes first (cheap, no GPU), then ending check.
 - Verified two Node regressions, a real FFmpeg source/upscale fixture, existing Studio recovery tests, the production UI build, and release-evidence tests. Browser verification confirmed 384×640 source clips / 720×1280 delivery on the cached replay, and withheld flags for a second take with a stale report. Cached replay again passed 6/6 technical QA (-14.72 LUFS, -1.54 dBTP, 10.000 s).
 - No new artistic quality or audio listening verdict was recorded. Formal Studio editorial integration and controlled Foley comparison remain the next creative phase. Live rollout and a new model render still require their existing approvals. No merge or deployment was performed.
 - Final regression results on this Phase 1 snapshot: 100 Vitest tests, 87 Python tests and 2 exact-export Node tests passed. Integration is a normal fast-forward update to PR #22, retaining the prior hardening commit in history. Generated media stays local.
+
+## 2026-11-17 — Approved localhost rollout preparation
+- Owner approved live rollout. Read-only precheck found port 8787 idle at a completed stills job. Plan: dedicated release snapshot, reusing existing storage, drafts, output media and authentication/origin settings. Original worktree remains intact.
+- Added a recovery action for completed first-frame jobs created before manifests existed. Missing selection now offers Make first frames without bumping a seed. UI production build passed.

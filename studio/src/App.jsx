@@ -365,7 +365,7 @@ export default function App() {
               {job.status === 'cancelled' && <p className="muted">Stopped.</p>}
               {job.status === 'interrupted' && <p className="bad">{job.error}</p>}
               {job.plan && <PlanCard job={job} idea={job.prompt} onStills={stills} disabled={busy || blocked} notes={notes} />}
-              {job.plan && <FramesBlock job={job} plan={job.plan?.plan || job.plan} onRegen={regen} onRender={render} busy={busy || me?.rendersLeft === 0} blocked={blocked} />}
+              {job.plan && <FramesBlock job={job} plan={job.plan?.plan || job.plan} onStills={stills} onRegen={regen} onRender={render} busy={busy || me?.rendersLeft === 0} blocked={blocked} />}
               {job.plan && <RenderTimer job={job} plan={job.plan?.plan || job.plan} />}
               {job.plan && <RenderLive job={job} plan={job.plan?.plan || job.plan} sessions={sessions} />}
               {job.status === 'done' && job.kind === 'draft' && !job.plan && <p className="muted">Plan saved: {job.scenario}</p>}

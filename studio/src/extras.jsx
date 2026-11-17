@@ -254,10 +254,11 @@ export function LearnedCard() {
 }
 
 /* ---------- first frames: check the pictures before spending minutes on motion ---------- */
-export function FramesReview({ job, plan, files, onRegen, onRender, busy, blocked }) {
+export function FramesReview({ job, plan, files, onStills, onRegen, onRender, busy, blocked }) {
   const shots = plan.shots || [];
   const still = (n) => [...(files.stills || [])].reverse().find((f) => f.shot === n);
-  if (!shots.length || !(files.stills || []).length) return null;
+  if (!shots.length) return null;
+  if (!(files.stills || []).length) return <section className="card"><h3>Review first frames</h3><p>This frame set has no verified selection. Make first frames to continue.</p><button className="primary" disabled={busy || blocked} onClick={onStills}>Make first frames</button></section>;
   const url = (f) => '/media?p=' + encodeURIComponent(f.p) + '&v=' + Math.round(f.t);
   const all = shots.every((_, i) => still(i + 1));
   const est = planEstimate(clipsOf(shots));
@@ -280,7 +281,7 @@ export function FramesReview({ job, plan, files, onRegen, onRender, busy, blocke
   );
 }
 
-export function FramesBlock({ job, plan, onRegen, onRender, busy, blocked }) {
+export function FramesBlock({ job, plan, onStills, onRegen, onRender, busy, blocked }) {
   const [files, setFiles] = useState({ stills: [] });
   const show = job.kind === 'stills' && job.status === 'done' && job.scenario;
   useEffect(() => {
@@ -290,7 +291,7 @@ export function FramesBlock({ job, plan, onRegen, onRender, busy, blocked }) {
     return () => { stop = true; };
   }, [show, job.scenario, job.updatedAt]);
   if (!show) return null;
-  return <FramesReview job={job} plan={plan} files={files} onRegen={onRegen} onRender={onRender} busy={busy} blocked={blocked} />;
+  return <FramesReview job={job} plan={plan} files={files} onStills={onStills} onRegen={onRegen} onRender={onRender} busy={busy} blocked={blocked} />;
 }
 
 /* ---------- a block the Studio could not fix by itself: plain words and one-click next steps ---------- */
