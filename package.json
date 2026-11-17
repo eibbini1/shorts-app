@@ -49,6 +49,8 @@
     "video:local": "bash scripts/make-local-video.sh",
     "scripts:verify": "python3 scripts/verify-npm-scripts.py",
     "artcraft:check:mac": "python3 scripts/check-artcraft-mac.py",
+    "recipe:arabic:check": "python3 scripts/arabic_recipe.py",
+    "recipe:arabic:render": "python3 scripts/arabic_recipe.py --output",
     "chocolate:motion:mac": "python3 scripts/chocolate-short/generate-motion.py",
     "models:check:mac": "python3 scripts/models-status-mac.py",
     "trends:local": "python3 scripts/fetch-trends.py",
