@@ -93,7 +93,7 @@ Added a selectable **Codex dark** Studio theme with charcoal surfaces, soft-gray
 1. Add a distinct state for `rendered; creative review required`; keep a 50/100 result blocked from “ready” or release wording while leaving the file playable for review.
 2. Improve risky-action review: require sampled motion evidence for hand/tool/food actions, and stop or request a human choice when the local vision model cannot confirm the intended action. Treat model judgments as conservative flags, not proof of realism.
 3. Verify local-AI refinement in the owner Mac Studio with Ollama available; deterministic validation cannot establish story quality.
-4. Add cross-shot first-frame continuity review and human review feedback to the image-to-motion gate.
+4. Run a controlled sound-cue comparison on identical cached footage, then complete Studio capture of human review and approved technique retrieval.
 5. Reconcile local checkouts only after reviewing every dirty worktree. Do not deploy this branch over the live Studio without a separate release review.
 
 ## Idea refinement implementation (2026-11-18)
@@ -106,6 +106,13 @@ Added a selectable **Codex dark** Studio theme with charcoal surfaces, soft-gray
 
 - **IMPLEMENTED, not deployed:** repeated sidebar names now show their creation time; the Studio detects a matching prompt and offers to open the existing project or intentionally create a separate one. Automatic Up Next remains able to repeat a user-queued idea without an interruption.
 - **IMPLEMENTED, locally tested:** the story builder now rejects camera-only pan/zoom/beauty-shot language as the sole shot motion, asks the model for one subject action plus a changed end state, retries once, then uses its beat-specific fallback or blocks saving if no physical action remains.
-- **Limits:** this is a conservative English verb check. It does not establish correct physics, realistic hand/tool contact, continuity, or quality, and it may need expansion for other languages. No Ollama-backed scenario was generated because the service was unavailable here. First-frame visual continuity remains a separate missing gate.
+- **Limits:** this is a conservative English verb check. It does not establish correct physics, realistic hand/tool contact, continuity, or quality, and it may need expansion for other languages. No Ollama-backed scenario was generated because the service was unavailable here. The new timeline makes adjacent samples reviewable but does not automatically prove within-shot or cross-shot continuity.
 - **Validation:** action gate 3/3, idea refinement 6/6 Node tests, focused Studio tests 11/11, root build/lint/script checks and Studio build pass. Full video-render integration was not rerun.
+
+## Phase 2 timestamped action checkpoints (2026-11-18)
+
+- **IMPLEMENTED, synthetic-smoke verified:** final-file prereview now extracts frames shortly after each shot starts, at its midpoint, and shortly before its end. The output contact sheet labels each frame with shot number, stage and timestamp. The exact-export report records the same times and planned action.
+- Studio exposes this as **Shot action checkpoints** with the planned action beside each shot. The image is shown only when its checksum matches the hash-bound prereview for that export. The UI clearly asks the person to compare start/middle/end; it does not call this an AI realism verdict.
+- **VERIFIED:** a four-second synthetic, two-shot video produced six labeled frames and a contact sheet. `--skip-vision` was used, so no model judgment was involved. The synthetic sine audio correctly triggered the loudness warning, providing a check that the existing audio gate still runs.
+- **Remaining Phase 2 work:** actual food/cartoon film review of the new sheet; a controlled baseline-versus-candidate Foley test on identical picture; human confirmation of event timing. The current automated vision review still asks about middle frames and the final payoff only.
 

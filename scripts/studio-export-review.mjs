@@ -50,13 +50,29 @@ export async function inspectExport(root, video, { running = false, probe = prob
   const flags = Object.fromEntries(Object.entries(report.flags && typeof report.flags === 'object' ? report.flags : {})
     .map(([key, value]) => [key, textList(value)]));
   const motion = Array.isArray(report.shotMotion) ? report.shotMotion : [];
+  const unchecked = textList(report.unchecked);
+  const sampleTimeline = Array.isArray(report.sampleTimeline) ? report.sampleTimeline.filter((item) =>
+    Number.isInteger(item?.shot) && ['startSeconds', 'middleSeconds', 'endSeconds'].every((key) => Number.isFinite(item[key]))
+      && typeof item.plannedAction === 'string').map((item) => ({
+    shot: item.shot, startSeconds: item.startSeconds, middleSeconds: item.middleSeconds,
+    endSeconds: item.endSeconds, plannedAction: item.plannedAction.slice(0, 400),
+  })) : [];
+  let contactSheet = null;
+  if (sampleTimeline.length) {
+    const contactFile = file.replace(/\.mp4$/i, '.contact.png');
+    try {
+      if (await fileHash(contactFile) === report.contactSheetSha256) contactSheet = path.relative(root, contactFile);
+      else unchecked.push('start/middle/end contact sheet is missing or does not match its saved checksum');
+    } catch { unchecked.push('start/middle/end contact sheet is unavailable'); }
+  }
   return {
     video, videoSha256: hash, status, resolution,
     shotMotion: motion,
     weak: motion.flatMap((value, index) => typeof value === 'number' && value < 2 ? [index + 1] : []),
     flags,
-    unchecked: textList(report.unchecked),
+    unchecked,
     notMachineChecked: textList(report.notMachineChecked),
+    sampleTimeline, contactSheet,
     visionChecked: report.visionChecked === true,
     motionChecked: motion.length > 0 && motion.every((value) => typeof value === 'number' && Number.isFinite(value)),
   };

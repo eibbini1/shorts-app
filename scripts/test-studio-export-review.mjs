@@ -28,10 +28,18 @@ test('review follows the exact export and never borrows another take', async () 
   assert.equal(stale.status, 'stale');
   assert.deepEqual(stale.weak, []);
   await write(b.replace('.mp4', '.prereview.json'), { videoSha256: await fileHash(b), shotMotion: [5] });
+  await fs.writeFile(b.replace('.mp4', '.contact.png'), 'synthetic contact sheet');
+  await write(b.replace('.mp4', '.prereview.json'), {
+    videoSha256: await fileHash(b), shotMotion: [5],
+    contactSheetSha256: await fileHash(b.replace('.mp4', '.contact.png')),
+    sampleTimeline: [{ shot: 1, startSeconds: 0.1, middleSeconds: 1, endSeconds: 1.9, plannedAction: 'A chef slices a tomato.' }],
+  });
   const reviewed = await inspect('outputs/take-b.mp4');
   assert.equal(reviewed.status, 'complete');
   assert.equal(reviewed.visionChecked, false);
   assert.equal(reviewed.motionChecked, true);
+  assert.equal(reviewed.contactSheet, 'outputs/take-b.contact.png');
+  assert.equal(reviewed.sampleTimeline[0].plannedAction, 'A chef slices a tomato.');
   assert.equal(reviewed.resolution.status, 'unavailable');
   await write(b.replace('.mp4', '.provenance.json'), {
     outputSha256: await fileHash(b), nativeSources: [{ width: 384, height: 640 }, { width: 768, height: 1280 }],

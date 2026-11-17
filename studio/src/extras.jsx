@@ -488,6 +488,14 @@ export function ExportReview({ job, review, weak, notes, busy, onRetake, onCompa
         <dd>{weak.length ? `${weak.length === 1 ? 'Shot ' + weak[0] + ' barely moves' : 'Shots ' + weak.join(', ') + ' barely move'}. This is a machine measure, not a verdict.` : review.status === 'complete' && review.motionChecked ? 'No shot was flagged by the motion measure.' : review.status === 'pending' ? 'Review results are loading.' : review.status === 'stale' ? 'The saved review belongs to a different version. Review this export again.' : review.status === 'complete' ? 'Motion measurement is incomplete.' : 'Review results are unavailable for this export.'}
           {review.status === 'complete' && <p className="muted">{review.visionChecked ? 'Vision screening ran.' : 'Vision screening is unverified or was skipped.'} {(review.unchecked || []).join(' ')} {(review.notMachineChecked || []).join(' ')}</p>}</dd>
         {review.status === 'complete' && Object.values(review.flags || {}).some((items) => items.length > 0) && <><dt>Automatic review flags (check these moments)</dt><dd><ul>{Object.entries(review.flags || {}).flatMap(([category, items]) => items.map((item, index) => <li key={category + index}>{category}: {item}</li>))}</ul></dd></>}
+        {review.status === 'complete' && review.sampleTimeline?.length > 0 && <><dt>Shot action checkpoints</dt><dd>
+          <p className="muted">Start, middle and end samples are provided for your review. The contact sheet is not an automatic realism verdict.</p>
+          {review.contactSheet && <details className="action-checkpoints">
+            <summary>Open timestamped frame sheet</summary>
+            <img src={'/media?p=' + encodeURIComponent(review.contactSheet)} alt="Timestamped start, middle and end frames for every shot" loading="lazy" />
+          </details>}
+          <ol>{review.sampleTimeline.map((item) => <li key={item.shot}><b>Shot {item.shot}</b> · {item.startSeconds.toFixed(1)}s / {item.middleSeconds.toFixed(1)}s / {item.endSeconds.toFixed(1)}s<br /><span className="muted">Planned: {item.plannedAction}</span></li>)}</ol>
+        </dd></>}
         <dt>Human editorial review</dt>
         <dd>{rated ? `Rated by you: ${rated === 'up' ? 'good' : 'needs work'}.` : 'Picture and sound have not been reviewed by a person yet.'}</dd>
       </dl>
