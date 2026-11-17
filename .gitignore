@@ -14,6 +14,7 @@ dist/
 
 # generated media and caches (large, reproducible)
 out/
+/outputs/arabic-chatterbox-pilot/
 storage/
 storage
 *.mp4
