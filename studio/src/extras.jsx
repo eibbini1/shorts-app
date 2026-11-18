@@ -470,11 +470,11 @@ export function StageBar({ job }) {
 export function jobState(job, blocked, busyElsewhere) {
   const st = job.status;
   if (!st || st === 'idle') return busyElsewhere ? { k: 'waiting', t: 'The Mac is busy with another video. New ideas wait in Up next.' } : { k: 'idle', t: '' };
-  if (st === 'running') return { k: 'running', t: job.kind === 'draft' ? 'Planning your video.' : job.kind === 'stills' ? 'Making first frames.' : 'Rendering motion. This takes several minutes; you can leave this page open.' };
+  if (st === 'running') return { k: 'running', t: job.kind === 'draft' ? 'Planning your video.' : job.kind === 'stills' ? 'Making and checking first frames. Local AI will correct a rejected frame before stopping; no motion starts until frames pass.' : 'Rendering motion. This takes several minutes; you can leave this page open.' };
   if (st === 'stopping') return { k: 'waiting', t: 'Stopping the current job. Studio will be available when it exits.' };
   if (st === 'cancelled') return { k: 'stopped', t: 'Stopped. Your idea is kept; plan again when ready.' };
   if (st === 'interrupted') return { k: 'failed', t: 'The Mac restarted this job. Your idea is kept; try again.' };
-  if (st === 'failed' && job.kind === 'stills') return { k: 'blocked', t: 'First-frame review stopped before video rendering. Inspect the flagged frames below; no motion was generated.' };
+  if (st === 'failed' && job.kind === 'stills') return { k: 'blocked', t: 'Local AI could not verify an acceptable first frame after its bounded correction attempt. Your idea and plan are saved; no motion was generated. Retry in this project to let Studio try again.' };
   if (st === 'failed') return blocked ? { k: 'blocked', t: 'Blocked by a check. Nothing was rendered. Fix the point below or try again.' } : { k: 'failed', t: 'Something went wrong. Your idea is kept; try again.' };
   if (job.kind === 'draft') return blocked ? { k: 'blocked', t: 'Blocked by a check. Nothing was rendered.' } : { k: 'approval', t: 'Plan ready. Next: make first frames, then check them before the long render.' };
   if (job.kind === 'stills') return blocked ? { k: 'blocked', t: 'Blocked by a check. Fix it before rendering.' } : { k: 'approval', t: 'First frames ready. Approve them to start the render, or regenerate any frame.' };

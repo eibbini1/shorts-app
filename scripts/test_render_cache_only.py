@@ -61,11 +61,34 @@ class StillReviewRetryTests(unittest.TestCase):
 
     def test_unavailable_vision_gate_does_not_waste_more_image_generations(self):
         generated = []
+        checks = []
+
+        def unavailable(_reference, _prompt):
+            checks.append(True)
+            return ('unavailable', 'Ollama is unreachable')
+
         with self.assertRaisesRegex(RuntimeError, 'vision review is unavailable'):
             render.review_still_with_retries(
                 Path('first-frame'), 'A halloumi slab', 'Halloumi', 'a halloumi slab', 1200,
-                lambda _reference, _prompt: ('unavailable', 'Ollama is unreachable'),
+                unavailable,
                 lambda prompt, seed: generated.append((prompt, seed)))
+        self.assertEqual(generated, [])
+        self.assertEqual(len(checks), 2)
+
+    def test_transient_vision_failure_retries_same_frame_before_rejecting_or_regenerating(self):
+        checks = []
+        generated = []
+
+        def review(reference, _prompt):
+            checks.append(reference)
+            return ('unavailable', 'Ollama timed out') if len(checks) == 1 else None
+
+        reference, _ = render.review_still_with_retries(
+            Path('first-frame'), 'A pizza dough ball', 'Italian pizza', 'pizza dough', 1200,
+            review, lambda prompt, seed: generated.append((prompt, seed)))
+
+        self.assertEqual(reference, Path('first-frame'))
+        self.assertEqual(checks, [Path('first-frame'), Path('first-frame')])
         self.assertEqual(generated, [])
 
     def test_exhausted_retries_keep_the_last_vision_reason(self):

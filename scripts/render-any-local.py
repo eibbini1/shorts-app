@@ -20,6 +20,7 @@ from select_still_local import select as select_still_local
 ROOT = Path(__file__).resolve().parents[1]
 FPS = 24
 STILL_REVIEW_ATTEMPTS = 2
+VISION_UNAVAILABLE_RETRIES = 1
 
 
 def run(*args, env=None):
@@ -93,6 +94,12 @@ def review_still_with_retries(initial_reference, prompt, subject, required, seed
     current_prompt = prompt
     for attempt in range(1, attempts + 1):
         result = review(reference, current_prompt)
+        for _ in range(VISION_UNAVAILABLE_RETRIES):
+            if not result or result[0] != 'unavailable':
+                break
+            print('Local vision check was incomplete; retrying the same frame once without generating another image.',
+                  flush=True)
+            result = review(reference, current_prompt)
         if result is None:
             return reference, current_prompt
         status, reason = result

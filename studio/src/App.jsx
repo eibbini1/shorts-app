@@ -110,6 +110,8 @@ function PlanCard({ job, idea, onStills, disabled, notes }) {
       <p className="muted">{shots.length} shots · {total}s · render estimate about {fmt(planEstimate(clipsOf(shots)).mid)} ({fmt(planEstimate(clipsOf(shots)).low)} to {fmt(planEstimate(clipsOf(shots)).high)}) if nothing is retried</p>
       <ShotPlan shots={shots} notes={notes} />
       {job.kind === 'draft' && job.status === 'done' && <button className="primary" onClick={onStills} disabled={disabled}>Make first frames</button>}
+      {job.kind === 'stills' && job.status === 'failed' && job.scenario &&
+        <button className="primary" onClick={onStills} disabled={disabled}>Retry first-frame correction in this project</button>}
     </div>
   );
 }

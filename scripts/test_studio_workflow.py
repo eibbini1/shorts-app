@@ -24,6 +24,10 @@ def run_fixture():
     (root/scenario).write_text('{}')
     session='1794900000000'
     (root/'storage/studio-sessions'/f'{session}.json').write_text(json.dumps(dict(id=session, user='creator-a', name='fixture', scenario=scenario, status='done', kind='stills', lines=[], steps=[])))
+    failed_stills='1794900000008'
+    (root/'storage/studio-sessions'/f'{failed_stills}.json').write_text(json.dumps(dict(
+        id=failed_stills, user='creator-a', name='failed first frames', scenario=scenario, status='failed',
+        kind='stills', options={'chain':True}, lines=['Vision review unavailable'], steps=['Generating stills'])))
     legacy='1794900000003'
     (root/'storage/studio-sessions'/f'{legacy}.json').write_text(json.dumps(dict(id=legacy, user='fixture-owner', name='older plan', scenario=scenario, status='done', kind='draft',
         prompt='A chef pours honey, then plates a pear tart.', lines=['BLOCKED: first shot misses the hook', 'Fixed automatically: preserved the requested action'],
@@ -48,7 +52,8 @@ def run_fixture():
         {'type':'gate-event','session':'seed-c','user':'creator-a','look':'food','gate':'visible-action','outcome':'blocked','blocker':'beat 2 has no filmable physical action','message':'fixture action failure'},
     ]
     (root/'storage/studio-learning/runs.jsonl').write_text(''.join(json.dumps(row)+'\n' for row in seeded_learning))
-    (root/'scripts/make-local-video.sh').write_text('''sleep 0.4
+    (root/'scripts/make-local-video.sh').write_text('''echo "Fixture args: $*"
+    sleep 0.4
     if [ -f fail ]; then
       touch outputs/fixture-invalid.mp4
       echo "Technical QA failed: fixture"
@@ -272,6 +277,12 @@ if [ "$3" = '--stills-only' ]; then
         assert stills['kind']=='stills'
         assert not {'Finishing and exporting','Mixing sound','Recording narration','Generating motion clips'}.intersection(stills['steps'])
         assert len(req('/api/live-files?scenario='+scenario,'creator-a')[1]['stills'])==2
+        retry_status, failed_retry=req('/api/stills','creator-a',{'scenario':scenario,'sessionId':failed_stills})
+        assert retry_status==202 and failed_retry['id']==failed_stills
+        failed_retry=finish(failed_stills)
+        assert failed_retry['attempts'][0]['status']=='failed'
+        assert failed_retry['attempts'][0]['lines']==['Vision review unavailable']
+        assert '--chain-images' not in failed_retry['lines'][0]
         assert req('/api/regen','creator-a',{**payload,'shot':2})[0]==202
         assert finish()['status']=='done'
         assert json.loads((work/'seed-bumps.json').read_text())=={'1':1}
