@@ -101,13 +101,17 @@ function PlanCard({ job, idea, onStills, disabled, notes }) {
   return (
     <div className="card">
       <p className="muted">Your idea</p>
-      <p>{idea || job.plan?.topic}</p>
+      <p>{job.options?.originalPrompt || idea || job.plan?.topic}</p>
+      {job.options?.storyPrompt && job.options.storyPrompt !== (job.options.originalPrompt || idea) &&
+        <p className="muted"><b>Director’s version:</b> {job.options.storyPrompt}</p>}
       <h3>{plan.title || 'Story plan'}</h3>
       {plan.hook && <p><b>Hook:</b> {plan.hook}</p>}
       {plan.payoff && <p><b>Payoff:</b> {plan.payoff}</p>}
       <p className="muted">{shots.length} shots · {total}s · render estimate about {fmt(planEstimate(clipsOf(shots)).mid)} ({fmt(planEstimate(clipsOf(shots)).low)} to {fmt(planEstimate(clipsOf(shots)).high)}) if nothing is retried</p>
       <ShotPlan shots={shots} notes={notes} />
       {job.kind === 'draft' && job.status === 'done' && <button className="primary" onClick={onStills} disabled={disabled}>Make first frames</button>}
+      {job.kind === 'stills' && job.status === 'failed' && job.scenario &&
+        <button className="primary" onClick={onStills} disabled={disabled}>Retry first-frame correction in this project</button>}
     </div>
   );
 }
@@ -121,9 +125,13 @@ function IdeaRefinement({ result, onUse }) {
       <p className="muted">{result.message}</p>
       {ready ? (
         <div className="refined-copy">
+          {result.originalPrompt && <p><b>Your original idea (kept as a must-show requirement)</b><br />{result.originalPrompt}</p>}
           <p><b>Refined idea</b><br />{result.refinedPrompt}</p>
-          <p><b>Ending</b><br />{result.ending}</p>
-          <button className="primary" onClick={() => onUse({ prompt: result.refinedPrompt, ending: result.ending })}>Use this version</button>
+          <ul className="brief-summary">
+            <li><b>Hook:</b> {result.hook}</li><li><b>Must show:</b> {result.mustShow}</li>
+            <li><b>Obstacle:</b> {result.obstacle}</li><li><b>Turn:</b> {result.turn}</li><li><b>Ending:</b> {result.ending}</li>
+          </ul>
+          <button className="primary" onClick={() => onUse(result)}>Create from this brief</button>
         </div>
       ) : (
         <>
@@ -133,8 +141,11 @@ function IdeaRefinement({ result, onUse }) {
               <article className="refine-choice" key={choice.label + index}>
                 <h4>{choice.label}</h4>
                 <p>{choice.prompt}</p>
-                <p className="muted"><b>Ending:</b> {choice.ending}</p>
-                <button className="ghost" onClick={() => onUse({ prompt: choice.prompt, ending: choice.ending })}>Choose this story</button>
+                <ul className="brief-summary">
+                  <li><b>Hook:</b> {choice.hook}</li><li><b>Must show:</b> {choice.mustShow}</li>
+                  <li><b>Obstacle:</b> {choice.obstacle}</li><li><b>Turn:</b> {choice.turn}</li><li><b>Ending:</b> {choice.ending}</li>
+                </ul>
+                <button className="ghost" onClick={() => onUse({ ...choice, prompt: choice.prompt })}>Create this story</button>
               </article>
             ))}
           </div>
@@ -194,7 +205,8 @@ function RenderLive({ job, plan, sessions }) {
             {clip(i + 1) ? <video src={url(clip(i + 1))} autoPlay muted loop playsInline />
               : still(i + 1) ? <img className="develop" src={url(still(i + 1))} alt={'Shot ' + (i + 1)} />
               : <div className="ph">{running ? 'waiting...' : 'no file'}</div>}
-            <div className="cap"><b>Shot {i + 1}</b> · {sh.seconds}s · {clip(i + 1) ? 'clip ready' : still(i + 1) ? 'first frame ready' : 'queued'}</div>
+            <div className="cap"><b>Shot {i + 1}</b> · {sh.seconds}s · {clip(i + 1) ? 'clip ready' : still(i + 1)?.verified === false ? 'review required; not approved' : still(i + 1) ? 'first frame ready' : 'queued'}</div>
+            {still(i + 1)?.reviewReason && <div className="muted small">{still(i + 1).reviewReason}</div>}
             {sh.sound && <div className="muted small">Sound: {sh.sound}</div>}
           </div>
         ))}
@@ -243,7 +255,17 @@ export default function App() {
   const [refinement, setRefinement] = useState(null);
   const refinementRequest = useRef(0);
   const [look, setLook] = useState('food');
-  const [theme, setTheme] = useState(() => { try { return localStorage.getItem('studio-theme') || 'studio'; } catch { return 'studio'; } });
+  const [theme, setTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem('studio-theme');
+      const migrated = localStorage.getItem('studio-theme-codex-default-v1') === '1';
+      if (!migrated) {
+        localStorage.setItem('studio-theme-codex-default-v1', '1');
+        if (!saved || saved === 'studio') return 'codex';
+      }
+      return saved || 'codex';
+    } catch { return 'codex'; }
+  });
   useEffect(() => { document.documentElement.dataset.theme = theme; try { localStorage.setItem('studio-theme', theme); } catch {} }, [theme]);
   const [setting, setSetting] = useState('');
   const refinementInputs = useRef({});
@@ -291,8 +313,11 @@ export default function App() {
     } catch (error) { if (request === refinementRequest.current) setErr(error.message); }
     finally { setRefining(false); }
   };
-  const useRefinedIdea = ({ prompt: nextPrompt, ending: nextEnding }) => {
-    setPrompt(nextPrompt); setEnding(nextEnding); setExampleContext(false); setRefinement(null); setExampleInfo(null);
+  const useRefinedIdea = (story) => {
+    const originalPrompt = prompt;
+    const nextPrompt = story.refinedPrompt || story.prompt;
+    setPrompt(nextPrompt); setEnding(story.ending); setExampleContext(false); setRefinement(null); setExampleInfo(null);
+    draftWith({ prompt: nextPrompt, originalPrompt, ending: story.ending, hook: story.hook, mustShow: story.mustShow, obstacle: story.obstacle, turn: story.turn, allowDuplicate: true }, { ignoreDuplicate: true, approved: true });
   };
   const [unattended, setUnattended] = useState(false);
   const [auto, setAuto] = useState(false);
@@ -366,7 +391,7 @@ export default function App() {
     try { await fn(); } catch (e) { setErr(e.message); }
     finally { submitting.current = false; setSending(false); }
   };
-  const draftWith = (extra = {}, { ignoreDuplicate = false } = {}) => {
+  const draftWith = (extra = {}, { ignoreDuplicate = false, approved = false } = {}) => {
     if (planDisabled) return;
     if (!ignoreDuplicate) {
       const duplicate = findMatchingSession(extra.prompt || prompt, sessions, selectedId);
@@ -375,11 +400,17 @@ export default function App() {
     setDuplicateSession(null);
     return run(async () => {
       const runUnattended = me?.canRunUnattended && unattended;
-      const r = await post('/api/draft', { prompt, seconds, orientation, audio, ending, look, setting, unattended: runUnattended, ...extra });
+      const r = await post('/api/draft', { prompt, seconds, orientation, audio, ending, look, setting, unattended: runUnattended, refine: !approved, requestId: globalThis.crypto.randomUUID(), ...extra });
+      if (r.decision === 'needs_choices') { setRefinement(r.refinement); return; }
+      if (r.options?.storyPrompt) setPrompt(r.options.storyPrompt);
+      if (r.options?.ending) setEnding(r.options.ending);
+      setRefinement(null);
       autoRef.current = autoOn && !runUnattended; autoSeen.current = ''; pickProject(r.id);
     })();
   };
-  const draft = () => draftWith();
+  // The normal Create action proposes a complete story brief first. The user
+  // confirms the brief (or chooses a direction) before the local director runs.
+  const draft = () => refineIdea();
   const render = run(async () => { const r = await post('/api/render', { scenario: job.scenario, sessionId: job.id }); pickProject(r.id); });
   const stills = run(async () => { const r = await post('/api/stills', { scenario: job.scenario, sessionId: job.id }); pickProject(r.id); });
   const resumeUnattended = run(async () => { const r = await post('/api/stills', { scenario: job.scenario, sessionId: job.id, resumeUnattended: true }); pickProject(r.id); });
@@ -457,13 +488,21 @@ export default function App() {
               {running && <button className="ghost" onClick={cancel}>Stop</button>}
               {job.status === 'failed' && !blocked && <p className="bad">{job.technicalQa?.status === 'failed' ? 'The final file failed technical QA.' : job.error}</p>}
               {notes.length > 0 && <ul className="notes">{notes.filter((n) => !(choice && n.startsWith('BLOCKED'))).map((n, i) => <li key={i} className={n.startsWith('BLOCKED') ? 'bad' : n.startsWith('Fixed') ? 'good' : 'muted'}>{n.startsWith('Fixed') ? '✓ ' + n : n}</li>)}</ul>}
-              {choice && job.status !== 'running' && <BlockedCard lines={job.lines || []} choice={choice} busy={anyRunning} onRetry={() => draftWith()} onAnyway={() => draftWith({ allowRepeat: true })} onEdit={() => document.querySelector('.composer textarea')?.focus()} />}
+              {choice && job.status !== 'running' && <BlockedCard lines={job.lines || []} choice={choice} busy={anyRunning} onRetry={() => draftWith({ retrySessionId: job.id, prompt: job.options?.storyPrompt || job.prompt, originalPrompt: job.options?.originalPrompt || job.prompt }, { ignoreDuplicate: true })} onAnyway={() => draftWith({ allowRepeat: true, allowDuplicate: true }, { ignoreDuplicate: true })} onEdit={() => document.querySelector('.composer textarea')?.focus()} />}
               {job.status === 'cancelled' && <p className="muted">Stopped.</p>}
               {job.status === 'interrupted' && <p className="bad">{job.error}</p>}
               {['failed', 'interrupted'].includes(job.status) && me?.canRunUnattended && job.options?.unattended && job.scenario && job.plan && <button className="primary" disabled={busy} onClick={resumeUnattended}>Resume automatically</button>}
               {job.plan && <PlanCard job={job} idea={job.prompt} onStills={stills} disabled={busy || blocked} notes={notes} />}
               {job.plan && <FramesBlock job={job} plan={job.plan?.plan || job.plan} onStills={stills} onRegen={regen} onRender={render} busy={busy || me?.rendersLeft === 0} blocked={blocked} />}
               {job.plan && <RenderTimer job={job} plan={job.plan?.plan || job.plan} />}
+              {(job.attempts || []).length > 0 && <details className="card"><summary>Previous planning attempts ({job.attempts.length})</summary>{job.attempts.map((attempt, index) => {
+                const previousPlan = attempt.plan?.plan || attempt.plan;
+                return <section key={`${attempt.startedAt}-${index}`}><p><b>Attempt {index + 1}</b> · {attempt.status}{attempt.error ? ` · ${attempt.error}` : ''}</p>
+                  {previousPlan?.shots && <><p><b>{previousPlan.title || 'Saved story plan'}</b> · {attempt.options?.seconds || previousPlan.shots.reduce((sum, shot) => sum + (Number(shot.seconds) || 0), 0)}s</p><ShotPlan shots={previousPlan.shots} notes={[]} /></>}
+                  {attempt.scenario && <p className="muted small">Saved scenario: {attempt.scenario}</p>}
+                  {attempt.lines?.length > 0 && <pre className="log">{attempt.lines.join('\n')}</pre>}
+                </section>;
+              })}</details>}
               {job.plan && <RenderLive job={job} plan={job.plan?.plan || job.plan} sessions={sessions} />}
               {job.status === 'done' && job.kind === 'draft' && !job.plan && <p className="muted">Plan saved: {job.scenario}</p>}
               {!job.video && job.previousVideo && <details className="card"><summary>Previous verified export</summary><Player src={'/media?p=' + encodeURIComponent(job.previousVideo)} /></details>}
@@ -499,21 +538,21 @@ export default function App() {
             placeholder="A baker cracks a chocolate shell to reveal pistachio cream." />
           {anyRunning
             ? <button className="primary" disabled={!prompt.trim()} title="Your Mac is busy with another video. This adds your idea to Up next." onClick={() => { writeQueue([...readQueue(), prompt.trim()].slice(0, 10)); setAutoNext(true); setPrompt(''); }}>Add to Up next</button>
-            : <button className="primary" onClick={draft} disabled={!prompt.trim() || sending || planDisabled}>{unattended && me?.canRunUnattended ? 'Create video automatically' : 'Plan video'}</button>}
+            : <button className="primary" onClick={draft} disabled={!prompt.trim() || sending || refining || planDisabled}>{refining ? 'Refining your story…' : unattended && me?.canRunUnattended ? 'Prepare video plan' : 'Review story'}</button>}
         </div>
         {duplicateSession && <div className="hint duplicate-project" role="status">
           <p><b>{duplicateSession.id === selectedId ? 'This project is already open.' : 'You already have a project with this idea.'}</b> “{sessionDisplayName(duplicateSession, sessions)}” · {duplicateSession.status}{duplicateSession.hasVideo ? ' · video available' : ''}</p>
           {duplicateSession.id === selectedId && <p>Continue with the current plan above, or create a separate project.</p>}
           <div className="row wrap">
             {duplicateSession.id !== selectedId && <button className="primary" type="button" onClick={() => { const id = duplicateSession.id; setDuplicateSession(null); select(id); }}>Open existing project</button>}
-            <button className="ghost" type="button" onClick={() => draftWith({}, { ignoreDuplicate: true })}>Create a separate project</button>
+            <button className="ghost" type="button" onClick={() => draftWith({ allowDuplicate: true }, { ignoreDuplicate: true })}>Create a separate project</button>
           </div>
         </div>}
         <div className="refine-row">
           <button className="link" type="button" onClick={refineIdea} disabled={!prompt.trim() || refining || anyRunning || sending}>
             {refining ? 'Checking the story with your local model…' : 'Refine idea with local AI'}
           </button>
-          <span className="muted small">Keeps your wording until you choose a refinement.</span>
+          <span className="muted small">First review the complete story brief. Choose or approve it to start the same story checks and local render scripts used by the terminal.</span>
         </div>
         <IdeaRefinement result={refinement} onUse={useRefinedIdea} />
         {me?.canRunUnattended && <div className="opts">

@@ -36,6 +36,17 @@ class RefineTests(unittest.TestCase):
     def test_motion_gets_camera_when_missing(self):
         out = refine.refine_motion('A spoon lifts a bite of cake as cream stretches.', STUDIO)
         self.assertIn('pushes in', out)
+        self.assertGreaterEqual(refine.lint.score_motion(out, 5)[0], 85)
+
+    def test_refined_prompt_stays_inside_renderer_schema(self):
+        first = 'A chef lifts one dumpling into a dark bowl.'
+        long = first + ' ' + 'A soft warm light illuminates the same bowl. ' * 25
+        result = refine.refine_image(long, STUDIO)
+        self.assertTrue(result.startswith(first))
+        self.assertLessEqual(len(result), 1000)
+        self.assertTrue(result.endswith('.'))
+        with self.assertRaises(ValueError):
+            refine.refine_image('A chef ' + 'stirs ' * 210, {})
 
     def test_refined_prompt_stays_inside_renderer_schema(self):
         first = 'A chef lifts one dumpling into a dark bowl.'

@@ -7,6 +7,7 @@ copy as SCENARIO.before-repair.json, and prints one 'FIXED:' line per change.
 Problems it cannot fix safely (repeat topic, timing, narration fit) are left for a redraft.
 """
 import json, re, subprocess, sys
+from difflib import SequenceMatcher
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -31,6 +32,15 @@ def sentence(text):
 
 def first_sentence(text):
     return text.split('.', 1)[0].strip()
+
+
+def action_lead(text):
+    return bool(re.search(r'\b(?:add|bast|break|chop|coat|cut|dip|drizzl|flip|garnish|lift|mix|open|peel|place|pour|press|reach|sear|serv|shake|slice|smash|sprinkl|stir|taste|tilt|toast|turn|whisk)\w*\b', text, re.I)
+                or re.search(r'\b(?:plate|plates|plating)\s+(?:the|a|an|one|each|it|their|her|his|beside)\b', text, re.I))
+
+
+def similar_lead(a, b):
+    return SequenceMatcher(None, ' '.join(a.lower().split()), ' '.join(b.lower().split())).ratio() >= .84
 
 
 def main():
@@ -78,6 +88,26 @@ def main():
             rest = shots[j]['imagePrompt'].split('.', 1)
             shots[j]['imagePrompt'] = sentence('Moments later, ' + (lead[:1].lower() + lead[1:])) + (' ' + rest[1].strip() if len(rest) > 1 else '')
             fixed.append(f'shot {j+1} first frame now shows a different moment from shot {j}')
+        elif m := re.fullmatch(r'shots (\d+) and (\d+) have near-identical motionPrompt', p):
+            i, j = int(m.group(1)) - 1, int(m.group(2)) - 1
+            lead = first_sentence(shots[j]['imagePrompt'])
+            previous = first_sentence(shots[i]['motionPrompt'])
+            if not action_lead(lead) or similar_lead(lead, previous):
+                protagonist = (data.get('storyArc') or {}).get('protagonist', 'The subject').strip().rstrip('.')
+                food = re.search(r'\b(?:chef|food|dish|recipe|cooking|cheese|halloumi|bread|pasta)\b',
+                                 (data.get('topic', '') + ' ' + str(brief.get('mustShow', ''))), re.I)
+                beat = (data.get('storyArc', {}).get('beats') or [{}])[j].get('label', '').lower()
+                if food and 'payoff' in beat:
+                    lead = 'The chef presents the finished dish for its final tasting'
+                elif food and 'approach' in beat:
+                    lead = 'The chef lifts one finished portion toward the serving dish'
+                elif food:
+                    lead = 'The chef turns the finished dish toward the camera'
+                else:
+                    lead = f'{protagonist} turns the focal object toward the visible goal'
+            rest = shots[j]['motionPrompt'].split('.', 1)
+            shots[j]['motionPrompt'] = (sentence(lead) + (' ' + rest[1].strip() if len(rest) > 1 else ''))[:1000]
+            fixed.append(f'shot {j+1} motion now begins with a distinct physical action')
     if not fixed:
         print('No safe automatic repair for: ' + '; '.join(found))
         return 1

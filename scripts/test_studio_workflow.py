@@ -2,13 +2,20 @@ import unittest
 
 
 def run_fixture():
-    import http.client, json, os, pathlib, shutil, socket, subprocess, tempfile, time
+    import atexit, hashlib, http.client, json, os, pathlib, shutil, socket, subprocess, tempfile, time, threading
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
     root=pathlib.Path(tempfile.mkdtemp(prefix='ishorts-ux-check-'))
-    for folder in ['scripts','outputs','storage/studio-sessions','drafts/generated','bin']:
+    for folder in ['scripts','outputs','storage/studio-sessions','storage/studio-learning','drafts/generated','bin']:
         (root/folder).mkdir(parents=True)
     shutil.copy('scripts/studio-server.mjs',root/'scripts')
+    shutil.copy('scripts/studio-session-utils.mjs',root/'scripts')
     shutil.copy('scripts/studio-export-review.mjs',root/'scripts')
     shutil.copy('scripts/studio-ideas.mjs',root/'scripts')
+    shutil.copy('scripts/studio-refine-idea.mjs',root/'scripts')
+    shutil.copy('scripts/studio-learning-signals.mjs',root/'scripts')
+    shutil.copy('scripts/studio-learning-memory.mjs',root/'scripts')
+    shutil.copy('scripts/story-action-gate.mjs',root/'scripts')
+    shutil.copy('scripts/creative-learning.mjs',root/'scripts')
     (root/'studio/dist').mkdir(parents=True)
     (root/'studio/dist/index.html').write_text('<html>Studio fixture</html>')
     (root/'bin/pgrep').write_text('#!/bin/sh\nexit 1\n')
@@ -17,8 +24,36 @@ def run_fixture():
     (root/scenario).write_text('{}')
     session='1794900000000'
     (root/'storage/studio-sessions'/f'{session}.json').write_text(json.dumps(dict(id=session, user='creator-a', name='fixture', scenario=scenario, status='done', kind='stills', lines=[], steps=[])))
+    failed_stills='1794900000008'
+    (root/'storage/studio-sessions'/f'{failed_stills}.json').write_text(json.dumps(dict(
+        id=failed_stills, user='creator-a', name='failed first frames', scenario=scenario, status='failed',
+        kind='stills', options={'chain':True}, lines=['Vision review unavailable'], steps=['Generating stills'])))
+    legacy='1794900000003'
+    (root/'storage/studio-sessions'/f'{legacy}.json').write_text(json.dumps(dict(id=legacy, user='fixture-owner', name='older plan', scenario=scenario, status='done', kind='draft',
+        prompt='A chef pours honey, then plates a pear tart.', lines=['BLOCKED: first shot misses the hook', 'Fixed automatically: preserved the requested action'],
+        plan={'title':'Pear tart','shots':[{'seconds':5,'narration':'Pour honey.','imagePrompt':'A pear tart.','motionPrompt':'A chef pours honey.','sound':'pour'}]}, steps=[])))
+    legacy_retry='1794900000007'
+    legacy_prompt='A chef sears halloumi, then dips a crisp golden bite into herbed yogurt.'
+    (root/'storage/studio-sessions'/f'{legacy_retry}.json').write_text(json.dumps(dict(id=legacy_retry, user='creator-a', name='legacy Halloumi retry',
+        prompt=legacy_prompt, createdAt=int(legacy_retry), options={'originalPrompt':legacy_prompt,'look':'food','seconds':60,'orientation':'vertical'},
+        status='failed', kind='draft', lines=['BLOCKED: previous local model failure'], steps=[])))
+    (root/'storage'/f'studio-answers-{int(legacy_retry)+2}.json').write_text(json.dumps({
+        'topic':legacy_prompt,'style':'luxury cinematic food film','set':'dark luxury kitchen',
+        'hook':'A golden halloumi bite catches the light','mustShow':legacy_prompt,
+        'obstacle':'The halloumi risks sticking in the pan.','turn':'The chef lowers the heat and bastes it with garlic butter.',
+        'ending':'A crisp bite dips into cool herbed yogurt.','audio':'voiced','seconds':60,'orientation':'vertical'}))
     (root/'storage/studio-users.json').write_text(json.dumps({'users':[{'name':n,'token':n,'role':'creator','dailyRenders':2} for n in ('creator-a','creator-b')]}))
-    (root/'scripts/make-local-video.sh').write_text('''sleep 0.4
+    seeded_learning=[
+        {'type':'run','session':'seed-a','user':'creator-a','look':'food'},
+        {'type':'feedback','session':'seed-a','user':'creator-a','look':'food','rating':'down','note':'Keep the same tomato shape between shots.','videoSha256':'fixture-video-hash'},
+        {'type':'run','session':'seed-b','user':'creator-a','look':'food'},
+        {'type':'gate-event','session':'seed-b','user':'creator-a','look':'food','gate':'visible-action','outcome':'blocked','blocker':'beat 2 has no filmable physical action','message':'fixture action failure'},
+        {'type':'run','session':'seed-c','user':'creator-a','look':'food'},
+        {'type':'gate-event','session':'seed-c','user':'creator-a','look':'food','gate':'visible-action','outcome':'blocked','blocker':'beat 2 has no filmable physical action','message':'fixture action failure'},
+    ]
+    (root/'storage/studio-learning/runs.jsonl').write_text(''.join(json.dumps(row)+'\n' for row in seeded_learning))
+    (root/'scripts/make-local-video.sh').write_text('''echo "Fixture args: $*"
+    sleep 0.4
     if [ -f fail ]; then
       touch outputs/fixture-invalid.mp4
       echo "Technical QA failed: fixture"
@@ -27,13 +62,85 @@ def run_fixture():
     touch outputs/fixture-good.mp4 outputs/fixture-later.mp4
     echo "Studio verified export: outputs/fixture-good.mp4"
     ''')
+    subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-f','lavfi','-i','color=c=red:s=64x64:r=24:d=1',
+        '-f','lavfi','-i','sine=frequency=440:duration=1','-map','0:v:0','-map','1:a:0','-c:v','libx264',
+        '-pix_fmt','yuv420p','-c:a','aac','-shortest','outputs/review-a.mp4'],cwd=root,check=True)
+    subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i','outputs/review-a.mp4','-f','lavfi',
+        '-i','sine=frequency=880:duration=1','-map','0:v:0','-map','1:a:0','-c:v','copy','-c:a','aac',
+        '-shortest','outputs/review-b.mp4'],cwd=root,check=True)
+    subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-f','lavfi','-i','color=c=blue:s=64x64:r=24:d=1',
+        '-f','lavfi','-i','sine=frequency=880:duration=1','-map','0:v:0','-map','1:a:0','-c:v','libx264',
+        '-pix_fmt','yuv420p','-c:a','aac','-shortest','outputs/review-c.mp4'],cwd=root,check=True)
+    subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i','outputs/review-a.mp4','-frames:v','1',
+        'outputs/review-a.contact.png'],cwd=root,check=True)
+    review_scenario='drafts/generated/review.local-scenario.json'
+    review_story={'settings':{'seconds':1},'plan':{'shots':[{'seconds':1,'motionPrompt':'A chef places one fresh basil leaf.'}]}}
+    story_file=root/review_scenario
+    story_file.write_text(json.dumps(review_story))
+    video_file=root/'outputs/review-a.mp4'; contact_file=root/'outputs/review-a.contact.png'
+    review_report={'videoSha256':hashlib.sha256(video_file.read_bytes()).hexdigest(),
+        'scenarioSha256':hashlib.sha256(story_file.read_bytes()).hexdigest(),
+        'contactSheetSha256':hashlib.sha256(contact_file.read_bytes()).hexdigest(),
+        'sampleTimeline':[{'shot':1,'startSeconds':0.12,'middleSeconds':0.5,'endSeconds':0.88,
+            'plannedAction':review_story['plan']['shots'][0]['motionPrompt']}], 'shotMotion':[4], 'flags':{},
+        'visionChecked':False,'notMachineChecked':[]}
+    (root/'outputs/review-a.prereview.json').write_text(json.dumps(review_report))
+    review_session='1794900000002'
+    (root/'storage/studio-sessions'/f'{review_session}.json').write_text(json.dumps(dict(id=review_session,
+        user='creator-a',name='checkpoint fixture',scenario=review_scenario,video='outputs/review-a.mp4',
+        status='done',kind='render',lines=[],steps=[])))
+    refiner_payloads=[]
+    class OllamaFixture(BaseHTTPRequestHandler):
+        def do_POST(self):
+            size=int(self.headers.get('Content-Length','0'))
+            request=json.loads(self.rfile.read(size))
+            user_payload=json.loads(request['messages'][1]['content'])
+            refiner_payloads.append(user_payload)
+            source=user_payload['originalSentence']
+            if source == 'tomatoes':
+                result={'decision':'needs_choices','message':'Choose the cooking direction.',
+                    'refinedPrompt':'','hook':'','mustShow':'','obstacle':'','turn':'','ending':'',
+                    'question':'Which tomato dish should the chef finish?', 'choices':[
+                        {'label':'Sauce','prompt':'A chef chops tomatoes, simmers them, then coats pasta.',
+                         'hook':'A tomato splits under the knife.','mustShow':'Tomatoes simmer and coat the pasta.',
+                         'obstacle':'The sauce is watery.','turn':'The chef simmers it until thick.',
+                         'ending':'Glossy sauce coats the pasta.'},
+                        {'label':'Salsa','prompt':'A chef dices tomatoes and herbs, then spoons salsa into a bowl.',
+                         'hook':'A tomato cube drops into a bowl.','mustShow':'The chef dices and mixes tomatoes.',
+                         'obstacle':'The salsa releases liquid.','turn':'The chef drains it before seasoning.',
+                         'ending':'Fresh salsa fills the serving bowl.'}]}
+            else:
+                result={'decision':'ready','message':'The idea is clear; the director brief is ready.',
+                    'refinedPrompt':'A chef chops tomatoes, simmers them into thick sauce, then coats fresh pasta.',
+                    'hook':'A ripe tomato splits under the knife in a tight opening shot.',
+                    'mustShow':'The chef chops tomatoes and stirs them into a simmering pan.',
+                    'obstacle':'The sauce is watery and slides off the pasta.',
+                    'turn':'The chef simmers until it thickens and clings to the spoon.',
+                    'ending':'Glossy tomato sauce coats the pasta.','question':'','choices':[]}
+            payload=json.dumps({'message':{'content':json.dumps(result)}}).encode()
+            self.send_response(200); self.send_header('Content-Type','application/json')
+            self.send_header('Content-Length',str(len(payload))); self.end_headers(); self.wfile.write(payload)
+        def log_message(self,*args): pass
+    ollama=ThreadingHTTPServer(('127.0.0.1',0),OllamaFixture)
+    threading.Thread(target=ollama.serve_forever,daemon=True).start()
     with socket.socket() as s:
         s.bind(('127.0.0.1',0))
         port=s.getsockname()[1]
-    proc=subprocess.Popen(['node','scripts/studio-server.mjs'],cwd=root,env={**os.environ,'STUDIO_PORT':str(port),'STUDIO_TOKEN':'fixture-owner','PATH':str(root/'bin')+':'+os.environ['PATH']})
-    def req(p,token=None,body=None):
+    tailnet_origin='https://esams-macbook-pro.tail870b21.ts.net'
+    proc=subprocess.Popen(['node','scripts/studio-server.mjs'],cwd=root,env={**os.environ,'STUDIO_PORT':str(port),'STUDIO_TOKEN':'fixture-owner',
+        'STUDIO_ALLOWED_ORIGINS':tailnet_origin,
+        'SHORTS_OLLAMA_CHAT_URL':f'http://127.0.0.1:{ollama.server_port}/api/chat','PATH':str(root/'bin')+':'+os.environ['PATH']})
+    def cleanup():
+        if proc.poll() is None:
+            proc.terminate()
+            try: proc.wait(timeout=5)
+            except subprocess.TimeoutExpired: proc.kill(); proc.wait(timeout=5)
+        ollama.shutdown(); ollama.server_close()
+    atexit.register(cleanup)
+    def req(p,token=None,body=None,origin=None):
         c=http.client.HTTPConnection('127.0.0.1',port,timeout=15)
         headers={'Cookie':f'studio_token={token}'} if token else {}
+        if origin: headers['Origin']=origin
         if body: headers['Content-Type']='application/json'
         c.request('POST' if body else 'GET',p,json.dumps(body) if body else None,headers)
         r=c.getresponse()
@@ -42,9 +149,10 @@ def run_fixture():
         try: data=json.loads(data)
         except ValueError: pass
         return r.status,data
-    def finish():
+    def finish(target_session=None):
+        target_session = target_session or session
         for _ in range(100):
-            status,data=req('/api/sessions/'+session,'creator-a')
+            status,data=req('/api/sessions/'+target_session,'creator-a')
             if data['status'] not in ('running','stopping'): return data
             time.sleep(.05)
         raise AssertionError('job timeout')
@@ -54,11 +162,96 @@ def run_fixture():
             except ConnectionRefusedError: time.sleep(.02)
         assert req('/','%ZZ')[0]==401
         assert req('/','fixture-owner')[0]==200
+        assert req('/api/me','fixture-owner',origin=tailnet_origin)[0]==200
+        assert req('/api/me',origin=tailnet_origin)[0]==401
+        assert req('/api/me','fixture-owner',origin='https://untrusted.example')[0]==403
         assert req('/api/me','creator-a')[1]['maxSeconds']==20
+        assert req('/api/comparison-feedback','creator-a',{'baseline':'outputs/review-a.mp4','candidate':'outputs/review-b.mp4'})[0]==403
+        code, saved = req('/api/comparison-feedback','fixture-owner',{'baseline':'outputs/review-a.mp4','candidate':'outputs/review-b.mp4','notes':'Both acceptable.'})
+        assert code==200 and saved['outcome']=='both-acceptable-no-preference',saved
+        assert (root/'storage/learning/creative.sqlite').is_file()
+        code, mismatch = req('/api/comparison-feedback','fixture-owner',{'baseline':'outputs/review-a.mp4','candidate':'outputs/review-c.mp4'})
+        assert code==422 and 'identical decoded picture streams' in mismatch['error'],mismatch
+        assert req('/api/comparison-feedback','fixture-owner',{'baseline':'outputs/review-a.mp4','candidate':'outputs/review-a.mp4'})[0]==400
+        assert req('/api/comparison-feedback','fixture-owner',{'baseline':'outputs/../outside.mp4','candidate':'outputs/review-b.mp4'})[0]==422
+        assert req('/api/checkpoint-review?sessionId='+review_session,'creator-b')[0]==404
+        code, pending_review=req('/api/checkpoint-review?sessionId='+review_session,'fixture-owner')
+        assert code==200 and pending_review['available'] and pending_review['review'] is None,pending_review
+        assert req('/api/checkpoint-review','creator-a',{'sessionId':review_session,'video':'outputs/review-a.mp4',
+            'confirmed':True,'shotFindings':[],'payoff':'achieved'})[0]==400
+        report_file=root/'outputs/review-a.prereview.json'
+        original_report=report_file.read_text()
+        stale_report=json.loads(original_report); stale_report['scenarioSha256']='stale'
+        report_file.write_text(json.dumps(stale_report))
+        code, stale_review=req('/api/checkpoint-review','creator-a',{'sessionId':review_session,'video':'outputs/review-a.mp4',
+            'confirmed':True,'shotFindings':[{'shot':1,'outcome':'matches'}],'payoff':'achieved'})
+        assert code==409 and 'stale' in stale_review['error'],stale_review
+        report_file.write_text(original_report)
+        code, saved_review=req('/api/checkpoint-review','creator-a',{'sessionId':review_session,'video':'outputs/review-a.mp4',
+            'confirmed':True,'shotFindings':[{'shot':1,'outcome':'partial'}],'payoff':'not-visible','notes':'Fixture end action not visible.'})
+        assert code==200 and saved_review['review']['shotFindings'][0]['plannedAction']=='A chef places one fresh basil leaf.',saved_review
+        code, loaded_review=req('/api/checkpoint-review?sessionId='+review_session,'creator-a')
+        assert code==200 and loaded_review['review']['payoff']=='not-visible',loaded_review
+        assert req('/api/learning','creator-a')[1]['checkpointReviews']==1
+        assert req('/api/learning','creator-b')[1]['checkpointReviews']==0
         assert req('/api/idea','creator-a',{'look':'invalid'})[0]==400
         (root/'scripts/studio-draft.py').write_text("import json\nfrom pathlib import Path\np=Path('drafts/generated/fresh.local-scenario.json')\np.write_text(json.dumps({'plan':{'title':'The Copper Kite','shots':[{'seconds':5},{'seconds':5}]}}))\nprint(p, flush=True)\n")
-        status, draft=req('/api/draft','creator-a',{'prompt':'A copper kite lifts a paper star out of a puddle, then lands on a blue bicycle.', 'seconds':30,'look':'cartoon'})
+        status, legacy_retry_job=req('/api/draft','creator-a',{'prompt':legacy_prompt,'retrySessionId':legacy_retry,'requestId':'legacy-brief-retry'})
+        assert status==202 and legacy_retry_job['id']==legacy_retry,legacy_retry_job
+        assert legacy_retry_job['options']['brief']['topic']==legacy_prompt and legacy_retry_job['options']['brief']['seconds']==60
+        legacy_retry_job=finish(legacy_retry)
+        assert legacy_retry_job['attempts'][0]['lines']==['BLOCKED: previous local model failure'],legacy_retry_job['attempts']
+        before_ambiguous=req('/api/state','creator-a')[1]
+        status, choices=req('/api/draft','creator-a',{'prompt':'tomatoes','seconds':20,'look':'food','refine':True})
+        assert status==200 and choices['decision']=='needs_choices' and len(choices['refinement']['choices'])==2,choices
+        assert refiner_payloads[-1]['learningEvidence']['humanNotes'][0]['note']=='Keep the same tomato shape between shots.'
+        assert refiner_payloads[-1]['learningEvidence']['repeatedFailures'][0]['reason']=='beat 2 has no filmable physical action'
+        after_ambiguous=req('/api/state','creator-a')[1]
+        assert after_ambiguous.get('id')==before_ambiguous.get('id') and after_ambiguous.get('status')==before_ambiguous.get('status')  # ambiguous idea starts no job
+        chosen=choices['refinement']['choices'][0]
+        status, approved=req('/api/draft','creator-a',{'prompt':chosen['prompt'],'originalPrompt':'tomatoes','seconds':20,'look':'food',
+            'hook':chosen['hook'],'mustShow':chosen['mustShow'],'obstacle':chosen['obstacle'],'turn':chosen['turn'],'ending':chosen['ending'],
+            'requestId':'approval-replay'})
+        assert status==202 and approved['options']['originalPrompt']=='tomatoes' and approved['options']['learningGuidanceCount']>=2,approved
+        choice_answers={}
+        for answer in (root/'storage').glob('studio-answers-*.json'):
+            candidate=json.loads(answer.read_text())
+            if candidate.get('hook')==chosen['hook']:
+                choice_answers=candidate
+                break
+        assert choice_answers['topic']=='tomatoes' and choice_answers['hook']==chosen['hook']
+        assert choice_answers['mustShow']==chosen['mustShow'] and choice_answers['ending']==chosen['ending']
+        finish(approved['id'])
+        _, session_summaries=req('/api/sessions','creator-a')
+        assert any(item['id']==approved['id'] and item['storyPrompt']==chosen['prompt'] for item in session_summaries)
+        replay_status, replay=req('/api/draft','creator-a',{'prompt':chosen['prompt'],'originalPrompt':'tomatoes','requestId':'approval-replay'})
+        assert replay_status==200 and replay['id']==approved['id'],replay
+        answer_count=len(list((root/'storage').glob('studio-answers-*.json')))
+        duplicate_status, duplicate=req('/api/draft','creator-a',{'prompt':'tomatoes'})
+        assert duplicate_status==409 and duplicate['sessionId']==approved['id'],duplicate
+        duplicate_story_status, duplicate_story=req('/api/draft','creator-a',{'prompt':chosen['prompt']})
+        assert duplicate_story_status==409 and duplicate_story['sessionId']==approved['id'],duplicate_story
+        assert len(list((root/'storage').glob('studio-answers-*.json')))==answer_count
+        retry_status, retried=req('/api/draft','creator-a',{'prompt':chosen['prompt'],'originalPrompt':'tomatoes',
+            'retrySessionId':approved['id'],'requestId':'same-project-retry'})
+        assert retry_status==202 and retried['id']==approved['id'] and len(retried['attempts'])==1,retried
+        assert retried['attempts'][0]['plan']['plan']['title']=='The Copper Kite',retried['attempts']
+        retried=finish(approved['id'])
+        assert len(retried['attempts'])==1 and retried['attempts'][0]['status']=='done',retried['attempts']
+        for answer in (root/'storage').glob('studio-answers-*.json'): answer.unlink()
+        status, draft=req('/api/draft','creator-a',{'prompt':'A chef chopping tomatoes for pasta','seconds':20,'look':'cartoon','refine':True})
         assert status==202 and draft['options']['seconds']==20, draft
+        answer_files=list((root/'storage').glob('studio-answers-*.json'))
+        assert len(answer_files)==1
+        answers=json.loads(answer_files[0].read_text())
+        assert answers['topic']=='A chef chopping tomatoes for pasta'
+        assert answers['hook']=='A chef chopping tomatoes for pasta'
+        assert answers['mustShow']=='A chef chopping tomatoes for pasta'
+        assert answers['obstacle']=='The sauce is watery and slides off the pasta.'
+        assert answers['turn']=='The chef simmers until it thickens and clings to the spoon.'
+        assert answers['ending']=='Glossy tomato sauce coats the pasta.'
+        assert draft['options']['originalPrompt']=='A chef chopping tomatoes for pasta'
+        assert draft['options']['storyPrompt']=='A chef chops tomatoes, simmers them into thick sauce, then coats fresh pasta.'
         session=draft['id']
         drafted=finish()
         assert drafted['plan']['plan']['title']=='The Copper Kite',drafted
@@ -68,6 +261,9 @@ def run_fixture():
         (root/'scripts/pin-fixture.py').write_text("import hashlib,json,sys\nfrom pathlib import Path\nscenario=Path(sys.argv[1])\nwork=Path('storage/any-local')/scenario.stem\nframes=[]\nfor i in range(2):\n    file=work/'refs'/f'shot-{i:02d}-aa.png'\n    file.write_bytes(bytes([i]))\n    frames.append(dict(shot=i+1,file=str(file.relative_to(work)),sha256=hashlib.sha256(file.read_bytes()).hexdigest()))\n(work/'first-frames.json').write_text(json.dumps(dict(schemaVersion=1,scenarioSha256=hashlib.sha256(scenario.read_bytes()).hexdigest(),frames=frames)))\n")
         (root/'scripts/make-local-video.sh').write_text("""set -e
 if [ "$3" = '--stills-only' ]; then
+      echo 'Presentation: voiced (explicit scenario setting)'
+      echo 'First-frame review only: skipping narration, soundtrack, and motion preparation.'
+      echo 'Sound cue and ASMR coverage plan passed.'
       python3 scripts/pin-fixture.py "$2"
       exit 0
     fi
@@ -77,17 +273,34 @@ if [ "$3" = '--stills-only' ]; then
         (root/'cached.mp4').write_bytes(bytes(256))
         payload={'scenario':scenario,'sessionId':session}
         assert req('/api/stills','creator-a',payload)[0]==202
-        assert finish()['kind']=='stills'
+        stills=finish()
+        assert stills['kind']=='stills'
+        assert not {'Finishing and exporting','Mixing sound','Recording narration','Generating motion clips'}.intersection(stills['steps'])
         assert len(req('/api/live-files?scenario='+scenario,'creator-a')[1]['stills'])==2
+        retry_status, failed_retry=req('/api/stills','creator-a',{'scenario':scenario,'sessionId':failed_stills})
+        assert retry_status==202 and failed_retry['id']==failed_stills
+        failed_retry=finish(failed_stills)
+        assert failed_retry['attempts'][0]['status']=='failed'
+        assert failed_retry['attempts'][0]['lines']==['Vision review unavailable']
+        assert '--chain-images' not in failed_retry['lines'][0]
         assert req('/api/regen','creator-a',{**payload,'shot':2})[0]==202
         assert finish()['status']=='done'
         assert json.loads((work/'seed-bumps.json').read_text())=={'1':1}
         assert req('/api/sessions/'+session,'creator-b')[0]==404
         manifest=work.parent/'first-frames.json'
         original=manifest.read_text()
+        (work/'vision-deadbeef.json').write_text(json.dumps({
+            'image':str((work/'shot-01-aa.png').resolve()),
+            'status':'review-required',
+            'verdict':{'missingOrWrong':['tofu is visible']},
+        }))
         broken=json.loads(original)
         broken['frames'][0]['sha256']='bad'
         manifest.write_text(json.dumps(broken))
+        pending=req('/api/live-files?scenario='+scenario,'creator-a')[1]['stills']
+        assert len(pending)==2 and all(frame['verified'] is False for frame in pending),pending
+        flagged=next(frame for frame in pending if frame['shot']==2)
+        assert flagged['reviewStatus']=='review-required' and 'tofu' in flagged['reviewReason'],flagged
         assert req('/api/render','creator-a',payload)[0]==409
         manifest.write_text(original)
         assert req('/api/render','creator-a',payload)[0]==202
@@ -107,6 +320,8 @@ if [ "$3" = '--stills-only' ]; then
                 assert req('/api/sessions/'+session,'creator-a')[1]['video']==final['video']
                 break
             except ConnectionRefusedError: time.sleep(.03)
+        replay_status, replay=req('/api/draft','creator-a',{'prompt':chosen['prompt'],'originalPrompt':'tomatoes','requestId':'approval-replay'})
+        assert replay_status==200 and replay['id']==approved['id'],replay
         (root/'scripts/make-local-video.sh').write_text("trap '' TERM\necho armed > armed\nsleep 1\n")
         assert req('/api/render','creator-a',payload)[0]==202
         for _ in range(100):
@@ -161,12 +376,21 @@ if [ "$3" = '--stills-only' ]; then
             if state.get('status')=='done':break
             time.sleep(.05)
         assert state['kind']=='draft' and not (root/'phases.log').read_text(),state
-        proc.terminate(); proc.wait(timeout=5)
+        learning_data=req('/api/learning','fixture-owner')[1]
+        assert learning_data['gateEvents']>0 and learning_data['scenePlans']>=2,learning_data
+        assert any(event['outcome']=='blocked' for event in learning_data['recentGateEvents']),learning_data
+        backfilled=[json.loads(line) for line in (root/'storage/studio-learning/runs.jsonl').read_text().splitlines() if json.loads(line).get('session')==legacy]
+        assert len([row for row in backfilled if row['type']=='gate-event'])==2
+        assert len([row for row in backfilled if row['type']=='scene-plan'])==1
+        proc.terminate(); proc.wait(timeout=5); ollama.shutdown(); ollama.server_close()
+        prior_count=len(backfilled)
         proc=subprocess.Popen(['node','scripts/studio-server.mjs'],cwd=root,env={**os.environ,'STUDIO_PORT':str(port),'STUDIO_TOKEN':'fixture-owner','STUDIO_DRAFT_TIMEOUT_MS':'300','PATH':str(root/'bin')+':'+os.environ['PATH']})
         for _ in range(100):
             try:
                 if req('/api/me','fixture-owner')[0]==200: break
             except ConnectionRefusedError: time.sleep(.03)
+        after_restart=[json.loads(line) for line in (root/'storage/studio-learning/runs.jsonl').read_text().splitlines() if json.loads(line).get('session')==legacy]
+        assert len(after_restart)==prior_count, 'persisted learning evidence is backfilled only once'
         (root/'scripts/studio-draft.py').write_text('import time; time.sleep(30)')
         status,state=req('/api/draft','fixture-owner',{'prompt':'Timeout recovery test','unattended':True})
         assert status==202
@@ -175,7 +399,7 @@ if [ "$3" = '--stills-only' ]; then
             if state['status']=='failed':break
             time.sleep(.05)
         assert state['status']=='failed' and 'timed out' in state['error'],state
-        print('PASS: manifest integrity, planning watchdog; unattended sequencing without browser, blocked plan stops, range 416, cancelled process holds lock, and stale feedback denied.')
+        print('PASS: manifest integrity, scenario-bound checkpoint review and access controls, planning watchdog; unattended sequencing without browser, blocked plan stops, range 416, cancelled process holds lock, and stale feedback denied.')
     finally:
         proc.terminate()
         proc.wait(timeout=5)

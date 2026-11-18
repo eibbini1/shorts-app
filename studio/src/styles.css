@@ -146,6 +146,11 @@ select { background:var(--panel); color:var(--text); border:1px solid var(--line
 .action-checkpoints img { display:block; max-width:100%; max-height:72vh; object-fit:contain; margin:8px auto; border:1px solid var(--line); border-radius:8px; }
 .export .gates ol { padding-inline-start:22px; }
 .export .gates li { margin-bottom:8px; }
+.checkpoint-review { display:grid; gap:10px; margin:14px 0; padding:12px; border:1px solid var(--line); border-radius:10px; }
+.checkpoint-review h4,.checkpoint-review p { margin:0; }
+.checkpoint-review-row { display:grid; gap:6px; }
+.checkpoint-review-row input,.checkpoint-review-row select { max-width:100%; padding:8px; color:var(--ink); background:var(--panel); border:1px solid var(--line); border-radius:7px; }
+.checkpoint-confirm { display:flex; gap:8px; align-items:flex-start; }
 @media (max-width:760px) {
   .shell { display:block; }
   .projects-toggle { display:inline-block; padding:4px 8px; }

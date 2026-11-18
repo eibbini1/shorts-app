@@ -133,6 +133,8 @@ storage/tools/ComfyUI/.venv/bin/python scripts/add-sfx.py --scenario "$scenario"
 t_checks=$SECONDS
 if [[ -n "$cache_only" ]]; then
   echo "Step 3/4  Reassembling cached local video to $output (no FLUX/LTX generation; missing cache stops the job)"
+elif [[ -n "${stills_only:-}" ]]; then
+  echo "Step 3/4  Preparing first-frame previews for review (no narration, soundtrack, or motion)"
 else
   echo "Step 3/4  Rendering local video to $output (about 5 min per shot on an M1: still, motion, voice, assembly)"
 fi

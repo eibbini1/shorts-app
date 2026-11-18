@@ -23,7 +23,7 @@ LIGHT_PARTS = {
     "temperature": re.compile(r"\b(warm|cool|golden|amber|blue|tungsten)\b", re.I),
 }
 QUALITY_TAGS = re.compile(r"\b(8k|4k|masterpiece|ultra[- ]detailed|trending on|best quality)\b", re.I)
-CAMERA = re.compile(r"\b(camera locked|static camera|tripod|dolly|camera pans|pans? (?:left|right|up|down|across)|camera tilts|tracking|handheld|push(?:es)?[- ]in|pull(?:s)? back|zoom|orbit|camera circles)\b", re.I)
+CAMERA = re.compile(r"\b(camera locked|static camera|tripod|dolly|camera pans?|camera follows?|pans? (?:left|right|up|down|across)|camera tilts?|tracking|handheld|push(?:es)?[- ]in|pull(?:s)? back|zoom|orbit|camera circles)\b", re.I)
 CHAOS = re.compile(r"\b(splash(es|ing)?|explod\w+|shatter\w*|crash\w*|tumbl\w+|flies|flying|spray\w*|burst\w*)\b", re.I)
 READ_TEXT = re.compile(r"\b(sign|logo|label|caption|lettering|written|words)\b", re.I)
 LIGHT = re.compile(r"\b(key light|rim light|backlit|side light|window light|soft light|warm light|diffused|golden)\b", re.I)

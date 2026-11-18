@@ -8,13 +8,14 @@ export function scenarioSettings({ brand = 'Billionaire Bites', format = 'short'
 }
 export function scenarioSchema(settings) {
   const line = z.string().trim().min(1).max(1000);
+  const prompt = z.string().trim().min(1).max(2000);
   return z.object({
     ideas: z.array(z.object({ title: line, angle: line })).length(5),
     title: line, hook: line, payoff: line,
     shots: z.array(z.object({
       seconds: z.number().int().min(1).max(30),
       narration: z.string().trim().min(1).max(1000),
-      imagePrompt: line, motionPrompt: line, sound: line,
+      imagePrompt: prompt, motionPrompt: prompt, sound: line,
     })).min(2).max(Math.ceil(settings.seconds / 2)),
     claimsToCheck: z.array(line).max(100),
   });

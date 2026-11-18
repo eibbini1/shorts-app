@@ -1,8 +1,8 @@
 # iShorts Studio system health report
 
-**Audit date:** 2026-11-17  
-**Mode:** audit plus approved Phase 1 UI, idea-hint, and documentation work  
-**Evidence snapshot:** GitHub `main` merge `77d601f`; reviewed source commit `eacff65` has the same tree (`6a38fcf3af855cf94fbbbb930a12ac9fb414b85c`).  
+**Audit date:** 2026-11-17
+**Mode:** audit plus approved Phase 1 UI, idea-hint, and documentation work
+**Evidence snapshot:** GitHub `main` merge `77d601f`; reviewed source commit `eacff65` has the same tree (`6a38fcf3af855cf94fbbbb930a12ac9fb414b85c`).
 **Working branch:** `fix/phase1-system-health`, isolated worktree. No other checkout was switched or cleaned.
 
 ## Summary
@@ -96,6 +96,12 @@ Added a selectable **Codex dark** Studio theme with charcoal surfaces, soft-gray
 4. Run a controlled sound-cue comparison on identical cached footage, then complete Studio capture of human review and approved technique retrieval.
 5. Reconcile local checkouts only after reviewing every dirty worktree. Do not deploy this branch over the live Studio without a separate release review.
 
+## Studio prompt-to-director alignment — 2026-11-18
+
+The main Studio action now presents a complete locally refined director brief before creating a plan. Clear ideas require an explicit “Create from this brief” action; ambiguous ideas require choosing one of the proposed story directions. The chosen brief is passed to the same local script and story-gate path used by terminal creation. This closes the request-to-pipeline gap at the UI/API boundary, but does not prove the local model will always produce a good story or physically realistic footage.
+
+**Evidence:** isolated workflow fixture with a mock Ollama response passed for both a ready idea and ambiguous alternatives; no job starts for the ambiguous case. The full brief fields reached the answer file for the ready case. Manual stills, regeneration, render manifest/QA, session recovery, cancellation, access control and unattended sequence checks passed. The Studio Vite production build passed. No live Ollama call, owner-browser session, or GPU render was performed. The Codex dark palette remains selectable in the built app source but has not been deployed to the existing server.
+
 ## Idea refinement implementation (2026-11-18)
 
 - **IMPLEMENTED, local only:** Studio has a “Refine idea with local AI” action. It preserves the original text until the user explicitly selects a proposed version. For a filmable idea the local Ollama model returns one polished prompt and ending; when the story intent/action is materially ambiguous it returns one focused question and 2–3 distinct alternatives.
@@ -114,5 +120,7 @@ Added a selectable **Codex dark** Studio theme with charcoal surfaces, soft-gray
 - **IMPLEMENTED, synthetic-smoke verified:** final-file prereview now extracts frames shortly after each shot starts, at its midpoint, and shortly before its end. The output contact sheet labels each frame with shot number, stage and timestamp. The exact-export report records the same times and planned action.
 - Studio exposes this as **Shot action checkpoints** with the planned action beside each shot. The image is shown only when its checksum matches the hash-bound prereview for that export. The UI clearly asks the person to compare start/middle/end; it does not call this an AI realism verdict.
 - **VERIFIED:** a four-second synthetic, two-shot video produced six labeled frames and a contact sheet. `--skip-vision` was used, so no model judgment was involved. The synthetic sine audio correctly triggered the loudness warning, providing a check that the existing audio gate still runs.
-- **Remaining Phase 2 work:** actual food/cartoon film review of the new sheet; a controlled baseline-versus-candidate Foley test on identical picture; human confirmation of event timing. The current automated vision review still asks about middle frames and the final payoff only.
-
+- **Phase 2 status:** timestamped checkpoints were exercised on a cached real food film with its matching scenario. Three shots show pomegranate muddling, a pineapple-juice pour, and a woman lifting the drink to sip. The planned final “lower the glass and smile” is not visible in the last sampled frame; it ends with the glass still at her mouth. The scenario-bound report completed with `--skip-vision`, so this is a manual visual finding, not an automated vision verdict or release score. Matched Foley listening is complete: the owner judged both hot-dog mixes good, with no preference. Sound-event timing remains unreviewed.
+- **Phase 2 feedback capture:** Compare Clips now supports listening to either synchronized clip and saving “both acceptable, no preference.” The owner-only API restricts files to Studio outputs and delegates exact-stream checks to the hash-bound learning recorder. It stores no invented score and does not change production defaults. Studio build passed; the isolated Studio API workflow passed, including authorization and path/picture validation; focused synthetic-media test passed 1/1. This code is local to the open review branch and is not live at port 8787.
+- **Phase 3 groundwork:** Studio now offers a scenario-bound human review form for each shot and the final payoff. The API requires the exact session export, matching video/story/contact-sheet hashes, and a reviewer confirmation. It stores findings and planned actions in the local learning ledger; the Learning card shows recent reviews. No scores or automatic prompt/default changes are made.
+- **Phase 3 remaining:** owner-side browser review of the new form; a human sound-event timing review; collect several real reviews before proposing recurring techniques. This code is uncommitted in the isolated branch and not live at 127.0.0.1:8787.

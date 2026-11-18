@@ -13,6 +13,6 @@ export function sessionDisplayName(session, sessions = []) {
 export function findMatchingSession(prompt, sessions = [], selectedId = null) {
   const key = normalizePrompt(prompt);
   if (key.length < 6) return null;
-  return sessions.filter((item) => normalizePrompt(item.prompt) === key)
+  return sessions.filter((item) => [item.prompt, item.storyPrompt].some((candidate) => normalizePrompt(candidate) === key))
     .sort((a, b) => (b.id === selectedId) - (a.id === selectedId) || (Number(b.updatedAt) || 0) - (Number(a.updatedAt) || 0))[0] || null;
 }

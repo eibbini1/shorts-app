@@ -158,8 +158,13 @@ export function ComparePanel({ onClose }) {
   const [swap, setSwap] = useState(false);
   const [rate, setRate] = useState(1);
   const [t, setT] = useState(0);
+  const [audioSide, setAudioSide] = useState('left');
+  const [feedback, setFeedback] = useState('');
+  const [feedbackNote, setFeedbackNote] = useState('');
+  const [savingFeedback, setSavingFeedback] = useState(false);
   const va = useRef(null); const vb = useRef(null);
   useEffect(() => { fetch('/api/videos').then((r) => r.json()).then((j) => { setList(j); if (j[0]) setA(j[0].p); if (j[1]) setB(j[1].p); }).catch(() => {}); }, []);
+  useEffect(() => { setFeedback(''); setFeedbackNote(''); }, [a, b]);
   const left = blind && swap ? b : a; const right = blind && swap ? a : b;
   const both = (fn) => [va.current, vb.current].forEach((el) => el && fn(el));
   const play = () => { both((el) => { el.currentTime = va.current.currentTime; }); both((el) => el.play()); };
@@ -171,14 +176,30 @@ export function ComparePanel({ onClose }) {
     let raf;
     const tick = () => {
       const m = va.current, f = vb.current;
-      if (m && f) { setT(m.currentTime); f.muted = true; if (!m.paused && Math.abs(f.currentTime - m.currentTime) > 0.08) f.currentTime = m.currentTime; }
+      if (m && f) { setT(m.currentTime); m.muted = audioSide !== 'left'; f.muted = audioSide !== 'right'; if (!m.paused && Math.abs(f.currentTime - m.currentTime) > 0.08) f.currentTime = m.currentTime; }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick); return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [audioSide]);
   const name = (p) => (list.find((x) => x.p === p)?.n || p || '').replace(/\.mp4$/, '');
   const url = (p) => '/media?p=' + encodeURIComponent(p);
-  const opts = list.map((x) => <option key={x.p} value={x.p}>{x.n}</option>);
+  const opts = list.map((x, i) => <option key={x.p} value={x.p}>{blind ? `Saved clip ${i + 1}` : x.n}</option>);
+  const listenTo = (side) => {
+    setAudioSide(side);
+    if (va.current) va.current.muted = side !== 'left';
+    if (vb.current) vb.current.muted = side !== 'right';
+  };
+  const saveAcceptability = async () => {
+    setSavingFeedback(true); setFeedback('saving');
+    try {
+      const response = await fetch('/api/comparison-feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ baseline: a, candidate: b, notes: feedbackNote }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Could not save this comparison.');
+      setFeedback('saved');
+    } catch (error) { setFeedback(error.message || 'Could not save this comparison.'); }
+    finally { setSavingFeedback(false); }
+  };
   return (
     <div className="card compare">
       <div className="cmphead"><h3>Compare clips</h3><button className="ghost" onClick={onClose}>Close</button></div>
@@ -188,17 +209,26 @@ export function ComparePanel({ onClose }) {
         <label><input type="checkbox" checked={blind} onChange={(e) => { setBlind(e.target.checked); setSwap(Math.random() < 0.5); }} /> Blind (hide names, random sides)</label>
       </div>
       <div className="cmpvids">
-        <div><video ref={va} src={left ? url(left) : undefined} playsInline className="player" /><div className="muted small">{blind ? 'Left' : 'A: ' + name(left)}</div></div>
-        <div><video ref={vb} src={right ? url(right) : undefined} playsInline muted className="player" /><div className="muted small">{blind ? 'Right' : 'B: ' + name(right)}</div></div>
+        <div><video ref={va} src={left ? url(left) : undefined} playsInline muted={audioSide !== 'left'} className="player" /><div className="muted small">{blind ? 'Left' : 'A: ' + name(left)}</div></div>
+        <div><video ref={vb} src={right ? url(right) : undefined} playsInline muted={audioSide !== 'right'} className="player" /><div className="muted small">{blind ? 'Right' : 'B: ' + name(right)}</div></div>
       </div>
       <div className="plbar">
         <button onClick={play}>Play both</button><button onClick={pause}>Pause</button>
         <button onClick={() => step(-1)}>‹ frame</button><button onClick={() => step(1)}>frame ›</button>
         <button onClick={() => seek(0)}>Restart</button>
+        <span>Audio:</span><button type="button" aria-pressed={audioSide === 'left'} onClick={() => listenTo('left')}>Left clip</button><button type="button" aria-pressed={audioSide === 'right'} onClick={() => listenTo('right')}>Right clip</button>
         <label>Speed <select value={rate} onChange={(e) => setRate(+e.target.value)}>{[0.25, 0.5, 1, 2].map((r) => <option key={r} value={r}>{r}x</option>)}</select></label>
-        <span className="muted small">{t.toFixed(2)}s · the right video is muted and follows the left clock</span>
+        <span className="muted small">{t.toFixed(2)}s · both pictures follow one clock; listen to one clip at a time</span>
       </div>
-      {blind && <p className="muted small">Judge the clips first. Names stay hidden while Blind is on; untick it to reveal which was which. The scoring sheet comes in the next phase.</p>}
+      <p className="muted small">For sound review, play the same moment and switch between Left clip and Right clip. Saving “both acceptable” checks that the picture streams match and the audio differs.</p>
+      {feedback === 'saved' ? <p className="muted small" role="status">Saved as “both acceptable, no preference.” This records your review only; it does not change production defaults.</p> : <div className="plbar">
+        <label className="muted small" htmlFor="comparison-feedback-note">Optional sound note</label>
+        <input id="comparison-feedback-note" className="ending" value={feedbackNote} onChange={(e) => setFeedbackNote(e.target.value)} maxLength={400} placeholder="Optional note about the sound" />
+        <button type="button" disabled={savingFeedback || !a || !b || a === b} onClick={saveAcceptability}>Both acceptable — no preference</button>
+        {feedback === 'saving' && <span className="muted small" role="status">Checking and saving…</span>}
+        {feedback && feedback !== 'saving' && <span className="bad small" role="alert">{feedback}</span>}
+      </div>}
+      {blind && <p className="muted small">Blind mode hides names and randomizes sides. The clip selectors reveal labels, so use Blind mode for a fresh unbiased listen.</p>}
     </div>
   );
 }
@@ -225,15 +255,21 @@ export function Feedback({ sessionId, video, onRated }) {
 export function LearnedCard() {
   const [l, setL] = useState(null);
   useEffect(() => { fetch('/api/learning').then((r) => r.json()).then(setL).catch(() => {}); }, []);
-  if (!l || (!l.drafts && !l.renders)) return null;
+  if (!l || (!l.drafts && !l.renders && !l.checkpointReviews && !l.machineReviews)) return null;
   const up = Object.values(l.ratings || {}).reduce((n, r) => n + r.up, 0), down = Object.values(l.ratings || {}).reduce((n, r) => n + r.down, 0);
   return (
     <div className="card learned">
       <b>What the Studio has recorded on this Mac</b>
-      <p className="muted small">{l.drafts} plans · {l.renders} finished renders · {up} good / {down} needs-work ratings{l.calibration.cycleSec ? ` · measured ${fmt(l.calibration.cycleSec)} per clip (${l.calibration.samples} renders)` : ''}</p>
+      <p className="muted small">{l.drafts} plans · {l.renders} finished renders · {up} good / {down} needs-work ratings{l.guidedRuns ? ` · local story models used review evidence in ${l.guidedRuns} runs` : ''}{l.calibration.cycleSec ? ` · measured ${fmt(l.calibration.cycleSec)} per clip (${l.calibration.samples} renders)` : ''}</p>
+      {l.gateEvents > 0 && <p className="muted small">Recorded {l.gateEvents} gate outcomes, {l.scenePlans} scene plans, and {l.machineReviews || 0} hash-checked final-file screens. These show where ideas passed, needed repair, or were blocked.</p>}
       {l.topBlockers.length > 0 && <ul className="small">{l.topBlockers.map((b) => <li key={b.reason}>Most common block ({b.count}x): {plainBlock(b.reason)}</li>)}</ul>}
+      {l.recentGateEvents?.length > 0 && <ul className="small">{l.recentGateEvents.slice(-3).map((event, i) => <li key={i}>{event.gate}: {event.outcome} · {plainBlock(event.message)}</li>)}</ul>}
+      {l.recentMachineReviews?.some((review) => review.likelyBelow4?.length) && <p className="muted small">Latest automated screen flagged: {l.recentMachineReviews.slice().reverse().find((review) => review.likelyBelow4?.length)?.likelyBelow4.join(', ')}. This is an advisory cue for your review, not an artistic score.</p>}
       {l.recentNotes.length > 0 && <ul className="small">{l.recentNotes.map((n, i) => <li key={i}>{n.rating === 'up' ? '👍' : '👎'} {n.note}</li>)}</ul>}
-      <p className="muted small">This log is saved in storage/studio-learning. It does not retrain the video models; it feeds the time estimate and the tips, and it is there for us to improve the prompts and rules from.</p>
+      {l.recentCheckpointReviews?.length > 0 && <div className="small"><b>{l.checkpointReviews} human checkpoint review{l.checkpointReviews === 1 ? '' : 's'} recorded</b>
+        <ul>{l.recentCheckpointReviews.map((item, i) => <li key={i}>{item.title || 'Untitled export'} · payoff {item.payoff.replace('-', ' ')}{item.notes ? ` · ${item.notes}` : ''}</li>)}</ul>
+        <p className="muted">These are tied to specific exports. They do not change prompts or scores automatically.</p></div>}
+      <p className="muted small">This log records ideas, scenes, gates, QA and your export-specific reviews. Local story models can consult repeated blockers and your notes on later ideas and plans. They cannot override your request or pass a gate; reviews do not retrain FLUX or LTX, and production defaults change only after measured checks.</p>
     </div>
   );
 }
@@ -434,10 +470,11 @@ export function StageBar({ job }) {
 export function jobState(job, blocked, busyElsewhere) {
   const st = job.status;
   if (!st || st === 'idle') return busyElsewhere ? { k: 'waiting', t: 'The Mac is busy with another video. New ideas wait in Up next.' } : { k: 'idle', t: '' };
-  if (st === 'running') return { k: 'running', t: job.kind === 'draft' ? 'Planning your video.' : job.kind === 'stills' ? 'Making first frames.' : 'Rendering motion. This takes several minutes; you can leave this page open.' };
+  if (st === 'running') return { k: 'running', t: job.kind === 'draft' ? 'Planning your video.' : job.kind === 'stills' ? 'Making and checking first frames. Local AI will correct a rejected frame before stopping; no motion starts until frames pass.' : 'Rendering motion. This takes several minutes; you can leave this page open.' };
   if (st === 'stopping') return { k: 'waiting', t: 'Stopping the current job. Studio will be available when it exits.' };
   if (st === 'cancelled') return { k: 'stopped', t: 'Stopped. Your idea is kept; plan again when ready.' };
   if (st === 'interrupted') return { k: 'failed', t: 'The Mac restarted this job. Your idea is kept; try again.' };
+  if (st === 'failed' && job.kind === 'stills') return { k: 'blocked', t: 'Local AI could not verify an acceptable first frame after its bounded correction attempt. Your idea and plan are saved; no motion was generated. Retry in this project to let Studio try again.' };
   if (st === 'failed') return blocked ? { k: 'blocked', t: 'Blocked by a check. Nothing was rendered. Fix the point below or try again.' } : { k: 'failed', t: 'Something went wrong. Your idea is kept; try again.' };
   if (job.kind === 'draft') return blocked ? { k: 'blocked', t: 'Blocked by a check. Nothing was rendered.' } : { k: 'approval', t: 'Plan ready. Next: make first frames, then check them before the long render.' };
   if (job.kind === 'stills') return blocked ? { k: 'blocked', t: 'Blocked by a check. Fix it before rendering.' } : { k: 'approval', t: 'First frames ready. Approve them to start the render, or regenerate any frame.' };
@@ -461,6 +498,76 @@ export function ShotPlan({ shots, notes }) {
       ))}
     </ol>
   );
+}
+
+export function CheckpointReviewForm({ job, timeline }) {
+  const [available, setAvailable] = useState(null);
+  const [saved, setSaved] = useState(null);
+  const [findings, setFindings] = useState({});
+  const [payoff, setPayoff] = useState('');
+  const [notes, setNotes] = useState('');
+  const [confirmed, setConfirmed] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    let stop = false;
+    setAvailable(null); setSaved(null); setFindings({}); setPayoff(''); setNotes(''); setConfirmed(false); setError('');
+    fetch('/api/checkpoint-review?sessionId=' + encodeURIComponent(job.id)).then((r) => r.json()).then((result) => {
+      if (stop) return;
+      setAvailable(result.available === true);
+      setSaved(result.review || null);
+      if (result.review) {
+        setFindings(Object.fromEntries(result.review.shotFindings.map((item) => [item.shot, item.outcome])));
+        setPayoff(result.review.payoff);
+        setNotes(result.review.notes || '');
+        setConfirmed(true);
+      } else if (result.reason) setError(result.reason);
+    }).catch(() => { if (!stop) { setAvailable(false); setError('Could not load the saved review state.'); } });
+    return () => { stop = true; };
+  }, [job.id, job.video]);
+  const save = async () => {
+    setBusy(true); setError('');
+    try {
+      const response = await fetch('/api/checkpoint-review', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: job.id, video: job.video, confirmed, payoff, notes,
+          shotFindings: timeline.map((item) => ({ shot: item.shot, outcome: findings[item.shot] || '' })) }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Could not save this review.');
+      setSaved(result.review);
+    } catch (failure) { setError(failure.message || 'Could not save this review.'); }
+    finally { setBusy(false); }
+  };
+  if (available === null) return <p className="muted small" role="status">Loading the saved checkpoint review…</p>;
+  if (!available) return <p className="muted small">Human checkpoint review cannot be saved for this export yet. {error}</p>;
+  if (saved) return <div className="checkpoint-review" role="status">
+    <p><b>Checkpoint review saved.</b> Payoff: {saved.payoff.replace('-', ' ')}. This is evidence for this exact export, not an automatic score or model update.</p>
+    <ul>{saved.shotFindings.map((item) => <li key={item.shot}>Shot {item.shot}: {item.outcome.replace('-', ' ')}</li>)}</ul>
+    <button type="button" className="ghost" onClick={() => setSaved(null)}>Edit review</button>
+  </div>;
+  const complete = timeline.length > 0 && timeline.every((item) => findings[item.shot]) && payoff && confirmed;
+  return <div className="checkpoint-review">
+    <h4>Record what you saw</h4>
+    <p className="muted small">Compare the planned actions with the start/middle/end frames. This saves your observations without assigning a score.</p>
+    {timeline.map((item) => <label key={item.shot} className="checkpoint-review-row">
+      <span><b>Shot {item.shot}</b> · {item.plannedAction}</span>
+      <select value={findings[item.shot] || ''} onChange={(event) => setFindings((current) => ({ ...current, [item.shot]: event.target.value }))}>
+        <option value="">Choose what you saw…</option><option value="matches">Action matches the plan</option>
+        <option value="partial">Action is partly visible</option><option value="not-visible">Action is not visible</option>
+      </select>
+    </label>)}
+    <label className="checkpoint-review-row"><span><b>Final payoff</b> · Did the last shot achieve its planned ending?</span>
+      <select value={payoff} onChange={(event) => setPayoff(event.target.value)}>
+        <option value="">Choose an outcome…</option><option value="achieved">Achieved</option>
+        <option value="partial">Partly achieved</option><option value="not-visible">Not visible</option>
+      </select>
+    </label>
+    <label className="checkpoint-review-row"><span>Optional note</span>
+      <input value={notes} maxLength={500} onChange={(event) => setNotes(event.target.value)} placeholder="Describe a mismatch or useful detail" />
+    </label>
+    <label className="checkpoint-confirm"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} /> I compared this export's checkpoints with its planned actions.</label>
+    <button type="button" disabled={busy || !complete} onClick={save}>{busy ? 'Saving…' : 'Save checkpoint review'}</button>
+    {error && <p className="bad small" role="alert">{error}</p>}
+  </div>;
 }
 
 /* ---------- export review: file gates, shot flags and human review are three different things ---------- */
@@ -495,6 +602,7 @@ export function ExportReview({ job, review, weak, notes, busy, onRetake, onCompa
             <img src={'/media?p=' + encodeURIComponent(review.contactSheet)} alt="Timestamped start, middle and end frames for every shot" loading="lazy" />
           </details>}
           <ol>{review.sampleTimeline.map((item) => <li key={item.shot}><b>Shot {item.shot}</b> · {item.startSeconds.toFixed(1)}s / {item.middleSeconds.toFixed(1)}s / {item.endSeconds.toFixed(1)}s<br /><span className="muted">Planned: {item.plannedAction}</span></li>)}</ol>
+          <CheckpointReviewForm job={job} timeline={review.sampleTimeline} />
         </dd></>}
         <dt>Human editorial review</dt>
         <dd>{rated ? `Rated by you: ${rated === 'up' ? 'good' : 'needs work'}.` : 'Picture and sound have not been reviewed by a person yet.'}</dd>

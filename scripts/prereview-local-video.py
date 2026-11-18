@@ -244,6 +244,7 @@ def main():
     report = {
         'checkedAt': datetime.now(timezone.utc).isoformat(), 'video': str(video),
         'videoSha256': hashlib.sha256(video.read_bytes()).hexdigest(),
+        'scenarioSha256': hashlib.sha256(args.scenario.read_bytes()).hexdigest(),
         'contactSheet': str(sheet), 'contactSheetSha256': hashlib.sha256(sheet.read_bytes()).hexdigest(),
         'sampleTimeline': timeline, 'loudnessLUFS': integrated, 'truePeakDBTP': peak,
         'shotMeanVolumeDB': means, 'shotMotion': motion, 'shots': shot_results, 'payoffFrame': payoff, 'foodContinuity': continuity,

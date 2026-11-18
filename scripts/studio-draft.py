@@ -16,6 +16,11 @@ def say(*a):
     print(*a, flush=True)
 
 
+def director_input_error(line):
+    match = re.search(r'director-brief\.py: error:\s*(.+)$', str(line))
+    return match.group(1).strip() if match else None
+
+
 def checks(scn, allow_repeat):
     """Same gates the render runs before any media work; returns the BLOCKED reasons."""
     found = []
@@ -29,7 +34,8 @@ def checks(scn, allow_repeat):
     schema = subprocess.run(['node', str(ROOT / 'scripts/bb-local-scenario.mjs'), '--validate', scn],
                             cwd=ROOT, capture_output=True, text=True)
     if schema.returncode:
-        found.append('scenario schema validation failed after prompt refinement')
+        detail = re.sub(r'\s+', ' ', (schema.stderr or schema.stdout).strip())
+        found.append('scenario schema validation failed after prompt refinement' + (f': {detail[:240]}' if detail else ''))
     return found
 
 
@@ -65,17 +71,23 @@ def main():
     last, scn = [], None
     for attempt in range(1, a.tries + 1):
         say(f'Attempt {attempt}/{a.tries}: writing the story')
+        input_error = None
         proc = subprocess.Popen(['bash', 'scripts/make-local-video.sh', '--draft-only', '--answers', a.answers], cwd=ROOT,
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         scn = None
         for line in proc.stdout:
             line = line.rstrip('\n')
+            input_error = input_error or director_input_error(line)
             if m := SCN.search(line): scn = m.group(1)
             # Gate lines are re-checked below; showing them raw now would look like a dead end.
             if line.startswith('BLOCKED: '): line = 'CHECK: ' + line[9:]
             elif 'blocked it' in line or 'Story gate blocked' in line: continue
             say(line)
         proc.wait()
+        if input_error:
+            say(f'BLOCKED: director brief input: {input_error}')
+            say('Fix the brief input and try again. No media render was started.')
+            return 2
         if not scn or not (ROOT / scn).is_file():
             say('Fixing: the story model did not save a plan; trying again'); continue
         last = checks(scn, a.allow_repeat)

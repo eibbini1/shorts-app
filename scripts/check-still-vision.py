@@ -15,8 +15,11 @@ from pathlib import Path
 
 
 MODEL = 'qwen3-vl:4b'
-PROMPT_VERSION = 9
+PROMPT_VERSION = 12
 URL = 'http://127.0.0.1:11434/api/chat'
+UNCERTAIN_REASON = re.compile(
+    r'\b(?:appears?\s+to\s+be|seems?\s+to\s+be|possibly|maybe|perhaps|could\s+be|might\s+be|'
+    r'uncertain|unsure|cannot\s+(?:tell|identify)|hard\s+to\s+tell|not\s+clear)\b', re.I)
 # One yes/no per question. The older {criticalMatches, missingOrWrong} format made qwen3-vl:4b echo the
 # alternative it was asked to rule out ("true" plus "halved baked potato"), which the gate had to treat as
 # unusable. A single answer plus a short visible reason was decisive on the same stills (2026-11-16).
@@ -24,7 +27,7 @@ SCHEMA = {
     'type': 'object',
     'properties': {
         'answer': {'type': 'string', 'enum': ['yes', 'no']},
-        'reason': {'type': 'string'},
+        'reason': {'type': 'string', 'maxLength': 80},
     },
     'required': ['answer', 'reason'],
     'additionalProperties': False,
@@ -68,13 +71,17 @@ def review(image, prompt, must_show=(), must_not_show=(), model=MODEL, cache_dir
         question = (item[:300] if kind == 'direct' else
                     f'Does this image show {item[:180]}?' if kind == 'required' else
                     f'Is {item[:180]} visible in this image?')
-        question += ' Answer yes or no from what is visible, with a short reason. JSON only.'
+        uncertainty_answer = 'yes' if kind == 'forbidden' else 'no'
+        question += (f' Answer yes or no from what is visible; if uncertain, answer {uncertainty_answer}. '
+                     'Use a factual reason of at most 10 words. Return only the JSON verdict; no analysis. /no_think')
         wanted = 'no' if kind == 'forbidden' else 'yes'
         last = (kind, item) == checks[-1]
         # Release the 3.4 GB vision model right after the last question: on a 16 GB Mac it otherwise stays
         # resident for Ollama's default five minutes and overlaps the LTX motion job (swap was ~97% full).
         body = {'model': model, 'stream': False, 'think': False, 'format': SCHEMA,
                 'keep_alive': 0 if last else '30s',
+                # Qwen3-VL can spend its first tokens thinking even with
+                # think=false. Leave enough room for the bounded JSON verdict.
                 'options': {'temperature': 0, 'num_predict': 2048, 'num_ctx': 4096},
                 'messages': [{'role': 'user', 'content': question, 'images': [image_b64]}]}
         request = urllib.request.Request(URL, data=json.dumps(body).encode(),
@@ -92,10 +99,13 @@ def review(image, prompt, must_show=(), must_not_show=(), model=MODEL, cache_dir
             if answer.get('answer') not in ('yes', 'no') or not isinstance(answer.get('reason'), str):
                 raise ValueError('local vision model returned an invalid verdict')
             outcomes.append({'criterion': item, 'kind': kind, 'expected': wanted, 'answer': answer})
-            if answer['answer'] != wanted:
+            uncertain = bool(UNCERTAIN_REASON.search(answer['reason']))
+            if answer['answer'] != wanted or uncertain:
                 release(model)
                 verdict = {'criticalMatches': False,
-                           'missingOrWrong': [f"{item}: {answer['reason'][:200]}".strip()]}
+                           'missingOrWrong': [
+                               f"{item}: {'uncertain visual match: ' if uncertain else ''}{answer['reason'][:200]}".strip()
+                           ]}
                 status = 'review-required'
                 break
         except (OSError, ValueError, json.JSONDecodeError) as error:

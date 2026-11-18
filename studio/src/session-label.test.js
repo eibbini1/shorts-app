@@ -3,7 +3,7 @@ import { findMatchingSession, sessionDisplayName } from './session-label.js';
 
 describe('session labels and duplicate detection', () => {
   const sessions = [
-    { id: '1000000001', name: 'Tomato pasta', prompt: 'A chef chops tomatoes for pasta!', createdAt: 1000000001000, updatedAt: 1000000001000 },
+    { id: '1000000001', name: 'Tomato pasta', prompt: 'A chef chops tomatoes for pasta!', storyPrompt: 'A chef simmers tomatoes into thick sauce, then coats pasta.', createdAt: 1000000001000, updatedAt: 1000000001000 },
     { id: '1000000002', name: 'Tomato pasta', prompt: 'A chef chops tomatoes for pasta!', createdAt: 1000000002000, updatedAt: 1000000002000 },
     { id: '1000000003', name: 'Robot story', prompt: 'A robot crosses the room.', createdAt: 1000000003000, updatedAt: 1000000003000 },
   ];
@@ -16,6 +16,7 @@ describe('session labels and duplicate detection', () => {
   it('finds the newest matching project and prefers the currently selected match', () => {
     expect(findMatchingSession('A chef chops tomatoes for pasta.', sessions)?.id).toBe('1000000002');
     expect(findMatchingSession('A chef chops tomatoes for pasta.', sessions, '1000000001')?.id).toBe('1000000001');
+    expect(findMatchingSession('A chef simmers tomatoes into thick sauce, then coats pasta.', sessions)?.id).toBe('1000000001');
     expect(findMatchingSession('A different idea entirely', sessions)).toBeNull();
   });
 
