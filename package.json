@@ -69,6 +69,7 @@
     "brief:local": "python3 scripts/director-brief.py",
     "story:audit:mac": "python3 scripts/audit-local-story.py",
     "creative:learn:mac": "node scripts/creative-learning.mjs",
+    "test:learning:feedback": "node --test scripts/test-creative-learning-feedback.mjs",
     "learn:run:mac": "python3 scripts/log-local-run.py",
     "score:video:mac": "python3 scripts/score-local-video.py",
     "quality:history:mac": "python3 scripts/quality-history.py",

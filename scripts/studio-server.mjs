@@ -4,6 +4,9 @@
 // POST /api/render {scenario}                              -> full local render
 // GET  /api/events (SSE) | /api/state | POST /api/cancel | GET /media?p=outputs/x.mp4
 import http from 'node:http';
+import { createIdeaService } from './studio-ideas.mjs';
+import { createIdeaRefiner } from './studio-refine-idea.mjs';
+import { inspectExport, fileHash } from './studio-export-review.mjs';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -11,6 +14,9 @@ import { spawn, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const ideaService = createIdeaService({ root: ROOT });
+const ideaRefiner = createIdeaRefiner();
+let localIdeaBusy = false;
 const PORT = Number(process.env.STUDIO_PORT || 8787);
 const DIST = path.join(ROOT, 'studio', 'dist');
 const MEDIA_ROOTS = ['outputs', 'storage/any-local', 'storage/benchmarks', 'drafts/generated'].map((d) => path.join(ROOT, d));
@@ -25,7 +31,7 @@ for (const f of fs.readdirSync(SESS_DIR)) {
   try {
     const x = JSON.parse(fs.readFileSync(path.join(SESS_DIR, f), 'utf8'));
     if (!ID_RE.test(String(x.id))) continue;
-    if (x.status === 'running') { x.status = 'interrupted'; x.error = 'The studio was restarted while this was running. Check the log, then run it again.'; }
+    if (['running', 'stopping'].includes(x.status)) { x.status = 'interrupted'; x.error = 'The studio was restarted while this was running. Check the log, then run it again.'; }
     sessions.set(x.id, x);
   } catch { /* skip unreadable file */ }
 }
@@ -55,7 +61,7 @@ const view = (user, x = job) => !x ? { status: 'idle' } : canSee(user, x) ? snap
 const emit = () => { for (const c of clients) c.write(`data: ${JSON.stringify(view(c.user))}\n\n`); };
 
 function busyReason() {
-  if (job && job.status === 'running') return 'A studio job is already running.';
+  if (job && ['running', 'stopping'].includes(job.status)) return 'A studio job is already running.';
   try {
     const out = execFileSync('pgrep', ['-fl', 'run-food-motion-baseline|ltx-2-mlx|create-flux-image|make-local-video'], { encoding: 'utf8' });
     if (out.trim()) return 'Another local render is using the GPU (for example the food benchmark). Wait for it to finish.';
@@ -79,6 +85,22 @@ function newest(dir, ext, since) {
   } catch { return null; }
 }
 
+
+function frameManifest(scenario) {
+  const work = path.join('storage', 'any-local', path.basename(scenario, '.json'));
+  const data = JSON.parse(fs.readFileSync(path.join(ROOT, work, 'first-frames.json'), 'utf8'));
+  const hash = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+  const story = path.join(ROOT, scenario);
+  const count = JSON.parse(fs.readFileSync(story, 'utf8')).plan.shots.length;
+  if (data.schemaVersion !== 1 || data.scenarioSha256 !== hash(story) || data.frames?.length !== count) throw new Error('Review fresh first frames for this story.');
+  const stills = data.frames.map((frame, index) => {
+    const file = path.resolve(ROOT, work, frame.file);
+    if (frame.shot !== index + 1 || !file.startsWith(path.resolve(ROOT, work) + path.sep) || hash(file) !== frame.sha256) throw new Error('A first frame changed. Make first frames again.');
+    return { shot: frame.shot, p: path.relative(ROOT, file), t: fs.statSync(file).mtimeMs, n: path.basename(file) };
+  });
+  return { stills };
+}
+
 function start(kind, args, extra = {}) {
   const startedAt = Date.now();
   let x = extra.session;
@@ -86,7 +108,7 @@ function start(kind, args, extra = {}) {
     x = { id: String(startedAt), user: extra.user, name: (extra.prompt || 'New video').slice(0, 48), prompt: extra.prompt || '', options: extra.options || {}, createdAt: startedAt, plan: null, scenario: null, video: null };
     sessions.set(x.id, x);
   }
-  Object.assign(x, { kind, status: 'running', startedAt, steps: [], lines: [], error: null });
+  Object.assign(x, { kind, status: 'running', startedAt, steps: [], lines: [], error: null, timedOut: false });
   if (kind === 'render' || kind === 'stills') { if (kind === 'render') {
       if (x.video && x.technicalQa?.status === 'passed') x.previousVideo = x.video;
       x.video = null;
@@ -94,12 +116,29 @@ function start(kind, args, extra = {}) {
     } x.scenario = extra.scenario || x.scenario; } else { x.plan = null; x.scenario = null; }
   job = x;
   const proc = spawn(extra.cmd ? extra.cmd[0] : 'bash', extra.cmd ? [...extra.cmd.slice(1), ...args] : ['scripts/make-local-video.sh', ...args], { cwd: ROOT, detached: true, env: { ...process.env, PYTHONUNBUFFERED: '1', // the prompt gate scores food close-ups and a luxury-kitchen look; it does not apply to cartoon/custom looks
+    ...(kind === 'render' && extra.pinFrames ? { SHORTS_STUDIO_PIN_FRAMES: '1' } : {}),
     ...(x.options && x.options.look && x.options.look !== 'food' ? { SHORTS_MIN_PROMPT_SCORE: '0' } : {}) } });
   x.proc = proc; // not serialised: snap() copies named fields only
+  let lastActivityAt = Date.now();
+  const draftTimeout = Number(process.env.STUDIO_DRAFT_TIMEOUT_MS || 900000);
+  const draftIdleTimeout = Number(process.env.STUDIO_DRAFT_IDLE_TIMEOUT_MS || 300000);
+  const watchdog = kind === 'draft' ? setInterval(() => {
+    if (x.status !== 'running') return;
+    if (Date.now() - startedAt < draftTimeout && Date.now() - lastActivityAt < draftIdleTimeout) return;
+    x.timedOut = true;
+    x.error = 'Planning timed out. Your idea is saved. Try a shorter, concrete action and ending.';
+    x.status = 'stopping';
+    try { process.kill(-proc.pid, 'SIGTERM'); } catch { /* already exited */ }
+    x.stopTimeout = setTimeout(() => {
+      if (x.status === 'stopping') { try { process.kill(-proc.pid, 'SIGKILL'); } catch { /* exited */ } }
+    }, 5000).unref();
+    persist(x); emit();
+  }, 250).unref() : null;
   let buf = '';
   let verifiedExport = null;
   let failedQa = false;
   const onData = (chunk) => {
+    lastActivityAt = Date.now();
     buf += chunk.toString();
     const parts = buf.split(/\r|\n/); buf = parts.pop();
     for (const raw of parts) {
@@ -109,18 +148,24 @@ function start(kind, args, extra = {}) {
       const verified = /^Studio verified export: (outputs\/[^/\\]+\.mp4)$/.exec(line);
       if (verified) verifiedExport = verified[1];
       if (line.startsWith('Technical QA failed:')) failedQa = true;
-      for (const [re, label] of STEP_RULES) if (re.test(line)) { if (x.steps[x.steps.length - 1] !== label) x.steps.push(label); break; }
+      for (const [re, label] of STEP_RULES) if (!(kind === 'draft' && ['Finishing and exporting', 'Mixing sound', 'Recording narration', 'Generating stills', 'Generating motion clips'].includes(label)) && re.test(line)) { if (x.steps[x.steps.length - 1] !== label) x.steps.push(label); break; }
       const sc = line.match(/(drafts\/generated\/[^\s'"]+\.local-scenario\.json)/);
       if (sc) x.scenario = sc[1];
+      recordGateEvent(x, line);
     }
     if (Date.now() - (x.lastSave || 0) > 5000) persist(x);
     if (job === x) emit();
   };
   proc.stdout.on('data', onData); proc.stderr.on('data', onData);
+  proc.on('error', (error) => { x.error = error.message; });
   proc.on('close', (code) => {
+    clearInterval(watchdog);
+    clearTimeout(x.stopTimeout);
+    if (buf.trim()) onData(Buffer.from('\n'));
+    if (x.status === 'stopping') x.status = x.timedOut ? 'failed' : 'cancelled';
     if (x.status !== 'cancelled') {
-      x.status = code === 0 ? 'done' : 'failed';
-      if (code !== 0) x.error = `Exited with code ${code}. See the log below.`;
+      x.status = code === 0 && !x.timedOut ? 'done' : 'failed';
+      if (code !== 0) x.error ||= `Exited with code ${code}. See the log below.`;
     }
     if (x.status !== 'cancelled' && kind === 'draft') {
       x.scenario ||= newest('drafts/generated', '.local-scenario.json', startedAt);
@@ -139,6 +184,21 @@ function start(kind, args, extra = {}) {
     }
     persist(x);
     logRun(x, code);
+    if (job === x && extra.unattended && x.status === 'done' && ['draft', 'stills'].includes(kind)) {
+      const blocked = x.lines.some((line) => /^(BLOCKED|NEEDS-CHOICE):/.test(line));
+      if (!blocked && x.plan && x.scenario) {
+        const args = ['--scenario', x.scenario];
+        if (kind === 'draft') args.push('--stills-only');
+        if (x.options.allowRepeat) args.push('--allow-repeat');
+        if (x.options.chain) args.push('--chain-images');
+        try {
+          if (kind === 'stills') frameManifest(x.scenario);
+          start(kind === 'draft' ? 'stills' : 'render', args, { session: x, scenario: x.scenario, unattended: true, pinFrames: kind === 'stills' });
+        } catch (error) {
+          x.status = 'failed'; x.error = error.message; persist(x);
+        }
+      }
+    }
     if (job === x) emit();
   });
   persist(x);
@@ -148,8 +208,112 @@ function start(kind, args, extra = {}) {
 // ---- learning ledger: every run and every rating is appended to storage/studio-learning/runs.jsonl ----
 const LEARN_DIR = path.join(ROOT, 'storage', 'studio-learning');
 const LEDGER = path.join(LEARN_DIR, 'runs.jsonl');
-function ledger(rec) { try { fs.mkdirSync(LEARN_DIR, { recursive: true }); fs.appendFileSync(LEDGER, JSON.stringify({ ts: new Date().toISOString(), ...rec }) + '\n'); } catch { /* learning is best effort */ } }
+function ledger(rec) { try { fs.mkdirSync(LEARN_DIR, { recursive: true }); fs.appendFileSync(LEDGER, JSON.stringify({ ts: new Date().toISOString(), ...rec }) + '\n'); return true; } catch { return false; } }
 function readLedger() { try { return fs.readFileSync(LEDGER, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)); } catch { return []; } }
+function recordGateEvent(session, line, evidenceSource = 'live-pipeline-output') {
+  let gate, outcome;
+  if (/^Attempt \d+\/\d+: writing the story/.test(line)) [gate, outcome] = ['story-draft', 'started'];
+  else if (/^Story passed every check|^Plan ready:/.test(line)) [gate, outcome] = ['story-plan', 'passed'];
+  else if (/^Story gate:|^Evidence gate passed|^Preflight passed:|^Story structure passed|^First (picture|clip) check passed|^Still vision gate:.*passed/i.test(line)) [gate, outcome] = ['pre-render', 'passed'];
+  else if (/^Technical QA passed|^Quality checks passed/i.test(line)) [gate, outcome] = ['technical-qa', 'passed'];
+  else if (/^Technical QA failed|^Quality check failed/i.test(line)) [gate, outcome] = ['technical-qa', 'failed'];
+  else if (/^BLOCKED:/.test(line)) [gate, outcome] = ['release-gate', 'blocked'];
+  else if (/^NEEDS-CHOICE:/.test(line)) [gate, outcome] = ['story-choice', 'needs-choice'];
+  else if (/^REVIEW:/.test(line)) [gate, outcome] = ['human-review', 'review-required'];
+  else if (/^WARNING:/.test(line)) [gate, outcome] = ['warning', 'review-required'];
+  else if (/^Fixed automatically:/.test(line)) [gate, outcome] = ['automatic-repair', 'repaired'];
+  else if (/^PASS:/.test(line)) [gate, outcome] = ['production-gate', 'passed'];
+  if (!gate) return;
+  ledger({ type: 'gate-event', user: session.user || 'owner', session: session.id, kind: session.kind,
+    prompt: session.prompt, scenario: session.scenario || null, gate, outcome, message: line.slice(0, 400),
+    evidenceSource, evidenceStatus: 'observed pipeline output; no automatic quality inference' });
+}
+async function saveComparisonFeedback({ baseline, candidate, reviewer, notes }) {
+  const outputRoot = fs.realpathSync(path.join(ROOT, 'outputs'));
+  const resolveOutput = (value) => {
+    if (typeof value !== 'string' || !/^outputs\/[\w.-]+\.mp4$/.test(value)) throw new Error('Choose two finished videos from the Studio output list.');
+    const resolved = path.resolve(ROOT, value);
+    if (!resolved.startsWith(outputRoot + path.sep) || !fs.existsSync(resolved)) throw new Error('A selected video is missing. Refresh the video list.');
+    const real = fs.realpathSync(resolved);
+    if (!real.startsWith(outputRoot + path.sep)) throw new Error('Selected video is outside Studio outputs.');
+    return real;
+  };
+  const baselineVideo = resolveOutput(baseline);
+  const candidateVideo = resolveOutput(candidate);
+  if (baselineVideo === candidateVideo) throw new Error('Choose two different exports.');
+  const id = 'studio-listen-' + crypto.randomUUID();
+  const input = path.join(ROOT, 'storage', id + '.json');
+  const request = { id, experimentId: id, baselineVideo, candidateVideo,
+    outcome: 'both-acceptable-no-preference', reviewer,
+    notes: String(notes || 'Both acceptable; no preference indicated.').slice(0, 400) };
+  fs.writeFileSync(input, JSON.stringify(request));
+  try {
+    const result = await new Promise((resolve, reject) => {
+      const child = spawn(process.execPath, [path.join(ROOT, 'scripts', 'creative-learning.mjs'), 'feedback', input],
+        { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
+      let stdout = '', stderr = '';
+      const timer = setTimeout(() => child.kill('SIGTERM'), 20_000);
+      child.stdout.on('data', (chunk) => { stdout += chunk.toString(); });
+      child.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
+      child.on('error', (error) => { clearTimeout(timer); reject(error); });
+      child.on('close', (code) => {
+        clearTimeout(timer);
+        if (code !== 0) return reject(new Error(stderr.trim().split('\n')[0] || 'Could not verify the audio comparison.'));
+        try { resolve(JSON.parse(stdout)); } catch { reject(new Error('The feedback recorder returned an unreadable result.')); }
+      });
+    });
+    return result;
+  } finally { try { fs.unlinkSync(input); } catch { /* already removed */ } }
+}
+async function checkpointReviewState(session, user, submitted) {
+  if (!session?.scenario || !session?.video || !canSee(user, session)) throw new Error('Unknown export.');
+  if (submitted?.video && submitted.video !== session.video) throw new Error('This review belongs to an older export. Reload the current video.');
+  const scenarioName = String(session.scenario);
+  if (!/^drafts\/generated\/[\w.-]+\.local-scenario\.json$/.test(scenarioName)) throw new Error('The original storyboard is unavailable.');
+  const scenarioFile = path.resolve(ROOT, scenarioName);
+  const scenarioRoot = path.resolve(ROOT, 'drafts', 'generated') + path.sep;
+  if (!scenarioFile.startsWith(scenarioRoot) || !fs.existsSync(scenarioFile)) throw new Error('The original storyboard is unavailable.');
+  const inspected = await inspectExport(ROOT, session.video);
+  if (inspected.status !== 'complete' || !inspected.contactSheet || !inspected.sampleTimeline.length) throw new Error('Run a fresh checkpoint review for this exact export first.');
+  const videoFile = path.resolve(ROOT, session.video);
+  const reportFile = videoFile.replace(/\.mp4$/i, '.prereview.json');
+  const report = JSON.parse(fs.readFileSync(reportFile, 'utf8'));
+  const scenarioSha256 = await fileHash(scenarioFile);
+  const videoSha256 = await fileHash(videoFile);
+  if (report.videoSha256 !== videoSha256 || report.scenarioSha256 !== scenarioSha256) throw new Error('The checkpoint report is stale or belongs to a different storyboard. Run the review again.');
+  const scenario = JSON.parse(fs.readFileSync(scenarioFile, 'utf8'));
+  const shots = scenario.plan?.shots;
+  if (!Array.isArray(shots) || shots.length !== inspected.sampleTimeline.length) throw new Error('The checkpoint list does not match the saved storyboard.');
+  const timeline = inspected.sampleTimeline.map((item, index) => {
+    const shot = shots[index];
+    const action = String(shot.motionPrompt || shot.imagePrompt || '').slice(0, 400);
+    if (item.shot !== index + 1 || item.plannedAction !== action) throw new Error('The checkpoint actions do not match the saved storyboard. Run the review again.');
+    return item;
+  });
+  if (!submitted) {
+    const past = readLedger().filter((item) => item.type === 'checkpoint-review' && item.user === user.name
+      && item.session === session.id && item.videoSha256 === videoSha256 && item.scenarioSha256 === scenarioSha256
+      && item.contactSheetSha256 === report.contactSheetSha256).at(-1);
+    return { available: true, review: past || null, timeline };
+  }
+  const validShotOutcomes = new Set(['matches', 'partial', 'not-visible']);
+  const validPayoff = new Set(['achieved', 'partial', 'not-visible']);
+  const findings = submitted.shotFindings;
+  if (submitted.confirmed !== true || !Array.isArray(findings) || findings.length !== shots.length
+    || !validPayoff.has(submitted.payoff) || findings.some((item, index) => item?.shot !== index + 1
+      || !validShotOutcomes.has(item.outcome))) throw new Error('Review every shot and the final payoff before saving.');
+  const saved = { type: 'checkpoint-review', evidenceType: 'scenario-bound-human-checkpoint-review',
+    id: 'checkpoint-' + crypto.randomUUID(), user: user.name, session: session.id,
+    video: session.video, videoSha256, scenario: scenarioName, scenarioSha256,
+    contactSheet: inspected.contactSheet, contactSheetSha256: report.contactSheetSha256,
+    title: String(scenario.plan?.title || '').slice(0, 120),
+    shotFindings: findings.map((item, index) => ({ shot: item.shot, outcome: item.outcome,
+      plannedAction: timeline[index].plannedAction, checkpoints: [timeline[index].startSeconds, timeline[index].middleSeconds, timeline[index].endSeconds] })),
+    payoff: submitted.payoff, notes: String(submitted.notes || '').trim().slice(0, 500),
+    learningUse: 'human evidence only; no score or automatic production-default update' };
+  if (!ledger(saved)) throw new Error('Could not save the review record.');
+  return { available: true, review: { ...saved, ts: new Date().toISOString() }, timeline };
+}
 function logRun(x, code) {
   const plan = x.plan?.plan || x.plan || {};
   const shots = plan.shots || [];
@@ -158,18 +322,53 @@ function logRun(x, code) {
     shots: shots.length, shotSeconds: shots.map((s) => s.seconds), title: plan.title, scenario: x.scenario, video: x.video,
     durationSec: Math.round((Date.now() - x.startedAt) / 1000),
     blocked: lines.filter((l) => /^BLOCKED/.test(l)).map((l) => l.slice(0, 160)), fixed: lines.filter((l) => /^Fixed automatically/.test(l)).map((l) => l.slice(21, 160)), tries: lines.filter((l) => /^Attempt \d+\/\d+/.test(l)).length || undefined, reviews: lines.filter((l) => /^REVIEW/.test(l)).length });
+  if (x.kind === 'draft') recordScenePlans(x, shots);
 }
-function learning() {
+function recordScenePlans(session, shots) {
+  if (!Array.isArray(shots) || !shots.length) return;
+  shots.forEach((shot, index) => ledger({ type: 'scene-plan', user: session.user || 'owner', session: session.id,
+    scenario: session.scenario, shot: index + 1, seconds: shot.seconds, narration: shot.narration,
+    imagePrompt: shot.imagePrompt, motionPrompt: shot.motionPrompt, sound: shot.sound,
+    evidenceStatus: 'generated scene plan; not human-approved for reuse' }));
+}
+function backfillPersistedEvidence() {
+  const rows = readLedger();
+  const sessionsWithGateEvidence = new Set(rows.filter((item) => item.type === 'gate-event').map((item) => item.session));
+  const sessionsWithSceneEvidence = new Set(rows.filter((item) => item.type === 'scene-plan').map((item) => item.session));
+  for (const session of sessions.values()) {
+    if (!sessionsWithGateEvidence.has(session.id)) {
+      for (const line of session.lines || []) recordGateEvent(session, String(line), 'persisted-session-log');
+    }
+    if (session.kind !== 'draft' || sessionsWithSceneEvidence.has(session.id)) continue;
+    let shots = session.plan?.plan?.shots || session.plan?.shots;
+    if (!Array.isArray(shots) && /^drafts\/generated\/[\w.-]+\.local-scenario\.json$/.test(session.scenario || '')) {
+      try { shots = JSON.parse(fs.readFileSync(path.resolve(ROOT, session.scenario), 'utf8')).plan?.shots; } catch { /* no readable historical plan */ }
+    }
+    recordScenePlans(session, shots);
+  }
+}
+backfillPersistedEvidence();
+function learning(user) {
   const rows = readLedger();
   const runs = rows.filter((r) => r.type === 'run'); const fb = rows.filter((r) => r.type === 'feedback');
+  const ownedRows = rows.filter((r) => user?.role === 'owner' || r.user === user?.name);
+  const gateEvents = ownedRows.filter((r) => r.type === 'gate-event');
+  const scenePlans = ownedRows.filter((r) => r.type === 'scene-plan');
+  const checkpointReviews = rows.filter((r) => r.type === 'checkpoint-review'
+    && (user?.role === 'owner' || r.user === user?.name));
   const renders = runs.filter((r) => r.kind === 'render' && r.status === 'done' && r.shots > 0 && r.durationSec > 0);
   const per = renders.map((r) => (r.durationSec - 80) / r.shots).filter((v) => v > 120 && v < 600).sort((p, q) => p - q);
   const cycle = per.length >= 2 ? Math.round(per[Math.floor(per.length / 2)]) : null; // median seconds per shot from this Mac's own renders
   const blockers = {}; runs.forEach((r) => (r.blocked || []).filter((b) => !/provisional score/.test(b)).forEach((b) => { const k = b.replace(/^BLOCKED:\s*/, '').replace(/shot \d+: /, ''); blockers[k] = (blockers[k] || 0) + 1; }));
   const byLook = {}; fb.forEach((f) => { const k = f.look || 'unknown'; byLook[k] ||= { up: 0, down: 0 }; byLook[k][f.rating === 'up' ? 'up' : 'down']++; });
   return { drafts: runs.filter((r) => r.kind === 'draft').length, renders: renders.length, failed: runs.filter((r) => r.status === 'failed').length,
+    gateEvents: gateEvents.length, scenePlans: scenePlans.length,
+    recentGateEvents: gateEvents.slice(-5).map((event) => ({ gate: event.gate, outcome: event.outcome, message: event.message })),
     calibration: { cycleSec: cycle, samples: per.length }, topBlockers: Object.entries(blockers).sort((p, q) => q[1] - p[1]).slice(0, 5).map(([reason, count]) => ({ reason, count })),
-    ratings: byLook, recentNotes: fb.filter((f) => f.note).slice(-5).map((f) => ({ look: f.look, rating: f.rating, note: f.note })) };
+    ratings: byLook, recentNotes: fb.filter((f) => f.note).slice(-5).map((f) => ({ look: f.look, rating: f.rating, note: f.note })),
+    checkpointReviews: checkpointReviews.length, recentCheckpointReviews: checkpointReviews.slice(-5).map((item) => ({
+      title: item.title, payoff: item.payoff, notes: item.notes, findings: item.shotFindings.map((shot) => ({ shot: shot.shot, outcome: shot.outcome })),
+    })) };
 }
 
 const json = (res, code, obj) => { res.writeHead(code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(obj)); };
@@ -180,11 +379,18 @@ function serveFile(req, res, file, roots) {
   if (roots && !roots.some((r) => real.startsWith(r + path.sep))) return json(res, 403, { error: 'Not allowed' });
   if (!fs.existsSync(real) || !fs.statSync(real).isFile()) return json(res, 404, { error: 'Not found' });
   const size = fs.statSync(real).size; const type = MIME[path.extname(real)] || 'application/octet-stream';
-  const range = req.headers.range && req.headers.range.match(/bytes=(\d*)-(\d*)/);
-  if (range) {
-    const s = range[1] ? Number(range[1]) : 0; const e = range[2] ? Number(range[2]) : size - 1;
-    res.writeHead(206, { 'Content-Type': type, 'Content-Range': `bytes ${s}-${e}/${size}`, 'Accept-Ranges': 'bytes', 'Content-Length': e - s + 1 });
-    return fs.createReadStream(real, { start: s, end: e }).pipe(res);
+  if (req.headers.range) {
+    const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range);
+    const start = range?.[1] ? Number(range[1]) : Math.max(0, size - Number(range?.[2]));
+    const end = range?.[1] && range[2] ? Math.min(size - 1, Number(range[2])) : size - 1;
+    if (!range || (!range[1] && !range[2]) || !Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start > end) {
+      res.writeHead(416, { 'Content-Range': `bytes */${size}` });
+      return res.end();
+    }
+    res.writeHead(206, { 'Content-Type': type, 'Content-Range': `bytes ${start}-${end}/${size}`, 'Accept-Ranges': 'bytes', 'Content-Length': end - start + 1 });
+    const stream = fs.createReadStream(real, { start, end });
+    stream.on('error', () => res.destroy());
+    return stream.pipe(res);
   }
   res.writeHead(200, { 'Content-Type': type, 'Content-Length': size, 'Accept-Ranges': 'bytes' });
   fs.createReadStream(real).pipe(res);
@@ -254,7 +460,40 @@ http.createServer(async (req, res) => {
     const owner = me.role === 'owner';
     return json(res, 200, { name: me.name, role: me.role, maxSeconds: owner ? 60 : CREATOR_MAX_SECONDS,
       rendersLeft: owner ? null : Math.max(0, me.dailyRenders - today(me, 'render')), draftsLeft: owner ? null : Math.max(0, CREATOR_DAILY_DRAFTS - today(me, 'draft')),
-      canCompare: owner, canSeeLog: owner });
+      canCompare: owner, canSeeLog: owner, canRunUnattended: owner });
+  }
+  if (url.pathname === '/api/idea' && req.method === 'POST') {
+    const input = await body(req);
+    if (!['food', 'cartoon', 'night', 'custom'].includes(input.look)) return json(res, 400, { error: 'Choose a film look.' });
+    const seconds = Math.min(isOwner ? 60 : CREATOR_MAX_SECONDS, Math.max(10, Number(input.seconds) || 10));
+    const history = readLedger().filter((item) => item.type === 'idea' && item.user === me.name && item.look === input.look).slice(-16).map((item) => item.prompt);
+    const projects = [...sessions.values()].filter((item) => canSee(me, item) && item.options?.look === input.look).slice(-8).map((item) => item.prompt);
+    if (localIdeaBusy) return json(res, 409, { error: 'The local idea helper is busy. Try again in a moment.' });
+    const isBusy = Boolean(busyReason());
+    if (!isBusy) localIdeaBusy = true;
+    try {
+      const result = await ideaService.suggest({ look: input.look, seconds,
+        exclude: [...(Array.isArray(input.exclude) ? input.exclude.slice(-8) : []), ...projects, ...history],
+        busy: isBusy });
+      if (!ledger({ type: 'idea', user: me.name, look: input.look, ...result })) return json(res, 500, { error: 'Could not save idea history. Try again.' });
+      return json(res, 200, result);
+    } catch (error) {
+      return json(res, 503, { error: error.message });
+    } finally { if (!isBusy) localIdeaBusy = false; }
+  }
+  if (url.pathname === '/api/refine-idea' && req.method === 'POST') {
+    const input = await body(req);
+    if (typeof input.prompt !== 'string' || input.prompt.trim().length < 4) return json(res, 400, { error: 'Write a little about your idea first.' });
+    if (busyReason()) return json(res, 409, { error: 'Your Mac is making a video. Refine the idea after the current job finishes.' });
+    if (localIdeaBusy || ideaRefiner.active) return json(res, 409, { error: 'The local idea helper is busy. Try again in a moment.' });
+    localIdeaBusy = true;
+    try {
+      const result = await ideaRefiner.refine(input);
+      return json(res, 200, result);
+    } catch (error) {
+      const status = /Write a little|incomplete refinement|unreadable refinement/.test(error.message) ? 422 : 503;
+      return json(res, status, { error: error.message || 'Could not refine this idea. Your original sentence is unchanged.' });
+    } finally { localIdeaBusy = false; }
   }
   if (url.pathname === '/api/state') return json(res, 200, view(me));
   if (url.pathname === '/api/events') {
@@ -266,8 +505,24 @@ http.createServer(async (req, res) => {
     const b = await body(req); const why = busyReason();
     if (why) return json(res, 409, { error: why });
     if (!isOwner && today(me, 'draft') >= CREATOR_DAILY_DRAFTS) return json(res, 429, { error: `That is today's limit of ${CREATOR_DAILY_DRAFTS} new ideas. Try again tomorrow.` });
-    const prompt = String(b.prompt || '').trim().slice(0, 600);
+    const submittedPrompt = String(b.prompt || '').trim().slice(0, 600);
+    const originalPrompt = String(b.originalPrompt || submittedPrompt).trim().slice(0, 600);
+    let prompt = submittedPrompt;
+    if (b.unattended && !isOwner) return json(res, 403, { error: 'Only the owner can run unattended.' });
     if (!prompt) return json(res, 400, { error: 'Write a prompt first.' });
+    let refined = null;
+    if (b.refine === true) {
+      if (localIdeaBusy || ideaRefiner.active) return json(res, 409, { error: 'The local idea helper is busy. Try again in a moment.' });
+      localIdeaBusy = true;
+      try {
+        refined = await ideaRefiner.refine({ prompt, look: b.look, seconds: b.seconds, orientation: b.orientation, setting: b.setting, ending: b.ending });
+      } catch (error) {
+        const status = /Write a little|incomplete refinement|unreadable refinement/.test(error.message) ? 422 : 503;
+        return json(res, status, { error: error.message || 'The local story model could not refine this idea. Your original sentence is unchanged.' });
+      } finally { localIdeaBusy = false; }
+      if (refined.decision === 'needs_choices') return json(res, 200, { decision: 'needs_choices', refinement: refined });
+      prompt = refined.refinedPrompt;
+    }
     // Split "A, then B" into first action (hook) and last action (ending) so the story audit can match both.
     const parts = prompt.split(/\s*(?:,\s*(?:and\s+)?then|\bthen\b|[,;.])\s*/i).map((x) => x.trim()).filter((x) => x.length > 3);
     if (!parts.length) parts.push(prompt);
@@ -279,12 +534,16 @@ http.createServer(async (req, res) => {
     };
     const look = LOOKS[b.look] ? b.look : 'food';
     const setting = String(b.setting || '').trim().slice(0, 200);
-    const answers = { topic: prompt, style: LOOKS[look].style, set: setting || LOOKS[look].set, hook: parts[0], mustShow: prompt,
-      ending: String(b.ending || '').trim().slice(0, 300) || (parts.length > 1 ? parts[parts.length - 1] : prompt), audio: ['asmr', 'voiced', 'auto'].includes(b.audio) ? b.audio : 'asmr',
+    const answers = { topic: originalPrompt, style: LOOKS[look].style, set: setting || LOOKS[look].set,
+      hook: String(refined?.hook || b.hook || parts[0]).trim().slice(0, 300),
+      mustShow: String(refined?.mustShow || b.mustShow || originalPrompt).trim().slice(0, 600),
+      obstacle: String(refined?.obstacle || b.obstacle || '').trim().slice(0, 300),
+      turn: String(refined?.turn || b.turn || '').trim().slice(0, 300),
+      ending: String(refined?.ending || b.ending || '').trim().slice(0, 300) || (parts.length > 1 ? parts[parts.length - 1] : prompt), audio: ['asmr', 'voiced', 'auto'].includes(b.audio) ? b.audio : 'asmr',
       seconds: Math.min(isOwner ? 60 : CREATOR_MAX_SECONDS, Math.max(10, Number(b.seconds) || 10)), orientation: b.orientation === 'wide' ? 'wide' : 'vertical' };
     const f = path.join(ROOT, 'storage', 'studio-answers-' + Date.now() + '.json');
     fs.writeFileSync(f, JSON.stringify(answers, null, 1));
-    const x = start('draft', ['--answers', path.relative(ROOT, f), ...(b.allowRepeat ? ['--allow-repeat'] : [])], { cmd: ['python3', 'scripts/studio-draft.py'], user: me.name, prompt, options: { look, setting, seconds: answers.seconds, orientation: answers.orientation, audio: answers.audio, ending: String(b.ending || '').trim().slice(0, 300), allowRepeat: Boolean(b.allowRepeat), chain: look !== 'food' } });
+    const x = start('draft', ['--answers', path.relative(ROOT, f), ...(b.allowRepeat ? ['--allow-repeat'] : [])], { cmd: ['python3', 'scripts/studio-draft.py'], user: me.name, prompt: originalPrompt, unattended: isOwner && b.unattended === true, options: { look, setting, seconds: answers.seconds, orientation: answers.orientation, audio: answers.audio, ending: answers.ending, originalPrompt, storyPrompt: prompt, ideaModel: refined?.model || null, allowRepeat: Boolean(b.allowRepeat), chain: look !== 'food', unattended: isOwner && b.unattended === true } });
     return json(res, 202, snap(x));
   }
   if ((url.pathname === '/api/stills' || url.pathname === '/api/regen') && req.method === 'POST') {
@@ -304,7 +563,7 @@ http.createServer(async (req, res) => {
     }
     const owner = ID_RE.test(String(b.sessionId)) ? sessions.get(String(b.sessionId)) : null;
     if (!isOwner && (!owner || !canSee(me, owner) || !mayUse(me, sc))) return json(res, 403, { error: 'That video belongs to someone else.' });
-    const x = start('stills', ['--scenario', sc, '--stills-only', ...(owner?.options?.allowRepeat ? ['--allow-repeat'] : []), ...(owner?.options?.chain ? ['--chain-images'] : [])], owner ? { session: owner, scenario: sc } : { scenario: sc, user: me.name, prompt: 'First frames ' + sc.split('/').pop() });
+    const x = start('stills', ['--scenario', sc, '--stills-only', ...(owner?.options?.allowRepeat ? ['--allow-repeat'] : []), ...(owner?.options?.chain ? ['--chain-images'] : [])], owner ? { session: owner, scenario: sc, unattended: isOwner && b.resumeUnattended === true && owner.options?.unattended === true } : { scenario: sc, user: me.name, prompt: 'First frames ' + sc.split('/').pop() });
     return json(res, 202, snap(x));
   }
   if (url.pathname === '/api/render' && req.method === 'POST') {
@@ -315,11 +574,25 @@ http.createServer(async (req, res) => {
     const owner = ID_RE.test(String(b.sessionId)) ? sessions.get(String(b.sessionId)) : null;
     if (!isOwner && (!owner || !canSee(me, owner) || !mayUse(me, sc))) return json(res, 403, { error: 'That video belongs to someone else.' });
     if (!isOwner && today(me, 'render') >= me.dailyRenders) return json(res, 429, { error: `That is today's limit of ${me.dailyRenders} videos. Try again tomorrow.` });
-    const x = start('render', ['--scenario', sc, ...(owner?.options?.allowRepeat ? ['--allow-repeat'] : []), ...(owner?.options?.chain ? ['--chain-images'] : [])], owner ? { session: owner, scenario: sc } : { scenario: sc, user: me.name, prompt: 'Render ' + sc.split('/').pop() });
+    try { frameManifest(sc); } catch (error) { return json(res, 409, { error: error.message }); }
+    const x = start('render', ['--scenario', sc, ...(owner?.options?.allowRepeat ? ['--allow-repeat'] : []), ...(owner?.options?.chain ? ['--chain-images'] : [])], owner ? { session: owner, scenario: sc, pinFrames: true } : { scenario: sc, pinFrames: true, user: me.name, prompt: 'Render ' + sc.split('/').pop() });
     return json(res, 202, snap(x));
   }
   if (url.pathname === '/api/cancel' && req.method === 'POST') {
-    if (job && job.status === 'running' && canSee(me, job)) { job.status = 'cancelled'; try { process.kill(-job.proc.pid, 'SIGTERM'); } catch { /* gone */ } persist(job); emit(); }
+    if (job && job.status === 'running' && canSee(me, job)) {
+      const stopping = job;
+      const pid = stopping.proc?.pid;
+      stopping.status = 'stopping';
+      if (pid) {
+        try { process.kill(-pid, 'SIGTERM'); } catch { /* already exited */ }
+        stopping.stopTimeout = setTimeout(() => {
+          if (stopping.status !== 'stopping') return;
+          try { process.kill(-pid, 'SIGKILL'); } catch { /* already exited */ }
+        }, 5000).unref();
+      }
+      persist(stopping);
+      emit();
+    }
     return json(res, 200, view(me));
   }
   if (url.pathname === '/api/sessions' && req.method === 'GET') {
@@ -335,7 +608,7 @@ http.createServer(async (req, res) => {
   if (url.pathname === '/api/sessions/delete' && req.method === 'POST') {
     const b = await body(req); const id = String(b.id); const x = sessions.get(id);
     if (!x || !ID_RE.test(id) || !canSee(me, x)) return json(res, 404, { error: 'Unknown session' });
-    if (x.status === 'running') return json(res, 409, { error: 'Stop this job before deleting it.' });
+    if (['running', 'stopping'].includes(x.status)) return json(res, 409, { error: 'Stop this job before deleting it.' });
     sessions.delete(id); if (job === x) job = null;
     try { fs.unlinkSync(path.join(SESS_DIR, id + '.json')); } catch { /* already gone */ } // media and drafts are never touched
     emit(); return json(res, 200, { ok: true });
@@ -346,26 +619,60 @@ http.createServer(async (req, res) => {
     if (!isOwner && !mayUse(me, sc)) return json(res, 403, { error: 'Not yours.' });
     const work = path.join('storage', 'any-local', path.basename(sc, '.json'));
     const list = (sub, re) => { try { return fs.readdirSync(path.join(ROOT, work, sub)).filter((n) => re.test(n)).map((n) => ({ n, shot: Number(n.match(re)[1]) + 1, p: path.join(work, sub, n), t: fs.statSync(path.join(ROOT, work, sub, n)).mtimeMs })).sort((x, y) => x.shot - y.shot || x.t - y.t); } catch { return []; } };
-    return json(res, 200, { stills: list('refs', /^shot-(\d+)-[0-9a-f]+\.png$/), clips: list('motion', /^shot-(\d+)-part-\d+-[0-9a-f]+\.mp4$/) });
+    let approved = null;
+    try { approved = frameManifest(sc); } catch { /* first frames still pending or changed */ }
+    return json(res, 200, { stills: approved?.stills || [], clips: list('motion', /^shot-(\d+)-part-\d+-[0-9a-f]+\.mp4$/) });
   }
-  if (url.pathname === '/api/learning') { const l = learning(); if (!isOwner) l.recentNotes = []; return json(res, 200, l); }
+  if (url.pathname === '/api/learning') { const l = learning(me); if (!isOwner) l.recentNotes = []; return json(res, 200, l); }
   if (url.pathname === '/api/feedback' && req.method === 'POST') {
     const b = await body(req); const sess = ID_RE.test(String(b.id)) ? sessions.get(String(b.id)) : null;
     if (!sess || !canSee(me, sess) || !['up', 'down'].includes(b.rating)) return json(res, 400, { error: 'Unknown chat or rating.' });
-    ledger({ type: 'feedback', user: me.name, session: sess.id, rating: b.rating, note: String(b.note || '').slice(0, 400), look: sess.options?.look, prompt: sess.prompt, video: sess.video });
+    if (!sess.video || (b.video && b.video !== sess.video)) return json(res, 409, { error: 'Reload the export before rating.' });
+    if (!ledger({ type: 'feedback', user: me.name, session: sess.id, rating: b.rating, note: String(b.note || '').slice(0, 400), look: sess.options?.look, prompt: sess.prompt, video: sess.video, evidenceType: 'creator-feedback' })) return json(res, 500, { error: 'Could not save feedback.' });
     return json(res, 200, { ok: true });
+  }
+  if (url.pathname === '/api/checkpoint-review') {
+    if (req.method === 'GET') {
+      const session = sessions.get(String(url.searchParams.get('sessionId') || ''));
+      if (!session || !canSee(me, session)) return json(res, 404, { error: 'Unknown export.' });
+      try { return json(res, 200, await checkpointReviewState(session, me, null)); }
+      catch (error) { return json(res, 200, { available: false, reason: error.message }); }
+    }
+    if (req.method === 'POST') {
+      const b = await body(req);
+      const session = ID_RE.test(String(b.sessionId || '')) ? sessions.get(String(b.sessionId)) : null;
+      if (!session || !canSee(me, session)) return json(res, 404, { error: 'Unknown export.' });
+      try { return json(res, 200, await checkpointReviewState(session, me, b)); }
+      catch (error) {
+        const status = /stale|older export|Run a fresh checkpoint|storyboard is unavailable/i.test(error.message) ? 409 : 400;
+        return json(res, status, { error: error.message || 'Could not save this checkpoint review.' });
+      }
+    }
+  }
+  if (url.pathname === '/api/comparison-feedback' && req.method === 'POST') {
+    if (!isOwner) return json(res, 403, { error: 'Only the owner can save comparison feedback.' });
+    const b = await body(req);
+    if (!b.baseline || !b.candidate || b.baseline === b.candidate) return json(res, 400, { error: 'Choose two different videos.' });
+    try {
+      const entry = await saveComparisonFeedback({ baseline: b.baseline, candidate: b.candidate,
+        reviewer: me.name, notes: b.notes });
+      return json(res, 200, { ok: true, outcome: entry.outcome, recordId: entry.id,
+        message: 'Saved to Creative Learning as human feedback. It will not change production defaults.' });
+    } catch (error) { return json(res, 422, { error: error.message || 'Could not save comparison feedback.' }); }
   }
   if (url.pathname === '/api/prereview') { // advisory checks on the finished video; shots that barely move can be retaken
     const x = sessions.get(String(url.searchParams.get('id') || ''));
     if (!x || !x.scenario || !canSee(me, x)) return json(res, 404, {});
-    const key = keyOf(x.scenario); let best = null;
-    try { for (const n of fs.readdirSync(path.join(ROOT, 'outputs'))) if (n.includes(key) && n.endsWith('.prereview.json')) { const t = fs.statSync(path.join(ROOT, 'outputs', n)).mtimeMs; if (!best || t > best.t) best = { n, t }; } } catch { /* none yet */ }
-    if (!best) return json(res, 200, { weak: [] });
+    const expected = url.searchParams.get('video');
+    if (expected && expected !== x.video) return json(res, 409, { status: 'stale', weak: [] });
+    if (!x.video) return json(res, 200, { status: x.status === 'running' ? 'pending' : 'unavailable', weak: [] });
     try {
-      const r = JSON.parse(fs.readFileSync(path.join(ROOT, 'outputs', best.n), 'utf8'));
-      const MIN_MOTION = 2.0; // same threshold as scripts/prereview-local-video.py
-      return json(res, 200, { shotMotion: r.shotMotion || [], weak: (r.shotMotion || []).map((v, i) => (v != null && v < MIN_MOTION ? i + 1 : 0)).filter(Boolean), flags: r.flags || {} });
-    } catch { return json(res, 200, { weak: [] }); }
+      const report = await inspectExport(ROOT, x.video, { running: x.status === 'running' });
+      if (expected && expected !== x.video) return json(res, 409, { status: 'stale', weak: [] });
+      return json(res, 200, report);
+    } catch {
+      return json(res, 200, { video: x.video, status: 'unavailable', weak: [] });
+    }
   }
   if (url.pathname === '/api/videos') { // finished videos for the compare view, newest first
     let out = [];

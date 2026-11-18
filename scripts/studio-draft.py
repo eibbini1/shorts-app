@@ -25,7 +25,12 @@ def checks(scn, allow_repeat):
         found += [l[9:] for l in out.splitlines() if l.startswith('BLOCKED: ')]
     if allow_repeat:
         found = [p for p in found if p != 'repeat topic']
-    return found + polish(scn)
+    found += polish(scn)
+    schema = subprocess.run(['node', str(ROOT / 'scripts/bb-local-scenario.mjs'), '--validate', scn],
+                            cwd=ROOT, capture_output=True, text=True)
+    if schema.returncode:
+        found.append('scenario schema validation failed after prompt refinement')
+    return found
 
 
 _polished = set()

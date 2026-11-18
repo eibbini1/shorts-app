@@ -20,6 +20,11 @@ def main():
         except ValueError as error:
             errors.append(f'{name}: invalid command quoting: {error}')
             continue
+        if len(parts) >= 3 and parts[:2] == ['node', '--test']:
+            target = ROOT / parts[2]
+            if not target.is_file():
+                errors.append(f'{name}: missing entry point {parts[2]}')
+            continue
         if len(parts) >= 2 and parts[0] in {'bash', 'python3', 'node', 'tsx'}:
             target = ROOT / parts[1]
             if not target.is_file():

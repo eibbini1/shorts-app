@@ -1,0 +1,108 @@
+const ACTIONS = new Set(`add assemble bake bite bloom boil break brown build carry catch chase chew chop crack climb close cook curl cut dance dice dip drizzle drop eat flip float fly fold fry garnish grab grate grow knead leap lick lift look melt mince mix open peel pedal place pour press pull push race react reach reveal roll run scoop sear serve shake slice smash smile sniff spin splash sprinkle stack steer steam stir stumble taste tap toast turn unfurl walk wave whisk`.split(' '));
+
+function roots(word) {
+  const values = new Set([word]);
+  if (word.endsWith('ies')) values.add(`${word.slice(0, -3)}y`);
+  if (word.endsWith('ing')) {
+    const base = word.slice(0, -3);
+    values.add(base); values.add(`${base}e`);
+    if (base.length > 2 && base.at(-1) === base.at(-2)) values.add(base.slice(0, -1));
+  }
+  if (word.endsWith('ed')) {
+    const base = word.slice(0, -2);
+    values.add(base); values.add(`${base}e`);
+    if (base.length > 2 && base.at(-1) === base.at(-2)) values.add(base.slice(0, -1));
+  }
+  if (word.endsWith('es')) values.add(word.slice(0, -2));
+  if (word.endsWith('s')) values.add(word.slice(0, -1));
+  return values;
+}
+
+export function hasVisiblePhysicalAction(value) {
+  let text = String(value || '').toLowerCase();
+  // In “camera zoom reveals the dish”, reveal describes the camera's framing, not subject motion.
+  text = text.replace(/\b(?:camera\s+)?(?:slow(?:ly)?\s+)?zoom(?:s|ed|ing)?\s+reveal(?:s|ed|ing)?\b/g, '');
+  const words = text.match(/[a-z]+/g) || [];
+  return words.some((word) => [...roots(word)].some((root) => ACTIONS.has(root)));
+}
+
+export function requestedActionClauses(value) {
+  return String(value || '').split(/\s*(?:,\s*(?:and\s+)?then\b|\bthen\b|[;.!?])\s*/i)
+    .map((text) => text.trim()).filter((text) => actionTokens(text).length > 0);
+}
+
+export function firstRequestedActionClause(value) {
+  return requestedActionClauses(value)[0] || '';
+}
+
+function actionTokens(value) {
+  const words = String(value || '').toLowerCase().match(/[a-z]+/g) || [];
+  return words.flatMap((word, index) => {
+    const found = [...roots(word)].find((root) => ACTIONS.has(root)
+      && !(root === 'plate' && word === 'plate' && words[index - 1] !== 'to'));
+    if (!found) return [];
+    return [found === 'plate' ? 'place' : found];
+  });
+}
+
+function appendWithinLimit(value, addition, max = 1000) {
+  const suffix = ` ${addition}`;
+  const room = Math.max(0, max - suffix.length);
+  return `${String(value || '').slice(0, room).replace(/[\s,;:]+$/, '')}${suffix}`.trim();
+}
+
+/** Keep recognized user-requested physical-action clauses in storyboard order. */
+export function preserveRequestedActions(shots, requestedText) {
+  if (!Array.isArray(shots) || shots.length === 0) return { status: 'unverified', inserted: [] };
+  const clauses = requestedActionClauses(requestedText);
+  if (!clauses.length) return { status: 'unverified', inserted: [] };
+  let cursor = 0;
+  const inserted = [];
+  for (let clauseIndex = 0; clauseIndex < clauses.length; clauseIndex++) {
+    const clause = clauses[clauseIndex];
+    const actions = [...new Set(actionTokens(clause))];
+    const positions = [];
+    let searchFrom = cursor;
+    for (const action of actions) {
+      let found = -1;
+      for (let shotIndex = searchFrom; shotIndex < shots.length; shotIndex++) {
+        if (actionTokens(shots[shotIndex].motionPrompt).includes(action)) { found = shotIndex; break; }
+      }
+      if (found < 0) { positions.length = 0; break; }
+      positions.push(found);
+      searchFrom = found;
+    }
+    if (!positions.length) {
+      const target = Math.min(shots.length - 1, Math.floor(clauseIndex * shots.length / clauses.length));
+      const directive = `Required user action must be visible in this shot: ${clause}.`;
+      shots[target].motionPrompt = appendWithinLimit(shots[target].motionPrompt, directive);
+      shots[target].imagePrompt = appendWithinLimit(shots[target].imagePrompt,
+        `Start state: position the subject and tools immediately before this action: ${clause}.`);
+      inserted.push({ clause, shot: target + 1 });
+      const refreshed = actionTokens(shots[target].motionPrompt);
+      if (!actions.every((action) => refreshed.includes(action))) {
+        throw new Error(`Could not preserve requested action in shot ${target + 1}: ${clause}`);
+      }
+      cursor = target;
+    } else {
+      cursor = positions.at(-1);
+    }
+  }
+  return { status: inserted.length ? 'repaired' : 'verified', inserted };
+}
+
+export function preserveOpeningHook(shots, hookText) {
+  if (!Array.isArray(shots) || !shots.length) return { status: 'unverified' };
+  const hook = firstRequestedActionClause(hookText);
+  if (!hook) return { status: 'unverified' };
+  const missing = [...new Set(actionTokens(hook))].filter((action) => !actionTokens(shots[0].motionPrompt).includes(action));
+  if (!missing.length) return { status: 'verified' };
+  shots[0].motionPrompt = appendWithinLimit(shots[0].motionPrompt,
+    `Opening hook must visibly perform the requested first action: ${hook}.`);
+  shots[0].imagePrompt = appendWithinLimit(shots[0].imagePrompt,
+    `Opening-hook start frame: show the subject and tool poised immediately before this action: ${hook}.`);
+  if (!missing.every((action) => actionTokens(shots[0].motionPrompt).includes(action))) {
+    throw new Error(`Could not preserve the opening hook in shot 1: ${hook}`);
+  }
+  return { status: 'repaired', action: hook };
+}

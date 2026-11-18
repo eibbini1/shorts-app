@@ -7,9 +7,9 @@ import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const usage = 'creative-learning <ingest|revoke|analyze|approve|retrieve|plan|compare|record|preference> INPUT.json [--db PATH]';
+const usage = 'creative-learning <ingest|revoke|analyze|approve|retrieve|plan|compare|record|preference|feedback> INPUT.json [--db PATH]';
 const [command, input, option, databasePath, ...extra] = process.argv.slice(2);
-const commands = ['ingest', 'revoke', 'analyze', 'approve', 'retrieve', 'plan', 'compare', 'record', 'preference'];
+const commands = ['ingest', 'revoke', 'analyze', 'approve', 'retrieve', 'plan', 'compare', 'record', 'preference', 'feedback'];
 const read = (file) => JSON.parse(readFileSync(file, 'utf8'));
 const json = JSON.stringify;
 const text = (value) => typeof value === 'string' && value.trim().length > 0;
@@ -66,6 +66,7 @@ function setup(db) {
       id TEXT PRIMARY KEY, entry TEXT NOT NULL
     );
     CREATE TABLE IF NOT EXISTS preference (id TEXT PRIMARY KEY, entry TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS feedback (id TEXT PRIMARY KEY, entry TEXT NOT NULL);
     PRAGMA user_version=1;`);
 }
 
@@ -277,6 +278,32 @@ async function main(db, request) {
       'Reviews must cover both cuts of the same experiment and name this reviewer');
       const entry = { ...request, recordedAt: new Date().toISOString() };
       db.prepare('INSERT INTO preference VALUES (?,?)').run(entry.id, json(entry));
+      return entry;
+    }
+    case 'feedback': {
+      requireFields([request.id, request.experimentId, request.baselineVideo, request.candidateVideo,
+        request.reviewer, request.notes].every(text)
+        && request.outcome === 'both-acceptable-no-preference',
+      'Feedback needs two videos, an experiment ID, reviewer, notes, and the explicit both-acceptable-no-preference outcome');
+      const baselineVideo = resolve(request.baselineVideo);
+      const candidateVideo = resolve(request.candidateVideo);
+      requireFields(existsSync(baselineVideo) && existsSync(candidateVideo), 'Both review videos must exist');
+      const [baselinePicture, candidatePicture] = [baselineVideo, candidateVideo]
+        .map((video) => streamHash(video, '0:v:0'));
+      const [baselineSound, candidateSound] = [baselineVideo, candidateVideo]
+        .map((video) => streamHash(video, '0:a:0'));
+      requireFields(baselinePicture === candidatePicture,
+        'Acceptability comparison requires identical decoded picture streams');
+      requireFields(baselineSound !== candidateSound,
+        'Acceptability comparison requires different audio streams');
+      const entry = { schemaVersion: 1, id: request.id, experimentId: request.experimentId,
+        outcome: request.outcome, reviewer: request.reviewer.trim(), notes: request.notes.trim(),
+        baseline: { video: baselineVideo, videoSha256: await hash(baselineVideo),
+          pictureStream: baselinePicture, audioStream: baselineSound },
+        candidate: { video: candidateVideo, videoSha256: await hash(candidateVideo),
+          pictureStream: candidatePicture, audioStream: candidateSound },
+        recordedAt: new Date().toISOString(), learningUse: 'human evidence only; no automatic preference or production-default update' };
+      db.prepare('INSERT INTO feedback VALUES (?,?)').run(entry.id, json(entry));
       return entry;
     }
   }

@@ -180,6 +180,7 @@ pack.write_text(json.dumps(data,indent=2)+'\n')
 PY
 fi
 python3 scripts/qa-local-video.py --video "$final_video" --pack "$pack" --scenario "$scenario" --expected-seconds "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["settings"]["seconds"])' "$scenario")" --work-dir "storage/any-local/$(basename "$scenario" .json)" || { echo "Technical QA failed: read $pack before uploading." >&2; exit 5; }
+python3 scripts/export-provenance.py --manifest "storage/any-local/$(basename "$scenario" .json)/film-manifest.json" --video "$final_video"
 python3 scripts/log-local-run.py --scenario "$scenario" --video "$final_video" --pack "$pack"
 # Advisory screen of the exact final file (shot questions on middle frames, final payoff, dish continuity, loudness).
 # It awards no points; it tells the reviewer which ratings are likely to fall below 4/5.

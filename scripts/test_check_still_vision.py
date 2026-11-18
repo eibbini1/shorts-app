@@ -58,6 +58,19 @@ class VisionGateTests(unittest.TestCase):
             self.assertEqual([c['expected'] for c in report['checks']], ['yes', 'no'])
             self.assertIn('halved potato', report['verdict']['missingOrWrong'][0])
 
+    def test_full_subject_after_comma_is_checked_with_bounded_reasoning_budget(self):
+        with tempfile.TemporaryDirectory() as folder:
+            image = Path(folder) / 'shot.png'
+            image.write_bytes(b'fixture')
+            good = {'done_reason': 'stop', 'eval_count': 117, 'message': {'content': json.dumps({
+                'answer': 'yes', 'reason': 'a hand holds a dumpling above a bowl'})}}
+            with patch.object(vision.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(good).encode())) as call:
+                report, _ = vision.review(image, 'A chef hand, holding one dumpling above a dark bowl. Warm light.')
+                sent = json.loads(call.call_args.args[0].data)
+                self.assertIn('dumpling', sent['messages'][0]['content'])
+                self.assertEqual(sent['options']['num_predict'], 2048)
+                self.assertEqual(report['diagnostics'][0]['generatedTokens'], 117)
+
     def test_invalid_answer_fails_closed(self):
         with tempfile.TemporaryDirectory() as folder:
             image = Path(folder) / 'shot.png'
