@@ -34,7 +34,8 @@ def checks(scn, allow_repeat):
     schema = subprocess.run(['node', str(ROOT / 'scripts/bb-local-scenario.mjs'), '--validate', scn],
                             cwd=ROOT, capture_output=True, text=True)
     if schema.returncode:
-        found.append('scenario schema validation failed after prompt refinement')
+        detail = re.sub(r'\s+', ' ', (schema.stderr or schema.stdout).strip())
+        found.append('scenario schema validation failed after prompt refinement' + (f': {detail[:240]}' if detail else ''))
     return found
 
 

@@ -43,18 +43,14 @@ export function firstRequestedActionClause(value) {
 }
 
 function actionTokens(value) {
-  const words = String(value || '').toLowerCase().match(/[a-z]+/g) || [];
+  const text = String(value || '')
+    .replace(/\b(?:required user action must be visible in this shot|opening hook must visibly perform the requested first action):[^.!?]*(?:[.!?]|$)/gi, '');
+  const words = text.toLowerCase().match(/[a-z]+/g) || [];
   return words.flatMap((word, index) => {
     const found = [...roots(word)].find((root) => ACTIONS.has(root));
     if (found) return [found];
     return /^(?:plate|plates|plating)$/.test(word) && PLATE_OBJECTS.has(words[index + 1]) ? ['place'] : [];
   });
-}
-
-function appendWithinLimit(value, addition, max = 1000) {
-  const suffix = ` ${addition}`;
-  const room = Math.max(0, max - suffix.length);
-  return `${String(value || '').slice(0, room).replace(/[\s,;:]+$/, '')}${suffix}`.trim();
 }
 
 /** Keep recognized user-requested physical-action clauses in storyboard order. */
@@ -80,10 +76,9 @@ export function preserveRequestedActions(shots, requestedText) {
     }
     if (!positions.length) {
       const target = Math.min(shots.length - 1, Math.floor(clauseIndex * shots.length / clauses.length));
-      const directive = `Required user action must be visible in this shot: ${clause}.`;
-      shots[target].motionPrompt = appendWithinLimit(shots[target].motionPrompt, directive);
-      shots[target].imagePrompt = appendWithinLimit(shots[target].imagePrompt,
-        `Start state: position the subject and tools immediately before this action: ${clause}.`);
+      shots[target].motionPrompt = `The subject performs this requested physical action now: ${clause}. `
+        + 'Keep the relevant ingredient and tool visible, show the change caused by the action, and use one continuous take.';
+      shots[target].imagePrompt = `Start frame for the requested action: show the subject, needed ingredient, and tool poised immediately before: ${clause}.`;
       inserted.push({ clause, shot: target + 1 });
       const refreshed = actionTokens(shots[target].motionPrompt);
       if (!actions.every((action) => refreshed.includes(action))) {
@@ -103,10 +98,9 @@ export function preserveOpeningHook(shots, hookText) {
   if (!hook) return { status: 'unverified' };
   const missing = [...new Set(actionTokens(hook))].filter((action) => !actionTokens(shots[0].motionPrompt).includes(action));
   if (!missing.length) return { status: 'verified' };
-  shots[0].motionPrompt = appendWithinLimit(shots[0].motionPrompt,
-    `Opening hook must visibly perform the requested first action: ${hook}.`);
-  shots[0].imagePrompt = appendWithinLimit(shots[0].imagePrompt,
-    `Opening-hook start frame: show the subject and tool poised immediately before this action: ${hook}.`);
+  shots[0].motionPrompt = `The subject performs the requested opening action now: ${hook}. `
+    + 'Keep the subject and relevant tool visible through the action in one continuous take.';
+  shots[0].imagePrompt = `Opening-hook start frame: show the subject and tool poised immediately before: ${hook}.`;
   if (!missing.every((action) => actionTokens(shots[0].motionPrompt).includes(action))) {
     throw new Error(`Could not preserve the opening hook in shot 1: ${hook}`);
   }

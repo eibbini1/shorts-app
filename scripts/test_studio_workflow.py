@@ -217,13 +217,18 @@ def run_fixture():
         assert choice_answers['topic']=='tomatoes' and choice_answers['hook']==chosen['hook']
         assert choice_answers['mustShow']==chosen['mustShow'] and choice_answers['ending']==chosen['ending']
         finish(approved['id'])
+        _, session_summaries=req('/api/sessions','creator-a')
+        assert any(item['id']==approved['id'] and item['storyPrompt']==chosen['prompt'] for item in session_summaries)
         replay_status, replay=req('/api/draft','creator-a',{'prompt':chosen['prompt'],'originalPrompt':'tomatoes','requestId':'approval-replay'})
         assert replay_status==200 and replay['id']==approved['id'],replay
         answer_count=len(list((root/'storage').glob('studio-answers-*.json')))
         duplicate_status, duplicate=req('/api/draft','creator-a',{'prompt':'tomatoes'})
         assert duplicate_status==409 and duplicate['sessionId']==approved['id'],duplicate
+        duplicate_story_status, duplicate_story=req('/api/draft','creator-a',{'prompt':chosen['prompt']})
+        assert duplicate_story_status==409 and duplicate_story['sessionId']==approved['id'],duplicate_story
         assert len(list((root/'storage').glob('studio-answers-*.json')))==answer_count
-        retry_status, retried=req('/api/draft','creator-a',{'prompt':'tomatoes','retrySessionId':approved['id'],'requestId':'same-project-retry'})
+        retry_status, retried=req('/api/draft','creator-a',{'prompt':chosen['prompt'],'originalPrompt':'tomatoes',
+            'retrySessionId':approved['id'],'requestId':'same-project-retry'})
         assert retry_status==202 and retried['id']==approved['id'] and len(retried['attempts'])==1,retried
         assert retried['attempts'][0]['plan']['plan']['title']=='The Copper Kite',retried['attempts']
         retried=finish(approved['id'])
@@ -251,6 +256,9 @@ def run_fixture():
         (root/'scripts/pin-fixture.py').write_text("import hashlib,json,sys\nfrom pathlib import Path\nscenario=Path(sys.argv[1])\nwork=Path('storage/any-local')/scenario.stem\nframes=[]\nfor i in range(2):\n    file=work/'refs'/f'shot-{i:02d}-aa.png'\n    file.write_bytes(bytes([i]))\n    frames.append(dict(shot=i+1,file=str(file.relative_to(work)),sha256=hashlib.sha256(file.read_bytes()).hexdigest()))\n(work/'first-frames.json').write_text(json.dumps(dict(schemaVersion=1,scenarioSha256=hashlib.sha256(scenario.read_bytes()).hexdigest(),frames=frames)))\n")
         (root/'scripts/make-local-video.sh').write_text("""set -e
 if [ "$3" = '--stills-only' ]; then
+      echo 'Presentation: voiced (explicit scenario setting)'
+      echo 'First-frame review only: skipping narration, soundtrack, and motion preparation.'
+      echo 'Sound cue and ASMR coverage plan passed.'
       python3 scripts/pin-fixture.py "$2"
       exit 0
     fi
@@ -260,7 +268,9 @@ if [ "$3" = '--stills-only' ]; then
         (root/'cached.mp4').write_bytes(bytes(256))
         payload={'scenario':scenario,'sessionId':session}
         assert req('/api/stills','creator-a',payload)[0]==202
-        assert finish()['kind']=='stills'
+        stills=finish()
+        assert stills['kind']=='stills'
+        assert not {'Finishing and exporting','Mixing sound','Recording narration','Generating motion clips'}.intersection(stills['steps'])
         assert len(req('/api/live-files?scenario='+scenario,'creator-a')[1]['stills'])==2
         assert req('/api/regen','creator-a',{**payload,'shot':2})[0]==202
         assert finish()['status']=='done'
@@ -268,9 +278,18 @@ if [ "$3" = '--stills-only' ]; then
         assert req('/api/sessions/'+session,'creator-b')[0]==404
         manifest=work.parent/'first-frames.json'
         original=manifest.read_text()
+        (work/'vision-deadbeef.json').write_text(json.dumps({
+            'image':str((work/'shot-01-aa.png').resolve()),
+            'status':'review-required',
+            'verdict':{'missingOrWrong':['tofu is visible']},
+        }))
         broken=json.loads(original)
         broken['frames'][0]['sha256']='bad'
         manifest.write_text(json.dumps(broken))
+        pending=req('/api/live-files?scenario='+scenario,'creator-a')[1]['stills']
+        assert len(pending)==2 and all(frame['verified'] is False for frame in pending),pending
+        flagged=next(frame for frame in pending if frame['shot']==2)
+        assert flagged['reviewStatus']=='review-required' and 'tofu' in flagged['reviewReason'],flagged
         assert req('/api/render','creator-a',payload)[0]==409
         manifest.write_text(original)
         assert req('/api/render','creator-a',payload)[0]==202

@@ -59,7 +59,7 @@ const STEP_RULES = [
 
 const snap = (x = job) => x && { id: x.id, user: x.user, name: x.name, prompt: x.prompt, options: x.options, createdAt: x.createdAt, updatedAt: x.updatedAt, kind: x.kind, status: x.status, startedAt: x.startedAt, steps: x.steps, lines: x.lines.slice(-200), scenario: x.scenario, plan: x.plan, video: x.video, previousVideo: x.previousVideo, technicalQa: x.technicalQa, error: x.error, attempts: x.attempts || [] };
 const persist = (x, touch = true) => { if (touch) x.updatedAt = Date.now(); x.lastSave = Date.now(); try { fs.writeFileSync(path.join(SESS_DIR, x.id + '.json'), JSON.stringify({ ...snap(x), requestIds: x.requestIds || [] })); } catch { /* disk issue: keep running */ } };
-const summary = (x) => ({ id: x.id, name: x.name, prompt: x.prompt, createdAt: x.createdAt, updatedAt: x.updatedAt, status: x.status, kind: x.kind, hasVideo: Boolean(x.video || x.previousVideo), attemptCount: (x.attempts || []).length });
+const summary = (x) => ({ id: x.id, name: x.name, prompt: x.prompt, storyPrompt: x.options?.storyPrompt || '', createdAt: x.createdAt, updatedAt: x.updatedAt, status: x.status, kind: x.kind, hasVideo: Boolean(x.video || x.previousVideo), attemptCount: (x.attempts || []).length });
 const canSee = (user, x) => !x || !user || user.role === 'owner' || x.user === user.name;
 function legacyBrief(session) {
   const expected = normalizeSessionPrompt(session.options?.originalPrompt || session.prompt);
@@ -116,9 +116,59 @@ function frameManifest(scenario) {
   const stills = data.frames.map((frame, index) => {
     const file = path.resolve(ROOT, work, frame.file);
     if (frame.shot !== index + 1 || !file.startsWith(path.resolve(ROOT, work) + path.sep) || hash(file) !== frame.sha256) throw new Error('A first frame changed. Make first frames again.');
-    return { shot: frame.shot, p: path.relative(ROOT, file), t: fs.statSync(file).mtimeMs, n: path.basename(file) };
+    return { shot: frame.shot, p: path.relative(ROOT, file), t: fs.statSync(file).mtimeMs, n: path.basename(file), verified: true };
   });
   return { stills };
+}
+
+function previewFrames(scenario, since = 0) {
+  const work = path.join('storage', 'any-local', path.basename(scenario, '.json'));
+  const refs = path.resolve(ROOT, work, 'refs');
+  let count;
+  try { count = JSON.parse(fs.readFileSync(path.join(ROOT, scenario), 'utf8')).plan.shots.length; }
+  catch (error) { if (error.code === 'ENOENT') return []; throw error; }
+  let names;
+  try { names = fs.readdirSync(refs); }
+  catch (error) { if (error.code === 'ENOENT') return []; throw error; }
+  const reviews = new Map();
+  for (const name of names.filter((file) => /^vision-[0-9a-f]+\.json$/i.test(file))) {
+    try {
+      const report = JSON.parse(fs.readFileSync(path.join(refs, name), 'utf8'));
+      const image = path.resolve(ROOT, report.image || '');
+      if (!image.startsWith(refs + path.sep)) continue;
+      if (!/^shot-\d+-[0-9a-f]+\.png$/i.test(path.basename(image))) continue;
+      const checkedAt = fs.statSync(path.join(refs, name)).mtimeMs;
+      const key = path.basename(image);
+      if (!reviews.has(key) || reviews.get(key).checkedAt < checkedAt) {
+        reviews.set(key, {
+          checkedAt,
+          status: String(report.status || 'unverified'),
+          reason: (report.verdict?.missingOrWrong || []).join('; ').slice(0, 300),
+        });
+      }
+    } catch (error) {
+      if (!(error instanceof SyntaxError) && error.code !== 'ENOENT') throw error;
+    }
+  }
+  const latest = new Map();
+  for (const name of names.filter((file) => /^shot-\d+-[0-9a-f]+\.png$/i.test(file))) {
+    const index = Number(name.match(/^shot-(\d+)-/)[1]);
+    if (index >= count) continue;
+    const file = path.join(refs, name);
+    let fileTime;
+    try { fileTime = fs.statSync(file).mtimeMs; }
+    catch (error) { if (error.code === 'ENOENT') continue; throw error; }
+    const review = reviews.get(name);
+    const t = Math.max(fileTime, review?.checkedAt || 0);
+    if (since && t < since) continue;
+    if (!latest.has(index) || latest.get(index).t < t) {
+      latest.set(index, {
+        shot: index + 1, p: path.relative(ROOT, file), t, n: name, verified: false,
+        reviewStatus: review?.status || 'unverified', reviewReason: review?.reason || '',
+      });
+    }
+  }
+  return [...latest.values()].sort((a, b) => a.shot - b.shot);
 }
 
 function start(kind, args, extra = {}) {
@@ -192,7 +242,12 @@ function start(kind, args, extra = {}) {
       const verified = /^Studio verified export: (outputs\/[^/\\]+\.mp4)$/.exec(line);
       if (verified) verifiedExport = verified[1];
       if (line.startsWith('Technical QA failed:')) failedQa = true;
-      for (const [re, label] of STEP_RULES) if (!(kind === 'draft' && ['Finishing and exporting', 'Mixing sound', 'Recording narration', 'Generating stills', 'Generating motion clips'].includes(label)) && re.test(line)) { if (x.steps[x.steps.length - 1] !== label) x.steps.push(label); break; }
+      const hiddenSteps = kind === 'draft'
+        ? ['Finishing and exporting', 'Mixing sound', 'Recording narration', 'Generating stills', 'Generating motion clips']
+        : kind === 'stills'
+          ? ['Finishing and exporting', 'Mixing sound', 'Recording narration', 'Generating motion clips']
+          : [];
+      for (const [re, label] of STEP_RULES) if (!hiddenSteps.includes(label) && re.test(line)) { if (x.steps[x.steps.length - 1] !== label) x.steps.push(label); break; }
       const sc = line.match(/(drafts\/generated\/[^\s'"]+\.local-scenario\.json)/);
       if (sc) x.scenario = sc[1];
       recordGateEvent(x, line);
@@ -598,8 +653,10 @@ http.createServer(async (req, res) => {
       retryBrief = retrySession.options?.brief || legacyBrief(retrySession);
       if (!retryBrief) return json(res, 409, { error: 'The original story brief is unavailable. Start a separate project to preserve this history.' });
     }
+    const requestPrompts = new Set([submittedPrompt, originalPrompt].map(normalizeSessionPrompt).filter(Boolean));
     const duplicate = !retrySession && !b.allowDuplicate && [...sessions.values()].find((item) =>
-      item.user === me.name && normalizeSessionPrompt(item.prompt) === normalizeSessionPrompt(originalPrompt));
+      item.user === me.name && [item.prompt, item.options?.originalPrompt, item.options?.storyPrompt]
+        .some((candidate) => requestPrompts.has(normalizeSessionPrompt(candidate))));
     if (duplicate) return json(res, 409, { error: 'A project with this exact idea already exists.', sessionId: duplicate.id });
     const why = busyReason();
     if (why) return json(res, 409, { error: why });
@@ -723,7 +780,13 @@ http.createServer(async (req, res) => {
     const list = (sub, re) => { try { return fs.readdirSync(path.join(ROOT, work, sub)).filter((n) => re.test(n)).map((n) => ({ n, shot: Number(n.match(re)[1]) + 1, p: path.join(work, sub, n), t: fs.statSync(path.join(ROOT, work, sub, n)).mtimeMs })).sort((x, y) => x.shot - y.shot || x.t - y.t); } catch { return []; } };
     let approved = null;
     try { approved = frameManifest(sc); } catch { /* first frames still pending or changed */ }
-    return json(res, 200, { stills: approved?.stills || [], clips: list('motion', /^shot-(\d+)-part-\d+-[0-9a-f]+\.mp4$/) });
+    const latestPreviewRun = [...sessions.values()]
+      .filter((session) => session.scenario === sc && session.kind === 'stills')
+      .sort((a, b) => (b.startedAt || 0) - (a.startedAt || 0))[0];
+    return json(res, 200, {
+      stills: approved?.stills || previewFrames(sc, latestPreviewRun?.startedAt || 0),
+      clips: list('motion', /^shot-(\d+)-part-\d+-[0-9a-f]+\.mp4$/),
+    });
   }
   if (url.pathname === '/api/learning') { const l = learning(me); if (!isOwner) l.recentNotes = []; return json(res, 200, l); }
   if (url.pathname === '/api/feedback' && req.method === 'POST') {

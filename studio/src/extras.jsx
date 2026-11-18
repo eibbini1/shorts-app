@@ -474,6 +474,7 @@ export function jobState(job, blocked, busyElsewhere) {
   if (st === 'stopping') return { k: 'waiting', t: 'Stopping the current job. Studio will be available when it exits.' };
   if (st === 'cancelled') return { k: 'stopped', t: 'Stopped. Your idea is kept; plan again when ready.' };
   if (st === 'interrupted') return { k: 'failed', t: 'The Mac restarted this job. Your idea is kept; try again.' };
+  if (st === 'failed' && job.kind === 'stills') return { k: 'blocked', t: 'First-frame review stopped before video rendering. Inspect the flagged frames below; no motion was generated.' };
   if (st === 'failed') return blocked ? { k: 'blocked', t: 'Blocked by a check. Nothing was rendered. Fix the point below or try again.' } : { k: 'failed', t: 'Something went wrong. Your idea is kept; try again.' };
   if (job.kind === 'draft') return blocked ? { k: 'blocked', t: 'Blocked by a check. Nothing was rendered.' } : { k: 'approval', t: 'Plan ready. Next: make first frames, then check them before the long render.' };
   if (job.kind === 'stills') return blocked ? { k: 'blocked', t: 'Blocked by a check. Fix it before rendering.' } : { k: 'approval', t: 'First frames ready. Approve them to start the render, or regenerate any frame.' };

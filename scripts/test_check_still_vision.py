@@ -58,7 +58,7 @@ class VisionGateTests(unittest.TestCase):
             self.assertEqual([c['expected'] for c in report['checks']], ['yes', 'no'])
             self.assertIn('halved potato', report['verdict']['missingOrWrong'][0])
 
-    def test_full_subject_after_comma_is_checked_with_bounded_reasoning_budget(self):
+    def test_full_subject_after_comma_uses_a_bounded_verdict_budget(self):
         with tempfile.TemporaryDirectory() as folder:
             image = Path(folder) / 'shot.png'
             image.write_bytes(b'fixture')
@@ -68,8 +68,21 @@ class VisionGateTests(unittest.TestCase):
                 report, _ = vision.review(image, 'A chef hand, holding one dumpling above a dark bowl. Warm light.')
                 sent = json.loads(call.call_args.args[0].data)
                 self.assertIn('dumpling', sent['messages'][0]['content'])
-                self.assertEqual(sent['options']['num_predict'], 2048)
+                self.assertEqual(sent['options']['num_predict'], 256)
+                self.assertIn('/no_think', sent['messages'][0]['content'])
                 self.assertEqual(report['diagnostics'][0]['generatedTokens'], 117)
+
+    def test_truncated_vision_response_fails_closed(self):
+        with tempfile.TemporaryDirectory() as folder:
+            image = Path(folder) / 'shot.png'
+            image.write_bytes(b'fixture')
+            truncated = {'done_reason': 'length', 'eval_count': 256,
+                         'message': {'content': '', 'thinking': 'incomplete'}}
+            with patch.object(vision.urllib.request, 'urlopen',
+                              return_value=io.BytesIO(json.dumps(truncated).encode())):
+                report, _ = vision.review(image, 'halloumi on a plate')
+            self.assertEqual(report['status'], 'unavailable')
+            self.assertEqual(report['diagnostics'][0]['generatedTokens'], 256)
 
     def test_invalid_answer_fails_closed(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -78,6 +91,17 @@ class VisionGateTests(unittest.TestCase):
             bad = {'done_reason': 'stop', 'message': {'content': json.dumps({'answer': 'maybe', 'reason': ''})}}
             with patch.object(vision.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(bad).encode())):
                 self.assertEqual(vision.review(image, 'bread', questions=['Is this bread?'])[0]['status'], 'unavailable')
+
+    def test_hedged_yes_answer_requires_review(self):
+        with tempfile.TemporaryDirectory() as folder:
+            image = Path(folder) / 'shot.png'
+            image.write_bytes(b'fixture')
+            hedged = {'done_reason': 'stop', 'message': {'content': json.dumps({
+                'answer': 'yes', 'reason': 'It appears to be halloumi'})}}
+            with patch.object(vision.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(hedged).encode())):
+                report, _ = vision.review(image, 'halloumi on a plate')
+            self.assertEqual(report['status'], 'review-required')
+            self.assertIn('uncertain visual match', report['verdict']['missingOrWrong'][0])
 
 
 if __name__ == '__main__':

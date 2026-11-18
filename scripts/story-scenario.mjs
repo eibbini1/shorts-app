@@ -295,8 +295,10 @@ for(let i=0;i<count;i++){
   }
   const action=beatAction(beat);
   const narration=shot.narration;
-  let image=issues.includes('image')?`${action}. Same ${outline.protagonist} in ${outline.setting}. ${args.values.style}.`:
-    `${shot.imagePrompt}${/consistent subject/i.test(shot.imagePrompt)?'':` Consistent subject: ${outline.protagonist.replace(/[.!?]+$/,'')}.`} Visual style: ${args.values.style}.`;
+  const identity=foodProcess?`${outline.title||storySubject}. `:'';
+  let image=issues.includes('image')
+    ?`${identity}Start frame: show the named food and relevant tools poised immediately before this beat: ${action}. Same ${outline.protagonist} in ${outline.setting}. ${args.values.style}.`
+    :`${identity}${shot.imagePrompt}${/consistent subject/i.test(shot.imagePrompt)?'':` Consistent subject: ${outline.protagonist.replace(/[.!?]+$/,'')}.`} Visual style: ${args.values.style}.`;
   const actor=foodProcess?'The chef':outline.protagonist;
   const focus=foodProcess?'the food':'the subject';
   let motion=issues.includes('motion')?`${action}. ${actor} performs this step with one deliberate visible movement, keeping ${focus} and the relevant tool clearly in view. As the action continues, the camera makes one slow close push-in and follows the movement. Warm side light reveals the visible change in ${focus} in real time. The motion ends when the described action is complete in the same continuous take.`:

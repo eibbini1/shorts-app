@@ -39,7 +39,7 @@ test('repairs a requested pour before a later slice and plating action', () => {
   assert.equal(result.status, 'repaired');
   assert.deepEqual(result.inserted.map((item) => item.shot), [1]);
   assert.match(shots[0].motionPrompt, /A chef pours warm caramel over a pear tart/);
-  assert.match(shots[0].imagePrompt, /Start state/);
+  assert.match(shots[0].imagePrompt, /Start frame for the requested action/);
 });
 
 test('preserves comma-separated cooking actions as ordered shot requirements', () => {
@@ -51,6 +51,18 @@ test('preserves comma-separated cooking actions as ordered shot requirements', (
   assert.match(shots[0].motionPrompt,/drizzles honey/);
   assert.match(shots[2].motionPrompt,/coats each slab/);
   assert.match(shots[10].motionPrompt,/dips and tastes it/);
+});
+
+test('does not count a requested action that appears only in a visibility note', () => {
+  const shots = [{
+    imagePrompt: 'A chef adjusts a ring light over the kitchen.',
+    motionPrompt: 'The chef turns the ring light. Required user action must be visible in this shot: add lemon zest and sesame.',
+  }];
+  const result = preserveRequestedActions(shots, 'Add lemon zest and sesame to the halloumi.');
+  assert.equal(result.status, 'repaired');
+  assert.match(shots[0].motionPrompt, /performs this requested physical action now: Add lemon zest and sesame/);
+  assert.doesNotMatch(shots[0].motionPrompt, /ring light/);
+  assert.match(shots[0].imagePrompt, /lemon zest and sesame/);
 });
 
 test('keeps already-covered actions and flags unsupported action language for review', () => {
@@ -67,6 +79,6 @@ test('moves the selected opening action into the first shot when the model delay
   ];
   const result = preserveOpeningHook(shots, 'A chef pours warm caramel over a pear tart.');
   assert.equal(result.status, 'repaired');
-  assert.match(shots[0].motionPrompt, /Opening hook must visibly perform/);
+  assert.match(shots[0].motionPrompt, /performs the requested opening action now/);
   assert.match(shots[0].imagePrompt, /Opening-hook start frame/);
 });

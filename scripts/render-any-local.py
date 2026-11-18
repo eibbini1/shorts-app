@@ -19,6 +19,7 @@ from select_still_local import select as select_still_local
 
 ROOT = Path(__file__).resolve().parents[1]
 FPS = 24
+STILL_REVIEW_ATTEMPTS = 2
 
 
 def run(*args, env=None):
@@ -76,6 +77,76 @@ def still(work, index, shot, seed, source, width, height, cache_only=False):
     if source: command.extend(['--source', source])
     run(*command)
     return target
+
+
+def repair_still_prompt(prompt, subject, required, reason, attempt):
+    detail = ' '.join(str(reason).split())[:400]
+    return (f"{prompt.rstrip()}\n\nAutomatic frame correction {attempt}: the subject is {subject}. "
+            f"Clearly show {required}. The previous image was rejected because {detail}. "
+            "Depict the named food and requested action unmistakably; do not substitute the mistaken object or material. "
+            "Keep the original setting and continuity, changing the composition only as needed for clarity.")
+
+
+def review_still_with_retries(initial_reference, prompt, subject, required, seed,
+                              review, generate, on_repair=None, attempts=STILL_REVIEW_ATTEMPTS):
+    reference = initial_reference
+    current_prompt = prompt
+    for attempt in range(1, attempts + 1):
+        result = review(reference, current_prompt)
+        if result is None:
+            return reference, current_prompt
+        status, reason = result
+        if status == 'unavailable':
+            raise RuntimeError(f'Local vision review is unavailable: {reason}')
+        if attempt == attempts:
+            raise RuntimeError(f'Vision review still rejects the image after {attempts} attempts: {reason}')
+        current_prompt = repair_still_prompt(current_prompt, subject, required, reason, attempt + 1)
+        if on_repair:
+            on_repair(current_prompt, attempt + 1, reason)
+        reference = generate(current_prompt, seed + 7919 * attempt)
+    raise RuntimeError(f'Vision review did not complete after {attempts} attempts')
+
+
+def review_vision(reference, prompt, checks, cache_dir):
+    command = ['python3', ROOT / 'scripts/check-still-vision.py', '--image', reference,
+               '--prompt', prompt, '--cache-dir', cache_dir]
+    for value in checks.get('mustShow', []):
+        command.extend(['--must-show', value])
+    for value in checks.get('mustNotShow', []):
+        command.extend(['--must-not-show', value])
+    for value in checks.get('questions', []):
+        command.extend(['--question', value])
+    process = subprocess.Popen([str(item) for item in command], cwd=ROOT, stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT, text=True)
+    lines = []
+    for line in process.stdout:
+        print(line.rstrip('\n'), flush=True)
+        lines.append(line)
+    return_code = process.wait()
+    if return_code == 0:
+        return None
+    output = ''.join(lines)
+    match = re.search(r'Still vision gate:\s*([^\s|]+)\s*\|\s*(.+)', output)
+    if match:
+        report_path = Path(match.group(2).strip())
+        if not report_path.is_absolute():
+            report_path = ROOT / report_path
+        if report_path.is_file():
+            report = json.loads(report_path.read_text(encoding='utf-8'))
+            reason = '; '.join(report.get('verdict', {}).get('missingOrWrong', []))
+            return report.get('status', match.group(1)), reason or output.strip()
+    reason = ' '.join(output.split())[-500:] or f'vision checker exited with code {return_code}'
+    status = 'unavailable' if 'unavailable' in reason.lower() else 'review-required'
+    return status, reason
+
+
+def save_repaired_scenario(scenario, source_data):
+    backup = scenario.with_name(scenario.stem + '.before-still-repair.json')
+    if not backup.exists():
+        backup.write_text(scenario.read_text(encoding='utf-8-sig'), encoding='utf-8')
+    temporary = scenario.with_name(scenario.name + '.tmp')
+    temporary.write_text(json.dumps(source_data, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+    os.replace(temporary, scenario)
 
 
 def studio_frames(studio_id):
@@ -224,71 +295,75 @@ def main():
     width, height = (384, 640) if aspect == 'short' else (640, 384)
     work.joinpath('refs').mkdir(parents=True, exist_ok=True)
     work.joinpath('motion').mkdir(exist_ok=True)
-    # Independent CPU tasks can overlap. Keep FLUX and LTX serial on 16 GB Macs;
-    # running both model jobs together competes for unified memory.
-    audio_started = time.monotonic()
-    with ThreadPoolExecutor(max_workers=2) as pool:
-        voice_job = (pool.submit(run, 'node', ROOT / 'scripts/narrate-any-local.mjs', scenario, work)
-                     if presentation['voice'] else None)
-        sound_job = pool.submit(run, ROOT / 'storage/tools/ComfyUI/.venv/bin/python',
-                                ROOT / 'scripts/sound-any-local.py', scenario, work)
-        if voice_job:
-            voice_job.result()
-        sound_job.result()
-    if not presentation['voice']:
-        with wave.open(str(work / 'voice-timeline.wav'), 'wb') as silent:
-            silent.setnchannels(2); silent.setsampwidth(2); silent.setframerate(48000)
-            silent.writeframes(b'\0' * settings['seconds'] * 48000 * 4)
-        (work / 'voice-provenance.json').write_text(json.dumps({'engine': 'none', 'voice': None,
-            'lines': [], 'presentation': presentation}, indent=2) + '\n')
-    print(f'Parallel voice and soundtrack preparation: {time.monotonic() - audio_started:.1f}s', flush=True)
-    # A deliberate music or recorded-room bed can carry a visual pause. Final-file QA
-    # still rejects actual silence; a bare voice track with dead air stops before GPU.
-    gaps = voice_gaps(work / 'voice-timeline.wav') if presentation['voice'] else []
-    if gaps and not args.allow_silence and not sound_led_pauses(source_data):
-        lines = ', '.join(f'{a:.1f}-{b:.1f} s ({b - a:.1f} s)' for a, b in gaps)
-        parser.error(f'Voice track has silence over 1.5 s at {lines}. Shorten those shots to the line length plus 0.6 s (total must stay equal to settings.seconds), or pass --allow-silence. Stopped before the 25-minute clip step')
-    if gaps and sound_led_pauses(source_data):
-        print(f'Voice leaves {len(gaps)} sound-led pause(s); final-file audio QA and a listening review are required.', flush=True)
-    model = (ROOT / 'storage/setup/ltx-model-dir.txt').read_text().strip()
-    gemma = (ROOT / 'storage/setup/gemma-model-dir.txt').read_text().strip()
-    expected = sum(math.ceil(shot['seconds'] / 5) for shot in plan['shots'])
-    if args.cache_only:
-        print(f'{len(plan["shots"])} shots require {expected} cached motion clips; a missing clip stops before LTX.', flush=True)
-    else:
-        print(f'{len(plan["shots"])} shots require {expected} motion clips; allow several minutes per uncached clip.', flush=True)
-    progress_state = work / 'progress-run.json'
-    class Progress:
-        observed = []
-        completed = []
-        def mark_complete(self, index, part):
-            pair = [index, part]
-            if pair not in self.completed:
-                self.completed.append(pair)
-            progress_state.write_text(json.dumps({'scenarioSha256': file_hash(scenario),
-                'output': str(output.resolve()), 'completed': self.completed}) + '\n')
-        def __call__(self, active=None, elapsed=0):
-            return snapshot(scenario, work, output, active, elapsed, self.observed)
-    bumps_file = work / 'refs' / 'seed-bumps.json'  # written by the Studio when you press Regenerate on a first frame
-    try: bumps = json.loads(bumps_file.read_text()) if bumps_file.is_file() else {}
-    except ValueError: bumps = {}
-    progress = Progress()
-    progress_state.write_text(json.dumps({'scenarioSha256': file_hash(scenario),
-        'output': str(output.resolve()), 'completed': []}) + '\n')
-    print(progress(), flush=True)
     references = []
-    pinned = read_manifest(work, scenario, len(plan['shots'])) if os.environ.get('SHORTS_STUDIO_PIN_FRAMES') == '1' else None
     segments = []
     previous = None
     gate = None if args.allow_bad_first else True
+    bumps_file = work / 'refs' / 'seed-bumps.json'  # written by the Studio when you press Regenerate on a first frame
+    try: bumps = json.loads(bumps_file.read_text()) if bumps_file.is_file() else {}
+    except ValueError: bumps = {}
+    if args.stills_only:
+        print('First-frame review only: skipping narration, soundtrack, and motion preparation.', flush=True)
+    else:
+        # Independent CPU tasks can overlap. Keep FLUX and LTX serial on 16 GB Macs;
+        # running both model jobs together competes for unified memory.
+        audio_started = time.monotonic()
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            voice_job = (pool.submit(run, 'node', ROOT / 'scripts/narrate-any-local.mjs', scenario, work)
+                         if presentation['voice'] else None)
+            sound_job = pool.submit(run, ROOT / 'storage/tools/ComfyUI/.venv/bin/python',
+                                    ROOT / 'scripts/sound-any-local.py', scenario, work)
+            if voice_job:
+                voice_job.result()
+            sound_job.result()
+        if not presentation['voice']:
+            with wave.open(str(work / 'voice-timeline.wav'), 'wb') as silent:
+                silent.setnchannels(2); silent.setsampwidth(2); silent.setframerate(48000)
+                silent.writeframes(b'\0' * settings['seconds'] * 48000 * 4)
+            (work / 'voice-provenance.json').write_text(json.dumps({'engine': 'none', 'voice': None,
+                'lines': [], 'presentation': presentation}, indent=2) + '\n')
+        print(f'Parallel voice and soundtrack preparation: {time.monotonic() - audio_started:.1f}s', flush=True)
+        # A deliberate music or recorded-room bed can carry a visual pause. Final-file QA
+        # still rejects actual silence; a bare voice track with dead air stops before GPU.
+        gaps = voice_gaps(work / 'voice-timeline.wav') if presentation['voice'] else []
+        if gaps and not args.allow_silence and not sound_led_pauses(source_data):
+            lines = ', '.join(f'{a:.1f}-{b:.1f} s ({b - a:.1f} s)' for a, b in gaps)
+            parser.error(f'Voice track has silence over 1.5 s at {lines}. Shorten those shots to the line length plus 0.6 s (total must stay equal to settings.seconds), or pass --allow-silence. Stopped before the 25-minute clip step')
+        if gaps and sound_led_pauses(source_data):
+            print(f'Voice leaves {len(gaps)} sound-led pause(s); final-file audio QA and a listening review are required.', flush=True)
+        model = (ROOT / 'storage/setup/ltx-model-dir.txt').read_text().strip()
+        gemma = (ROOT / 'storage/setup/gemma-model-dir.txt').read_text().strip()
+        expected = sum(math.ceil(shot['seconds'] / 5) for shot in plan['shots'])
+        if args.cache_only:
+            print(f'{len(plan["shots"])} shots require {expected} cached motion clips; a missing clip stops before LTX.', flush=True)
+        else:
+            print(f'{len(plan["shots"])} shots require {expected} motion clips; allow several minutes per uncached clip.', flush=True)
+        progress_state = work / 'progress-run.json'
+        class Progress:
+            observed = []
+            completed = []
+            def mark_complete(self, index, part):
+                pair = [index, part]
+                if pair not in self.completed:
+                    self.completed.append(pair)
+                progress_state.write_text(json.dumps({'scenarioSha256': file_hash(scenario),
+                    'output': str(output.resolve()), 'completed': self.completed}) + '\n')
+            def __call__(self, active=None, elapsed=0):
+                return snapshot(scenario, work, output, active, elapsed, self.observed)
+        progress = Progress()
+        progress_state.write_text(json.dumps({'scenarioSha256': file_hash(scenario),
+            'output': str(output.resolve()), 'completed': []}) + '\n')
+        print(progress(), flush=True)
+    pinned = read_manifest(work, scenario, len(plan['shots'])) if os.environ.get('SHORTS_STUDIO_PIN_FRAMES') == '1' else None
     for index, shot in enumerate(plan['shots']):
         reference = pinned[index] if pinned else None
+        source = previous if args.chain_images and previous else (muse if muse_shots is None or index + 1 in muse_shots else None)
+        if source is None and shot.get('studioFrame'):
+            source = frames[shot['studioFrame']]
         if reference is None and args.stills:
             reference = own_still(args.stills.expanduser().resolve(), work, index, width, height)
         if reference is None:
-            source = previous if args.chain_images and previous else (muse if muse_shots is None or index + 1 in muse_shots else None)
-            if source is None and shot.get('studioFrame'):
-                source = frames[shot['studioFrame']]  # same kitchen plate every film; the food is the prompt's
+            if shot.get('studioFrame'):
                 print(f"Shot {index + 1} edits studio frame '{shot['studioFrame']}'", flush=True)
             if args.best_of_3_stills:
                 candidates = [still(work, index, shot, 1200 + index + variation * 100,
@@ -301,26 +376,40 @@ def main():
                 print(f'Best of 3 stills for shot {index + 1}: candidate {selected}', flush=True)
             else:
                 reference = still(work, index, shot, 1200 + index + 7919 * int(bumps.get(str(index), 0)), source, width, height, args.cache_only)
-        if gate and index == 0:
-            problem = check_still(reference)
-            if problem:
-                parser.error(f'First picture failed: {problem}. Stopped before the clip step (use --allow-bad-first to override)')
-            print('First picture check passed', flush=True)
-        if not args.skip_vision_gate:
             checks = visual_checks[index] or {}
-            command = ['python3', ROOT / 'scripts/check-still-vision.py', '--image', reference,
-                       '--prompt', shot['imagePrompt'], '--cache-dir', work / 'refs']
-            for value in checks.get('mustShow', []):
-                command.extend(['--must-show', value])
-            for value in checks.get('mustNotShow', []):
-                command.extend(['--must-not-show', value])
-            for value in checks.get('questions', []):
-                command.extend(['--question', value])
-            try:
-                run(*command)
-            except subprocess.CalledProcessError:
-                parser.error(f'Shot {index + 1} still failed local vision review before LTX. '
-                             f'Inspect {reference} and the vision report in {work / "refs"}; correct the still or prompt.')
+        checks = visual_checks[index] or {}
+        base_seed = 1200 + index + 7919 * int(bumps.get(str(index), 0))
+        required = '; '.join(checks.get('mustShow', [])) or shot.get('motionPrompt', '').split('.', 1)[0].strip()
+        subject = plan.get('title') or source_data.get('topic') or 'the planned subject'
+
+        def review_candidate(candidate, prompt):
+            if gate and index == 0:
+                problem = check_still(candidate)
+                if problem:
+                    return 'review-required', f'First picture: {problem}'
+                print('First picture check passed', flush=True)
+            if args.skip_vision_gate:
+                return None
+            return review_vision(candidate, prompt, checks, work / 'refs')
+
+        def generate_repair(prompt, seed):
+            repaired_shot = {**shot, 'imagePrompt': prompt}
+            return still(work, index, repaired_shot, seed, source, width, height, args.cache_only)
+
+        def save_repair(prompt, attempt, reason):
+            shot['imagePrompt'] = prompt
+            save_repaired_scenario(scenario, source_data)
+            print(f'Automatically correcting shot {index + 1} from local vision feedback '
+                  f'({attempt}/{STILL_REVIEW_ATTEMPTS}): {reason}', flush=True)
+
+        try:
+            reference, accepted_prompt = review_still_with_retries(
+                reference, shot['imagePrompt'], subject, required, base_seed,
+                review_candidate, generate_repair, save_repair)
+        except RuntimeError as error:
+            parser.error(f'Shot {index + 1} preview could not pass review after automatic correction: {error}. '
+                         f'Inspect the still and vision report in {work / "refs"}.')
+        shot['imagePrompt'] = accepted_prompt
         references.append(reference)
         previous = reference
         if args.stills_only:
