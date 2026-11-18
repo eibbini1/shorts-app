@@ -706,4 +706,9 @@ Next: implement audio fixes first (cheap, no GPU), then ending check.
 - VERIFIED: `npm run test:studio:brief:mac` passed (7 director tests and 1 no-retry test); Studio workflow integration passed; npm script/static checks passed (76 entries, 107 Python, 18 shell, 44 Node); production UI build passed; `git diff --check` passed.
 - VERIFIED live: the rebuilt UI and owner API returned HTTP 200; new JavaScript bundle includes retry behavior. `director-brief.py --dry-run` accepted the exact saved 554-character failed brief with 60 seconds, voiced audio, and vertical orientation. No new model plan or render was started.
 - The family guide is in `docs/ISHORTS_STUDIO_GUIDE.md` and linked from README. No owner token is included. Guide covers access constraints, story approval, first-frame review, feedback, and evidence-based learning.
-- NEXT: refresh Studio, confirm Advanced settings show 60 seconds / Vertical / Voiced, then use **Try again** in the failed session. It should create a new plan session; inspect the plan and frames before rendering. Continue consolidating this fix and guide into PR #24; do not merge without review.
+- NEXT: refresh Studio, confirm Advanced settings show 60 seconds / Vertical / Voiced, then use **Try again** in the failed session. It should create a new plan session; inspect the plan and frames before rendering. The fix and guide have now been pushed to the existing PR #24; do not merge without review.
+
+### 2026-11-18 — retry fix and family guide pushed
+- Commit `ba2e87e` is pushed to `feature/studio-hook-learning-hardening`, updating the existing PR #24 with the long-brief validation fix, retry duplicate bypass, tests, and `docs/ISHORTS_STUDIO_GUIDE.md` linked from README. No new PR or merge was created.
+- Latest local build is deployed at `127.0.0.1:8787`. The exact saved halloumi brief passes a dry-run validation; do not promise the remaining model/story/render steps until the user retries and reviews them.
+- Working tree was clean after the code/docs commit; this handoff update is the only remaining local change until committed.
