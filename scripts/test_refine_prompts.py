@@ -48,6 +48,16 @@ class RefineTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             refine.refine_image('A chef ' + 'stirs ' * 210, {})
 
+    def test_refined_prompt_stays_inside_renderer_schema(self):
+        first = 'A chef lifts one dumpling into a dark bowl.'
+        long = first + ' ' + 'A soft warm light illuminates the same bowl. ' * 25
+        result = refine.refine_image(long, STUDIO)
+        self.assertTrue(result.startswith(first))
+        self.assertLessEqual(len(result), 1000)
+        self.assertTrue(result.endswith('.'))
+        with self.assertRaises(ValueError):
+            refine.refine_image('A chef ' + 'stirs ' * 210, {})
+
     def test_frame_choice_needs_the_action_not_just_the_word(self):
         frames = {'oven': 'o', 'pan': 'p', 'prep': 'r'}
         shot = lambda text: {'imagePrompt': text, 'motionPrompt': ''}
