@@ -314,7 +314,7 @@ export default function App() {
     const originalPrompt = prompt;
     const nextPrompt = story.refinedPrompt || story.prompt;
     setPrompt(nextPrompt); setEnding(story.ending); setExampleContext(false); setRefinement(null); setExampleInfo(null);
-    draftWith({ prompt: nextPrompt, originalPrompt, ending: story.ending, hook: story.hook, mustShow: story.mustShow, obstacle: story.obstacle, turn: story.turn }, { ignoreDuplicate: true, approved: true });
+    draftWith({ prompt: nextPrompt, originalPrompt, ending: story.ending, hook: story.hook, mustShow: story.mustShow, obstacle: story.obstacle, turn: story.turn, allowDuplicate: true }, { ignoreDuplicate: true, approved: true });
   };
   const [unattended, setUnattended] = useState(false);
   const [auto, setAuto] = useState(false);
@@ -397,7 +397,7 @@ export default function App() {
     setDuplicateSession(null);
     return run(async () => {
       const runUnattended = me?.canRunUnattended && unattended;
-      const r = await post('/api/draft', { prompt, seconds, orientation, audio, ending, look, setting, unattended: runUnattended, refine: !approved, ...extra });
+      const r = await post('/api/draft', { prompt, seconds, orientation, audio, ending, look, setting, unattended: runUnattended, refine: !approved, requestId: globalThis.crypto.randomUUID(), ...extra });
       if (r.decision === 'needs_choices') { setRefinement(r.refinement); return; }
       if (r.options?.storyPrompt) setPrompt(r.options.storyPrompt);
       if (r.options?.ending) setEnding(r.options.ending);
@@ -485,13 +485,21 @@ export default function App() {
               {running && <button className="ghost" onClick={cancel}>Stop</button>}
               {job.status === 'failed' && !blocked && <p className="bad">{job.technicalQa?.status === 'failed' ? 'The final file failed technical QA.' : job.error}</p>}
               {notes.length > 0 && <ul className="notes">{notes.filter((n) => !(choice && n.startsWith('BLOCKED'))).map((n, i) => <li key={i} className={n.startsWith('BLOCKED') ? 'bad' : n.startsWith('Fixed') ? 'good' : 'muted'}>{n.startsWith('Fixed') ? '✓ ' + n : n}</li>)}</ul>}
-              {choice && job.status !== 'running' && <BlockedCard lines={job.lines || []} choice={choice} busy={anyRunning} onRetry={() => draftWith({}, { ignoreDuplicate: true })} onAnyway={() => draftWith({ allowRepeat: true })} onEdit={() => document.querySelector('.composer textarea')?.focus()} />}
+              {choice && job.status !== 'running' && <BlockedCard lines={job.lines || []} choice={choice} busy={anyRunning} onRetry={() => draftWith({ retrySessionId: job.id }, { ignoreDuplicate: true })} onAnyway={() => draftWith({ allowRepeat: true, allowDuplicate: true }, { ignoreDuplicate: true })} onEdit={() => document.querySelector('.composer textarea')?.focus()} />}
               {job.status === 'cancelled' && <p className="muted">Stopped.</p>}
               {job.status === 'interrupted' && <p className="bad">{job.error}</p>}
               {['failed', 'interrupted'].includes(job.status) && me?.canRunUnattended && job.options?.unattended && job.scenario && job.plan && <button className="primary" disabled={busy} onClick={resumeUnattended}>Resume automatically</button>}
               {job.plan && <PlanCard job={job} idea={job.prompt} onStills={stills} disabled={busy || blocked} notes={notes} />}
               {job.plan && <FramesBlock job={job} plan={job.plan?.plan || job.plan} onStills={stills} onRegen={regen} onRender={render} busy={busy || me?.rendersLeft === 0} blocked={blocked} />}
               {job.plan && <RenderTimer job={job} plan={job.plan?.plan || job.plan} />}
+              {(job.attempts || []).length > 0 && <details className="card"><summary>Previous planning attempts ({job.attempts.length})</summary>{job.attempts.map((attempt, index) => {
+                const previousPlan = attempt.plan?.plan || attempt.plan;
+                return <section key={`${attempt.startedAt}-${index}`}><p><b>Attempt {index + 1}</b> · {attempt.status}{attempt.error ? ` · ${attempt.error}` : ''}</p>
+                  {previousPlan?.shots && <><p><b>{previousPlan.title || 'Saved story plan'}</b> · {attempt.options?.seconds || previousPlan.shots.reduce((sum, shot) => sum + (Number(shot.seconds) || 0), 0)}s</p><ShotPlan shots={previousPlan.shots} notes={[]} /></>}
+                  {attempt.scenario && <p className="muted small">Saved scenario: {attempt.scenario}</p>}
+                  {attempt.lines?.length > 0 && <pre className="log">{attempt.lines.join('\n')}</pre>}
+                </section>;
+              })}</details>}
               {job.plan && <RenderLive job={job} plan={job.plan?.plan || job.plan} sessions={sessions} />}
               {job.status === 'done' && job.kind === 'draft' && !job.plan && <p className="muted">Plan saved: {job.scenario}</p>}
               {!job.video && job.previousVideo && <details className="card"><summary>Previous verified export</summary><Player src={'/media?p=' + encodeURIComponent(job.previousVideo)} /></details>}
@@ -534,7 +542,7 @@ export default function App() {
           {duplicateSession.id === selectedId && <p>Continue with the current plan above, or create a separate project.</p>}
           <div className="row wrap">
             {duplicateSession.id !== selectedId && <button className="primary" type="button" onClick={() => { const id = duplicateSession.id; setDuplicateSession(null); select(id); }}>Open existing project</button>}
-            <button className="ghost" type="button" onClick={() => draftWith({}, { ignoreDuplicate: true })}>Create a separate project</button>
+            <button className="ghost" type="button" onClick={() => draftWith({ allowDuplicate: true }, { ignoreDuplicate: true })}>Create a separate project</button>
           </div>
         </div>}
         <div className="refine-row">

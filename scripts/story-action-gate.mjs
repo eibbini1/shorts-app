@@ -1,4 +1,6 @@
-const ACTIONS = new Set(`add arrange assemble bake bite bloom boil break brown build carry catch chase chew chop crack climb close cook curl cut dance dice dip drizzle drop eat flip float fly fold fry garnish grab grate grow knead leap lick lift look melt mince mix move open peel pedal place pour prepare press pull push race react reach reveal roll run scoop sear serve shake slice smash smile sniff spin splash sprinkle stack steer steam stir stumble taste tap toast turn unfurl walk wave whisk`.split(' '));
+const ACTIONS = new Set(`add arrange assemble bake baste bite bloom boil break brown build carry catch chase chew chop close coat cook curl cut dance dice dip drizzle drop eat flip float fly fold fry garnish grab grate grow knead leap lick lift look melt mince mix move open peel pedal place pour prepare press pull push race react reach reveal roll run scoop sear serve shake slice smash smile sniff spin splash sprinkle stack steer steam stir stumble taste tap toast turn unfurl walk wave whisk`.split(' '));
+const PLATE_OBJECTS = new Set(['a', 'an', 'beside', 'each', 'her', 'his', 'it', 'one', 'the', 'their']);
+const PRODUCTION_NOTES = /\b(?:film|video|vertical|horizontal|cinematic|captions?|narration|macro details|sync(?:ed|hronized)?|cooking sounds)\b/i;
 
 function roots(word) {
   const values = new Set([word]);
@@ -25,15 +27,15 @@ export function hasVisiblePhysicalAction(value) {
   const words = text.match(/[a-z]+/g) || [];
   return words.some((word, index) => {
     const root = [...roots(word)].find((value) => ACTIONS.has(value));
-    if (!root) return false;
+    if (!root) return /^(?:plate|plates|plating)$/.test(word) && PLATE_OBJECTS.has(words[index + 1]);
     // A camera moving is not evidence that the filmed subject performed an action.
     return !(root === 'move' && words.slice(Math.max(0, index - 2), index).includes('camera'));
   });
 }
 
 export function requestedActionClauses(value) {
-  return String(value || '').split(/\s*(?:,\s*(?:and\s+)?then\b|\bthen\b|[;.!?])\s*/i)
-    .map((text) => text.trim()).filter((text) => actionTokens(text).length > 0);
+  return String(value || '').split(/\s*(?:,\s*(?:and\s+)?then\b|,|\bthen\b|[;.!?])\s*/i)
+    .map((text) => text.trim()).filter((text) => actionTokens(text).length > 0 && !PRODUCTION_NOTES.test(text));
 }
 
 export function firstRequestedActionClause(value) {
@@ -43,10 +45,9 @@ export function firstRequestedActionClause(value) {
 function actionTokens(value) {
   const words = String(value || '').toLowerCase().match(/[a-z]+/g) || [];
   return words.flatMap((word, index) => {
-    const found = [...roots(word)].find((root) => ACTIONS.has(root)
-      && !(root === 'plate' && word === 'plate' && words[index - 1] !== 'to'));
-    if (!found) return [];
-    return [found === 'plate' ? 'place' : found];
+    const found = [...roots(word)].find((root) => ACTIONS.has(root));
+    if (found) return [found];
+    return /^(?:plate|plates|plating)$/.test(word) && PLATE_OBJECTS.has(words[index + 1]) ? ['place'] : [];
   });
 }
 

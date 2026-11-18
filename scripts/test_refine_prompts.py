@@ -36,6 +36,7 @@ class RefineTests(unittest.TestCase):
     def test_motion_gets_camera_when_missing(self):
         out = refine.refine_motion('A spoon lifts a bite of cake as cream stretches.', STUDIO)
         self.assertIn('pushes in', out)
+        self.assertGreaterEqual(refine.lint.score_motion(out, 5)[0], 85)
 
     def test_refined_prompt_stays_inside_renderer_schema(self):
         first = 'A chef lifts one dumpling into a dark bowl.'

@@ -9,6 +9,7 @@ import { createIdeaRefiner } from './studio-refine-idea.mjs';
 import { inspectExport, fileHash } from './studio-export-review.mjs';
 import { blockerReasons, classifyGateLine, gateEventKey } from './studio-learning-signals.mjs';
 import { buildLearningContext } from './studio-learning-memory.mjs';
+import { createSessionId, draftIdleTimeoutMs, draftTimeoutMs, normalizeSessionPrompt, sessionTitle } from './studio-session-utils.mjs';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -33,6 +34,8 @@ for (const f of fs.readdirSync(SESS_DIR)) {
   try {
     const x = JSON.parse(fs.readFileSync(path.join(SESS_DIR, f), 'utf8'));
     if (!ID_RE.test(String(x.id))) continue;
+    if (!Array.isArray(x.attempts)) x.attempts = [];
+    if (!Array.isArray(x.requestIds)) x.requestIds = [];
     if (['running', 'stopping'].includes(x.status)) { x.status = 'interrupted'; x.error = 'The studio was restarted while this was running. Check the log, then run it again.'; }
     sessions.set(x.id, x);
   } catch { /* skip unreadable file */ }
@@ -54,10 +57,25 @@ const STEP_RULES = [
   [/final-file|qa\b|verified|contact sheet/i, 'Quality checks'],
 ];
 
-const snap = (x = job) => x && { id: x.id, user: x.user, name: x.name, prompt: x.prompt, options: x.options, createdAt: x.createdAt, updatedAt: x.updatedAt, kind: x.kind, status: x.status, startedAt: x.startedAt, steps: x.steps, lines: x.lines.slice(-200), scenario: x.scenario, plan: x.plan, video: x.video, previousVideo: x.previousVideo, technicalQa: x.technicalQa, error: x.error };
-const persist = (x, touch = true) => { if (touch) x.updatedAt = Date.now(); x.lastSave = Date.now(); try { fs.writeFileSync(path.join(SESS_DIR, x.id + '.json'), JSON.stringify(snap(x))); } catch { /* disk issue: keep running */ } };
-const summary = (x) => ({ id: x.id, name: x.name, prompt: x.prompt, createdAt: x.createdAt, updatedAt: x.updatedAt, status: x.status, kind: x.kind, hasVideo: Boolean(x.video || x.previousVideo) });
+const snap = (x = job) => x && { id: x.id, user: x.user, name: x.name, prompt: x.prompt, options: x.options, createdAt: x.createdAt, updatedAt: x.updatedAt, kind: x.kind, status: x.status, startedAt: x.startedAt, steps: x.steps, lines: x.lines.slice(-200), scenario: x.scenario, plan: x.plan, video: x.video, previousVideo: x.previousVideo, technicalQa: x.technicalQa, error: x.error, attempts: x.attempts || [] };
+const persist = (x, touch = true) => { if (touch) x.updatedAt = Date.now(); x.lastSave = Date.now(); try { fs.writeFileSync(path.join(SESS_DIR, x.id + '.json'), JSON.stringify({ ...snap(x), requestIds: x.requestIds || [] })); } catch { /* disk issue: keep running */ } };
+const summary = (x) => ({ id: x.id, name: x.name, prompt: x.prompt, createdAt: x.createdAt, updatedAt: x.updatedAt, status: x.status, kind: x.kind, hasVideo: Boolean(x.video || x.previousVideo), attemptCount: (x.attempts || []).length });
 const canSee = (user, x) => !x || !user || user.role === 'owner' || x.user === user.name;
+function legacyBrief(session) {
+  const expected = normalizeSessionPrompt(session.options?.originalPrompt || session.prompt);
+  const createdAt = Number(session.createdAt || session.id);
+  const candidates = [];
+  for (const file of fs.readdirSync(path.join(ROOT, 'storage'))) {
+    const match = /^studio-answers-(\d+)\.json$/.exec(file);
+    if (!match || Math.abs(Number(match[1]) - createdAt) > 5 * 60 * 1000) continue;
+    try {
+      const answers = JSON.parse(fs.readFileSync(path.join(ROOT, 'storage', file), 'utf8'));
+      if (normalizeSessionPrompt(answers.topic) === expected) candidates.push({ distance: Math.abs(Number(match[1]) - createdAt), answers });
+    } catch { /* ignore unrelated or unreadable legacy answer files */ }
+  }
+  candidates.sort((a, b) => a.distance - b.distance);
+  return candidates[0]?.answers || null;
+}
 const view = (user, x = job) => !x ? { status: 'idle' } : canSee(user, x) ? snap(x)
   : { id: 'other', name: 'Another video', prompt: '', options: {}, status: x.status, kind: x.kind, startedAt: x.startedAt, steps: [], lines: [], busyElsewhere: true };
 const emit = () => { for (const c of clients) c.write(`data: ${JSON.stringify(view(c.user))}\n\n`); };
@@ -107,9 +125,29 @@ function start(kind, args, extra = {}) {
   const startedAt = Date.now();
   let x = extra.session;
   if (!x) {
-    x = { id: String(startedAt), user: extra.user, name: (extra.prompt || 'New video').slice(0, 48), prompt: extra.prompt || '', options: extra.options || {}, createdAt: startedAt, plan: null, scenario: null, video: null };
+    x = { id: createSessionId(sessions.keys(), startedAt), user: extra.user, name: sessionTitle(extra.prompt || 'New video'), prompt: extra.prompt || '', options: extra.options || {}, attempts: [], requestIds: [], createdAt: startedAt, plan: null, scenario: null, video: null };
     sessions.set(x.id, x);
+  } else if (extra.archiveAttempt) {
+    x.attempts ||= [];
+    x.attempts.push({
+      startedAt: x.startedAt || x.createdAt,
+      updatedAt: x.updatedAt || Date.now(),
+      kind: x.kind,
+      status: x.status,
+      options: { ...(x.options || {}) },
+      steps: [...(x.steps || [])],
+      lines: [...(x.lines || [])],
+      error: x.error || null,
+      scenario: x.scenario || null,
+      plan: x.plan || null,
+      video: x.video || null,
+      technicalQa: x.technicalQa || null,
+    });
   }
+  x.attempts ||= [];
+  x.requestIds ||= [];
+  if (extra.requestId && !x.requestIds.includes(extra.requestId)) x.requestIds.push(extra.requestId);
+  if (extra.options) x.options = extra.options;
   Object.assign(x, { kind, status: 'running', startedAt, steps: [], lines: [], error: null, timedOut: false });
   if (kind === 'render' || kind === 'stills') { if (kind === 'render') {
       if (x.video && x.technicalQa?.status === 'passed') x.previousVideo = x.video;
@@ -126,8 +164,8 @@ function start(kind, args, extra = {}) {
   // Longer plans call the local story model once per shot; size the hard limit to requested runtime.
   // Keep an idle watchdog too, so a truly stalled model is still stopped and recoverable.
   const plannedSeconds = Math.max(10, Number(x.options?.seconds) || 30);
-  const draftTimeout = Number(process.env.STUDIO_DRAFT_TIMEOUT_MS || Math.max(900000, plannedSeconds * 45000));
-  const draftIdleTimeout = Number(process.env.STUDIO_DRAFT_IDLE_TIMEOUT_MS || 600000);
+  const draftTimeout = draftTimeoutMs(plannedSeconds, process.env.STUDIO_DRAFT_TIMEOUT_MS);
+  const draftIdleTimeout = draftIdleTimeoutMs(plannedSeconds, process.env.STUDIO_DRAFT_IDLE_TIMEOUT_MS);
   const watchdog = kind === 'draft' ? setInterval(() => {
     if (x.status !== 'running') return;
     if (Date.now() - startedAt < draftTimeout && Date.now() - lastActivityAt < draftIdleTimeout) return;
@@ -538,18 +576,40 @@ http.createServer(async (req, res) => {
     res.user = me; clients.add(res); req.on('close', () => clients.delete(res)); return;
   }
   if (url.pathname === '/api/draft' && req.method === 'POST') {
-    const b = await body(req); const why = busyReason();
-    if (why) return json(res, 409, { error: why });
-    if (!isOwner && today(me, 'draft') >= CREATOR_DAILY_DRAFTS) return json(res, 429, { error: `That is today's limit of ${CREATOR_DAILY_DRAFTS} new ideas. Try again tomorrow.` });
+    const b = await body(req);
+    const requestId = String(b.requestId || '').trim();
+    if (requestId && !/^[\w.:-]{1,128}$/.test(requestId)) return json(res, 400, { error: 'Invalid request ID.' });
+    if (requestId) {
+      const previous = [...sessions.values()].find((item) => item.requestIds?.includes(requestId));
+      if (previous) return canSee(me, previous) ? json(res, 200, snap(previous)) : json(res, 409, { error: 'This request has already been processed.' });
+    }
     const submittedPrompt = String(b.prompt || '').trim().slice(0, 600);
     const originalPrompt = String(b.originalPrompt || submittedPrompt).trim().slice(0, 600);
+    if (!submittedPrompt) return json(res, 400, { error: 'Write a prompt first.' });
+    let retrySession = null;
+    let retryBrief = null;
+    if (b.retrySessionId !== undefined) {
+      const retryId = String(b.retrySessionId || '');
+      retrySession = ID_RE.test(retryId) ? sessions.get(retryId) : null;
+      if (!retrySession || !canSee(me, retrySession)) return json(res, 404, { error: 'Unknown project to retry.' });
+      if (retrySession.kind !== 'draft' || ['running', 'stopping'].includes(retrySession.status)) return json(res, 409, { error: 'Only a completed story plan can be retried.' });
+      const savedPrompt = String(retrySession.options?.originalPrompt || retrySession.prompt || '');
+      if (normalizeSessionPrompt(originalPrompt) !== normalizeSessionPrompt(savedPrompt)) return json(res, 409, { error: 'The idea changed. Start a separate project to keep the previous attempt.' });
+      retryBrief = retrySession.options?.brief || legacyBrief(retrySession);
+      if (!retryBrief) return json(res, 409, { error: 'The original story brief is unavailable. Start a separate project to preserve this history.' });
+    }
+    const duplicate = !retrySession && !b.allowDuplicate && [...sessions.values()].find((item) =>
+      item.user === me.name && normalizeSessionPrompt(item.prompt) === normalizeSessionPrompt(originalPrompt));
+    if (duplicate) return json(res, 409, { error: 'A project with this exact idea already exists.', sessionId: duplicate.id });
+    const why = busyReason();
+    if (why) return json(res, 409, { error: why });
+    if (!isOwner && !retrySession && today(me, 'draft') >= CREATOR_DAILY_DRAFTS) return json(res, 429, { error: `That is today's limit of ${CREATOR_DAILY_DRAFTS} new ideas. Try again tomorrow.` });
     let prompt = submittedPrompt;
-    const look = ['food', 'cartoon', 'night', 'custom'].includes(b.look) ? b.look : 'food';
+    const look = retrySession?.options?.look || (['food', 'cartoon', 'night', 'custom'].includes(b.look) ? b.look : 'food');
     const learningEvidence = buildLearningContext(readLedger(), { user: me, look });
     if (b.unattended && !isOwner) return json(res, 403, { error: 'Only the owner can run unattended.' });
-    if (!prompt) return json(res, 400, { error: 'Write a prompt first.' });
     let refined = null;
-    if (b.refine === true) {
+    if (!retrySession && b.refine === true) {
       if (localIdeaBusy || ideaRefiner.active) return json(res, 409, { error: 'The local idea helper is busy. Try again in a moment.' });
       localIdeaBusy = true;
       try {
@@ -570,17 +630,22 @@ http.createServer(async (req, res) => {
       night: { style: 'hand-drawn 2D cartoon animation at night, deep navy blue sky and shadows with warm creamy ivory highlights, glowing cream lights, limited navy and cream palette, bold outlines', set: 'a moonlit navy-blue night scene with cream-coloured lights' },
       custom: { style: 'cinematic short film matching the idea', set: 'a setting that fits the idea' },
     };
-    const setting = String(b.setting || '').trim().slice(0, 200);
-    const answers = { topic: originalPrompt, style: LOOKS[look].style, set: setting || LOOKS[look].set,
+    const setting = retrySession?.options?.setting || String(b.setting || '').trim().slice(0, 200);
+    const answers = retryBrief || { topic: originalPrompt, style: LOOKS[look].style, set: setting || LOOKS[look].set,
       hook: String(refined?.hook || b.hook || parts[0]).trim().slice(0, 300),
       mustShow: String(refined?.mustShow || b.mustShow || originalPrompt).trim().slice(0, 600),
       obstacle: String(refined?.obstacle || b.obstacle || '').trim().slice(0, 300),
       turn: String(refined?.turn || b.turn || '').trim().slice(0, 300),
       ending: String(refined?.ending || b.ending || '').trim().slice(0, 300) || (parts.length > 1 ? parts[parts.length - 1] : prompt), audio: ['asmr', 'voiced', 'auto'].includes(b.audio) ? b.audio : 'asmr',
       seconds: Math.min(isOwner ? 60 : CREATOR_MAX_SECONDS, Math.max(10, Number(b.seconds) || 10)), orientation: b.orientation === 'wide' ? 'wide' : 'vertical' };
-    const f = path.join(ROOT, 'storage', 'studio-answers-' + Date.now() + '.json');
+    const f = path.join(ROOT, 'storage', `studio-answers-${Date.now()}-${crypto.randomUUID()}.json`);
     fs.writeFileSync(f, JSON.stringify(answers, null, 1));
-    const x = start('draft', ['--answers', path.relative(ROOT, f), ...(b.allowRepeat ? ['--allow-repeat'] : [])], { cmd: ['python3', 'scripts/studio-draft.py'], user: me.name, prompt: originalPrompt, learningEvidence, unattended: isOwner && b.unattended === true, options: { look, setting, seconds: answers.seconds, orientation: answers.orientation, audio: answers.audio, ending: answers.ending, originalPrompt, storyPrompt: prompt, ideaModel: refined?.model || null, learningGuidanceCount: learningEvidence.guidanceCount, allowRepeat: Boolean(b.allowRepeat), chain: look !== 'food', unattended: isOwner && b.unattended === true } });
+    const options = { ...(retrySession?.options || {}), look, setting, seconds: answers.seconds, orientation: answers.orientation, audio: answers.audio, ending: answers.ending, originalPrompt, storyPrompt: retrySession?.options?.storyPrompt || prompt, brief: answers, ideaModel: retrySession?.options?.ideaModel || refined?.model || null, learningGuidanceCount: learningEvidence.guidanceCount, allowRepeat: retrySession ? Boolean(retrySession.options?.allowRepeat) : Boolean(b.allowRepeat), chain: retrySession ? Boolean(retrySession.options?.chain) : look !== 'food', unattended: isOwner && b.unattended === true };
+    const x = start('draft', ['--answers', path.relative(ROOT, f), ...(options.allowRepeat ? ['--allow-repeat'] : [])], {
+      cmd: ['python3', 'scripts/studio-draft.py'], user: me.name, prompt: originalPrompt, learningEvidence,
+      unattended: isOwner && b.unattended === true, options, requestId,
+      ...(retrySession ? { session: retrySession, archiveAttempt: true } : {}),
+    });
     return json(res, 202, snap(x));
   }
   if ((url.pathname === '/api/stills' || url.pathname === '/api/regen') && req.method === 'POST') {

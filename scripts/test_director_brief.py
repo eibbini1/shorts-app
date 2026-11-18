@@ -61,6 +61,7 @@ class DirectorBriefTests(unittest.TestCase):
     def test_no_cuts_does_not_count_as_a_moving_subject(self):
         self.assertFalse(physical_action('Camera zooms over a still plate. One take, no cuts.'))
         self.assertTrue(physical_action('A hand adds jalapeños to the burger. One take, no cuts.'))
+        self.assertTrue(physical_action('A chef drizzles honey, coats halloumi, bastes it, then plates each bite.'))
 
     def test_concrete_subject_hook_beats_vague_adjectives(self):
         self.assertLess(hook_score('Juicy, savory, perfectly roasted.', 'rosemary roast chicken')[0], 60)

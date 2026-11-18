@@ -7,6 +7,7 @@ test('recognizes food actions including common inflections', () => {
     'A chef slices a tomato and the wedges fall onto the board.',
     'The cook is chopping scallions while oil sizzles in the pan.',
     'A hand drizzles honey, then sprinkles sesame over the toast.',
+    'The chef coats halloumi in flour, bastes it, then plates each golden slice.',
   ]) assert.equal(hasVisiblePhysicalAction(prompt), true, prompt);
 });
 
@@ -39,6 +40,17 @@ test('repairs a requested pour before a later slice and plating action', () => {
   assert.deepEqual(result.inserted.map((item) => item.shot), [1]);
   assert.match(shots[0].motionPrompt, /A chef pours warm caramel over a pear tart/);
   assert.match(shots[0].imagePrompt, /Start state/);
+});
+
+test('preserves comma-separated cooking actions as ordered shot requirements', () => {
+  const shots=Array.from({length:12},()=>({imagePrompt:'A chef and halloumi.',motionPrompt:'The chef waits beside the pan.'}));
+  const result=preserveRequestedActions(shots,
+    'A chef drizzles honey, then cuts halloumi into slabs, coats each slab in flour, sears it, bastes it, adds lemon, plates it, breaks a bite, then dips and tastes it. Shoot a 60-second vertical cinematic food film with close macro details, natural cooking sounds, warm English narration and clear synced captions.');
+  assert.equal(result.status,'repaired');
+  assert.equal(result.inserted.length,9);
+  assert.match(shots[0].motionPrompt,/drizzles honey/);
+  assert.match(shots[2].motionPrompt,/coats each slab/);
+  assert.match(shots[10].motionPrompt,/dips and tastes it/);
 });
 
 test('keeps already-covered actions and flags unsupported action language for review', () => {

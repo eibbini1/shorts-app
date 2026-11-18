@@ -77,11 +77,23 @@ def refine_image(prompt, studio):
 def refine_motion(prompt, studio):
     text = strip_negations(prompt)
     extra = []
-    if not (lint.CAMERA.search(text) or re.search(r'\bcamera\b', text, re.I)) and studio.get('cameraMove'):
-        extra.append(studio['cameraMove'].rstrip('.') + '.')
+    current = lambda: ' '.join([text] + extra)
+    if not (lint.CAMERA.search(current()) or re.search(r'\bcamera\b', current(), re.I)):
+        extra.append((studio.get('cameraMove') or 'The camera tracks the action in one close view').rstrip('.') + '.')
+    if not lint.SEQUENCE.search(current()):
+        extra.append('As the action continues, the same movement carries the subject toward its visible end state.')
+    if not re.search(r'\b(push(?:es)?[- ]in|zoom|close)\b', current(), re.I):
+        extra.append('The camera stays close on the subject throughout the movement.')
     if not re.search(r'continuous (?:take|motion)|one take', text, re.I):
         extra.append('Everything happens in one continuous take.')
-    return bounded_prompt(' '.join([text] + extra))
+    if lint.words(current()) < 40:
+        extra.extend([
+            'The subject and relevant object remain clearly visible as the described action continues.',
+            'The motion ends in the new state described above, in the same continuous take.',
+        ])
+    while len(sentences(current())) < 4:
+        extra.append('The subject remains visible until the movement reaches its natural end.')
+    return bounded_prompt(current())
 
 
 FRAME_HINTS = (('oven', r'\b(?:in|into|out of|from) the (?:\w+ )?oven\b|\boven (?:door|rack)\b|\bopen (?:\w+ )?oven\b'),
