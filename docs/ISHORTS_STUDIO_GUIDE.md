@@ -61,18 +61,14 @@ The Studio reports technical checks, resolution, and automatic motion or image f
 
 ## 6. Help the Studio learn from each video
 
-For each completed session that has an actual video export:
+For each completed session with a video export:
 
-1. Open the session from the **Projects** list.
-2. Watch and listen to the exact export.
-3. Choose **Good** or **Needs work**.
-4. Add a short, specific note. Include the shot or time and what should change, for example: “At 00:12, the spatula misses the halloumi; keep it in contact while turning the slice.”
-5. If the shot-checkpoint review is available, compare the planned action with its start, middle, and end frames, and record whether the action and payoff are visible.
-6. Open the Learning panel to see recorded ratings, recurring blockers, gate outcomes, and scene-plan counts.
+1. Open the session from **Projects** and watch and listen to the exact export.
+2. Choose **Good** or **Needs work** and add a specific note with a shot or timestamp.
+3. If shot-checkpoint review is available, compare the planned action with its sampled frames and review the payoff.
+4. Open the Learning panel to see gate outcomes, final-file screen findings, recurring blockers and human feedback.
 
-Useful feedback describes what happened and what you expected. “Bad” is less useful than “shot 3 changes the plate, and the sauce pour never appears.” Rate only exports you watched. Plan-only or failed sessions do not have a finished video to rate.
-
-This creates a record tied to the session and export. It does **not** retrain FLUX, LTX, Gemma, Qwen, or voice models, and it does not silently change production settings. Reusable creative techniques require an explicit review and approval by the owner.
+These records are tied to the session and exact export. Relevant feedback, repeated blockers and advisory final-file findings can guide later local story-model prompts. Model suggestions still pass the same story and release gates. This does **not** retrain FLUX, LTX, Gemma, Qwen or voice models, and it does not silently change production defaults. A rating without a note records sentiment but cannot tell the model what to change. Rate only videos you watched and listened to.
 
 ## 7. If something goes wrong
 

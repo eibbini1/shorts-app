@@ -21,9 +21,11 @@ test('recognizes character and object actions', () => {
 test('camera movement and static beauty shots do not satisfy the action gate', () => {
   for (const prompt of [
     'The camera slowly pans across a finished plate.',
+    'The camera slowly moves across a finished plate.',
     'A slow zoom reveals the same still scene.',
     'Hold on the beautiful dish while warm light glows across the counter.',
   ]) assert.equal(hasVisiblePhysicalAction(prompt), false, prompt);
+  assert.equal(hasVisiblePhysicalAction('The subject moves visibly while the camera tracks the action.'), true);
 });
 
 test('repairs a requested pour before a later slice and plating action', () => {

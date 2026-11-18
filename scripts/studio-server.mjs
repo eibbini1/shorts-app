@@ -7,6 +7,8 @@ import http from 'node:http';
 import { createIdeaService } from './studio-ideas.mjs';
 import { createIdeaRefiner } from './studio-refine-idea.mjs';
 import { inspectExport, fileHash } from './studio-export-review.mjs';
+import { blockerReasons, classifyGateLine, gateEventKey } from './studio-learning-signals.mjs';
+import { buildLearningContext } from './studio-learning-memory.mjs';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -117,11 +119,15 @@ function start(kind, args, extra = {}) {
   job = x;
   const proc = spawn(extra.cmd ? extra.cmd[0] : 'bash', extra.cmd ? [...extra.cmd.slice(1), ...args] : ['scripts/make-local-video.sh', ...args], { cwd: ROOT, detached: true, env: { ...process.env, PYTHONUNBUFFERED: '1', // the prompt gate scores food close-ups and a luxury-kitchen look; it does not apply to cartoon/custom looks
     ...(kind === 'render' && extra.pinFrames ? { SHORTS_STUDIO_PIN_FRAMES: '1' } : {}),
+    ...(extra.learningEvidence ? { SHORTS_STUDIO_LEARNING_EVIDENCE: JSON.stringify(extra.learningEvidence) } : {}),
     ...(x.options && x.options.look && x.options.look !== 'food' ? { SHORTS_MIN_PROMPT_SCORE: '0' } : {}) } });
   x.proc = proc; // not serialised: snap() copies named fields only
   let lastActivityAt = Date.now();
-  const draftTimeout = Number(process.env.STUDIO_DRAFT_TIMEOUT_MS || 900000);
-  const draftIdleTimeout = Number(process.env.STUDIO_DRAFT_IDLE_TIMEOUT_MS || 300000);
+  // Longer plans call the local story model once per shot; size the hard limit to requested runtime.
+  // Keep an idle watchdog too, so a truly stalled model is still stopped and recoverable.
+  const plannedSeconds = Math.max(10, Number(x.options?.seconds) || 30);
+  const draftTimeout = Number(process.env.STUDIO_DRAFT_TIMEOUT_MS || Math.max(900000, plannedSeconds * 45000));
+  const draftIdleTimeout = Number(process.env.STUDIO_DRAFT_IDLE_TIMEOUT_MS || 600000);
   const watchdog = kind === 'draft' ? setInterval(() => {
     if (x.status !== 'running') return;
     if (Date.now() - startedAt < draftTimeout && Date.now() - lastActivityAt < draftIdleTimeout) return;
@@ -158,7 +164,7 @@ function start(kind, args, extra = {}) {
   };
   proc.stdout.on('data', onData); proc.stderr.on('data', onData);
   proc.on('error', (error) => { x.error = error.message; });
-  proc.on('close', (code) => {
+  proc.on('close', async (code) => {
     clearInterval(watchdog);
     clearTimeout(x.stopTimeout);
     if (buf.trim()) onData(Buffer.from('\n'));
@@ -182,8 +188,10 @@ function start(kind, args, extra = {}) {
         }
       }
     }
+    await recordFinalReviewEvidence(x).catch(() => {});
     persist(x);
     logRun(x, code);
+    recordSessionFailure(x);
     if (job === x && extra.unattended && x.status === 'done' && ['draft', 'stills'].includes(kind)) {
       const blocked = x.lines.some((line) => /^(BLOCKED|NEEDS-CHOICE):/.test(line));
       if (!blocked && x.plan && x.scenario) {
@@ -210,23 +218,43 @@ const LEARN_DIR = path.join(ROOT, 'storage', 'studio-learning');
 const LEDGER = path.join(LEARN_DIR, 'runs.jsonl');
 function ledger(rec) { try { fs.mkdirSync(LEARN_DIR, { recursive: true }); fs.appendFileSync(LEDGER, JSON.stringify({ ts: new Date().toISOString(), ...rec }) + '\n'); return true; } catch { return false; } }
 function readLedger() { try { return fs.readFileSync(LEDGER, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)); } catch { return []; } }
+const recordedGateKeys = new Set(readLedger().filter((row) => row.type === 'gate-event').map(gateEventKey));
 function recordGateEvent(session, line, evidenceSource = 'live-pipeline-output') {
-  let gate, outcome;
-  if (/^Attempt \d+\/\d+: writing the story/.test(line)) [gate, outcome] = ['story-draft', 'started'];
-  else if (/^Story passed every check|^Plan ready:/.test(line)) [gate, outcome] = ['story-plan', 'passed'];
-  else if (/^Story gate:|^Evidence gate passed|^Preflight passed:|^Story structure passed|^First (picture|clip) check passed|^Still vision gate:.*passed/i.test(line)) [gate, outcome] = ['pre-render', 'passed'];
-  else if (/^Technical QA passed|^Quality checks passed/i.test(line)) [gate, outcome] = ['technical-qa', 'passed'];
-  else if (/^Technical QA failed|^Quality check failed/i.test(line)) [gate, outcome] = ['technical-qa', 'failed'];
-  else if (/^BLOCKED:/.test(line)) [gate, outcome] = ['release-gate', 'blocked'];
-  else if (/^NEEDS-CHOICE:/.test(line)) [gate, outcome] = ['story-choice', 'needs-choice'];
-  else if (/^REVIEW:/.test(line)) [gate, outcome] = ['human-review', 'review-required'];
-  else if (/^WARNING:/.test(line)) [gate, outcome] = ['warning', 'review-required'];
-  else if (/^Fixed automatically:/.test(line)) [gate, outcome] = ['automatic-repair', 'repaired'];
-  else if (/^PASS:/.test(line)) [gate, outcome] = ['production-gate', 'passed'];
-  if (!gate) return;
-  ledger({ type: 'gate-event', user: session.user || 'owner', session: session.id, kind: session.kind,
-    prompt: session.prompt, scenario: session.scenario || null, gate, outcome, message: line.slice(0, 400),
-    evidenceSource, evidenceStatus: 'observed pipeline output; no automatic quality inference' });
+  const signal = classifyGateLine(line);
+  if (!signal) return;
+  const row = { type: 'gate-event', user: session.user || 'owner', session: session.id, kind: session.kind,
+    prompt: session.prompt, look: session.options?.look || null, scenario: session.scenario || null, ...signal,
+    evidenceSource, evidenceStatus: 'observed pipeline output; no automatic quality inference' };
+  const key = gateEventKey(row);
+  if (recordedGateKeys.has(key)) return;
+  if (ledger(row)) recordedGateKeys.add(key);
+}
+function recordSessionFailure(session, evidenceSource = 'terminal-session-state') {
+  if (session.status !== 'failed') return;
+  const detail = String(session.error || session.lines?.at(-1) || 'session ended in a failed state').replace(/[\r\n]+/g, ' ').slice(0, 240);
+  recordGateEvent(session, `Run failed: ${detail}`, evidenceSource);
+}
+async function recordFinalReviewEvidence(session) {
+  if (session.kind !== 'render' || session.status !== 'done' || !session.video
+    || !/^outputs\/[\w.-]+\.mp4$/.test(session.video)
+    || !/^drafts\/generated\/[\w.-]+\.local-scenario\.json$/.test(session.scenario || '')) return;
+  const videoFile = path.resolve(ROOT, session.video);
+  const scenarioFile = path.resolve(ROOT, session.scenario);
+  const reportFile = videoFile.replace(/\.mp4$/i, '.prereview.json');
+  if (!fs.existsSync(videoFile) || !fs.existsSync(scenarioFile) || !fs.existsSync(reportFile)) return;
+  const report = JSON.parse(fs.readFileSync(reportFile, 'utf8'));
+  const [videoSha256, scenarioSha256] = await Promise.all([fileHash(videoFile), fileHash(scenarioFile)]);
+  if (report.videoSha256 !== videoSha256 || report.scenarioSha256 !== scenarioSha256) return;
+  if (readLedger().some((row) => row.type === 'machine-review' && row.session === session.id && row.videoSha256 === videoSha256)) return;
+  ledger({ type: 'machine-review', evidenceType: 'hash-bound-advisory-prereview', user: session.user || 'owner',
+    session: session.id, look: session.options?.look || null, video: session.video, videoSha256,
+    scenario: session.scenario, scenarioSha256, visionChecked: report.visionChecked === true,
+    flags: report.flags && typeof report.flags === 'object' ? report.flags : {},
+    shotMotion: Array.isArray(report.shotMotion) ? report.shotMotion : [],
+    likelyBelow4: Array.isArray(report.likelyBelow4) ? report.likelyBelow4 : [],
+    unchecked: Array.isArray(report.unchecked) ? report.unchecked : [],
+    technicalQa: session.technicalQa?.status || 'unverified',
+    evidenceStatus: 'machine screening only; not an artistic verdict; human watch/listen review remains required' });
 }
 async function saveComparisonFeedback({ baseline, candidate, reviewer, notes }) {
   const outputRoot = fs.realpathSync(path.join(ROOT, 'outputs'));
@@ -307,6 +335,7 @@ async function checkpointReviewState(session, user, submitted) {
     video: session.video, videoSha256, scenario: scenarioName, scenarioSha256,
     contactSheet: inspected.contactSheet, contactSheetSha256: report.contactSheetSha256,
     title: String(scenario.plan?.title || '').slice(0, 120),
+    look: session.options?.look || null,
     shotFindings: findings.map((item, index) => ({ shot: item.shot, outcome: item.outcome,
       plannedAction: timeline[index].plannedAction, checkpoints: [timeline[index].startSeconds, timeline[index].middleSeconds, timeline[index].endSeconds] })),
     payoff: submitted.payoff, notes: String(submitted.notes || '').trim().slice(0, 500),
@@ -318,10 +347,13 @@ function logRun(x, code) {
   const plan = x.plan?.plan || x.plan || {};
   const shots = plan.shots || [];
   const lines = x.lines || [];
-  ledger({ type: 'run', user: x.user || 'owner', session: x.id, kind: x.kind, status: x.status, exitCode: code, prompt: x.prompt, look: x.options?.look, setting: x.options?.setting, ending: x.options?.ending, audio: x.options?.audio, seconds: x.options?.seconds,
+    ledger({ type: 'run', user: x.user || 'owner', session: x.id, kind: x.kind, status: x.status, exitCode: code, prompt: x.prompt, look: x.options?.look, setting: x.options?.setting, ending: x.options?.ending, audio: x.options?.audio, seconds: x.options?.seconds,
     shots: shots.length, shotSeconds: shots.map((s) => s.seconds), title: plan.title, scenario: x.scenario, video: x.video,
+    storyModel: x.plan?.model || plan.model || null, ideaModel: x.options?.ideaModel || null,
+    technicalQa: x.technicalQa?.status || 'unverified', learningGuidanceCount: Number(x.options?.learningGuidanceCount) || 0,
+    completedSteps: [...new Set(x.steps || [])],
     durationSec: Math.round((Date.now() - x.startedAt) / 1000),
-    blocked: lines.filter((l) => /^BLOCKED/.test(l)).map((l) => l.slice(0, 160)), fixed: lines.filter((l) => /^Fixed automatically/.test(l)).map((l) => l.slice(21, 160)), tries: lines.filter((l) => /^Attempt \d+\/\d+/.test(l)).length || undefined, reviews: lines.filter((l) => /^REVIEW/.test(l)).length });
+    blocked: blockerReasons(lines), fixed: lines.filter((l) => /^Fixed automatically/.test(l)).map((l) => l.slice(21, 160)), tries: lines.filter((l) => /^Attempt \d+\/\d+/.test(l)).length || undefined, reviews: lines.filter((l) => /^REVIEW/.test(l)).length });
   if (x.kind === 'draft') recordScenePlans(x, shots);
 }
 function recordScenePlans(session, shots) {
@@ -331,14 +363,13 @@ function recordScenePlans(session, shots) {
     imagePrompt: shot.imagePrompt, motionPrompt: shot.motionPrompt, sound: shot.sound,
     evidenceStatus: 'generated scene plan; not human-approved for reuse' }));
 }
-function backfillPersistedEvidence() {
+async function backfillPersistedEvidence() {
   const rows = readLedger();
-  const sessionsWithGateEvidence = new Set(rows.filter((item) => item.type === 'gate-event').map((item) => item.session));
   const sessionsWithSceneEvidence = new Set(rows.filter((item) => item.type === 'scene-plan').map((item) => item.session));
   for (const session of sessions.values()) {
-    if (!sessionsWithGateEvidence.has(session.id)) {
-      for (const line of session.lines || []) recordGateEvent(session, String(line), 'persisted-session-log');
-    }
+    for (const line of session.lines || []) recordGateEvent(session, String(line), 'persisted-session-log');
+    recordSessionFailure(session, 'persisted-session-status');
+    await recordFinalReviewEvidence(session).catch(() => {});
     if (session.kind !== 'draft' || sessionsWithSceneEvidence.has(session.id)) continue;
     let shots = session.plan?.plan?.shots || session.plan?.shots;
     if (!Array.isArray(shots) && /^drafts\/generated\/[\w.-]+\.local-scenario\.json$/.test(session.scenario || '')) {
@@ -347,25 +378,28 @@ function backfillPersistedEvidence() {
     recordScenePlans(session, shots);
   }
 }
-backfillPersistedEvidence();
+void backfillPersistedEvidence();
 function learning(user) {
   const rows = readLedger();
-  const runs = rows.filter((r) => r.type === 'run'); const fb = rows.filter((r) => r.type === 'feedback');
   const ownedRows = rows.filter((r) => user?.role === 'owner' || r.user === user?.name);
+  const runs = ownedRows.filter((r) => r.type === 'run'); const fb = ownedRows.filter((r) => r.type === 'feedback');
   const gateEvents = ownedRows.filter((r) => r.type === 'gate-event');
   const scenePlans = ownedRows.filter((r) => r.type === 'scene-plan');
-  const checkpointReviews = rows.filter((r) => r.type === 'checkpoint-review'
-    && (user?.role === 'owner' || r.user === user?.name));
+  const machineReviews = ownedRows.filter((r) => r.type === 'machine-review');
+  const checkpointReviews = ownedRows.filter((r) => r.type === 'checkpoint-review');
   const renders = runs.filter((r) => r.kind === 'render' && r.status === 'done' && r.shots > 0 && r.durationSec > 0);
   const per = renders.map((r) => (r.durationSec - 80) / r.shots).filter((v) => v > 120 && v < 600).sort((p, q) => p - q);
   const cycle = per.length >= 2 ? Math.round(per[Math.floor(per.length / 2)]) : null; // median seconds per shot from this Mac's own renders
   const blockers = {}; runs.forEach((r) => (r.blocked || []).filter((b) => !/provisional score/.test(b)).forEach((b) => { const k = b.replace(/^BLOCKED:\s*/, '').replace(/shot \d+: /, ''); blockers[k] = (blockers[k] || 0) + 1; }));
   const byLook = {}; fb.forEach((f) => { const k = f.look || 'unknown'; byLook[k] ||= { up: 0, down: 0 }; byLook[k][f.rating === 'up' ? 'up' : 'down']++; });
+  const guidedRuns = runs.filter((run) => run.learningGuidanceCount > 0).length;
   return { drafts: runs.filter((r) => r.kind === 'draft').length, renders: renders.length, failed: runs.filter((r) => r.status === 'failed').length,
-    gateEvents: gateEvents.length, scenePlans: scenePlans.length,
+    gateEvents: gateEvents.length, scenePlans: scenePlans.length, machineReviews: machineReviews.length,
     recentGateEvents: gateEvents.slice(-5).map((event) => ({ gate: event.gate, outcome: event.outcome, message: event.message })),
     calibration: { cycleSec: cycle, samples: per.length }, topBlockers: Object.entries(blockers).sort((p, q) => q[1] - p[1]).slice(0, 5).map(([reason, count]) => ({ reason, count })),
     ratings: byLook, recentNotes: fb.filter((f) => f.note).slice(-5).map((f) => ({ look: f.look, rating: f.rating, note: f.note })),
+    guidedRuns, recentMachineReviews: machineReviews.slice(-3).map((review) => ({ look: review.look,
+      visionChecked: review.visionChecked, likelyBelow4: review.likelyBelow4, flags: review.flags, technicalQa: review.technicalQa })),
     checkpointReviews: checkpointReviews.length, recentCheckpointReviews: checkpointReviews.slice(-5).map((item) => ({
       title: item.title, payoff: item.payoff, notes: item.notes, findings: item.shotFindings.map((shot) => ({ shot: shot.shot, outcome: shot.outcome })),
     })) };
@@ -474,6 +508,7 @@ http.createServer(async (req, res) => {
     try {
       const result = await ideaService.suggest({ look: input.look, seconds,
         exclude: [...(Array.isArray(input.exclude) ? input.exclude.slice(-8) : []), ...projects, ...history],
+        learningEvidence: buildLearningContext(readLedger(), { user: me, look: input.look }),
         busy: isBusy });
       if (!ledger({ type: 'idea', user: me.name, look: input.look, ...result })) return json(res, 500, { error: 'Could not save idea history. Try again.' });
       return json(res, 200, result);
@@ -488,7 +523,8 @@ http.createServer(async (req, res) => {
     if (localIdeaBusy || ideaRefiner.active) return json(res, 409, { error: 'The local idea helper is busy. Try again in a moment.' });
     localIdeaBusy = true;
     try {
-      const result = await ideaRefiner.refine(input);
+      const learningEvidence = buildLearningContext(readLedger(), { user: me, look: input.look });
+      const result = await ideaRefiner.refine({ ...input, learningEvidence });
       return json(res, 200, result);
     } catch (error) {
       const status = /Write a little|incomplete refinement|unreadable refinement/.test(error.message) ? 422 : 503;
@@ -508,6 +544,8 @@ http.createServer(async (req, res) => {
     const submittedPrompt = String(b.prompt || '').trim().slice(0, 600);
     const originalPrompt = String(b.originalPrompt || submittedPrompt).trim().slice(0, 600);
     let prompt = submittedPrompt;
+    const look = ['food', 'cartoon', 'night', 'custom'].includes(b.look) ? b.look : 'food';
+    const learningEvidence = buildLearningContext(readLedger(), { user: me, look });
     if (b.unattended && !isOwner) return json(res, 403, { error: 'Only the owner can run unattended.' });
     if (!prompt) return json(res, 400, { error: 'Write a prompt first.' });
     let refined = null;
@@ -515,7 +553,7 @@ http.createServer(async (req, res) => {
       if (localIdeaBusy || ideaRefiner.active) return json(res, 409, { error: 'The local idea helper is busy. Try again in a moment.' });
       localIdeaBusy = true;
       try {
-        refined = await ideaRefiner.refine({ prompt, look: b.look, seconds: b.seconds, orientation: b.orientation, setting: b.setting, ending: b.ending });
+        refined = await ideaRefiner.refine({ prompt, look, seconds: b.seconds, orientation: b.orientation, setting: b.setting, ending: b.ending, learningEvidence });
       } catch (error) {
         const status = /Write a little|incomplete refinement|unreadable refinement/.test(error.message) ? 422 : 503;
         return json(res, status, { error: error.message || 'The local story model could not refine this idea. Your original sentence is unchanged.' });
@@ -532,7 +570,6 @@ http.createServer(async (req, res) => {
       night: { style: 'hand-drawn 2D cartoon animation at night, deep navy blue sky and shadows with warm creamy ivory highlights, glowing cream lights, limited navy and cream palette, bold outlines', set: 'a moonlit navy-blue night scene with cream-coloured lights' },
       custom: { style: 'cinematic short film matching the idea', set: 'a setting that fits the idea' },
     };
-    const look = LOOKS[b.look] ? b.look : 'food';
     const setting = String(b.setting || '').trim().slice(0, 200);
     const answers = { topic: originalPrompt, style: LOOKS[look].style, set: setting || LOOKS[look].set,
       hook: String(refined?.hook || b.hook || parts[0]).trim().slice(0, 300),
@@ -543,7 +580,7 @@ http.createServer(async (req, res) => {
       seconds: Math.min(isOwner ? 60 : CREATOR_MAX_SECONDS, Math.max(10, Number(b.seconds) || 10)), orientation: b.orientation === 'wide' ? 'wide' : 'vertical' };
     const f = path.join(ROOT, 'storage', 'studio-answers-' + Date.now() + '.json');
     fs.writeFileSync(f, JSON.stringify(answers, null, 1));
-    const x = start('draft', ['--answers', path.relative(ROOT, f), ...(b.allowRepeat ? ['--allow-repeat'] : [])], { cmd: ['python3', 'scripts/studio-draft.py'], user: me.name, prompt: originalPrompt, unattended: isOwner && b.unattended === true, options: { look, setting, seconds: answers.seconds, orientation: answers.orientation, audio: answers.audio, ending: answers.ending, originalPrompt, storyPrompt: prompt, ideaModel: refined?.model || null, allowRepeat: Boolean(b.allowRepeat), chain: look !== 'food', unattended: isOwner && b.unattended === true } });
+    const x = start('draft', ['--answers', path.relative(ROOT, f), ...(b.allowRepeat ? ['--allow-repeat'] : [])], { cmd: ['python3', 'scripts/studio-draft.py'], user: me.name, prompt: originalPrompt, learningEvidence, unattended: isOwner && b.unattended === true, options: { look, setting, seconds: answers.seconds, orientation: answers.orientation, audio: answers.audio, ending: answers.ending, originalPrompt, storyPrompt: prompt, ideaModel: refined?.model || null, learningGuidanceCount: learningEvidence.guidanceCount, allowRepeat: Boolean(b.allowRepeat), chain: look !== 'food', unattended: isOwner && b.unattended === true } });
     return json(res, 202, snap(x));
   }
   if ((url.pathname === '/api/stills' || url.pathname === '/api/regen') && req.method === 'POST') {
@@ -628,7 +665,10 @@ http.createServer(async (req, res) => {
     const b = await body(req); const sess = ID_RE.test(String(b.id)) ? sessions.get(String(b.id)) : null;
     if (!sess || !canSee(me, sess) || !['up', 'down'].includes(b.rating)) return json(res, 400, { error: 'Unknown chat or rating.' });
     if (!sess.video || (b.video && b.video !== sess.video)) return json(res, 409, { error: 'Reload the export before rating.' });
-    if (!ledger({ type: 'feedback', user: me.name, session: sess.id, rating: b.rating, note: String(b.note || '').slice(0, 400), look: sess.options?.look, prompt: sess.prompt, video: sess.video, evidenceType: 'creator-feedback' })) return json(res, 500, { error: 'Could not save feedback.' });
+    const videoFile = path.resolve(ROOT, sess.video);
+    if (!videoFile.startsWith(path.resolve(ROOT, 'outputs') + path.sep) || !fs.existsSync(videoFile)) return json(res, 409, { error: 'The export is no longer available for review.' });
+    const videoSha256 = await fileHash(videoFile);
+    if (!ledger({ type: 'feedback', user: me.name, session: sess.id, rating: b.rating, note: String(b.note || '').slice(0, 400), look: sess.options?.look, prompt: sess.prompt, scenario: sess.scenario, video: sess.video, videoSha256, evidenceType: 'creator-feedback' })) return json(res, 500, { error: 'Could not save feedback.' });
     return json(res, 200, { ok: true });
   }
   if (url.pathname === '/api/checkpoint-review') {

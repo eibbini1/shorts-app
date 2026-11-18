@@ -255,20 +255,21 @@ export function Feedback({ sessionId, video, onRated }) {
 export function LearnedCard() {
   const [l, setL] = useState(null);
   useEffect(() => { fetch('/api/learning').then((r) => r.json()).then(setL).catch(() => {}); }, []);
-  if (!l || (!l.drafts && !l.renders && !l.checkpointReviews)) return null;
+  if (!l || (!l.drafts && !l.renders && !l.checkpointReviews && !l.machineReviews)) return null;
   const up = Object.values(l.ratings || {}).reduce((n, r) => n + r.up, 0), down = Object.values(l.ratings || {}).reduce((n, r) => n + r.down, 0);
   return (
     <div className="card learned">
       <b>What the Studio has recorded on this Mac</b>
-      <p className="muted small">{l.drafts} plans · {l.renders} finished renders · {up} good / {down} needs-work ratings{l.calibration.cycleSec ? ` · measured ${fmt(l.calibration.cycleSec)} per clip (${l.calibration.samples} renders)` : ''}</p>
-      {l.gateEvents > 0 && <p className="muted small">Recorded {l.gateEvents} gate outcomes and {l.scenePlans} scene plans. These show where ideas passed, needed repair, or were blocked.</p>}
+      <p className="muted small">{l.drafts} plans · {l.renders} finished renders · {up} good / {down} needs-work ratings{l.guidedRuns ? ` · local story models used review evidence in ${l.guidedRuns} runs` : ''}{l.calibration.cycleSec ? ` · measured ${fmt(l.calibration.cycleSec)} per clip (${l.calibration.samples} renders)` : ''}</p>
+      {l.gateEvents > 0 && <p className="muted small">Recorded {l.gateEvents} gate outcomes, {l.scenePlans} scene plans, and {l.machineReviews || 0} hash-checked final-file screens. These show where ideas passed, needed repair, or were blocked.</p>}
       {l.topBlockers.length > 0 && <ul className="small">{l.topBlockers.map((b) => <li key={b.reason}>Most common block ({b.count}x): {plainBlock(b.reason)}</li>)}</ul>}
       {l.recentGateEvents?.length > 0 && <ul className="small">{l.recentGateEvents.slice(-3).map((event, i) => <li key={i}>{event.gate}: {event.outcome} · {plainBlock(event.message)}</li>)}</ul>}
+      {l.recentMachineReviews?.some((review) => review.likelyBelow4?.length) && <p className="muted small">Latest automated screen flagged: {l.recentMachineReviews.slice().reverse().find((review) => review.likelyBelow4?.length)?.likelyBelow4.join(', ')}. This is an advisory cue for your review, not an artistic score.</p>}
       {l.recentNotes.length > 0 && <ul className="small">{l.recentNotes.map((n, i) => <li key={i}>{n.rating === 'up' ? '👍' : '👎'} {n.note}</li>)}</ul>}
       {l.recentCheckpointReviews?.length > 0 && <div className="small"><b>{l.checkpointReviews} human checkpoint review{l.checkpointReviews === 1 ? '' : 's'} recorded</b>
         <ul>{l.recentCheckpointReviews.map((item, i) => <li key={i}>{item.title || 'Untitled export'} · payoff {item.payoff.replace('-', ' ')}{item.notes ? ` · ${item.notes}` : ''}</li>)}</ul>
         <p className="muted">These are tied to specific exports. They do not change prompts or scores automatically.</p></div>}
-      <p className="muted small">This local evidence log records ideas, scene plans, gate results, QA and your reviews. It does not retrain the video models. Only explicitly approved shot examples can be reused later; failures inform the gate history without changing defaults automatically.</p>
+      <p className="muted small">This log records ideas, scenes, gates, QA and your export-specific reviews. Local story models can consult repeated blockers and your notes on later ideas and plans. They cannot override your request or pass a gate; reviews do not retrain FLUX or LTX, and production defaults change only after measured checks.</p>
     </div>
   );
 }

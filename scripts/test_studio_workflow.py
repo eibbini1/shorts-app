@@ -5,12 +5,14 @@ def run_fixture():
     import atexit, hashlib, http.client, json, os, pathlib, shutil, socket, subprocess, tempfile, time, threading
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
     root=pathlib.Path(tempfile.mkdtemp(prefix='ishorts-ux-check-'))
-    for folder in ['scripts','outputs','storage/studio-sessions','drafts/generated','bin']:
+    for folder in ['scripts','outputs','storage/studio-sessions','storage/studio-learning','drafts/generated','bin']:
         (root/folder).mkdir(parents=True)
     shutil.copy('scripts/studio-server.mjs',root/'scripts')
     shutil.copy('scripts/studio-export-review.mjs',root/'scripts')
     shutil.copy('scripts/studio-ideas.mjs',root/'scripts')
     shutil.copy('scripts/studio-refine-idea.mjs',root/'scripts')
+    shutil.copy('scripts/studio-learning-signals.mjs',root/'scripts')
+    shutil.copy('scripts/studio-learning-memory.mjs',root/'scripts')
     shutil.copy('scripts/story-action-gate.mjs',root/'scripts')
     shutil.copy('scripts/creative-learning.mjs',root/'scripts')
     (root/'studio/dist').mkdir(parents=True)
@@ -26,6 +28,15 @@ def run_fixture():
         prompt='A chef pours honey, then plates a pear tart.', lines=['BLOCKED: first shot misses the hook', 'Fixed automatically: preserved the requested action'],
         plan={'title':'Pear tart','shots':[{'seconds':5,'narration':'Pour honey.','imagePrompt':'A pear tart.','motionPrompt':'A chef pours honey.','sound':'pour'}]}, steps=[])))
     (root/'storage/studio-users.json').write_text(json.dumps({'users':[{'name':n,'token':n,'role':'creator','dailyRenders':2} for n in ('creator-a','creator-b')]}))
+    seeded_learning=[
+        {'type':'run','session':'seed-a','user':'creator-a','look':'food'},
+        {'type':'feedback','session':'seed-a','user':'creator-a','look':'food','rating':'down','note':'Keep the same tomato shape between shots.','videoSha256':'fixture-video-hash'},
+        {'type':'run','session':'seed-b','user':'creator-a','look':'food'},
+        {'type':'gate-event','session':'seed-b','user':'creator-a','look':'food','gate':'visible-action','outcome':'blocked','blocker':'beat 2 has no filmable physical action','message':'fixture action failure'},
+        {'type':'run','session':'seed-c','user':'creator-a','look':'food'},
+        {'type':'gate-event','session':'seed-c','user':'creator-a','look':'food','gate':'visible-action','outcome':'blocked','blocker':'beat 2 has no filmable physical action','message':'fixture action failure'},
+    ]
+    (root/'storage/studio-learning/runs.jsonl').write_text(''.join(json.dumps(row)+'\n' for row in seeded_learning))
     (root/'scripts/make-local-video.sh').write_text('''sleep 0.4
     if [ -f fail ]; then
       touch outputs/fixture-invalid.mp4
@@ -62,11 +73,14 @@ def run_fixture():
     (root/'storage/studio-sessions'/f'{review_session}.json').write_text(json.dumps(dict(id=review_session,
         user='creator-a',name='checkpoint fixture',scenario=review_scenario,video='outputs/review-a.mp4',
         status='done',kind='render',lines=[],steps=[])))
+    refiner_payloads=[]
     class OllamaFixture(BaseHTTPRequestHandler):
         def do_POST(self):
             size=int(self.headers.get('Content-Length','0'))
             request=json.loads(self.rfile.read(size))
-            source=json.loads(request['messages'][1]['content'])['originalSentence']
+            user_payload=json.loads(request['messages'][1]['content'])
+            refiner_payloads.append(user_payload)
+            source=user_payload['originalSentence']
             if source == 'tomatoes':
                 result={'decision':'needs_choices','message':'Choose the cooking direction.',
                     'refinedPrompt':'','hook':'','mustShow':'','obstacle':'','turn':'','ending':'',
@@ -163,12 +177,14 @@ def run_fixture():
         before_ambiguous=req('/api/state','creator-a')[1]
         status, choices=req('/api/draft','creator-a',{'prompt':'tomatoes','seconds':20,'look':'food','refine':True})
         assert status==200 and choices['decision']=='needs_choices' and len(choices['refinement']['choices'])==2,choices
+        assert refiner_payloads[-1]['learningEvidence']['humanNotes'][0]['note']=='Keep the same tomato shape between shots.'
+        assert refiner_payloads[-1]['learningEvidence']['repeatedFailures'][0]['reason']=='beat 2 has no filmable physical action'
         after_ambiguous=req('/api/state','creator-a')[1]
         assert after_ambiguous.get('id')==before_ambiguous.get('id') and after_ambiguous.get('status')==before_ambiguous.get('status')  # ambiguous idea starts no job
         chosen=choices['refinement']['choices'][0]
         status, approved=req('/api/draft','creator-a',{'prompt':chosen['prompt'],'originalPrompt':'tomatoes','seconds':20,'look':'food',
             'hook':chosen['hook'],'mustShow':chosen['mustShow'],'obstacle':chosen['obstacle'],'turn':chosen['turn'],'ending':chosen['ending']})
-        assert status==202 and approved['options']['originalPrompt']=='tomatoes',approved
+        assert status==202 and approved['options']['originalPrompt']=='tomatoes' and approved['options']['learningGuidanceCount']>=2,approved
         choice_answers=json.loads(next((root/'storage').glob('studio-answers-*.json')).read_text())
         assert choice_answers['topic']=='tomatoes' and choice_answers['hook']==chosen['hook']
         assert choice_answers['mustShow']==chosen['mustShow'] and choice_answers['ending']==chosen['ending']
