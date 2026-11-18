@@ -68,7 +68,7 @@ class VisionGateTests(unittest.TestCase):
                 report, _ = vision.review(image, 'A chef hand, holding one dumpling above a dark bowl. Warm light.')
                 sent = json.loads(call.call_args.args[0].data)
                 self.assertIn('dumpling', sent['messages'][0]['content'])
-                self.assertEqual(sent['options']['num_predict'], 256)
+                self.assertEqual(sent['options']['num_predict'], 512)
                 self.assertIn('/no_think', sent['messages'][0]['content'])
                 self.assertEqual(report['diagnostics'][0]['generatedTokens'], 117)
 
@@ -76,13 +76,13 @@ class VisionGateTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             image = Path(folder) / 'shot.png'
             image.write_bytes(b'fixture')
-            truncated = {'done_reason': 'length', 'eval_count': 256,
+            truncated = {'done_reason': 'length', 'eval_count': 512,
                          'message': {'content': '', 'thinking': 'incomplete'}}
             with patch.object(vision.urllib.request, 'urlopen',
                               return_value=io.BytesIO(json.dumps(truncated).encode())):
                 report, _ = vision.review(image, 'halloumi on a plate')
             self.assertEqual(report['status'], 'unavailable')
-            self.assertEqual(report['diagnostics'][0]['generatedTokens'], 256)
+            self.assertEqual(report['diagnostics'][0]['generatedTokens'], 512)
 
     def test_invalid_answer_fails_closed(self):
         with tempfile.TemporaryDirectory() as folder:

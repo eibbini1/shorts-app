@@ -80,7 +80,9 @@ def review(image, prompt, must_show=(), must_not_show=(), model=MODEL, cache_dir
         # resident for Ollama's default five minutes and overlaps the LTX motion job (swap was ~97% full).
         body = {'model': model, 'stream': False, 'think': False, 'format': SCHEMA,
                 'keep_alive': 0 if last else '30s',
-                'options': {'temperature': 0, 'num_predict': 256, 'num_ctx': 4096},
+                # Qwen3-VL can spend its first tokens thinking even with
+                # think=false. Leave enough room for the bounded JSON verdict.
+                'options': {'temperature': 0, 'num_predict': 512, 'num_ctx': 4096},
                 'messages': [{'role': 'user', 'content': question, 'images': [image_b64]}]}
         request = urllib.request.Request(URL, data=json.dumps(body).encode(),
                                          headers={'Content-Type': 'application/json'})
