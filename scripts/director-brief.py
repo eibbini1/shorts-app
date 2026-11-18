@@ -63,8 +63,12 @@ def validate(raw):
     brief = {key: str(raw.get(key, default)).strip() for key, _, default in QUESTIONS}
     if not brief['topic']:
         raise ValueError('Name the exact dish or subject')
-    if any(len(value) > 240 for value in brief.values()):
-        raise ValueError('Keep each answer under 240 characters')
+    limits = {'topic': 600, 'mustShow': 600}
+    too_long = [(key, len(value), limits.get(key, 240)) for key, value in brief.items()
+                if len(value) > limits.get(key, 240)]
+    if too_long:
+        key, actual, maximum = too_long[0]
+        raise ValueError(f'{key} is {actual} characters; maximum is {maximum}')
     if brief['audio'] not in ('auto', 'asmr', 'voiced'):
         raise ValueError('Sound must be auto, asmr, or voiced')
     if brief['orientation'] not in ('vertical', 'wide'):

@@ -693,3 +693,17 @@ Next: implement audio fixes first (cheap, no GPU), then ending check.
 - The latest release is served at `http://127.0.0.1:8787/` by process 36966. Authenticated page and owner API smoke checks returned HTTP 200. Current session state is idle.
 - Past history remains intact. The 24 visible sessions are all terminal (12 done, 9 failed, 3 cancelled). Six finished video exports are counted; the other completed entries may be plans/stills and cannot receive export ratings. The owner Learning panel reports 246 observed gate outcomes and 42 scene plans after idempotent backfill.
 - No actual halloumi export has been rendered or heard. The next evidence step is owner review/rating of existing finished videos, then a new 60-second voiced test with first frames checked before motion.
+
+### 2026-11-18 — family-facing Studio guide
+- Added `docs/ISHORTS_STUDIO_GUIDE.md` with safe access notes, prompt writing, story approval, first-frame review, export listening/viewing, specific feedback, learning limitations, and common fixes.
+- The guide explicitly distinguishes same-Mac localhost access from unverified remote access, and does not expose the private owner token. Creator limits (20 seconds, quotas, no unattended mode) match the current server implementation.
+- No production defaults changed. Added a README link to the guide. This documentation update is included in the existing PR #24.
+
+### 2026-11-18 — 60-second Studio retry failure and user guide
+- Diagnosed failed halloumi planning session `1794989792548`: the saved exact idea and `mustShow` were each 554 characters, but `director-brief.py` imposed a 240-character maximum on every answer. This failed before a scenario or any media was created; retries repeated the same input error three times.
+- FIXED: `topic` and `mustShow` now permit 600 characters, matching Studio input; other brief fields retain a 240-character limit and errors identify the exact field and limit. The Studio draft loop recognizes permanent director input errors and stops instead of wasting all three retries.
+- FIXED: the failed session's **Try again** button now bypasses duplicate-project detection for the currently selected session, so retry creates a fresh attempt rather than showing “This project is already open.”
+- VERIFIED: `npm run test:studio:brief:mac` passed (7 director tests and 1 no-retry test); Studio workflow integration passed; npm script/static checks passed (76 entries, 107 Python, 18 shell, 44 Node); production UI build passed; `git diff --check` passed.
+- VERIFIED live: the rebuilt UI and owner API returned HTTP 200; new JavaScript bundle includes retry behavior. `director-brief.py --dry-run` accepted the exact saved 554-character failed brief with 60 seconds, voiced audio, and vertical orientation. No new model plan or render was started.
+- The family guide is in `docs/ISHORTS_STUDIO_GUIDE.md` and linked from README. No owner token is included. Guide covers access constraints, story approval, first-frame review, feedback, and evidence-based learning.
+- NEXT: refresh Studio, confirm Advanced settings show 60 seconds / Vertical / Voiced, then use **Try again** in the failed session. It should create a new plan session; inspect the plan and frames before rendering. Continue consolidating this fix and guide into PR #24; do not merge without review.

@@ -485,7 +485,7 @@ export default function App() {
               {running && <button className="ghost" onClick={cancel}>Stop</button>}
               {job.status === 'failed' && !blocked && <p className="bad">{job.technicalQa?.status === 'failed' ? 'The final file failed technical QA.' : job.error}</p>}
               {notes.length > 0 && <ul className="notes">{notes.filter((n) => !(choice && n.startsWith('BLOCKED'))).map((n, i) => <li key={i} className={n.startsWith('BLOCKED') ? 'bad' : n.startsWith('Fixed') ? 'good' : 'muted'}>{n.startsWith('Fixed') ? '✓ ' + n : n}</li>)}</ul>}
-              {choice && job.status !== 'running' && <BlockedCard lines={job.lines || []} choice={choice} busy={anyRunning} onRetry={() => draftWith()} onAnyway={() => draftWith({ allowRepeat: true })} onEdit={() => document.querySelector('.composer textarea')?.focus()} />}
+              {choice && job.status !== 'running' && <BlockedCard lines={job.lines || []} choice={choice} busy={anyRunning} onRetry={() => draftWith({}, { ignoreDuplicate: true })} onAnyway={() => draftWith({ allowRepeat: true })} onEdit={() => document.querySelector('.composer textarea')?.focus()} />}
               {job.status === 'cancelled' && <p className="muted">Stopped.</p>}
               {job.status === 'interrupted' && <p className="bad">{job.error}</p>}
               {['failed', 'interrupted'].includes(job.status) && me?.canRunUnattended && job.options?.unattended && job.scenario && job.plan && <button className="primary" disabled={busy} onClick={resumeUnattended}>Resume automatically</button>}

@@ -9,6 +9,10 @@ A Node + TypeScript toolkit that turns a script and still images into a finished
 - A text-to-speech API key (ElevenLabs is supported; cached voice lines cost nothing to reuse)
 - Optional: a Google OAuth client for `yt-upload`, and an image provider for generated visuals
 
+## Local Studio
+
+The browser-based iShorts Studio uses the same local story and rendering pipeline. See the [iShorts Studio guide](docs/ISHORTS_STUDIO_GUIDE.md) for safe access, prompt writing, frame review, export feedback, and how recorded learning works. If it is not already running, start it from this project with `npm run studio`.
+
 ## Setup
 
 ```bash

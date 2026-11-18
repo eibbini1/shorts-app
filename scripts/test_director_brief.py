@@ -20,6 +20,16 @@ hook_score = runpy.run_path(str(Path(__file__).with_name('preflight-short.py')))
 
 
 class DirectorBriefTests(unittest.TestCase):
+    def test_long_topic_and_must_show_match_the_studio_limit(self):
+        text = 'A chef drizzles hot honey over halloumi, then plates it. ' * 8
+        brief = validate({'topic': text, 'mustShow': text, 'seconds': '60', 'audio': 'voiced'})
+        self.assertEqual(brief['topic'], text.strip())
+        self.assertEqual(brief['mustShow'], text.strip())
+        with self.assertRaisesRegex(ValueError, 'mustShow is .*maximum is 600'):
+            validate({'topic': 'halloumi', 'mustShow': 'x' * 601})
+        with self.assertRaisesRegex(ValueError, 'turn is .*maximum is 240'):
+            validate({'topic': 'halloumi', 'turn': 'x' * 241})
+
     def test_luxury_kitchen_studio_prefills_one_locked_set(self):
         defaults = studio_defaults('luxury-kitchen')
         brief = validate({**defaults, 'topic': 'roasted tomato toast'})
