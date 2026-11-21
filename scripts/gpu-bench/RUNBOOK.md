@@ -19,3 +19,14 @@ Goal: decide LTX-2.5 vs Wan 2.2 (FP8 + 4-step lightning LoRA) vs HunyuanVideo 1.
 
 ## Decision rule (proposed)
 Move the motion backend only if the blind test prefers it on at least 6 of 10 shots against the Mac baseline AND cost per kept 5 s clip stays under about $0.15 with peak VRAM under 24 GB. Otherwise keep LTX and use the pod only for speed.
+
+## Blind review (after the Mac baseline finishes)
+
+```
+python3 scripts/gpu-bench/blind_review.py outputs/blind-review \
+  --pod outputs/bench-pod --mac outputs/bench-mac
+```
+
+Uses only shots that every backend produced (wan_sNN, ltx_sNN, ltx23_sNN), removes audio and metadata, and
+shuffles labels per shot. Score `score_sheet.csv` first; open `blind_key.json` only afterwards.
+Tested on dummy clips only; not yet run on real output.
