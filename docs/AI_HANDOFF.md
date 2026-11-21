@@ -5,7 +5,7 @@
 - Deliberately NOT built: "retry with lower memory settings". The render API has no such option (grep of studio-server.mjs found none); inventing one would be a guess. Needs a real, measured option first.
 - Tests: vitest 173/173 (incl. 10 new); JSX compiles with esbuild. `vite build` and screenshots are still blocked in the cloud sandbox, so layout and theme colours are UNVERIFIED until the studio is opened on the Mac.
 
-## 2026-11-21 — Claude: Studio watchdog (branch studio-watchdog, based on origin/main 9936cdd, not pushed)
+## 2026-11-21 — Claude: Studio watchdog (branch studio-watchdog, based on origin/main 9936cdd, draft PR #30)
 Plan: WD-1..WD-8 (stall detection, one bounded retry, keep-awake, UI status, restart recovery). Files: `scripts/studio-watchdog.mjs` (pure rules), `scripts/studio-server.mjs` (integration), `studio/src/watchdog-status.js` + `App.jsx` (label + "Retry render" button).
 - VERIFIED (real studio-server.mjs + stub render script, `node --test scripts/*.test.mjs`, 59/59): crash retried once then succeeds; crash twice stops after exactly one retry; QA failure is never retried; a silent job is stopped (idle limit) and retried once while an unrelated process survives; a slow job that keeps printing is not stopped; user cancel is not retried. Root `npx vitest run`: 34 files / 158 tests pass.
 - VERIFIED by mutation: raising the retry cap, retrying QA failures, or disabling stall detection each makes those tests fail.
