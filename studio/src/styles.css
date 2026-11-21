@@ -273,3 +273,13 @@ button { border-radius:7px; }
 @media (max-width:760px) {
   main { padding:14px 16px; }
 }
+
+/* per-clip progress strip in the render timer */
+.clipstrip { list-style:none; display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 4px; padding:0; }
+.clipstrip li { display:flex; align-items:center; gap:5px; min-width:30px; justify-content:center; padding:3px 8px; border:1px solid var(--line); border-radius:999px; font-size:12px; color:var(--muted); }
+.clipstrip li.done { border-color:var(--ok); color:var(--ok); }
+.clipstrip li.active { border-color:currentColor; color:inherit; font-weight:600; }
+.clipstrip li.active.slow { border-color:var(--bad); color:var(--bad); }
+.clipstrip li em { font-style:normal; font-variant-numeric:tabular-nums; font-weight:400; }
+@media (prefers-reduced-motion: no-preference) { .clipstrip li.active { animation:clippulse 1.8s ease-in-out infinite; } }
+@keyframes clippulse { 50% { opacity:.6; } }

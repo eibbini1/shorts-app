@@ -4,6 +4,7 @@ import { exportReviewStatus, releaseQualityStatus } from './review-status.js';
 import { reviewRecommendations, suggestedRepairGuidance, suggestedShotRepairGuidance } from './review-recommendations.js';
 import { readRepairGuidance, writeRepairGuidance } from './draft-storage.js';
 import { moveQueueItem } from './queue-order.js';
+import { clipProgress } from './clip-progress.js';
 
 /* ---------- render time estimate ----------
    Calibrated from real timestamps on this Mac (LTX-2.3 MLX, 576x1024, plugged in):
@@ -59,6 +60,10 @@ export function RenderTimer({ job, plan }) {
         <span className="muted">{k}/{n} clips · est. finish {new Date(endAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
       </div>
       <div className="bar"><div className="fill" style={{ width: pct + '%' }} /></div>
+      {n > 1 && <ol className="clipstrip" aria-label="Clip progress">{clipProgress({ total: n, doneShots: [...done.values()].map((c) => c.shot), startedAt: job.startedAt, lastDoneAt: last, now, cycleSec: cycle, startSec: EST.start }).map((c) => (
+        <li key={c.shot} className={`${c.state}${c.slow ? ' slow' : ''}`} title={c.state === 'active' ? `Clip ${c.shot} rendering for ${fmt(c.elapsedSec)}${c.slow ? ', longer than usual' : ''}` : `Clip ${c.shot} ${c.state === 'done' ? 'finished' : 'waiting'}`}>
+          <span>{c.shot}</span>{c.state === 'active' && <em>{fmt(c.elapsedSec)}</em>}
+        </li>))}</ol>}
       <div className="muted small">{k ? `Based on your first ${k} clip${k > 1 ? 's' : ''} (${fmt(cycle)} each).` : (learned ? `Estimate from your own past renders on this Mac (${fmt(learned)} per shot). It sharpens after the first clip.` : 'Estimate from past runs on this Mac (about 4.5 min per clip). It sharpens after the first clip.')} Retries add time.</div>
     </div>
   );
