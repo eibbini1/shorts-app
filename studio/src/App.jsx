@@ -68,7 +68,8 @@ function useElapsed(job) {
 const progressOf = (job) => progressOfLines(job.lines);
 
 const dayLabel = (t) => {
-  const d = new Date(t); const today = new Date(); today.setHours(0, 0, 0, 0);
+  const d = new Date(t);
+  if (!Number.isFinite(d.getTime())) return 'Earlier'; const today = new Date(); today.setHours(0, 0, 0, 0);
   const diff = Math.round((today - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000);
   if (diff <= 0) return 'Today';
   if (diff === 1) return 'Yesterday';
@@ -585,6 +586,8 @@ export default function App() {
   const notes = notesOf(job.lines);
   const blocked = isBlocked(notes);
   const busy = anyRunning || sending;
+  // When a plan is waiting for first frames, the one primary action is on the plan; the composer becomes secondary.
+  const planAwaiting = Boolean(job.plan) && job.status === 'done' && job.kind === 'draft' && !blocked;
   const phase = jobState(job, blocked, live.busyElsewhere);
   const choice = choiceOf(job.lines);
 
@@ -826,9 +829,12 @@ export default function App() {
             placeholder="A baker cracks a chocolate shell to reveal pistachio cream." />
           {anyRunning
             ? <button className="primary" disabled={!prompt.trim()} title="Your Mac is busy with another video. This adds your idea to Up next." onClick={() => { writeQueue([...readQueue(), prompt.trim()].slice(0, 10)); setAutoNext(true); setPrompt(''); }}>Add to Up next</button>
-            : <button className="primary" onClick={draft} disabled={!prompt.trim() || sending || refining || planDisabled}>{refining ? 'Refining your story…' : unattended && me?.canRunUnattended ? 'Prepare video plan' : 'Review story'}</button>}
+            : <button className={planAwaiting ? 'ghost composer-secondary' : 'primary'} onClick={draft} disabled={!prompt.trim() || sending || refining || planDisabled} title={planAwaiting ? 'Starts a new story from this idea. Your current plan is kept.' : undefined}>{refining ? 'Refining your story…' : unattended && me?.canRunUnattended ? 'Prepare video plan' : 'Review story'}</button>}
         </div>
         <p className="muted small">Your idea and settings are saved locally in this browser.</p>
+        <p className="stage-help" id="stage-help">{simple || auto
+          ? <><b>Guided:</b> Studio plans the story and makes first frames, then waits for your OK before the long motion render.</>
+          : <><b>Manual:</b> you start each stage yourself: plan, first frames, render.</>}</p>
         {duplicateSession && <div className="hint duplicate-project" role="status">
           <p><b>{duplicateSession.id === selectedId ? 'This project is already open.' : 'You already have a project with this idea.'}</b> “{sessionDisplayName(duplicateSession, sessions)}” · {duplicateSession.status}{duplicateSession.hasVideo ? ' · video available' : ''}</p>
           {duplicateSession.id === selectedId && <p>Continue with the current plan above, or create a separate project.</p>}
@@ -856,6 +862,7 @@ export default function App() {
           <label>Sound <select value={audio} onChange={(e) => setAudio(e.target.value)}><option value="asmr">ASMR (no voice)</option><option value="voiced">Voiced</option><option value="auto">Auto</option></select></label>
           <label title="Runs plan, first frames and the automatic checks by itself, and stops if any check fails."><input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} /> Auto mode</label>
           {auto && <label title="Recommended: you see the first frames before the long motion render."><input type="checkbox" checked={pauseFrames} onChange={(e) => setPauseFrames(e.target.checked)} /> pause at first frames</label>}
+          {auto && <p className="muted small" id="auto-help">Auto mode plans, makes first frames and runs the automatic checks by itself. It stops at the first failed check. {pauseFrames ? 'The long motion render starts only after you approve the first frames.' : 'With pause off, the long motion render starts right after the first frames pass, without waiting for you.'}</p>}
           <label className="brief-setting">Setting (optional)<input className="ending" dir="auto" value={setting} onChange={(e) => { invalidateRefinement(); setSetting(e.target.value); }} placeholder="Setting (hint, optional), e.g. a rainy rooftop garden" title="A hint: shapes the prompts, and the audit only notes shots that leave it out." /></label>
           <label className="brief-setting">Required ending (optional)<input className="ending" dir="auto" value={ending} onChange={(e) => { invalidateRefinement(); setEnding(e.target.value); setExampleContext(false); }} placeholder="Ending (checked, optional), e.g. onions glistening in the copper pan" title="Checked: the plan is blocked unless the payoff and final shot match this ending. Auto-filled from your last 'then...' part." /></label>
         </div>
