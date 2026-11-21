@@ -1,6 +1,7 @@
 """Cache-only rendering must fail before either local model starts."""
 import importlib.util
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -13,6 +14,53 @@ spec.loader.exec_module(render)
 
 
 class CacheOnlyTests(unittest.TestCase):
+    def test_continuous_shot_uses_previous_motion_end_frame(self):
+        studio_plate = Path('oven-plate.png')
+        motion_end = Path('shot-one-end.png')
+        source = render.select_source(2, None, None, motion_end, True, None, studio_plate)
+        self.assertEqual(source, motion_end)
+
+    def test_continuous_shot_never_falls_back_to_the_previous_opening_still(self):
+        with self.assertRaisesRegex(ValueError, 'preceding motion clip final frame'):
+            render.select_source(2, None, None, None, True, None, Path('oven-plate.png'))
+
+    def test_explicit_user_reference_takes_priority_over_motion_end_frame(self):
+        uploaded = Path('shot-two-reference.png')
+        source = render.select_source(
+            2, uploaded, None, Path('shot-one-end.png'), True, None, Path('oven-plate.png'))
+        self.assertEqual(source, uploaded)
+
+    def test_shared_identity_reference_takes_priority_over_the_previous_end_frame(self):
+        identity = Path('shot-one-approved.png')
+        source = render.select_source(
+            2, None, Path('shot-one-end.png'), None, False, identity, Path('oven-plate.png'))
+        self.assertEqual(source, identity)
+
+    def test_explicit_chain_images_keep_using_the_previous_end_frame(self):
+        identity = Path('shot-one-approved.png')
+        motion_end = Path('shot-one-end.png')
+        source = render.select_source(2, None, None, motion_end, True, identity, Path('oven-plate.png'))
+        self.assertEqual(source, motion_end)
+
+    def test_story_anchor_is_used_after_the_first_scene_without_an_external_anchor(self):
+        first_frame = Path('shot-one-approved.png')
+        source = render.select_source(2, None, None, None, False, first_frame, None)
+        self.assertEqual(source, first_frame)
+
+    def test_motion_end_frame_is_extracted_to_a_clip_hash_named_file(self):
+        with tempfile.TemporaryDirectory() as folder:
+            work = Path(folder)
+            clip = work / 'shot-one.mp4'
+            subprocess.run([
+                'ffmpeg', '-v', 'error', '-y', '-f', 'lavfi',
+                '-i', 'color=c=red:s=64x64:r=24:d=1', '-c:v', 'libx264',
+                '-pix_fmt', 'yuv420p', str(clip),
+            ], check=True)
+            end_frame = render.extract_end_frame(work, 0, clip)
+            self.assertTrue(end_frame.is_file())
+            self.assertGreater(end_frame.stat().st_size, 0)
+            self.assertEqual(render.extract_end_frame(work, 0, clip), end_frame)
+
     def test_voice_pause_needs_continuous_audio_bed(self):
         self.assertTrue(render.sound_led_pauses({'audioPlan': {'music': 'licensed-track'}}))
         self.assertTrue(render.sound_led_pauses({'audioPlan': {'music': 'none', 'foleySamples': {'room': {}}}}))

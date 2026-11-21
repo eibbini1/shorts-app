@@ -13,7 +13,7 @@ import { createSessionId, draftIdleTimeoutMs, draftTimeoutMs, normalizeSessionPr
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawn, execFileSync } from 'node:child_process';
+import { spawn, execFile, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -23,7 +23,7 @@ let localIdeaBusy = false;
 const PORT = Number(process.env.STUDIO_PORT || 8787);
 const DIST = path.join(ROOT, 'studio', 'dist');
 const MEDIA_ROOTS = ['outputs', 'storage/any-local', 'storage/benchmarks', 'drafts/generated'].map((d) => path.join(ROOT, d));
-const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.mp4': 'video/mp4', '.png': 'image/png', '.jpg': 'image/jpeg', '.json': 'application/json' };
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.mp4': 'video/mp4', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.json': 'application/json', '.srt': 'text/plain; charset=utf-8' };
 
 const SESS_DIR = path.join(ROOT, 'storage', 'studio-sessions');
 fs.mkdirSync(SESS_DIR, { recursive: true });
@@ -57,7 +57,7 @@ const STEP_RULES = [
   [/final-file|qa\b|verified|contact sheet/i, 'Quality checks'],
 ];
 
-const snap = (x = job) => x && { id: x.id, user: x.user, name: x.name, prompt: x.prompt, options: x.options, createdAt: x.createdAt, updatedAt: x.updatedAt, kind: x.kind, status: x.status, startedAt: x.startedAt, steps: x.steps, lines: x.lines.slice(-200), scenario: x.scenario, plan: x.plan, video: x.video, previousVideo: x.previousVideo, technicalQa: x.technicalQa, error: x.error, attempts: x.attempts || [] };
+const snap = (x = job) => x && { id: x.id, user: x.user, name: x.name, prompt: x.prompt, options: x.options, createdAt: x.createdAt, updatedAt: x.updatedAt, kind: x.kind, status: x.status, startedAt: x.startedAt, unattendedRun: x.unattendedRun, steps: x.steps, lines: x.lines.slice(-200), scenario: x.scenario, plan: x.plan, sequence: x.sequence || null, referenceFrames: x.referenceFrames || [], video: x.video, previousVideo: x.previousVideo, technicalQa: x.technicalQa, error: x.error, attempts: x.attempts || [] };
 const persist = (x, touch = true) => { if (touch) x.updatedAt = Date.now(); x.lastSave = Date.now(); try { fs.writeFileSync(path.join(SESS_DIR, x.id + '.json'), JSON.stringify({ ...snap(x), requestIds: x.requestIds || [] })); } catch { /* disk issue: keep running */ } };
 const summary = (x) => ({ id: x.id, name: x.name, prompt: x.prompt, storyPrompt: x.options?.storyPrompt || '', createdAt: x.createdAt, updatedAt: x.updatedAt, status: x.status, kind: x.kind, hasVideo: Boolean(x.video || x.previousVideo), attemptCount: (x.attempts || []).length });
 const canSee = (user, x) => !x || !user || user.role === 'owner' || x.user === user.name;
@@ -106,19 +106,198 @@ function newest(dir, ext, since) {
 }
 
 
+function readReferenceManifest(scenario) {
+  const work = path.join('storage', 'any-local', path.basename(scenario, '.json'));
+  const workRoot = path.resolve(ROOT, work);
+  const manifest = path.join(workRoot, 'references.json');
+  if (!fs.existsSync(manifest)) return { rows: [], references: [], sha256: null };
+  const hash = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+  const story = path.join(ROOT, scenario);
+  const data = JSON.parse(fs.readFileSync(manifest, 'utf8'));
+  if (data.schemaVersion !== 1 || data.scenarioSha256 !== hash(story) || !Array.isArray(data.references)) {
+    throw new Error('The reference images belong to an older version of this story. Upload them again.');
+  }
+  const shotCount = JSON.parse(fs.readFileSync(story, 'utf8')).plan.shots.length;
+  const seen = new Set();
+  const references = data.references.map((row) => {
+    if (!row || typeof row !== 'object') throw new Error('The reference-image manifest is invalid.');
+    const fileName = String(row.file || '');
+    const match = /^references\/shot-(\d+)-[0-9a-f]{16}\.(png|jpg)$/i.exec(fileName);
+    if (!match || Number(match[1]) !== row.shot || !Number.isInteger(row.shot) ||
+        row.shot < 1 || row.shot > shotCount || seen.has(row.shot)) {
+      throw new Error('The reference-image manifest is invalid.');
+    }
+    seen.add(row.shot);
+    const file = path.resolve(workRoot, fileName);
+    const real = fs.realpathSync(file);
+    if (!real.startsWith(workRoot + path.sep) || hash(real) !== row.sha256) {
+      throw new Error(`The reference image for shot ${row.shot} changed. Upload it again.`);
+    }
+    return { shot: row.shot, p: path.relative(ROOT, real), t: fs.statSync(real).mtimeMs, sha256: row.sha256 };
+  }).sort((a, b) => a.shot - b.shot);
+  return { rows: data.references, references, sha256: hash(manifest) };
+}
+
+function referenceIdentity(scenario) {
+  const rows = readReferenceManifest(scenario).rows
+    .map((row) => ({ shot: row.shot, file: row.file, sha256: row.sha256 }))
+    .sort((a, b) => a.shot - b.shot);
+  return crypto.createHash('sha256').update(JSON.stringify(rows)).digest('hex');
+}
+
 function frameManifest(scenario) {
   const work = path.join('storage', 'any-local', path.basename(scenario, '.json'));
   const data = JSON.parse(fs.readFileSync(path.join(ROOT, work, 'first-frames.json'), 'utf8'));
   const hash = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+  const referenceHash = readReferenceManifest(scenario).sha256;
   const story = path.join(ROOT, scenario);
   const count = JSON.parse(fs.readFileSync(story, 'utf8')).plan.shots.length;
-  if (data.schemaVersion !== 1 || data.scenarioSha256 !== hash(story) || data.frames?.length !== count) throw new Error('Review fresh first frames for this story.');
+  if (data.schemaVersion !== 1 || data.scenarioSha256 !== hash(story) ||
+      (data.referenceManifestSha256 ?? null) !== referenceHash || data.frames?.length !== count) {
+    throw new Error('Review fresh first frames for this story and its reference images.');
+  }
   const stills = data.frames.map((frame, index) => {
-    const file = path.resolve(ROOT, work, frame.file);
-    if (frame.shot !== index + 1 || !file.startsWith(path.resolve(ROOT, work) + path.sep) || hash(file) !== frame.sha256) throw new Error('A first frame changed. Make first frames again.');
-    return { shot: frame.shot, p: path.relative(ROOT, file), t: fs.statSync(file).mtimeMs, n: path.basename(file), verified: true };
+    const workRoot = path.resolve(ROOT, work);
+    const file = path.resolve(workRoot, frame.file);
+    const real = fs.realpathSync(file);
+    if (frame.shot !== index + 1 || !real.startsWith(workRoot + path.sep) || hash(real) !== frame.sha256) throw new Error('A first frame changed. Make first frames again.');
+    return { shot: frame.shot, p: path.relative(ROOT, real), t: fs.statSync(real).mtimeMs, n: path.basename(real), verified: true };
   });
   return { stills };
+}
+
+function pendingFrameManifest(scenario) {
+  const work = path.join('storage', 'any-local', path.basename(scenario, '.json'));
+  const workRoot = path.resolve(ROOT, work);
+  const story = path.join(ROOT, scenario);
+  const data = JSON.parse(fs.readFileSync(path.join(workRoot, 'pending-first-frames.json'), 'utf8'));
+  const hash = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+  const referenceHash = readReferenceManifest(scenario).sha256;
+  const count = JSON.parse(fs.readFileSync(story, 'utf8')).plan.shots.length;
+  if (data.schemaVersion !== 1 || data.scenarioSha256 !== hash(story) ||
+      (data.referenceManifestSha256 ?? null) !== referenceHash || !Array.isArray(data.frames)) {
+    throw new Error('The pending frame review is stale. Generate first frames again.');
+  }
+  const seen = new Set();
+  for (const frame of data.frames) {
+    if (!Number.isInteger(frame.shot) || frame.shot < 1 || frame.shot > count || seen.has(frame.shot) ||
+        !Array.isArray(frame.candidates) || frame.candidates.length === 0) {
+      throw new Error('The pending frame review is incomplete or invalid.');
+    }
+    seen.add(frame.shot);
+    const candidateIds = new Set();
+    for (const candidate of frame.candidates) {
+      const file = path.resolve(workRoot, candidate.file || '');
+      if (!file.startsWith(workRoot + path.sep) || !fs.existsSync(file)) {
+        throw new Error('A pending frame changed. Generate first frames again.');
+      }
+      const real = fs.realpathSync(file);
+      const relative = path.relative(workRoot, real);
+      const match = /^refs\/shot-(\d+)-[0-9a-f]+\.png$/i.exec(relative);
+      if (!real.startsWith(workRoot + path.sep) || !match || Number(match[1]) !== frame.shot - 1 ||
+          hash(real) !== candidate.sha256 ||
+          !Number.isInteger(candidate.candidate) || candidate.candidate < 1 ||
+          candidateIds.has(candidate.candidate)) {
+        throw new Error('A pending frame changed. Generate first frames again.');
+      }
+      candidateIds.add(candidate.candidate);
+    }
+  }
+  return { work, workRoot, data, count };
+}
+
+function studioMotionEditor() {
+  const configured = process.env.SHORTS_EDITOR || 'auto';
+  if (configured !== 'auto') return configured === 'artcraft' ? 'artcraft' : 'ffmpeg';
+  const artcraftTools = ['photocraft-cli', 'filmcraft-cli', 'soundcraft-cli', 'effectcraft-cli']
+    .map((tool) => path.join(ROOT, 'storage', 'tools', 'artcraft', tool));
+  return process.platform === 'darwin' && artcraftTools.every((tool) => {
+    try { return (fs.statSync(tool).mode & 0o111) !== 0; } catch { return false; }
+  }) ? 'artcraft' : 'ffmpeg';
+}
+
+function sequenceMotionResult(scenario, sequence, shot) {
+  const workRoot = path.resolve(ROOT, 'storage', 'any-local', path.basename(scenario, '.json'));
+  const manifestPath = path.join(workRoot, 'sequence', `shot-${String(shot).padStart(2, '0')}.json`);
+  const result = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  const story = path.join(ROOT, scenario);
+  const hash = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+  const approved = sequence.approvedFrames.find((frame) => frame.shot === shot);
+  const approvedPath = approved && path.resolve(workRoot, approved.file);
+  if (!approvedPath || !approvedPath.startsWith(workRoot + path.sep) ||
+      hash(fs.realpathSync(approvedPath)) !== approved.sha256) {
+    throw new Error(`The approved first frame for shot ${shot} changed.`);
+  }
+  const checkedFile = (relative, expectedHash) => {
+    const candidate = path.resolve(workRoot, relative || '');
+    const real = fs.realpathSync(candidate);
+    if (!real.startsWith(workRoot + path.sep) || hash(real) !== expectedHash) {
+      throw new Error(`The verified motion artifact for shot ${shot} changed.`);
+    }
+    return path.relative(workRoot, real);
+  };
+  if (!approved || result.schemaVersion !== 1 || result.shot !== shot ||
+      result.scenarioSha256 !== hash(story) ||
+      result.scenarioSha256 !== approved.scenarioSha256 ||
+      result.approvedReferenceSha256 !== approved.sha256) {
+    throw new Error(`Shot ${shot} motion does not match the current story and approved first frame.`);
+  }
+  const clip = checkedFile(result.clip, result.clipSha256);
+  const endFrame = checkedFile(result.endFrame, result.endFrameSha256);
+  return { shot, clip, clipSha256: result.clipSha256, endFrame, endFrameSha256: result.endFrameSha256 };
+}
+
+function sequenceIdentityReference(scenario, sequence) {
+  const identity = sequence.approvedFrames.find((frame) => frame.shot === 1);
+  if (!identity || identity.scenarioSha256 !== crypto.createHash('sha256')
+    .update(fs.readFileSync(path.join(ROOT, scenario))).digest('hex')) {
+    throw new Error('The first approved shot is missing or belongs to an older story.');
+  }
+  const workRoot = path.resolve(ROOT, 'storage', 'any-local', path.basename(scenario, '.json'));
+  const candidate = path.resolve(workRoot, identity.file);
+  const real = fs.realpathSync(candidate);
+  const digest = crypto.createHash('sha256').update(fs.readFileSync(real)).digest('hex');
+  if (!real.startsWith(workRoot + path.sep) || digest !== identity.sha256) {
+    throw new Error('The shared identity reference changed; review shot 1 again.');
+  }
+  return path.relative(ROOT, real);
+}
+
+function saveSequenceFrameManifest(scenario, sequence, reviewer) {
+  const workRoot = path.resolve(ROOT, 'storage', 'any-local', path.basename(scenario, '.json'));
+  const story = path.join(ROOT, scenario);
+  const hash = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+  const scenarioSha256 = hash(story);
+  const count = JSON.parse(fs.readFileSync(story, 'utf8')).plan.shots.length;
+  const frames = [...sequence.approvedFrames].sort((a, b) => a.shot - b.shot);
+  if (frames.length !== count || frames.some((frame, index) => frame.shot !== index + 1)) {
+    throw new Error('Sequential frame approval is incomplete.');
+  }
+  for (const frame of frames) {
+    const file = path.resolve(workRoot, frame.file);
+    const real = fs.realpathSync(file);
+    if (!real.startsWith(workRoot + path.sep) || hash(real) !== frame.sha256) {
+      throw new Error(`The approved first frame for shot ${frame.shot} changed.`);
+    }
+  }
+  const manifest = {
+    schemaVersion: 1,
+    scenarioSha256,
+    referenceManifestSha256: readReferenceManifest(scenario).sha256,
+    reviewMethod: 'human',
+    reviewedBy: reviewer,
+    reviewedAt: new Date().toISOString(),
+    sharedIdentityReference: {
+      shot: frames[0].shot,
+      file: frames[0].file,
+      sha256: frames[0].sha256,
+    },
+    frames,
+  };
+  const target = path.join(workRoot, 'first-frames.json');
+  const temporary = `${target}.${crypto.randomUUID()}.tmp`;
+  fs.writeFileSync(temporary, JSON.stringify(manifest, null, 2) + '\n', { flag: 'wx' });
+  fs.renameSync(temporary, target);
 }
 
 function previewFrames(scenario, since = 0) {
@@ -198,16 +377,26 @@ function start(kind, args, extra = {}) {
   x.requestIds ||= [];
   if (extra.requestId && !x.requestIds.includes(extra.requestId)) x.requestIds.push(extra.requestId);
   if (extra.options) x.options = extra.options;
-  Object.assign(x, { kind, status: 'running', startedAt, steps: [], lines: [], error: null, timedOut: false });
-  if (kind === 'render' || kind === 'stills') { if (kind === 'render') {
+  if (extra.sequence) x.sequence = extra.sequence;
+  Object.assign(x, { kind, status: 'running', startedAt, steps: [], lines: [], error: null, timedOut: false,
+    unattendedRun: extra.unattended === true });
+  if (kind === 'render' || kind === 'stills' || kind === 'sequence-motion') { if (kind === 'render') {
       if (x.video && x.technicalQa?.status === 'passed') x.previousVideo = x.video;
       x.video = null;
       x.technicalQa = { status: 'pending' };
     } x.scenario = extra.scenario || x.scenario; } else { x.plan = null; x.scenario = null; }
+  if (kind === 'draft') {
+    if (x.video) x.previousVideo = x.video;
+    x.video = null;
+    x.technicalQa = null;
+    x.plan = null;
+    x.scenario = null;
+  }
   job = x;
   const proc = spawn(extra.cmd ? extra.cmd[0] : 'bash', extra.cmd ? [...extra.cmd.slice(1), ...args] : ['scripts/make-local-video.sh', ...args], { cwd: ROOT, detached: true, env: { ...process.env, PYTHONUNBUFFERED: '1', // the prompt gate scores food close-ups and a luxury-kitchen look; it does not apply to cartoon/custom looks
     ...(kind === 'render' && extra.pinFrames ? { SHORTS_STUDIO_PIN_FRAMES: '1' } : {}),
     ...(extra.learningEvidence ? { SHORTS_STUDIO_LEARNING_EVIDENCE: JSON.stringify(extra.learningEvidence) } : {}),
+    ...(kind === 'draft' ? { SHORTS_STUDIO_UNATTENDED: x.options?.unattended === true ? '1' : '0' } : {}),
     ...(x.options && x.options.look && x.options.look !== 'food' ? { SHORTS_MIN_PROMPT_SCORE: '0' } : {}) } });
   x.proc = proc; // not serialised: snap() copies named fields only
   let lastActivityAt = Date.now();
@@ -220,7 +409,7 @@ function start(kind, args, extra = {}) {
     if (x.status !== 'running') return;
     if (Date.now() - startedAt < draftTimeout && Date.now() - lastActivityAt < draftIdleTimeout) return;
     x.timedOut = true;
-    x.error = 'Planning timed out. Your idea is saved. Try a shorter, concrete action and ending.';
+    x.error = 'Planning took too long and was stopped. Your brief and previous export are saved; retry planning or shorten the idea. No new media was rendered.';
     x.status = 'stopping';
     try { process.kill(-proc.pid, 'SIGTERM'); } catch { /* already exited */ }
     x.stopTimeout = setTimeout(() => {
@@ -269,6 +458,8 @@ function start(kind, args, extra = {}) {
     if (x.status !== 'cancelled' && kind === 'draft') {
       x.scenario ||= newest('drafts/generated', '.local-scenario.json', startedAt);
       if (x.scenario) { try { x.plan = JSON.parse(fs.readFileSync(path.join(ROOT, x.scenario), 'utf8')); } catch { /* keep raw log */ } }
+    } else if (x.status !== 'cancelled' && kind === 'stills' && x.scenario) {
+      try { x.plan = JSON.parse(fs.readFileSync(path.join(ROOT, x.scenario), 'utf8')); } catch { /* keep the last valid plan */ }
     } else if (x.status !== 'cancelled' && kind === 'render') {
       if (code === 0 && verifiedExport && fs.existsSync(path.join(ROOT, verifiedExport))) {
         x.video = verifiedExport;
@@ -289,9 +480,9 @@ function start(kind, args, extra = {}) {
       const blocked = x.lines.some((line) => /^(BLOCKED|NEEDS-CHOICE):/.test(line));
       if (!blocked && x.plan && x.scenario) {
         const args = ['--scenario', x.scenario];
-        if (kind === 'draft') args.push('--stills-only');
+        if (kind === 'draft') args.push('--stills-only', '--best-of-3-stills');
         if (x.options.allowRepeat) args.push('--allow-repeat');
-        if (x.options.chain) args.push('--chain-images');
+        if (x.options.chain && kind === 'stills') args.push('--chain-images');
         try {
           if (kind === 'stills') frameManifest(x.scenario);
           start(kind === 'draft' ? 'stills' : 'render', args, { session: x, scenario: x.scenario, unattended: true, pinFrames: kind === 'stills' });
@@ -500,6 +691,105 @@ function learning(user) {
 
 const json = (res, code, obj) => { res.writeHead(code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(obj)); };
 const body = (req) => new Promise((ok) => { let s = ''; req.on('data', (c) => (s += c)); req.on('end', () => { try { ok(JSON.parse(s || '{}')); } catch { ok({}); } }); });
+function runReadinessCheck() {
+  return new Promise((resolve, reject) => {
+    execFile('python3', ['scripts/check-env.py'], { cwd: ROOT, timeout: 30000, maxBuffer: 256 * 1024 }, (error, stdout, stderr) => {
+      if (error && typeof error.code !== 'number') return reject(error);
+      const checks = stdout.split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((line) => {
+        const match = /^(OK|FAIL|SKIP)\s+(.+?)(?:\s+->\s+(.+))?$/.exec(line);
+        return match
+          ? { status: match[1].toLowerCase(), name: match[2], fix: match[3] || '' }
+          : { status: 'info', name: line, fix: '' };
+      });
+      resolve({ ready: !error, checks, error: stderr.trim() || null });
+    });
+  });
+}
+
+function exportArtifacts(session) {
+  if (!session?.video || !/^outputs\/[\w.-]+\.mp4$/i.test(session.video)) return [];
+  const outputRoot = path.resolve(ROOT, 'outputs') + path.sep;
+  const videoFile = path.resolve(ROOT, session.video);
+  if (!videoFile.startsWith(outputRoot)) return [];
+  const videoStem = path.basename(session.video).replace(/\.mp4$/i, '').replace(/\.(?:captioned|artcraft|filmcraft)$/i, '');
+  const stems = [...new Set([videoStem, videoStem.replace(/\.sfx$/i, '')])];
+  const candidates = [
+    { kind: 'captions', label: 'Captions (.srt)', files: stems.map((stem) => `${stem}.srt`) },
+    { kind: 'publish-pack', label: 'Publish pack (.json)', files: [...stems.map((stem) => `${stem}.pack.json`), `${stems.at(-1)}.sfx.pack.json`] },
+    { kind: 'quality-report', label: 'Release quality report (.json)', files: stems.flatMap((stem) => [`${stem}.pack.quality.json`, `${stem}.quality.json`]) },
+    { kind: 'provenance', label: 'Provenance (.json)', files: [
+      path.basename(session.video).replace(/\.mp4$/i, '.provenance.json'),
+      ...stems.map((stem) => `${stem}.provenance.json`),
+    ] },
+  ];
+  return candidates.flatMap(({ kind, label, files }) => {
+    const file = files.map((name) => path.join(ROOT, 'outputs', name))
+      .find((candidate) => {
+        const resolved = path.resolve(candidate);
+        return resolved.startsWith(outputRoot) && fs.existsSync(resolved) && fs.statSync(resolved).isFile();
+      });
+    return file ? [{ kind, label, path: path.relative(ROOT, file) }] : [];
+  });
+}
+
+function boundedJsonBody(req, limit) {
+  return new Promise((resolve) => {
+    const chunks = [];
+    let size = 0;
+    let tooLarge = false;
+    req.on('data', (chunk) => {
+      size += chunk.length;
+      if (size > limit) { tooLarge = true; chunks.length = 0; }
+      else if (!tooLarge) chunks.push(chunk);
+    });
+    req.on('end', () => {
+      if (tooLarge) return resolve({ error: 'The image upload is too large.', status: 413 });
+      try { return resolve({ value: JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}') }); }
+      catch { return resolve({ error: 'The image upload request is invalid.', status: 400 }); }
+    });
+    req.on('error', () => resolve({ error: 'Unable to read the image upload.', status: 400 }));
+  });
+}
+
+function imageDimensions(buffer, mime) {
+  if (mime === 'image/png' && buffer.length >= 24 &&
+      buffer.subarray(0, 8).equals(Buffer.from('89504e470d0a1a0a', 'hex')) &&
+      buffer.toString('ascii', 12, 16) === 'IHDR') {
+    return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
+  }
+  if (mime !== 'image/jpeg' || buffer.length < 4 || buffer[0] !== 0xff || buffer[1] !== 0xd8) return null;
+  const frameMarkers = new Set([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf]);
+  let offset = 2;
+  while (offset + 4 < buffer.length) {
+    if (buffer[offset] !== 0xff) { offset += 1; continue; }
+    while (buffer[offset] === 0xff) offset += 1;
+    const marker = buffer[offset++];
+    if (marker === 0xd8 || marker === 0xd9 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) continue;
+    if (offset + 2 > buffer.length) return null;
+    const length = buffer.readUInt16BE(offset);
+    if (length < 2 || offset + length > buffer.length) return null;
+    if (frameMarkers.has(marker) && length >= 7) {
+      return { height: buffer.readUInt16BE(offset + 3), width: buffer.readUInt16BE(offset + 5) };
+    }
+    offset += length;
+  }
+  return null;
+}
+
+function uploadedImage(dataUrl) {
+  const match = /^data:(image\/(?:png|jpeg));base64,([A-Za-z0-9+/]+={0,2})$/.exec(String(dataUrl || ''));
+  if (!match || match[2].length > 11_185_000) throw new Error('Choose a PNG or JPEG image up to 8 MB.');
+  const buffer = Buffer.from(match[2], 'base64');
+  if (buffer.length > 8 * 1024 * 1024 || buffer.toString('base64') !== match[2]) {
+    throw new Error('Choose a PNG or JPEG image up to 8 MB.');
+  }
+  const dimensions = imageDimensions(buffer, match[1]);
+  if (!dimensions || dimensions.width < 256 || dimensions.height < 256 ||
+      dimensions.width > 8192 || dimensions.height > 8192 || dimensions.width * dimensions.height > 40_000_000) {
+    throw new Error('The image must be a valid PNG or JPEG between 256 px and 8192 px per side.');
+  }
+  return { buffer, mime: match[1], ext: match[1] === 'image/png' ? 'png' : 'jpg' };
+}
 
 function serveFile(req, res, file, roots) {
   const real = path.resolve(file);
@@ -589,6 +879,11 @@ http.createServer(async (req, res) => {
       rendersLeft: owner ? null : Math.max(0, me.dailyRenders - today(me, 'render')), draftsLeft: owner ? null : Math.max(0, CREATOR_DAILY_DRAFTS - today(me, 'draft')),
       canCompare: owner, canSeeLog: owner, canRunUnattended: owner });
   }
+  if (url.pathname === '/api/readiness') {
+    if (req.method !== 'GET') return json(res, 405, { error: 'Use GET to run the local readiness check.' });
+    try { return json(res, 200, await runReadinessCheck()); }
+    catch (error) { return json(res, 503, { error: `Could not run the local readiness check: ${error.message}` }); }
+  }
   if (url.pathname === '/api/idea' && req.method === 'POST') {
     const input = await body(req);
     if (!['food', 'cartoon', 'night', 'custom'].includes(input.look)) return json(res, 400, { error: 'Choose a film look.' });
@@ -643,16 +938,21 @@ http.createServer(async (req, res) => {
     if (!submittedPrompt) return json(res, 400, { error: 'Write a prompt first.' });
     let retrySession = null;
     let retryBrief = null;
+    const repairing = b.repair === true;
     if (b.retrySessionId !== undefined) {
       const retryId = String(b.retrySessionId || '');
       retrySession = ID_RE.test(retryId) ? sessions.get(retryId) : null;
       if (!retrySession || !canSee(me, retrySession)) return json(res, 404, { error: 'Unknown project to retry.' });
-      if (retrySession.kind !== 'draft' || ['running', 'stopping'].includes(retrySession.status)) return json(res, 409, { error: 'Only a completed story plan can be retried.' });
+      const canRetryPlan = retrySession.kind === 'draft'
+        || (repairing && retrySession.kind === 'render' && retrySession.status === 'done' && Boolean(retrySession.video));
+      if (!canRetryPlan || ['running', 'stopping'].includes(retrySession.status)) return json(res, 409, { error: 'Only a completed story plan or rendered project can be revised.' });
       const savedPrompt = String(retrySession.options?.originalPrompt || retrySession.prompt || '');
       if (normalizeSessionPrompt(originalPrompt) !== normalizeSessionPrompt(savedPrompt)) return json(res, 409, { error: 'The idea changed. Start a separate project to keep the previous attempt.' });
       retryBrief = retrySession.options?.brief || legacyBrief(retrySession);
       if (!retryBrief) return json(res, 409, { error: 'The original story brief is unavailable. Start a separate project to preserve this history.' });
+      if (repairing && retrySession.kind !== 'render') return json(res, 409, { error: 'A review repair must start from a rendered project.' });
     }
+    if (repairing && !retrySession) return json(res, 400, { error: 'A plan repair must be linked to its existing project.' });
     const requestPrompts = new Set([submittedPrompt, originalPrompt].map(normalizeSessionPrompt).filter(Boolean));
     const duplicate = !retrySession && !b.allowDuplicate && [...sessions.values()].find((item) =>
       item.user === me.name && [item.prompt, item.options?.originalPrompt, item.options?.storyPrompt]
@@ -688,22 +988,108 @@ http.createServer(async (req, res) => {
       custom: { style: 'cinematic short film matching the idea', set: 'a setting that fits the idea' },
     };
     const setting = retrySession?.options?.setting || String(b.setting || '').trim().slice(0, 200);
-    const answers = retryBrief || { topic: originalPrompt, style: LOOKS[look].style, set: setting || LOOKS[look].set,
+    let answers = retryBrief || { topic: prompt, style: LOOKS[look].style, set: setting || LOOKS[look].set,
       hook: String(refined?.hook || b.hook || parts[0]).trim().slice(0, 300),
       mustShow: String(refined?.mustShow || b.mustShow || originalPrompt).trim().slice(0, 600),
       obstacle: String(refined?.obstacle || b.obstacle || '').trim().slice(0, 300),
       turn: String(refined?.turn || b.turn || '').trim().slice(0, 300),
       ending: String(refined?.ending || b.ending || '').trim().slice(0, 300) || (parts.length > 1 ? parts[parts.length - 1] : prompt), audio: ['asmr', 'voiced', 'auto'].includes(b.audio) ? b.audio : 'asmr',
       seconds: Math.min(isOwner ? 60 : CREATOR_MAX_SECONDS, Math.max(10, Number(b.seconds) || 10)), orientation: b.orientation === 'wide' ? 'wide' : 'vertical' };
+    if (repairing) {
+      const requiredText = (key, max) => typeof b[key] === 'string' && b[key].trim().length > 0 && b[key].trim().length <= max;
+      if (!['hook', 'mustShow', 'obstacle', 'turn', 'ending'].every((key) => requiredText(key, key === 'mustShow' ? 600 : 300))
+        || typeof b.repairGuidance !== 'string' || !b.repairGuidance.trim() || b.repairGuidance.length > 600) {
+        return json(res, 400, { error: 'The revised brief is incomplete. Review the local AI proposal and try again.' });
+      }
+      const nextSeconds = Number(b.seconds) || Number(retryBrief.seconds) || 10;
+      const allowedSeconds = isOwner ? 60 : CREATOR_MAX_SECONDS;
+      if (nextSeconds < 10 || nextSeconds > 60 || (nextSeconds !== Number(retryBrief.seconds) && nextSeconds > allowedSeconds)) {
+        return json(res, 400, { error: `Choose a video length from 10 to ${allowedSeconds} seconds for this account.` });
+      }
+      answers = {
+        ...retryBrief,
+        topic: originalPrompt,
+        hook: b.hook.trim(),
+        mustShow: b.mustShow.trim(),
+        obstacle: b.obstacle.trim(),
+        turn: b.turn.trim(),
+        ending: b.ending.trim(),
+        seconds: nextSeconds,
+        orientation: b.orientation === 'wide' ? 'wide' : 'vertical',
+        audio: ['asmr', 'voiced', 'auto'].includes(b.audio) ? b.audio : retryBrief.audio,
+      };
+    }
     const f = path.join(ROOT, 'storage', `studio-answers-${Date.now()}-${crypto.randomUUID()}.json`);
     fs.writeFileSync(f, JSON.stringify(answers, null, 1));
-    const options = { ...(retrySession?.options || {}), look, setting, seconds: answers.seconds, orientation: answers.orientation, audio: answers.audio, ending: answers.ending, originalPrompt, storyPrompt: retrySession?.options?.storyPrompt || prompt, brief: answers, ideaModel: retrySession?.options?.ideaModel || refined?.model || null, learningGuidanceCount: learningEvidence.guidanceCount, allowRepeat: retrySession ? Boolean(retrySession.options?.allowRepeat) : Boolean(b.allowRepeat), chain: retrySession ? Boolean(retrySession.options?.chain) : look !== 'food', unattended: isOwner && b.unattended === true };
+    const options = { ...(retrySession?.options || {}), look, setting, seconds: answers.seconds, orientation: answers.orientation, audio: answers.audio, ending: answers.ending, originalPrompt, storyPrompt: repairing ? prompt : retrySession?.options?.storyPrompt || prompt, brief: answers, ...(repairing ? { repairGuidance: b.repairGuidance.trim() } : {}), ideaModel: retrySession?.options?.ideaModel || refined?.model || null, learningGuidanceCount: learningEvidence.guidanceCount, allowRepeat: retrySession ? Boolean(retrySession.options?.allowRepeat) : Boolean(b.allowRepeat), chain: retrySession ? Boolean(retrySession.options?.chain) : look !== 'food', unattended: !repairing && isOwner && b.unattended === true };
     const x = start('draft', ['--answers', path.relative(ROOT, f), ...(options.allowRepeat ? ['--allow-repeat'] : [])], {
       cmd: ['python3', 'scripts/studio-draft.py'], user: me.name, prompt: originalPrompt, learningEvidence,
-      unattended: isOwner && b.unattended === true, options, requestId,
+      unattended: !repairing && isOwner && b.unattended === true, options, requestId,
       ...(retrySession ? { session: retrySession, archiveAttempt: true } : {}),
     });
     return json(res, 202, snap(x));
+  }
+  if (url.pathname === '/api/reference-frame' && req.method === 'POST') {
+    const parsed = await boundedJsonBody(req, 12 * 1024 * 1024);
+    if (parsed.error) return json(res, parsed.status, { error: parsed.error });
+    const b = parsed.value;
+    const sc = String(b.scenario || '');
+    const owner = ID_RE.test(String(b.sessionId)) ? sessions.get(String(b.sessionId)) : null;
+    if (!/^drafts\/generated\/[\w.-]+\.local-scenario\.json$/.test(sc) ||
+        !owner || !canSee(me, owner) || !mayUse(me, sc) || owner.scenario !== sc) {
+      return json(res, 403, { error: 'That image reference does not belong to this session.' });
+    }
+    if (!['draft', 'stills'].includes(owner.kind) || !['done', 'failed'].includes(owner.status) ||
+        owner.unattendedRun === true || (owner.unattendedRun !== false && owner.options?.unattended === true)) {
+      return json(res, 409, { error: 'Reference images can only be added to a completed attended plan before rendering.' });
+    }
+    if (owner.sequence?.active) return json(res, 409, { error: 'Reference images are locked while sequential shot review is in progress.' });
+    const why = busyReason();
+    if (why) return json(res, 409, { error: why });
+    const story = path.join(ROOT, sc);
+    if (!fs.existsSync(story)) return json(res, 404, { error: 'Unknown plan.' });
+    let shotCount;
+    try { shotCount = JSON.parse(fs.readFileSync(story, 'utf8')).plan.shots.length; }
+    catch { return json(res, 400, { error: 'The story plan is invalid.' }); }
+    const shot = Number(b.shot);
+    if (!Number.isInteger(shot) || shot < 1 || shot > shotCount) return json(res, 400, { error: 'Choose a shot in this plan.' });
+    let image;
+    try { image = uploadedImage(b.dataUrl); }
+    catch (error) { return json(res, 400, { error: error.message }); }
+
+    let previous;
+    try { previous = readReferenceManifest(sc); }
+    catch (error) { return json(res, 409, { error: error.message || 'The reference-image manifest is invalid.' }); }
+    const workRoot = path.join(ROOT, 'storage', 'any-local', path.basename(sc, '.json'));
+    const directory = path.join(workRoot, 'references');
+    fs.mkdirSync(directory, { recursive: true });
+    const digest = crypto.createHash('sha256').update(image.buffer).digest('hex');
+    const fileName = `references/shot-${String(shot).padStart(2, '0')}-${digest.slice(0, 16)}.${image.ext}`;
+    const target = path.join(workRoot, fileName);
+    if (fs.existsSync(target)) {
+      if (crypto.createHash('sha256').update(fs.readFileSync(target)).digest('hex') !== digest) {
+        return json(res, 409, { error: 'A stored reference image does not match its filename.' });
+      }
+    } else {
+      const temporary = `${target}.${crypto.randomUUID()}.tmp`;
+      fs.writeFileSync(temporary, image.buffer, { flag: 'wx' });
+      fs.renameSync(temporary, target);
+    }
+    const rows = [...previous.rows.filter((row) => row.shot !== shot),
+      { shot, file: fileName, sha256: digest, mime: image.mime }].sort((a, b) => a.shot - b.shot);
+    const referenceManifest = {
+      schemaVersion: 1,
+      scenarioSha256: crypto.createHash('sha256').update(fs.readFileSync(story)).digest('hex'),
+      references: rows,
+    };
+    const manifestFile = path.join(workRoot, 'references.json');
+    const temporaryManifest = `${manifestFile}.${crypto.randomUUID()}.tmp`;
+    fs.writeFileSync(temporaryManifest, JSON.stringify(referenceManifest, null, 2) + '\n', { flag: 'wx' });
+    fs.renameSync(temporaryManifest, manifestFile);
+    owner.referenceFrames = readReferenceManifest(sc).references;
+    persist(owner);
+    emit();
+    return json(res, 201, { ok: true, reference: owner.referenceFrames.find((item) => item.shot === shot) });
   }
   if ((url.pathname === '/api/stills' || url.pathname === '/api/regen') && req.method === 'POST') {
     // first-frame step: make only the stills (about 25 s each) so a bad frame is caught before 4.5 min of motion
@@ -711,20 +1097,255 @@ http.createServer(async (req, res) => {
     if (why) return json(res, 409, { error: why });
     const sc = String(b.scenario || '');
     if (!/^drafts\/generated\/[\w.-]+\.local-scenario\.json$/.test(sc) || !fs.existsSync(path.join(ROOT, sc))) return json(res, 400, { error: 'Unknown plan.' });
-    if (!isOwner) { const o = ID_RE.test(String(b.sessionId)) ? sessions.get(String(b.sessionId)) : null; if (!o || !canSee(me, o) || !mayUse(me, sc)) return json(res, 403, { error: 'That video belongs to someone else.' }); }
+    const owner = ID_RE.test(String(b.sessionId)) ? sessions.get(String(b.sessionId)) : null;
+    if (!isOwner && (!owner || !canSee(me, owner) || !mayUse(me, sc))) return json(res, 403, { error: 'That video belongs to someone else.' });
     if (url.pathname === '/api/regen') {
       const shot = Number(b.shot);
       if (!Number.isInteger(shot) || shot < 1 || shot > 60) return json(res, 400, { error: 'Unknown shot.' });
+      if (owner?.sequence?.active &&
+          (owner.sequence.stage !== 'review' || shot !== owner.sequence.currentShot)) {
+        return json(res, 409, { error: `Only current sequential shot ${owner.sequence.currentShot} can be regenerated.` });
+      }
+      if (owner?.sequence?.stage === 'ready') {
+        const sequence = owner.sequence;
+        if (shot > sequence.shotCount) return json(res, 400, { error: 'Unknown shot.' });
+        if (shot > 1) {
+          const previous = sequence.endFrames.find((frame) => frame.shot === shot - 1);
+          const workRoot = path.resolve(ROOT, 'storage', 'any-local', path.basename(sc, '.json'));
+          const priorFrame = previous && path.resolve(workRoot, previous.endFrame);
+          if (!priorFrame || !priorFrame.startsWith(workRoot + path.sep) || !fs.existsSync(priorFrame) ||
+              crypto.createHash('sha256').update(fs.readFileSync(priorFrame)).digest('hex') !== previous.endFrameSha256) {
+            return json(res, 409, { error: 'The preceding motion final frame is missing or changed; restart from shot 1.' });
+          }
+        }
+        sequence.active = true;
+        sequence.stage = 'review';
+        sequence.currentShot = shot;
+        sequence.approvedFrames = sequence.approvedFrames.filter((frame) => frame.shot < shot);
+        sequence.endFrames = sequence.endFrames.filter((frame) => frame.shot < shot);
+      }
       const refs = path.join(ROOT, 'storage', 'any-local', path.basename(sc, '.json'), 'refs'); fs.mkdirSync(refs, { recursive: true });
       const f = path.join(refs, 'seed-bumps.json'); let bumps = {}; try { bumps = JSON.parse(fs.readFileSync(f, 'utf8')); } catch { /* none yet */ }
       bumps[String(shot - 1)] = (Number(bumps[String(shot - 1)]) || 0) + 1; fs.writeFileSync(f, JSON.stringify(bumps));
       ledger({ type: 'regenerate', user: me.name, session: b.sessionId, shot, scenario: sc });
     }
-    const owner = ID_RE.test(String(b.sessionId)) ? sessions.get(String(b.sessionId)) : null;
-    if (!isOwner && (!owner || !canSee(me, owner) || !mayUse(me, sc))) return json(res, 403, { error: 'That video belongs to someone else.' });
     const retryingFailedSession = owner?.status === 'failed';
-    const x = start('stills', ['--scenario', sc, '--stills-only', ...(owner?.options?.allowRepeat ? ['--allow-repeat'] : []), ...(owner?.options?.chain && !retryingFailedSession ? ['--chain-images'] : [])], owner ? { session: owner, scenario: sc, archiveAttempt: retryingFailedSession, unattended: isOwner && b.resumeUnattended === true && owner.options?.unattended === true } : { scenario: sc, user: me.name, prompt: 'First frames ' + sc.split('/').pop() });
+    const unattendedRun = Boolean(isOwner && b.resumeUnattended === true && owner?.options?.unattended === true);
+    let sequence = null;
+    const stillArgs = ['--scenario', sc, '--stills-only', '--best-of-3-stills',
+      ...(!unattendedRun ? ['--allow-pending-visual-review'] : []),
+      ...(owner?.options?.allowRepeat ? ['--allow-repeat'] : [])];
+    if (!unattendedRun) {
+      try {
+        const story = JSON.parse(fs.readFileSync(path.join(ROOT, sc), 'utf8'));
+        const shotCount = story.plan.shots.length;
+        const existing = owner?.sequence;
+        if (existing?.active && existing.stage === 'motion') {
+          return json(res, 409, { error: 'The current shot motion must finish before the next still can be prepared.' });
+        }
+        sequence = existing?.active && existing.stage === 'review'
+          ? existing
+          : { active: true, stage: 'review', currentShot: 1, shotCount,
+            approvedFrames: [], endFrames: [], referenceFramesSha256: referenceIdentity(sc) };
+        sequence.active = true;
+        sequence.shotCount = shotCount;
+        const currentShot = sequence.currentShot || 1;
+        stillArgs.push('--shot-only', String(currentShot));
+        if (currentShot > 1) {
+          const previousEnd = sequence.endFrames.find((frame) => frame.shot === currentShot - 1);
+          if (!previousEnd) return json(res, 409, { error: 'The preceding motion final frame is missing. Restart sequential review from shot 1.' });
+          const workRoot = path.resolve(ROOT, 'storage', 'any-local', path.basename(sc, '.json'));
+          const endFrame = path.resolve(workRoot, previousEnd.endFrame);
+          if (!endFrame.startsWith(workRoot + path.sep) || !fs.existsSync(endFrame) ||
+              crypto.createHash('sha256').update(fs.readFileSync(endFrame)).digest('hex') !== previousEnd.endFrameSha256) {
+            return json(res, 409, { error: 'The preceding motion final frame changed. Restart sequential review from shot 1.' });
+          }
+          stillArgs.push('--chain-source', path.relative(ROOT, endFrame),
+            '--chain-source-sha256', previousEnd.endFrameSha256);
+          stillArgs.push('--anchor-image', sequenceIdentityReference(sc, sequence));
+        }
+        const firstFrames = path.join(ROOT, 'storage', 'any-local', path.basename(sc, '.json'), 'first-frames.json');
+        try { fs.unlinkSync(firstFrames); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+      } catch (error) {
+        return json(res, 400, { error: error.message || 'The story plan is invalid.' });
+      }
+    }
+    const x = start('stills', stillArgs, owner
+      ? { session: owner, scenario: sc, archiveAttempt: retryingFailedSession, unattended: unattendedRun, ...(sequence ? { sequence } : {}) }
+      : { scenario: sc, user: me.name, prompt: 'First frames ' + sc.split('/').pop(), ...(sequence ? { sequence } : {}) });
     return json(res, 202, snap(x));
+  }
+  if (url.pathname === '/api/approve-frames' && req.method === 'POST') {
+    const b = await body(req);
+    const sc = String(b.scenario || '');
+    const owner = ID_RE.test(String(b.sessionId)) ? sessions.get(String(b.sessionId)) : null;
+    if (!/^drafts\/generated\/[\w.-]+\.local-scenario\.json$/.test(sc) ||
+        !owner || !canSee(me, owner) || !mayUse(me, sc) || owner.scenario !== sc) {
+      return json(res, 403, { error: 'That frame review does not belong to this session.' });
+    }
+    if (owner.kind !== 'stills' || owner.status !== 'done' || owner.unattendedRun === true ||
+        (owner.unattendedRun !== false && owner.options?.unattended === true)) {
+      return json(res, 409, { error: 'Only a completed attended stills run can be manually approved.' });
+    }
+    try {
+      const pending = pendingFrameManifest(sc);
+      const { work, workRoot, data, count } = pending;
+      if (owner.sequence?.active) {
+        const sequence = owner.sequence;
+        const shot = sequence.currentShot;
+        if (sequence.stage !== 'review' || !Array.isArray(b.selections) ||
+            b.selections.length !== 1 || b.selections[0].shot !== shot) {
+          return json(res, 400, { error: `Choose one candidate for current shot ${shot}.` });
+        }
+        if (sequence.referenceFramesSha256 !== referenceIdentity(sc)) {
+          return json(res, 409, { error: 'Reference images changed during sequential review. Restart frame review.' });
+        }
+        const entry = data.frames.find((item) => item.shot === shot);
+        const candidate = entry?.candidates.find((item) =>
+          item.candidate === b.selections[0].candidate);
+        if (!candidate) return json(res, 409, { error: `No selected candidate is available for shot ${shot}.` });
+        const file = fs.realpathSync(path.resolve(workRoot, candidate.file));
+        if (!file.startsWith(workRoot + path.sep) ||
+            crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex') !== candidate.sha256) {
+          return json(res, 409, { error: `The selected candidate for shot ${shot} changed.` });
+        }
+        sequence.approvedFrames = sequence.approvedFrames.filter((frame) => frame.shot !== shot);
+        sequence.approvedFrames.push({
+          shot,
+          file: path.relative(workRoot, file),
+          sha256: candidate.sha256,
+          scenarioSha256: crypto.createHash('sha256').update(fs.readFileSync(path.join(ROOT, sc))).digest('hex'),
+          reviewedAt: new Date().toISOString(),
+          reviewedBy: me.name,
+        });
+        sequence.approvedFrames.sort((a, b) => a.shot - b.shot);
+        sequence.stage = 'motion';
+        if (sequence.approvedFrames.length === sequence.shotCount) {
+          saveSequenceFrameManifest(sc, sequence, me.name);
+        }
+        const x = start('sequence-motion', [
+          '--scenario', sc, '--scenario-sha256', sequence.approvedFrames.find((frame) => frame.shot === shot).scenarioSha256,
+          '--shot', String(shot), '--reference', path.relative(ROOT, file),
+          '--reference-sha256', candidate.sha256,
+          '--editor', studioMotionEditor(),
+        ], { session: owner, scenario: sc,
+          cmd: ['python3', 'scripts/render-studio-shot.py'] });
+        return json(res, 200, { ok: true, sequential: true, shot, job: snap(x) });
+      }
+      if (!Array.isArray(b.selections) || b.selections.length !== count) {
+        return json(res, 400, { error: 'Choose one candidate for every shot.' });
+      }
+      const selections = new Map();
+      for (const selection of b.selections) {
+        if (!Number.isInteger(selection.shot) || selection.shot < 1 || selection.shot > count ||
+            !Number.isInteger(selection.candidate) || selection.candidate < 1 || selections.has(selection.shot)) {
+          return json(res, 400, { error: 'Frame selections are invalid.' });
+        }
+        selections.set(selection.shot, selection.candidate);
+      }
+      const frames = [];
+      for (let shot = 1; shot <= count; shot += 1) {
+        const entry = data.frames.find((item) => item.shot === shot);
+        const candidate = entry?.candidates.find((item) => item.candidate === selections.get(shot));
+        if (!candidate) return json(res, 409, { error: `No selected candidate is available for shot ${shot}.` });
+        const file = fs.realpathSync(path.resolve(workRoot, candidate.file));
+        if (!file.startsWith(workRoot + path.sep) ||
+            crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex') !== candidate.sha256) {
+          return json(res, 409, { error: `The selected candidate for shot ${shot} changed.` });
+        }
+        frames.push({ shot, file: path.relative(workRoot, file), sha256: candidate.sha256 });
+      }
+      const story = path.join(ROOT, sc);
+      const scenarioSha256 = crypto.createHash('sha256').update(fs.readFileSync(story)).digest('hex');
+      const reviewed = { schemaVersion: 1, scenarioSha256,
+        referenceManifestSha256: readReferenceManifest(sc).sha256,
+        reviewMethod: 'human',
+        reviewedBy: me.name, reviewedAt: new Date().toISOString(), frames };
+      const target = path.join(ROOT, work, 'first-frames.json');
+      const temporary = target + '.tmp';
+      fs.writeFileSync(temporary, JSON.stringify(reviewed, null, 2) + '\n');
+      fs.renameSync(temporary, target);
+      ledger({ type: 'frame-approval', user: me.name, session: owner.id, scenario: sc,
+        frames: frames.map((frame) => ({ shot: frame.shot, sha256: frame.sha256 })) });
+      return json(res, 200, { ok: true, ...frameManifest(sc) });
+    } catch (error) {
+      return json(res, 409, { error: error.message || 'Could not approve these frames.' });
+    }
+  }
+  if ((url.pathname === '/api/sequence/next' || url.pathname === '/api/sequence/retry') && req.method === 'POST') {
+    const b = await body(req);
+    const owner = ID_RE.test(String(b.sessionId)) ? sessions.get(String(b.sessionId)) : null;
+    const sc = String(b.scenario || '');
+    if (!owner || !canSee(me, owner) || !mayUse(me, sc) || owner.scenario !== sc ||
+        !/^drafts\/generated\/[\w.-]+\.local-scenario\.json$/.test(sc)) {
+      return json(res, 403, { error: 'That sequential render does not belong to this session.' });
+    }
+    const sequence = owner.sequence;
+    if (!sequence?.active || sequence.stage !== 'motion' || owner.kind !== 'sequence-motion') {
+      return json(res, 409, { error: 'There is no completed sequential shot to continue.' });
+    }
+    const why = busyReason();
+    if (why) return json(res, 409, { error: why });
+    if (url.pathname === '/api/sequence/retry') {
+      if (!['failed', 'cancelled'].includes(owner.status) &&
+          !(owner.status === 'done' && sequence.continuationError)) {
+        return json(res, 409, { error: 'Only a failed or stopped shot motion can be retried.' });
+      }
+      const shot = sequence.currentShot;
+      const approved = sequence.approvedFrames.find((frame) => frame.shot === shot);
+      if (!approved) return json(res, 409, { error: `The approved first frame for shot ${shot} is missing.` });
+      const workRoot = path.resolve(ROOT, 'storage', 'any-local', path.basename(sc, '.json'));
+      const reference = path.resolve(workRoot, approved.file);
+      if (!reference.startsWith(workRoot + path.sep) || !fs.existsSync(reference) ||
+          crypto.createHash('sha256').update(fs.readFileSync(reference)).digest('hex') !== approved.sha256) {
+        return json(res, 409, { error: `The approved first frame for shot ${shot} changed.` });
+      }
+      delete sequence.continuationError;
+      const retried = start('sequence-motion', [
+        '--scenario', sc, '--scenario-sha256', approved.scenarioSha256,
+        '--shot', String(shot), '--reference', path.relative(ROOT, reference),
+        '--reference-sha256', approved.sha256,
+        '--editor', studioMotionEditor(),
+      ], { session: owner, scenario: sc, cmd: ['python3', 'scripts/render-studio-shot.py'] });
+      return json(res, 202, snap(retried));
+    }
+    if (owner.status !== 'done') return json(res, 409, { error: 'Wait for the current shot motion to finish.' });
+    try {
+      if (sequence.referenceFramesSha256 !== referenceIdentity(sc)) {
+        return json(res, 409, { error: 'Reference images changed during sequential review. Restart frame review.' });
+      }
+      const shot = sequence.currentShot;
+      const result = sequenceMotionResult(sc, sequence, shot);
+      delete sequence.continuationError;
+      sequence.endFrames = sequence.endFrames.filter((frame) => frame.shot !== shot);
+      sequence.endFrames.push(result);
+      sequence.endFrames.sort((a, b) => a.shot - b.shot);
+      if (shot >= sequence.shotCount) {
+        sequence.stage = 'ready';
+        sequence.active = false;
+        persist(owner);
+        emit();
+        return json(res, 200, { ok: true, ready: true, job: snap(owner) });
+      }
+      const nextShot = shot + 1;
+      const workRoot = path.resolve(ROOT, 'storage', 'any-local', path.basename(sc, '.json'));
+      const endFrame = path.resolve(workRoot, result.endFrame);
+      const args = ['--scenario', sc, '--stills-only', '--best-of-3-stills',
+        '--allow-pending-visual-review', '--shot-only', String(nextShot),
+        '--chain-source', path.relative(ROOT, endFrame),
+        '--chain-source-sha256', result.endFrameSha256];
+      args.push('--anchor-image', sequenceIdentityReference(sc, sequence));
+      if (owner.options?.allowRepeat) args.push('--allow-repeat');
+      sequence.currentShot = nextShot;
+      sequence.stage = 'review';
+      const next = start('stills', args, { session: owner, scenario: sc, sequence });
+      return json(res, 202, snap(next));
+    } catch (error) {
+      sequence.continuationError = error.message || 'Could not verify the shot motion final frame.';
+      persist(owner);
+      emit();
+      return json(res, 409, { error: sequence.continuationError });
+    }
   }
   if (url.pathname === '/api/render' && req.method === 'POST') {
     const b = await body(req); const why = busyReason();
@@ -734,8 +1355,13 @@ http.createServer(async (req, res) => {
     const owner = ID_RE.test(String(b.sessionId)) ? sessions.get(String(b.sessionId)) : null;
     if (!isOwner && (!owner || !canSee(me, owner) || !mayUse(me, sc))) return json(res, 403, { error: 'That video belongs to someone else.' });
     if (!isOwner && today(me, 'render') >= me.dailyRenders) return json(res, 429, { error: `That is today's limit of ${me.dailyRenders} videos. Try again tomorrow.` });
+    if (owner?.sequence && owner.sequence.stage !== 'ready') {
+      return json(res, 409, { error: 'Approve and render every shot in the sequential review before assembling the final video.' });
+    }
     try { frameManifest(sc); } catch (error) { return json(res, 409, { error: error.message }); }
-    const x = start('render', ['--scenario', sc, ...(owner?.options?.allowRepeat ? ['--allow-repeat'] : []), ...(owner?.options?.chain ? ['--chain-images'] : [])], owner ? { session: owner, scenario: sc, pinFrames: true } : { scenario: sc, pinFrames: true, user: me.name, prompt: 'Render ' + sc.split('/').pop() });
+    const x = start('render', ['--scenario', sc, ...(owner?.options?.allowRepeat ? ['--allow-repeat'] : []),
+      ...(owner?.options?.chain || owner?.sequence?.stage === 'ready' ? ['--chain-images'] : [])],
+    owner ? { session: owner, scenario: sc, pinFrames: true } : { scenario: sc, pinFrames: true, user: me.name, prompt: 'Render ' + sc.split('/').pop() });
     return json(res, 202, snap(x));
   }
   if (url.pathname === '/api/cancel' && req.method === 'POST') {
@@ -760,6 +1386,11 @@ http.createServer(async (req, res) => {
   }
   const one = url.pathname.match(/^\/api\/sessions\/(\d{10,16})$/);
   if (one && req.method === 'GET') { const x = sessions.get(one[1]); return x && canSee(me, x) ? json(res, 200, snap(x)) : json(res, 404, { error: 'Unknown session' }); }
+  if (url.pathname === '/api/artifacts' && req.method === 'GET') {
+    const session = sessions.get(String(url.searchParams.get('sessionId') || ''));
+    if (!session || !canSee(me, session)) return json(res, 404, { error: 'Unknown export.' });
+    return json(res, 200, { artifacts: exportArtifacts(session) });
+  }
   if (url.pathname === '/api/sessions/rename' && req.method === 'POST') {
     const b = await body(req); const x = sessions.get(String(b.id)); const name = String(b.name || '').trim().slice(0, 80);
     if (!x || !name || !canSee(me, x)) return json(res, 400, { error: 'Need an existing session and a name.' });
@@ -781,11 +1412,33 @@ http.createServer(async (req, res) => {
     const list = (sub, re) => { try { return fs.readdirSync(path.join(ROOT, work, sub)).filter((n) => re.test(n)).map((n) => ({ n, shot: Number(n.match(re)[1]) + 1, p: path.join(work, sub, n), t: fs.statSync(path.join(ROOT, work, sub, n)).mtimeMs })).sort((x, y) => x.shot - y.shot || x.t - y.t); } catch { return []; } };
     let approved = null;
     try { approved = frameManifest(sc); } catch { /* first frames still pending or changed */ }
+    let referenceFrames = [];
+    try { referenceFrames = readReferenceManifest(sc).references; } catch { /* stale or invalid references are reported by frame review */ }
     const latestPreviewRun = [...sessions.values()]
       .filter((session) => session.scenario === sc && session.kind === 'stills')
       .sort((a, b) => (b.startedAt || 0) - (a.startedAt || 0))[0];
+    let pendingFrames = [];
+    let pendingFramesError = null;
+    try {
+      const pending = pendingFrameManifest(sc);
+      pendingFrames = pending.data.frames.map((frame) => ({
+        shot: frame.shot,
+        selectedCandidate: frame.candidates.find((candidate) =>
+          path.relative(pending.workRoot, path.resolve(pending.workRoot, candidate.file)) === frame.selectedFile)?.candidate,
+        candidates: frame.candidates.map((candidate) => {
+          const file = fs.realpathSync(path.resolve(pending.workRoot, candidate.file));
+          return { candidate: candidate.candidate, p: path.relative(ROOT, file),
+            t: fs.statSync(file).mtimeMs, status: candidate.status, reason: candidate.reason || '' };
+        }),
+      }));
+    } catch (error) {
+      if (error.code !== 'ENOENT') pendingFramesError = error.message;
+    }
     return json(res, 200, {
       stills: approved?.stills || previewFrames(sc, latestPreviewRun?.startedAt || 0),
+      referenceFrames,
+      pendingFrames, pendingFramesError,
+      needsHumanReview: !approved && pendingFrames.length > 0,
       clips: list('motion', /^shot-(\d+)-part-\d+-[0-9a-f]+\.mp4$/),
     });
   }

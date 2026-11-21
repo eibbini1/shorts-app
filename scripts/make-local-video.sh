@@ -7,7 +7,7 @@ usage() {
 Usage:
   bash scripts/make-local-video.sh
   bash scripts/make-local-video.sh --draft-only [--model gemma-local] [--idea BANK_ID] [--studio luxury-kitchen] [--answers brief.json]
-  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--editor ffmpeg|artcraft|filmcraft|auto] [--title 'Optional film title'] [--chain-images] [--best-of-3-stills] [--cache-only] [--stills FOLDER] [--anchor-image IMAGE] [--allow-repeat] [--allow-silence] [--allow-bad-first] [--skip-vision-gate]
+  bash scripts/make-local-video.sh --scenario drafts/generated/ID.local-scenario.json [--editor ffmpeg|artcraft|filmcraft|auto] [--title 'Optional film title'] [--chain-images] [--best-of-3-stills] [--stills-only] [--shot-only N] [--chain-source IMAGE --chain-source-sha256 HASH] [--allow-pending-visual-review] [--cache-only] [--stills FOLDER] [--anchor-image IMAGE] [--allow-repeat] [--allow-silence] [--allow-bad-first] [--skip-vision-gate]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json [--watch]
   bash scripts/make-local-video.sh --status drafts/generated/ID.local-scenario.json --preview
 
@@ -18,7 +18,7 @@ USAGE
 
 default_model='qwen3:1.7b'
 [[ -s storage/setup/gemma-model-dir.txt ]] && default_model='gemma-local'
-scenario=''; status=''; chain=''; stills=''; anchor_image=''; allow_repeat=''; cache_only=''; best_of_3=''; skip_vision_gate=''; idea=''; studio=''; answers=''; title=''; editor="${SHORTS_EDITOR:-auto}"; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
+scenario=''; status=''; chain=''; stills=''; anchor_image=''; shot_only=''; chain_source=''; chain_source_sha256=''; allow_repeat=''; cache_only=''; best_of_3=''; skip_vision_gate=''; stills_only=''; allow_pending_visual_review=''; idea=''; studio=''; answers=''; title=''; editor="${SHORTS_EDITOR:-auto}"; draft_only=0; watch=0; preview=0; model="${SHORTS_STORY_MODEL:-$default_model}"
 while (($#)); do
   case "$1" in
     --scenario) scenario="${2:?Missing scenario path}"; shift 2 ;;
@@ -28,9 +28,13 @@ while (($#)); do
     --chain-images) chain='--chain-images'; shift ;;
     --cache-only) cache_only='--cache-only'; shift ;;
     --best-of-3-stills) best_of_3='--best-of-3-stills'; shift ;;
+    --allow-pending-visual-review) allow_pending_visual_review='--allow-pending-visual-review'; shift ;;
     --skip-vision-gate) skip_vision_gate='--skip-vision-gate'; shift ;;
     --stills) stills="$2"; shift 2 ;;
     --stills-only) stills_only='--stills-only'; shift ;;
+    --shot-only) shot_only="${2:?Missing shot number}"; shift 2 ;;
+    --chain-source) chain_source="${2:?Missing chain-source image}"; shift 2 ;;
+    --chain-source-sha256) chain_source_sha256="${2:?Missing chain-source hash}"; shift 2 ;;
     --anchor-image) anchor_image="$2"; shift 2 ;;
     --editor) editor="${2:?Missing editor}"; shift 2 ;;
     --title) title="${2:?Missing title}"; shift 2 ;;
@@ -47,6 +51,11 @@ while (($#)); do
   esac
 done
 [[ "$editor" == auto || "$editor" == filmcraft || "$editor" == ffmpeg || "$editor" == artcraft ]] || { echo 'Editor must be ffmpeg, artcraft, filmcraft, or auto.' >&2; exit 2; }
+[[ -z "$allow_pending_visual_review" || -n "$stills_only" ]] || { echo '--allow-pending-visual-review requires --stills-only.' >&2; exit 2; }
+[[ -z "$shot_only" || -n "$stills_only" ]] || { echo '--shot-only requires --stills-only.' >&2; exit 2; }
+[[ -z "$chain_source" || -n "$shot_only" ]] || { echo '--chain-source requires --shot-only.' >&2; exit 2; }
+[[ -z "$chain_source" || -n "$chain_source_sha256" ]] || { echo '--chain-source requires --chain-source-sha256.' >&2; exit 2; }
+[[ -z "$chain_source_sha256" || -n "$chain_source" ]] || { echo '--chain-source-sha256 requires --chain-source.' >&2; exit 2; }
 if [[ "$editor" == auto ]]; then
   editor=ffmpeg
   if [[ "$(uname -s)" == Darwin && -x storage/tools/artcraft/photocraft-cli && -x storage/tools/artcraft/filmcraft-cli && -x storage/tools/artcraft/soundcraft-cli && -x storage/tools/artcraft/effectcraft-cli ]]; then
@@ -138,7 +147,7 @@ elif [[ -n "${stills_only:-}" ]]; then
 else
   echo "Step 3/4  Rendering local video to $output (about 5 min per shot on an M1: still, motion, voice, assembly)"
 fi
-python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" $([[ "$editor" == artcraft ]] && echo --prep-stills) ${chain:+$chain} ${cache_only:+$cache_only} ${best_of_3:+$best_of_3} ${skip_vision_gate:+$skip_vision_gate} ${allow_silence:+$allow_silence} ${allow_bad_first:+$allow_bad_first} ${stills:+--stills "$stills"} ${anchor_image:+--anchor-image "$anchor_image"} ${stills_only:+$stills_only}
+python3 scripts/render-any-local.py --scenario "$scenario" --output "$output" $([[ "$editor" == artcraft ]] && echo --prep-stills) ${chain:+$chain} ${cache_only:+$cache_only} ${best_of_3:+$best_of_3} ${skip_vision_gate:+$skip_vision_gate} ${allow_silence:+$allow_silence} ${allow_bad_first:+$allow_bad_first} ${stills:+--stills "$stills"} ${anchor_image:+--anchor-image "$anchor_image"} ${stills_only:+$stills_only} ${shot_only:+--shot-only "$shot_only"} ${chain_source:+--chain-source "$chain_source" --chain-source-sha256 "$chain_source_sha256"} ${allow_pending_visual_review:+$allow_pending_visual_review}
 if [[ -n "${stills_only:-}" ]]; then echo "First frames ready (no motion generated yet)"; exit 0; fi
 t_render=$SECONDS
 echo "Base render complete: $output (not release approved)"

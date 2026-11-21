@@ -1,5 +1,105 @@
 # AI handoff
 
+## Current handover — 2026-11-21: Studio and pipeline work
+
+This is the current code handoff for `handoff/current-work-2026-11-21`, based on `main` at `4ce9f40`. It supersedes the older status snapshots below. The curated source, test, documentation, and app-asset changes are being delivered together in one PR; generated local drafts, reports, outputs, and Python bytecode caches are intentionally excluded.
+
+### Included work
+
+- **Studio UX:** clearer review/error guidance, queue reordering, persistent draft/session helpers, and a lazy-loaded Three.js baby/ball/park preview. The Studio production build succeeds; the 3D chunk is 544 KB minified and emits Vite's size advisory.
+- **Local story continuity:** the scenario path carries a visual identity bible and shot-state progression into prompts. Sequential Studio generation can use the approved first shot as a shared image anchor, with per-shot references retained as overrides and frame hashes recorded in manifests. This is a tested local-path improvement, not a universal continuity guarantee.
+- **Local review and generation tools:** prompt/action gates, shot reference handling, still-selection and cache behavior, review helpers, and focused regression tests were updated.
+- **Hosted motion foundation:** typed motion-engine capabilities and conditioning validation, hosted job dispatch/worker and artifact-transfer components, plus persistent job and spend-ledger repositories with tests. These components are not yet a production Runpod/Wan adapter or an end-to-end remote-render integration.
+- **Studio support assets:** the checked-in reference stills and muse assets used by the current Studio work are included.
+
+### Verification and limits
+
+- Passed: `npm run build`, `npm run lint`, `npm test` (33 files, 154 tests), Node script tests (59), Python script tests (133, using `storage/tools/scenedetect/.venv/bin/python`), and the Studio Vite build.
+- No paid generation was run for this handoff, and no existing export was modified. Do not treat automated visual flags as editorial approval; actual watch/listen review remains required.
+- Continuity still needs a versioned cross-pipeline Story Bible contract, provider capability-aware reference reuse, and cross-shot visual identity validation. The TypeScript visual pipeline does not yet have the same continuity integration as the local Studio path. Do not claim universal coverage or automatically retry paid generations.
+- GPT-6 Luna is not an application model/provider in this repository; do not add provider-specific prompt-cache parameters without verifying a real supported API.
+- Generated scenario drafts, output/review artifacts, benchmark draft files, and modified `.pyc` caches remain local and are not part of this curated PR.
+
+### Next for the receiving agent
+
+1. Review the local continuity prototype and carry the versioned story/identity context into the TypeScript provider-driven path, gating image references on declared provider capabilities.
+2. Add hash-based invalidation and cross-shot review evidence without bypassing existing human release gates.
+3. Keep the hosted motion foundation separate from production until a concrete adapter is integrated and its lifecycle, costs, and artifact verification are tested end to end.
+
+## Previous handover — 2026-11-20: Runpod Wan 2.2 PoC and benchmark
+
+This is a Nov 20 snapshot; the current code handoff is above. The product goal is idea-agnostic video generation: cinematic/warm and realistic looks, 2D/3D animation and cartoons, ASMR or voiced outputs, in both landscape and vertical formats. The Runpod work is a standalone model PoC, **not an integration or deployment of `shorts-app`**. The 10-shot food benchmark is a narrow domain stress test; the three-case quick pilot below is a separate cross-domain directional screen.
+
+### Runpod infrastructure
+
+- Pod `n6oa98v79mgfsf` (`wan22-ti2v5b-comfyui-poc-a40`) is **EXITED**, stopped on 2026-11-20 at the owner's direction to stop and avoid further hourly compute charges. Last read: Secure Cloud, EU-SE-1, A40 48 GB, CUDA 13.2; rate while running was **$0.59/hour**; uptime was about 33 minutes. GPU compute billing has ended. Actual posted billing was not checked.
+- Image was `runpod/comfyui:1.3.3-comfyuiv0.30.0-cuda13.0`; 150 GB container disk, port `8188/http`, no persistent mount. ComfyUI previously returned HTTP 200 on `/system_stats`, detected the A40, and exposed the required Wan nodes.
+- The proxy `https://n6oa98v79mgfsf-8188.proxy.runpod.net` was public and unauthenticated while running; it is not serving while the Pod is stopped. Do not use it as a production endpoint; the hosted-video roadmap says never expose ComfyUI publicly.
+- The Wan files, workflow and smoke MP4 were on ephemeral container storage. Stopping cleared them; there was no persistent mount. A future Wan run must re-download the models/workflow. The smoke MP4 was not downloaded to the repo and is no longer available for visual review.
+- Previous Pod `m6lgnv4vxifpco` (Secure RTX 4090, $0.89/hour) is EXITED after the authorized switch. Its 50 GB host-local persistent `/workspace` disk remains and continues to bill at the stopped-disk rate until that Pod is terminated. It was not terminated.
+- RTX 3090 Community at $0.22/hour was tried twice in EU-CZ-1; both creates returned HTTP 400 for unavailable capacity. No 3090 Pod was created.
+
+### Wan files and smoke render
+
+- Downloaded the official Comfy-Org TI2V-5B workflow dependencies into the matching ComfyUI model folders:
+  - `models/diffusion_models/wan2.2_ti2v_5B_fp16.safetensors` — 9,999,658,848 bytes.
+  - `models/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors` — 6,735,906,897 bytes.
+  - `models/vae/wan2.2_vae.safetensors` — 1,409,400,960 bytes.
+- Sources: [Comfy-Org Wan 2.2 repackaged model](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged) (README declares Apache-2.0), [Wan 2.1 repackaged text encoder](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged), and the [official TI2V-5B ComfyUI workflow](https://github.com/Comfy-Org/workflow_templates/blob/main/templates/video_wan2_2_5B_ti2v.json). The safetensors headers parsed successfully and ComfyUI listed all three model names.
+- Workflow installed at `user/default/workflows/video_wan2_2_5B_ti2v.json`. Required nodes (`UNETLoader`, `CLIPLoader`, `VAELoader`, `Wan22ImageToVideoLatent`, `SaveVideo`, and supporting nodes) are present.
+- Smoke render completed successfully with the user's prompt: “A tiny paper boat drifts through a rain-lit city gutter at dusk; water ripples around it as the camera follows at water level, cinematic natural motion.” Settings: 832×480, 33 frames, 24 fps, 12 steps, CFG 5, seed 6022026.
+- Output before the Pod was stopped: `/workspace/runpod-slim/ComfyUI/output/video/WanPoC_00001_.mp4`, 327,970 bytes, 1.375 seconds. ComfyUI history reported `execution_success`; file existence, nonzero size, and duration were verified. **The video was not watched or visually rated**; it was lost when the Pod stopped, so there is no quality verdict.
+
+### Local benchmark status
+
+- `data/benchmarks/food-motion-testset.json` is frozen as `food-motion-testset-v1` after owner approval. It specifies 10 vertical shots, 576×1024, 65 frames, FLUX.2 Klein stills, local LTX-2.3 MLX q4, and five blind 0–3 scoring axes.
+- This food suite is a narrow stress test, not evidence that the product works across arbitrary ideas. It is vertical, silent motion-only, and photoreal food; it does not cover landscape, 2D/3D animation/cartoon, voice or ASMR. The runner creates both first/last FLUX stills but conditions local LTX motion on the first still only; confirm equivalent conditioning before interpreting any hosted comparison.
+- `scripts/run-food-motion-baseline.py` finished locally with exit code 0 after resuming the existing 20/20 FLUX stills; no paid APIs were used. It generated 9/10 LTX clips: t01–t03 and t05–t10 completed in 437 s, 387 s, 364 s, 363 s, 359 s, 365 s, 349 s, 348 s and 393 s; t04 failed after 23 s with an MLX/GPU resource error and was not retried. The 9 MP4s were verified at 576×1024, 65 frames, 24 fps, 2.708 s each; 9 blind copies and the separate blind key exist. No human blind scoring has been done.
+
+### Full integration plan and status
+
+- Keep `shorts-app` as the controller/orchestrator; the Runpod Pod only ran ComfyUI and Wan. There is still **no Runpod/Wan provider, hosted dispatcher, or app-to-Pod workflow** in `shorts-app`.
+- The approved direction in [the hosted video roadmap](HOSTED_VIDEO_ROADMAP.md) is a `MotionEngine` contract (shot spec in, MP4 + manifest out), local LTX first and remote providers later. Keep finishing, captions, QA, checksums/publish packs, and human review in the existing app pipeline.
+- Implemented, not yet integrated: `src/media/video/MotionEngine.ts` defines typed adapter capabilities, request preflight, registry selection, and a versioned artifact manifest contract. `src/database/HostedSpendLedgerRepository.ts` reserves a run-level cap transactionally, supports idempotent reservation/settlement, retains uncertain charges, and records provider overruns. No concrete adapter or hosted job lifecycle exists yet.
+- The 16-case mixed-domain draft now includes case-specific checks and a working acceptance threshold (explicit human accept, each shared axis >=2/3, checks met, no blocking technical defect). It remains a draft pending reviewer validation and adapter parity checks. Phase 0 still needs a local baseline. The next Phase 1 work is bounded hosted-job lifecycle/dispatch and adapter implementations before any provider comparison.
+- Phase 2: only if the evidence justifies it, build a pinned private/stateless Serverless worker and measure quality/cost. Phase 3: use H200/B200/multi-GPU only for a demonstrated need. Roadmap cost figures are estimates, not measured results; each paid/install step needs its own cap and approval.
+- Production architecture: app/controller dispatches through a private provider queue to a scale-to-zero worker; transfer media using R2 presigned URLs (not base64); worker returns MP4 plus manifest. Do not expose ComfyUI as the production API.
+
+### Capability survey update — 2026-11-20
+
+- Documentation-only survey is recorded in [`data/benchmarks/video-engine-capabilities-draft.json`](../data/benchmarks/video-engine-capabilities-draft.json). It covers local LTX-2.3 MLX, the stopped Wan 2.2 TI2V-5B ComfyUI workflow, separate Wan 2.2 14B ComfyUI workflows, fal Wan 2.2 standard/Turbo endpoints, and Alibaba Wan 3.0. No hosted API was called and no media was generated.
+- Key comparison constraint: the tested Wan 2.2 5B workflow is T2V/first-frame I2V; Wan 2.2 first/last-frame conditioning is a separate 14B workflow. Fal Wan 2.2 standard I2V documents an optional end frame. General reference-image conditioning is not equivalent to a first-frame anchor, so those draft cases are not cross-model quality cases until semantics match.
+- Alibaba Wan 3.0 documents native audio and reference media, but provider/account/region selection and pricing are unresolved. Seed reproducibility and practical limits for local LTX are unverified. The registry remains a draft, not runtime validation.
+
+### Local GPU purchase comparison — Jordan, 2026-11-20
+
+- Recommendation: **do not buy a GPU server based on this small PoC alone**. The owner clarified the total remaining POC budget is only a few dollars in one account plus **$15 in another**, with no further funding, and confirmed in the Runpod console that `anan1993ibbini@gmail.com` had at least $5 in existing credit. The MCP read did not expose the account email or balance; never add funds or charge a payment method. The live Runpod catalog read this turn lists a Secure A40 48 GB at **$0.59/hour** (overall availability MEDIUM; EU-SE-1 LOW), RTX 4090 24 GB at **$0.89/hour** (LOW availability), RTX 3090 24 GB at **$0.50/hour** (NONE), and RTX 5090 32 GB at **$1.39/hour** (NONE).
+- Jordan listings checked: CityCenter's [MSI RTX 3090 24 GB desktop](https://citycenter.jo/msi-meg-aegis-ti5-042-gaming-desktop-12gen-intel-core-i7-k-series-12-cores-w-nvidia-rtx-3090-liquid-cooler) is **JOD 2,199**, out of stock; its [HP RTX 3090 desktop](https://citycenter.jo/omen-by-hp-45l-gt22-0003ne-gaming-desktop-12gen-intel-core-i9-16-cores-w-nvidia-rtx-3090-24gb-liquied-cooler) is **JOD 3,499**, also out of stock. An [OpenSooq RTX 3090 card listing](https://jo.opensooq.com/en/search/288981862) at **JOD 650** is expired. A [PC Circle RTX 5090 32 GB card](https://pccircle.com/product/aorus-rtx-5090-master/) at **JOD 2,949** is out of stock; [JoCell's 5090 card](https://jo-cell.com/products/msi-geforce-rtx-5090-gaming-trio-oc-32gb-gddr7-graphics-card) is **JOD 7,999**, marked in stock. PCYARD's [RTX 5090 desktop](https://store.pcyard.net/product/intel-core-ultra-9-285k-rtx-5090-32gb-64gb-ddr5-ram-ultra-ai-ml-pc-build-os-10965/) at **JOD 9,799** is out of stock. These are seller listings, not a stable market quote; confirm availability, warranty, and delivery before purchase.
+- Hardware fit: [ComfyUI's Wan 2.2 docs](https://docs.comfy.org/tutorials/video/wan/wan2_2) say TI2V-5B can run with native offload at 8 GB VRAM; [LTX's published model guidance](https://ltx.io/blog/open-video-model-vram-requirements) says 24 GB for Wan 2.2 TI2V-5B at 720p with offloading, 32 GB minimum for LTX-2.5, and 80 GB for the single-GPU Wan 2.2 A14B recipe. A 24 GB used RTX 3090 is the lower-cost home tier if acquired with verified warranty/condition; a 32 GB RTX 5090 gives more headroom but the listed Jordan price is not sensible for this PoC. Neither is a replacement for renting 80 GB when a model recipe needs it.
+- Power is not free: [EMRC's residential tariff](https://emrc.gov.jo/Ar/NewsDetails/%D8%A7%D9%84%D8%AA%D9%81%D8%A7%D8%B5%D9%8A%D9%84_%D8%A7%D9%84%D9%83%D8%A7%D9%85%D9%84%D8%A9_%D9%84%D9%84%D8%AA%D8%B9%D8%B1%D9%81_%D8%A7%D9%84%D9%83%D9%87%D8%B1%D8%A8%D8%A7%D8%A6%D9%8A%D8%A9_%D8%A7%D9%84%D8%AC%D8%AF%D9%8A%D8%AF%D8%A9) is **JOD 0.050/kWh** for the first 300 kWh, **0.100** for 301–600 kWh, and **0.200** above 600 kWh. At an illustrative 0.7 kW wall draw, 100 render-hours use about 70 kWh (roughly JOD 3.50–14.00 depending on the household's marginal tier); actual system draw must be metered.
+- Simple break-even warning: the out-of-stock JOD 2,199 RTX 3090 system equals about **5,250 hours** of Secure A40 rental at $0.59/hour and the [Central Bank USD/JOD midpoint](https://www.cbj.gov.jo/ar/Pages/foreignexchangerates) of 0.709, before local electricity, repair, resale, or depreciation. This is not a throughput-equivalent comparison (48 GB A40 versus 24 GB RTX 3090); benchmark jobs per accepted second before deciding. Low or occasional usage favors renting; sustained high utilization may justify a 24 GB custom build.
+
+### Quick comparison rescope — 2026-11-20
+
+- The previous 2–3-working-day estimate was for the complete 16-case benchmark and hosted comparison, not the requested quick POC. The owner approved a three-case screen—realistic people, cinematic landscape, and 2D cartoon—using T2V, one attempt per engine/case, no audio, and a **$5 total Runpod cap from existing credits only**.
+- The six renders and blind pairwise review are complete. Local LTX received the two clear preferences; g03 was unclear. The 12–16-case, 5-second/720p-class suite remains a later, more rigorous phase.
+
+### Quick pilot execution — 2026-11-20
+
+- Local LTX-2.3 MLX q4 produced all three clips in **262.8 s (g02), 254.3 s (g03), and 268.4 s (g06)**; summed render time was 785.5 s (13m 5.5s). The outputs are 73 frames, 24 fps, 3.041667 s each.
+- Wan 2.2 TI2V-5B on A40 produced all three outputs on the first attempt. ComfyUI history reported `DONE` for g02, g03, and g06. Per-clip Wan render time was not instrumented, so no speed comparison is justified.
+- All six files were probed for duration, frame rate, frame count, dimensions, and SHA-256. Wan outputs are 832×480 landscape / 480×832 vertical; local LTX outputs are 832×448 / 448×832 because the distilled two-stage path snaps dimensions to a 64-pixel grid. Quality results must be treated as directional, not resolution-matched.
+- A metadata-stripped, shuffled review set and score template are at `storage/benchmarks/quick-pilot-2026-11-20/blind-review/`; the private mapping is stored separately under `storage/benchmarks/quick-pilot-2026-11-20/private/`.
+- Blind pairwise selections were Option B for all three cases. After revealing the key, g02 and g06 were clear preferences for local LTX. The owner noted that **g03-option-b and the overall g03 result were both unclear**, so do not count g03 as a decisive Wan preference. This is not a detailed five-criterion score or a statistically meaningful winner; the resolution mismatch remains a limitation. No accepted-output cost was calculated; the full-benchmark acceptance rule was selected after this pilot.
+- The test Pod `f2nbsj1pm3nv2a` (Secure A40, CA-MTL-1) was terminated after verified transfer; `get-pod` then returned 404. Pod-specific billing returned no rows. The account-wide 11:00–12:00 UTC bucket showed $0.003472 pod disk and $0 GPU, but cannot attribute the disk charge to this Pod. Based on the Pod's start time, deletion before 11:59:44Z, and $0.59/hour rate, estimated compute was at most about **$0.21**; conservatively under **$0.22** including that full disk bucket. Exact pilot billing remains unconfirmed until Runpod posts a Pod-specific charge.
+
+### Next
+
+1. Validate local LTX and candidate-provider capabilities against the 16 case inputs; finalize common dimensions and conditioning semantics before freezing or generating the suite.
+2. Continue the no-cost integration sequence with bounded hosted-job lifecycle and adapter work. Do not start hosted generation until there is a separate per-run spend cap and approval.
+3. Reconcile actual Runpod billing if a Pod-specific record appears. Do not claim a speed winner: Wan per-clip timing was not captured.
+4. Human-blind-score the nine successful food clips if continuing that narrow stress test; retain t04 as a failure unless separately approved. Revisit GPU purchase only after measured usage and accepted-output cost.
+
 ## 2026-11-16 — Owner reference mix for Arabic recipe (Codex)
 
 - Branch: `feature/arabic-artcraft-recipe`; previous remote HEAD `048b858`. Working tree before this entry: modified recipe JSON and Arabic recipe guide, plus untracked local `outputs/` previews. No change to Claude's checkout or render.
@@ -291,7 +391,7 @@ CAUTIONS: scripts/_retired/ holds old generators incl. another session's story_m
 
 - Branch `feature/artcraft-title-polish` (PR #20), from `1f38b43`.
 - WHY 50/100: technical 30/30 and story 20/20 are already full on the shallot film. The other 50 points are five 0–5 editorial ratings (×2) that `score-local-video.py` only accepts with a reviewer name, six review facts and the SHA-256 of the exact file watched. No assistant may fill these: it cannot listen, and a self-signed review would void the gate. 75 needs ≥13/25 editorial; release (`pass`) needs every rating ≥4 (90/100) and a non-empty `data/published-signatures.json`.
-- NEW `scripts/prereview-local-video.py` (`npm run prereview:video:mac`): re-asks each shot's `visualChecks` questions on the middle frame of that shot in the final MP4 (LTX can morph food after the still gate), checks the final frame for the payoff, compares opening and final dish side by side, measures loudness/true peak/per-shot sound, writes `<video>.contact.png` and `<video>.prereview.json`. Advisory only; adds no points. Unavailable vision answers are reported as unchecked, not failures. A same-kitchen comparison was tried and dropped (qwen3-vl:4b never finished a verdict, twice).
+- NEW `scripts/prereview-local-video.py` (`npm run video:prereview:mac`): re-asks each shot's `visualChecks` questions on the middle frame of that shot in the final MP4 (LTX can morph food after the still gate), checks the final frame for the payoff, compares opening and final dish side by side, measures loudness/true peak/per-shot sound, writes `<video>.contact.png` and `<video>.prereview.json`. Advisory only; adds no points. Unavailable vision answers are reported as unchecked, not failures. A same-kitchen comparison was tried and dropped (qwen3-vl:4b never finished a verdict, twice).
 - NEW `scripts/record-editorial-review.py` (`npm run review:video:mac`): opens the film, shows pre-review flags for the same file hash, asks the six review facts (any "no" records nothing), the five ratings with the fixed questions from `docs/QUALITY_RELEASE_GATE.md`, reviewer and notes; writes `storage/learning/reviews/<stem>.editorial.json` and re-runs the scorer. Non-interactive use needs `--scores` plus `--confirm-watched-and-listened`.
 - `make-local-video.sh` now runs the pre-review after QA (`--skip-vision` follows `--skip-vision-gate`) and prints the review command.
 - VERIFIED on the shallot v7 film (1m35s): audio clear (−15.4 LUFS, −1.8 dBTP, all shots −17 to −18 dB). Flag: payoff — the last second moves the slice onto a plate in a different-looking corner (new bowls, no tray). An end-frame oven false positive (door closed hides the tray) led to the middle-frame rule. Claude's own look at the sheet also sees round bread behind the pan (shot 2) and a shallot topping that reads as beans (shot 3); the model did not flag those.

@@ -9,8 +9,9 @@ each with an action verb, camera movement described relative to the subject, one
 first-frame image, and a sound line.
 
 The refiner never invents food, actions or story. It keeps every positive sentence the writer gave, removes
-negative clauses (which these models do not use as exclusions), and fills only what is missing from the
-studio preset: set, lighting, lens, camera move and mood. Run scripts/prompt-lint.py on the result.
+negative clauses (which these models do not use as exclusions), and fills missing prompt details from the
+scenario's explicit setting first, then the studio preset: set, lighting, lens, camera move and mood.
+Run scripts/prompt-lint.py on the result.
 
   python3 scripts/refine-prompts.py SCENARIO.json [--studio luxury-kitchen] [--output OUT.json | --in-place]
 """
@@ -26,6 +27,8 @@ lint = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(lint)
 
 NEG_CLAUSE = re.compile(r'(?:^|(?<=[.;,]))\s*(?:and\s+)?(?:no|not|without|never|avoid)\b[^.;,]*[.;,]?', re.I)
+STATE_STOP_WORDS = {'held', 'fully', 'inside', 'outside', 'just', 'before', 'after', 'resting', 'rests',
+                    'positioned', 'located', 'placed', 'with', 'the', 'and', 'from', 'over', 'under'}
 
 
 def sentences(text):
@@ -45,7 +48,12 @@ def strip_negations(text):
 def lighting_parts(text):
     return [name for name, rx in lint.LIGHT_PARTS.items() if rx.search(text)]
 
-
+def matches_start_state(prompt, state):
+    terms = {word for word in re.findall(r'[a-z]{4,}', state.lower()) if word not in STATE_STOP_WORDS}
+    if not terms:
+        return True
+    prompt_terms = set(re.findall(r'[a-z]{4,}', prompt.lower()))
+    return len(terms & prompt_terms) >= min(2, len(terms))
 
 def bounded_prompt(text, limit=1000):
     parts = sentences(text)
@@ -56,13 +64,18 @@ def bounded_prompt(text, limit=1000):
         raise ValueError('The main shot sentence exceeds the schema limit; shorten it before refinement.')
     return result
 
-def refine_image(prompt, studio):
+def refine_image(prompt, studio, requested_set=None, start_state=None):
     text = strip_negations(prompt)
+    if start_state and not matches_start_state(text, start_state):
+        state = start_state.rstrip('.!?')
+        text = f'First frame: {state}.'
     extra = []
-    set_words = re.findall(r'[a-z]{5,}', studio.get('set', '').lower())
-    if sum(w in text.lower() for w in set(set_words)) < 3 and studio.get('set'):
-        extra.append('The setting is ' + studio['set'].rstrip('.')[0].lower() + studio['set'].rstrip('.')[1:] + '.')
-    if len(lighting_parts(text)) < 2 and studio.get('lighting'):
+    setting = requested_set or studio.get('set', '')
+    set_words = set(re.findall(r'[a-z]{5,}', setting.lower()))
+    if set_words and sum(w in text.lower() for w in set_words) < min(3, len(set_words)):
+        extra.append('The setting is ' + setting.rstrip('.')[0].lower() + setting.rstrip('.')[1:] + '.')
+    requested_lighting = lighting_parts(requested_set or '')
+    if len(set(lighting_parts(text) + requested_lighting)) < 2 and studio.get('lighting'):
         extra.append(studio['lighting'].rstrip('.') + '.')
     if not lint.LENS.search(text) and studio.get('camera'):
         extra.append(studio['camera'].rstrip('.') + '.')
@@ -96,13 +109,15 @@ def refine_motion(prompt, studio):
     return bounded_prompt(current())
 
 
-FRAME_HINTS = (('oven', r'\b(?:in|into|out of|from) the (?:\w+ )?oven\b|\boven (?:door|rack)\b|\bopen (?:\w+ )?oven\b'),
+FRAME_HINTS = (('oven', r'\b(?:in|inside|into|out of|from)\s+(?:the|a|an)\s+(?:\w+\s+)?oven(?!-safe\b)\b|\boven (?:door|rack|entrance)\b|\bopen (?:\w+ )?oven\b'),
                ('pan', r'\b(?:in|into) the (?:\w+ )?(?:skillet|pan|saucepan)\b|\b(?:stove|hob|sizzl\w*|sear\w*)\b'))
 
 
 def pick_frame(shot, frames):
     """Kitchen plate for this shot: oven, pan or prep, from what the shot shows."""
-    text = shot['imagePrompt'] + ' ' + shot['motionPrompt']
+    state = shot.get('sceneState') or {}
+    text = ' '.join(str(shot.get(key, '')) for key in ('imagePrompt', 'motionPrompt')) + ' '
+    text += ' '.join(str(state.get(key, '')) for key in ('before', 'action'))
     for name, pattern in FRAME_HINTS:
         if name in frames and re.search(pattern, text, re.I):
             return name
@@ -112,12 +127,15 @@ def pick_frame(shot, frames):
 def refine(data, studio):
     changes = []
     frames = studio.get('referenceFrames') or {}
+    requested_set = (data.get('creativeBrief') or {}).get('set') or (data.get('storyArc') or {}).get('setting')
     for number, shot in enumerate(data['plan']['shots'], 1):
-        if frames and not shot.get('studioFrame') and pick_frame(shot, frames):
-            shot['studioFrame'] = pick_frame(shot, frames)
-            changes.append({'shot': number, 'field': 'studioFrame', 'before': None, 'after': shot['studioFrame']})
+        inferred_frame = pick_frame(shot, frames) if frames else None
+        if inferred_frame and shot.get('studioFrame') != inferred_frame:
+            previous_frame = shot.get('studioFrame')
+            shot['studioFrame'] = inferred_frame
+            changes.append({'shot': number, 'field': 'studioFrame', 'before': previous_frame, 'after': inferred_frame})
         for key, fn in (('imagePrompt', refine_image), ('motionPrompt', refine_motion)):
-            new = fn(shot[key], studio)
+            new = fn(shot[key], studio, requested_set, (shot.get('sceneState') or {}).get('before')) if key == 'imagePrompt' else fn(shot[key], studio)
             if new != shot[key]:
                 changes.append({'shot': number, 'field': key, 'before': shot[key], 'after': new})
                 shot[key] = new
@@ -147,8 +165,8 @@ def main():
         args.scenario.name.replace('.local-scenario.json', '.refined.local-scenario.json')))
     data['promptRefinement'] = {'tool': 'scripts/refine-prompts.py', 'studio': studio_id,
                                 'changedFields': len(changes),
-                                'note': 'Negative clauses removed; missing set, lighting, lens, camera move and mood '
-                                        'filled from the studio. Food, actions and story are the writer\'s.'}
+                                'note': 'Negative clauses removed; missing setting comes from the scenario first, '
+                                        'then studio details fill gaps. Food, actions and story are the writer\'s.'}
     target.write_text(json.dumps(data, indent=2, ensure_ascii=False) + '\n')
     after = lint.lint(str(target))
     print(f'Refined {len(changes)} prompt fields -> {target}')

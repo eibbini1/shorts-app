@@ -15,7 +15,7 @@ from pathlib import Path
 
 
 MODEL = 'qwen3-vl:4b'
-PROMPT_VERSION = 12
+PROMPT_VERSION = 13
 URL = 'http://127.0.0.1:11434/api/chat'
 UNCERTAIN_REASON = re.compile(
     r'\b(?:appears?\s+to\s+be|seems?\s+to\s+be|possibly|maybe|perhaps|could\s+be|might\s+be|'
@@ -82,7 +82,7 @@ def review(image, prompt, must_show=(), must_not_show=(), model=MODEL, cache_dir
                 'keep_alive': 0 if last else '30s',
                 # Qwen3-VL can spend its first tokens thinking even with
                 # think=false. Leave enough room for the bounded JSON verdict.
-                'options': {'temperature': 0, 'num_predict': 2048, 'num_ctx': 4096},
+                'options': {'temperature': 0, 'num_predict': 4096, 'num_ctx': 8192},
                 'messages': [{'role': 'user', 'content': question, 'images': [image_b64]}]}
         request = urllib.request.Request(URL, data=json.dumps(body).encode(),
                                          headers={'Content-Type': 'application/json'})

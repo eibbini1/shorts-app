@@ -36,7 +36,10 @@ def is_food_film(scenario):
 
 
 def ending_question(scenario):
-    ending = str(scenario.get('requestedEnding') or '').strip()
+    plan = scenario.get('plan') or {}
+    shots = plan.get('shots') or []
+    scene_state = shots[-1].get('sceneState') or {} if shots else {}
+    ending = str(scenario.get('requestedEnding') or plan.get('payoff') or scene_state.get('after') or '').strip()
     return f'The film should end like this: "{ending[:180]}". Does this final image already show that outcome, not just the build-up to it?' if ending else None
 # A same-kitchen comparison was tried and dropped: qwen3-vl:4b never finished a verdict on it (2026-11-16).
 
@@ -78,6 +81,15 @@ def shot_questions(scenario, checks, index):
         return list(questions)
     subject = scenario['plan']['shots'][index]['imagePrompt'].split('.')[0][:180]
     return [f'Does this image show {subject}?']
+
+
+def motion_questions(scenario, checks, index):
+    shot = scenario['plan']['shots'][index]
+    scene_state = shot.get('sceneState') or {}
+    action = str(scene_state.get('action') or '').strip()
+    if action:
+        return [f'Does this frame plausibly show the planned action underway: "{action[:180]}"?']
+    return shot_questions(scenario, checks, index)
 
 
 def audio_flags(integrated, true_peak, shot_means):
@@ -223,20 +235,22 @@ def main():
     audio = audio_flags(integrated, peak, means)
     motion = [shot_motion(video, a, b) for a, b in windows]
     shot_results, payoff, continuity = [], None, None
+    expected_ending = ending_question(scenario)
     if not args.skip_vision:
         vision = load_vision()
         cache = video.parent / 'prereview-cache'
-        questions = [shot_questions(scenario, checks, index) for index in range(len(windows))]
+        middle_questions = [motion_questions(scenario, checks, index) for index in range(len(windows))]
         # Middle frame: the shot's action is under way. An action that completes (an oven door closing)
         # legitimately hides the subject by the last frame, so only the final shot is checked at its end.
         for index, frame in enumerate(mids):
-            shot_results.append(ask(vision, frame, questions[index], cache))
-        extra = ending_question(scenario)
-        payoff = ask(vision, ends[-1], questions[-1] + ([extra] if extra else []), cache)
+            shot_results.append(ask(vision, frame, middle_questions[index], cache))
+        payoff = ask(vision, ends[-1], [expected_ending], cache) if expected_ending else None
         if len(windows) > 1:
             continuity = ask(vision, side_by_side(starts[0], ends[-1], work / 'food.png'),
                              [CONTINUITY_QUESTION if is_food_film(scenario) else SUBJECT_QUESTION], cache)
     flags, unchecked = categorize(shot_results, payoff, continuity, audio)
+    if not expected_ending:
+        unchecked.append('final frame: no explicit ending outcome in the plan')
     for number, value in enumerate(motion, 1):
         if value is not None and value < MIN_MOTION:
             flags['realism'].append(f'shot {number} barely moves (motion {value}, real shots here measure 3.7-18.9): regenerate it for a new take')

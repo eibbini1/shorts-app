@@ -1,0 +1,13 @@
+{
+  "createdAt": "2026-11-14T20:06:47.741259+00:00",
+  "model": "mlx-community/flux2-klein-4b-4bit",
+  "revision": "860e87183ceb29e39627c0612ebd66d8ea66e68c",
+  "runtime": "mflux==0.24.0",
+  "prompt": "Photorealistic editorial food photograph of a crisp-skinned salmon fillet with a glossy hot honey glaze, chili flakes and a lime wedge in a black skillet, honey dripping from a spoon. Bright airy home kitchen, soft natural window light, white marble counter, shallow depth of field, shot on an 85mm lens, appetizing natural texture, steam visible, no people, no text, no logos.",
+  "seed": 5001,
+  "width": 768,
+  "height": 1152,
+  "source": null,
+  "sourceSha256": null,
+  "outputSha256": "cddc6d164b756df2f607d7e7b53cf6894cb97ecf14713c4ae18bc0567f9d3197"
+}

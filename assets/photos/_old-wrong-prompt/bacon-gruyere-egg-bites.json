@@ -1,0 +1,13 @@
+{
+  "createdAt": "2026-11-14T18:39:00.943270+00:00",
+  "model": "mlx-community/flux2-klein-4b-4bit",
+  "revision": "860e87183ceb29e39627c0612ebd66d8ea66e68c",
+  "runtime": "mflux==0.24.0",
+  "prompt": "Photorealistic editorial food photograph of a white bowl of creamy pasta in a smooth pale cottage cheese sauce with cracked black pepper and grated parmesan, a fork twirling. Bright airy home kitchen, soft natural window light, white marble counter, shallow depth of field, shot on an 85mm lens, appetizing natural texture, steam visible, no people, no text, no logos.",
+  "seed": 5002,
+  "width": 768,
+  "height": 1152,
+  "source": null,
+  "sourceSha256": null,
+  "outputSha256": "26c8f38a0614e9a69da61e39b1361436654b89453ee8e3470cefb1c82493a60d"
+}

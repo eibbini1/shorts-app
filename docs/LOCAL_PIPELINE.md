@@ -22,7 +22,8 @@ Options for `--scenario`:
 | Option | What it does |
 |---|---|
 | `--stills FOLDER` | Use `shot-01.png` ... `shot-NN.png` (jpg, webp also fine) from the folder instead of FLUX stills. Use for a recurring character (e.g. Flow stills for Dr. Tod). Missing shots fall back to FLUX. |
-| `--chain-images` | Passed to the renderer to chain shot images (see `scripts/render-any-local.py --help`). |
+| `--anchor-image IMAGE` | Use the supplied image as the shared identity reference for every generated shot. Without it, the first shot's selected frame anchors later generated shots. |
+| `--chain-images` | Explicitly use each preceding motion clip's end frame instead of the fixed shared identity reference; prepare shots sequentially. |
 | `--allow-repeat` | Render even when the topic repeats a published or scheduled Short. |
 
 ## What runs, in order

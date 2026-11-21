@@ -6,7 +6,7 @@ Writes outputs/ID.sfx.mp4 (picture copied, audio remixed) and ID.sfx.wav. Effect
 the scenario declares a local field recording, whose source and licence must be documented. Effects sit low and are ducked under the narration
 (the voice track in the work folder is the ducking key), then the mix is loudness-normalised again.
 Cue words in a shot's `sound` or action prompts: sizzle, crunch/bite, chew, pour, slice, scrape/spread, plate clink,
-chime/shimmer, pat, bubble/pop, squeak, fizz and room tone. These are original synthesized Foley approximations.
+chime/shimmer, bounce, pat, bubble/pop, squeak, fizz and room tone. These are original synthesized Foley approximations.
 """
 import argparse
 import json
@@ -97,6 +97,27 @@ def pat(seconds, rng):
     return out
 
 
+def bounce(seconds, rng):
+    """A ball's diminishing impacts, with each rebound arriving sooner and softer."""
+    out = np.zeros(round(seconds * RATE), dtype=np.float32)
+    at, gap, amplitude = 0.12, 0.52, 1.0
+    for _ in range(8):
+        if at >= seconds - 0.05 or amplitude < 0.035:
+            break
+        length = min(0.12, seconds - at)
+        t = t_axis(length)
+        envelope = np.exp(-38 * t)
+        tone = np.sin(2 * np.pi * 105 * t) * envelope
+        texture = lowpass(noise(length, rng), 0.18) * envelope
+        hit = (tone * 0.7 + texture * 0.3) * amplitude
+        start = round(at * RATE)
+        out[start:start + len(hit)] += hit[:len(out) - start]
+        at += gap
+        gap *= 0.78
+        amplitude *= 0.58
+    return out
+
+
 def fizz(seconds, rng):
     hiss = highpass(noise(seconds, rng), 0.985) * 0.12
     clicks = (rng.random(len(hiss)) > 0.9992).astype(np.float32)
@@ -173,6 +194,7 @@ CUES = [(r'\brain', 'rain'), (r'\b(splash\w*|puddle\w*|ripple\w*)\b', 'splash'),
         (r'\b(click\w*|tick\w*|mechanical|gear\w*|servo\w*|beep\w*)\b', 'click'),
         (r'\b(rustl\w*|leaves|foliage|grass|bloom\w*|sprout\w*)\b', 'rustle'),
         (r'\b(footstep\w*|pitter\w*|paws?|stomp\w*|hoof\w*|paddl\w*)\b', 'pat'),
+        (r'\bbounc\w*', 'bounce'),
         (r'\b(breez\w*|wind\w*|gust\w*)\b', 'whoosh'),
         (r'\bsizzl', 'sizzle'), (r'\b(crunch|crispy|crisp|bite|biting|crack|snap)\b', 'crunch'),
         (r'\b(chew\w*|munch\w*)\b', 'chew'), (r'\b(pour\w*|drizzl\w*|stream of sauce)\b', 'pour'),
@@ -184,7 +206,7 @@ CUES = [(r'\brain', 'rain'), (r'\b(splash\w*|puddle\w*|ripple\w*)\b', 'splash'),
         (r'\b(ambience|ambient|room tone|hum)\b', 'room')]
 GAIN = {'sizzle': 0.15, 'crunch': 0.16, 'chew': 0.08, 'pour': 0.13, 'slice': 0.12, 'scrape': 0.10, 'clink': 0.10,
         'shimmer': 0.16, 'chime': 0.18, 'pat': 0.18, 'squeak': 0.12, 'pop': 0.18, 'whoosh': 0.06, 'fizz': 0.13, 'room': 0.08,
-        'rain': 0.12, 'splash': 0.14, 'click': 0.16, 'rustle': 0.12}
+        'rain': 0.12, 'splash': 0.14, 'click': 0.16, 'rustle': 0.12, 'bounce': 0.16}
 
 
 def cues_for(text):
@@ -227,8 +249,8 @@ def audit_cues(data):
         explicit = shot.get('sound', '').strip()
         names = planned_cues(shot)
         print(f'Shot {number} sound: {", ".join(names) or "none"}')
-        if mode == 'asmr' and (not explicit or not cues_for(explicit)):
-            problems.append(f'shot {number}: ASMR sound line is empty or has no supported Foley cue')
+        if mode == 'asmr' and (not explicit or not cues_for(explicit) or not names):
+            problems.append(f'shot {number}: ASMR sound line needs a supported Foley cue that fits this scene')
         if recordings_only:
             for name in names:
                 if name not in samples:
@@ -342,6 +364,7 @@ def build(shots, total, seed=311, foley_samples=None, continuous_room=False, rec
             elif name == 'clink': put(chime(1300, 0.35), at + 0.5, GAIN[name])
             elif name == 'shimmer': put(shimmer(length - 0.3, rng), at + 0.3, GAIN[name])
             elif name == 'chime': put(chime(), at + (length - 1.8 if number == len(shots) else 0.4), GAIN[name])
+            elif name == 'bounce': put(bounce(length, rng), at, GAIN[name])
             elif name == 'pat': put(pat(length, rng), at, GAIN[name])
             elif name == 'whoosh': put(whoosh(1.1, rng), at + 0.5, GAIN[name])
             elif name == 'squeak': put(squeak(), at + 1.2, GAIN[name])

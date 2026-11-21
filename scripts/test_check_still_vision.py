@@ -68,7 +68,7 @@ class VisionGateTests(unittest.TestCase):
                 report, _ = vision.review(image, 'A chef hand, holding one dumpling above a dark bowl. Warm light.')
                 sent = json.loads(call.call_args.args[0].data)
                 self.assertIn('dumpling', sent['messages'][0]['content'])
-                self.assertEqual(sent['options']['num_predict'], 2048)
+                self.assertEqual(sent['options']['num_predict'], 4096)
                 self.assertIn('/no_think', sent['messages'][0]['content'])
                 self.assertEqual(report['diagnostics'][0]['generatedTokens'], 117)
 

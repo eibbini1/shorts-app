@@ -17,3 +17,9 @@ export function exportReviewStatus({ failed = [], technicalPassed = false, revie
   }
   return { tone: 'ok', message: 'Technical checks passed. Watch and listen before publishing.' };
 }
+
+export function releaseQualityStatus(report, currentVideoSha) {
+  if (!report) return { verified: false, status: 'missing' };
+  if (!currentVideoSha || report.reviewedVideoSha256 !== currentVideoSha) return { verified: false, status: 'unverified' };
+  return { verified: true, status: typeof report.status === 'string' ? report.status : 'unknown' };
+}

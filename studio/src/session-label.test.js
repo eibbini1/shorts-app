@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findMatchingSession, sessionDisplayName } from './session-label.js';
+import { filterSessions, findMatchingSession, sessionDisplayName } from './session-label.js';
 
 describe('session labels and duplicate detection', () => {
   const sessions = [
@@ -22,5 +22,12 @@ describe('session labels and duplicate detection', () => {
 
   it('does not flag short prompts as duplicate projects', () => {
     expect(findMatchingSession('toast', [{ id: '1', prompt: 'toast' }])).toBeNull();
+  });
+
+  it('filters projects by name and prompt words without case or punctuation sensitivity', () => {
+    expect(filterSessions(sessions, 'TOMATO, pasta').map((session) => session.id)).toEqual(['1000000001', '1000000002']);
+    expect(filterSessions(sessions, 'thick sauce').map((session) => session.id)).toEqual(['1000000001']);
+    expect(filterSessions(sessions, 'unmatched')).toEqual([]);
+    expect(filterSessions(sessions, ' ')).toEqual(sessions);
   });
 });
