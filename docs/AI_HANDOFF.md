@@ -862,3 +862,9 @@ Next: implement audio fixes first (cheap, no GPU), then ending check.
 - VERIFIED (Linux VM): node --test 72/72; python test_*.py 30/30 (SHORTS_MEDIA_PY=system python3); tsc --noEmit pass; characterization tests fail on injected regressions (5 failures).
 - UNVERIFIED / BLOCKED: Studio Vite build, vitest, eslint (VM npm 403 for `three`); real Studio event flow; spare-port draft/stills run. Run on Mac: `cd studio && npm run build && npm run lint && npm test`.
 - Next: verify on Mac, then commit (approval needed); phases 2–5 need separate approval; redo iShorts UI/UX brief on current main afterwards.
+
+## 2026-11-21 — Claude — iShorts UI/UX, slice 1 (branch ishorts-uiux, stacked on phase1-events / PR #26)
+- IMPLEMENTED + VERIFIED in browser fixtures (Chrome via Playwright, 1440x900 and 390x844, 4 states: empty, plan, blocked, export; no horizontal overflow): amber primary/selection/focus in the default dark theme; one primary action on a plan awaiting first frames (composer button becomes secondary); visible Guided/Manual and Auto-mode explanations; sidebar day group no longer shows "Invalid Date".
+- VERIFIED: studio vite build + vitest 26/26 (scratch copy with `three` stubbed; real `npm ci` is blocked by a 403 on `three`).
+- Tooling: `scripts/ui-fixture/{make_fixture.py,shoot.py,build_ui.sh}` — isolated fixture root, spare port (STUDIO_PORT=8799), test tokens only. Screenshots are gitignored (*.png).
+- PLANNED / not done: brief sections 2 (shot cards retakes/audio/RTL), 3 (progress+recovery, duplicate/refresh tests, creator isolation), 4 (export review step), keyboard/contrast audit, Arabic RTL preview, live-port rollout (separate step).
