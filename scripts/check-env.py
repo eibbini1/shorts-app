@@ -5,6 +5,7 @@
 
 Exit 1 when something required is missing. Takes about a second.
 """
+import os
 import argparse
 import shutil
 import subprocess
@@ -45,7 +46,7 @@ def main():
         'FLUX model': ROOT / 'storage/models/flux2-klein-4b-4bit',
         'LTX video tool': ROOT / 'storage/tools/ltx-2-mlx/.venv/bin/ltx-2-mlx',
         'Kokoro voice (node)': ROOT / 'storage/tools/kokoro/node_modules/kokoro-js',
-        'Soundtrack python': ROOT / 'storage/tools/ComfyUI/.venv/bin/python',
+        'Soundtrack python': Path(os.environ.get('SHORTS_MEDIA_PY') or (ROOT / 'storage/tools/ComfyUI/.venv/bin/python')),
     }
     for name, path in needed.items():
         report(path.exists(), name, f'missing {path.relative_to(ROOT)}; run the setup script for it (scripts/setup-*.sh)')

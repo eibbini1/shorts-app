@@ -3,6 +3,7 @@ import { LearnedCard, RenderTimer, IdeaHelper, Player, ComparePanel, FramesBlock
 import { filterSessions, findMatchingSession, sessionDisplayName } from './session-label.js';
 import { readComposerDraft, readPreflightApproval, writeComposerDraft, writePreflightApproval } from './draft-storage.js';
 import { planPromptChanges, repairPreviewChanges } from './review-recommendations.js';
+import { notesOf, isBlocked, choiceOf, nowLine, progressOf as progressOfLines } from './pipeline-lines.js';
 
 const BabyBall3DPreview = lazy(() => import('./BabyBall3DPreview.jsx'));
 
@@ -64,15 +65,7 @@ function useElapsed(job) {
   return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
 }
 
-function progressOf(job) {
-  const lines = job.lines || [];
-  let best = null;
-  for (const l of lines) {
-    const m = l.match(/(?:beat|clip|shot|still)s?\s+(\d+)\s*\/\s*(\d+)/i) || l.match(/(\d+)\s*\/\s*(\d+)\b/);
-    if (m && +m[2] > 0 && +m[1] <= +m[2]) best = { n: +m[1], of: +m[2], label: l.slice(0, 70) };
-  }
-  return best;
-}
+const progressOf = (job) => progressOfLines(job.lines);
 
 const dayLabel = (t) => {
   const d = new Date(t); const today = new Date(); today.setHours(0, 0, 0, 0);
@@ -198,7 +191,7 @@ function PlanCard({ job, idea, onStills, onReference, disabled, notes }) {
       {plan.hook && <p><b>Hook:</b> {plan.hook}</p>}
       {plan.payoff && <p><b>Payoff:</b> {plan.payoff}</p>}
       <p className="muted">{shots.length} shots · {total}s · render estimate about {fmt(planEstimate(clipsOf(shots)).mid)} ({fmt(planEstimate(clipsOf(shots)).low)} to {fmt(planEstimate(clipsOf(shots)).high)}) if nothing is retried</p>
-      <ShotPlan shots={shots} notes={notes} />
+      <ShotPlan shots={shots} notes={notes} events={job.events} />
       {needsPromptChangeApproval && <section className="preflight-fixes" aria-label="Prompt changes to approve">
         <h4>Prompt changes to review</h4>
         {repairPromptChanges.length > 0 && <>
@@ -364,17 +357,6 @@ const TIPS = [
   'Tip: 10 seconds is two or three shots. Keep one clear action per shot.',
   'Tip: the Setting box overrides the scene, e.g. "a rainy rooftop garden".',
 ];
-
-function nowLine(lines) {
-  const p = [...(lines || [])].reverse().find((l) => String(l).includes('[progress]'));
-  if (!p) return 'Getting ready...';
-  const m = String(p).split('[progress]')[1] || '';
-  const parts = m.split('|').map((x) => x.trim());
-  const clips = parts.find((x) => /motion clips/.test(x)) || '';
-  const what = parts.find((x) => /rendering|still|FLUX|voice|sound|finish/i.test(x)) || parts[3] || '';
-  const left = parts.find((x) => /remaining/.test(x)) || '';
-  return [what, clips && 'done: ' + clips.replace(' motion clips', ' clips'), left].filter(Boolean).join(' · ');
-}
 
 function RenderLive({ job, plan, sessions }) {
   const [files, setFiles] = useState({ stills: [], clips: [] });
@@ -600,11 +582,11 @@ export default function App() {
   const logRef = useRef(null);
   useEffect(() => { if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight; }, [job.lines?.length, showLog]);
   // A provisional QA score only means a human rating is pending; it is not a block.
-  const notes = (job.lines || []).filter((l) => /^(BLOCKED|REVIEW|WARNING|Fixed automatically)/.test(l)).map((l) => (/^BLOCKED:.*provisional score/.test(l) ? 'REVIEW: waiting for your rating (thumbs up or down below)' : l));
-  const blocked = notes.some((l) => l.startsWith('BLOCKED'));
+  const notes = notesOf(job.lines);
+  const blocked = isBlocked(notes);
   const busy = anyRunning || sending;
   const phase = jobState(job, blocked, live.busyElsewhere);
-  const choice = ((job.lines || []).find((l) => l.startsWith('NEEDS-CHOICE: ')) || '').slice(14);
+  const choice = choiceOf(job.lines);
 
   // Auto mode can prepare a plan, but attended sequencing pauses for every explicit shot-frame approval.
   useEffect(() => {
@@ -768,7 +750,7 @@ export default function App() {
               {job.status === 'failed' && !blocked && <p className="bad">{job.technicalQa?.status === 'failed' ? 'The final file failed technical QA.' : job.error}</p>}
               {notes.length > 0 && <ul className="notes">{notes.filter((n) => !(choice && n.startsWith('BLOCKED'))).map((n, i) => <li key={i} className={n.startsWith('BLOCKED') ? 'bad' : n.startsWith('Fixed') ? 'good' : 'muted'}>{n.startsWith('Fixed') ? '✓ ' + n : n}</li>)}</ul>}
               {['failed', 'cancelled', 'interrupted'].includes(job.status) && job.kind === 'draft' && !choice && <button className="primary" disabled={busy} onClick={retryPlanning}>Retry planning in this project</button>}
-              {choice && job.status !== 'running' && <BlockedCard lines={job.lines || []} choice={choice} busy={anyRunning} onRetry={() => draftWith({ retrySessionId: job.id, prompt: job.options?.storyPrompt || job.prompt, originalPrompt: job.options?.originalPrompt || job.prompt }, { ignoreDuplicate: true })} onAnyway={() => draftWith({ allowRepeat: true, allowDuplicate: true }, { ignoreDuplicate: true })} onEdit={() => document.querySelector('.composer textarea')?.focus()} />}
+              {choice && job.status !== 'running' && <BlockedCard lines={job.lines || []} events={job.events} choice={choice} busy={anyRunning} onRetry={() => draftWith({ retrySessionId: job.id, prompt: job.options?.storyPrompt || job.prompt, originalPrompt: job.options?.originalPrompt || job.prompt }, { ignoreDuplicate: true })} onAnyway={() => draftWith({ allowRepeat: true, allowDuplicate: true }, { ignoreDuplicate: true })} onEdit={() => document.querySelector('.composer textarea')?.focus()} />}
               {job.status === 'cancelled' && <p className="muted">Stopped.</p>}
               {job.status === 'interrupted' && <p className="bad">{job.error}</p>}
               {job.sequence?.continuationError && <p className="bad">{job.sequence.continuationError}</p>}

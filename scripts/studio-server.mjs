@@ -8,6 +8,7 @@ import { createIdeaService } from './studio-ideas.mjs';
 import { createIdeaRefiner } from './studio-refine-idea.mjs';
 import { inspectExport, fileHash } from './studio-export-review.mjs';
 import { blockerReasons, classifyGateLine, gateEventKey } from './studio-learning-signals.mjs';
+import { EVENT_PREFIX, parseEventLine as parseEvent } from './pipeline-events.mjs';
 import { buildLearningContext } from './studio-learning-memory.mjs';
 import { createSessionId, draftIdleTimeoutMs, draftTimeoutMs, normalizeSessionPrompt, sessionTitle } from './studio-session-utils.mjs';
 import crypto from 'node:crypto';
@@ -57,7 +58,7 @@ const STEP_RULES = [
   [/final-file|qa\b|verified|contact sheet/i, 'Quality checks'],
 ];
 
-const snap = (x = job) => x && { id: x.id, user: x.user, name: x.name, prompt: x.prompt, options: x.options, createdAt: x.createdAt, updatedAt: x.updatedAt, kind: x.kind, status: x.status, startedAt: x.startedAt, unattendedRun: x.unattendedRun, steps: x.steps, lines: x.lines.slice(-200), scenario: x.scenario, plan: x.plan, sequence: x.sequence || null, referenceFrames: x.referenceFrames || [], video: x.video, previousVideo: x.previousVideo, technicalQa: x.technicalQa, error: x.error, attempts: x.attempts || [] };
+const snap = (x = job) => x && { id: x.id, user: x.user, name: x.name, prompt: x.prompt, options: x.options, createdAt: x.createdAt, updatedAt: x.updatedAt, kind: x.kind, status: x.status, startedAt: x.startedAt, unattendedRun: x.unattendedRun, steps: x.steps, lines: x.lines.slice(-200), events: (x.events || []).slice(-100), scenario: x.scenario, plan: x.plan, sequence: x.sequence || null, referenceFrames: x.referenceFrames || [], video: x.video, previousVideo: x.previousVideo, technicalQa: x.technicalQa, error: x.error, attempts: x.attempts || [] };
 const persist = (x, touch = true) => { if (touch) x.updatedAt = Date.now(); x.lastSave = Date.now(); try { fs.writeFileSync(path.join(SESS_DIR, x.id + '.json'), JSON.stringify({ ...snap(x), requestIds: x.requestIds || [] })); } catch { /* disk issue: keep running */ } };
 const summary = (x) => ({ id: x.id, name: x.name, prompt: x.prompt, storyPrompt: x.options?.storyPrompt || '', createdAt: x.createdAt, updatedAt: x.updatedAt, status: x.status, kind: x.kind, hasVideo: Boolean(x.video || x.previousVideo), attemptCount: (x.attempts || []).length });
 const canSee = (user, x) => !x || !user || user.role === 'owner' || x.user === user.name;
@@ -77,7 +78,7 @@ function legacyBrief(session) {
   return candidates[0]?.answers || null;
 }
 const view = (user, x = job) => !x ? { status: 'idle' } : canSee(user, x) ? snap(x)
-  : { id: 'other', name: 'Another video', prompt: '', options: {}, status: x.status, kind: x.kind, startedAt: x.startedAt, steps: [], lines: [], busyElsewhere: true };
+  : { id: 'other', name: 'Another video', prompt: '', options: {}, status: x.status, kind: x.kind, startedAt: x.startedAt, steps: [], lines: [], events: [], busyElsewhere: true };
 const emit = () => { for (const c of clients) c.write(`data: ${JSON.stringify(view(c.user))}\n\n`); };
 
 function busyReason() {
@@ -366,6 +367,7 @@ function start(kind, args, extra = {}) {
       options: { ...(x.options || {}) },
       steps: [...(x.steps || [])],
       lines: [...(x.lines || [])],
+      events: [...(x.events || [])],
       error: x.error || null,
       scenario: x.scenario || null,
       plan: x.plan || null,
@@ -378,7 +380,7 @@ function start(kind, args, extra = {}) {
   if (extra.requestId && !x.requestIds.includes(extra.requestId)) x.requestIds.push(extra.requestId);
   if (extra.options) x.options = extra.options;
   if (extra.sequence) x.sequence = extra.sequence;
-  Object.assign(x, { kind, status: 'running', startedAt, steps: [], lines: [], error: null, timedOut: false,
+  Object.assign(x, { kind, status: 'running', startedAt, steps: [], lines: [], events: [], error: null, timedOut: false,
     unattendedRun: extra.unattended === true });
   if (kind === 'render' || kind === 'stills' || kind === 'sequence-motion') { if (kind === 'render') {
       if (x.video && x.technicalQa?.status === 'passed') x.previousVideo = x.video;
@@ -427,6 +429,7 @@ function start(kind, args, extra = {}) {
     for (const raw of parts) {
       const line = raw.replace(/\x1b\[[0-9;]*[A-Za-z]/g, '').trim();
       if (!line) continue;
+      if (line.startsWith(EVENT_PREFIX)) { const event = parseEvent(line); if (event) x.events.push({ ...event, at: Date.now() }); continue; } // structured, kept out of the human log
       x.lines.push(line);
       const verified = /^Studio verified export: (outputs\/[^/\\]+\.mp4)$/.exec(line);
       if (verified) verifiedExport = verified[1];

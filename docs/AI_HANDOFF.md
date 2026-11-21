@@ -847,3 +847,18 @@ Next: implement audio fixes first (cheap, no GPU), then ending check.
 - DUPLICATE HISTORY: `/api/sessions` shows separate historical records for repeated prompts, including halloumi sessions `1794989792548` and `1794990312319`, and pear-tart sessions `1794987030237` and `1794987160442`. Preserve these records. Current code rejects an exact duplicate new idea unless explicitly allowed; historical duplicates were not collapsed.
 - UX GAP: `ExportReview` shows raw automatic flags. First-frame review has bounded local correction; post-render retake controls are currently limited to low-motion shots. There is no tailored recommendation or one-click repair for continuity, realism, or payoff flags. Checkpoint review and thumbs record human evidence but do not repair the export or update model weights. The pizza screen also shows narration text while the export is marked ASMR with voice disabled; check whether this is only plan display or an audio-mode UI defect.
 - NEXT: implement user-facing, flag-specific recommendations and a safe repair path that previews plan changes before expensive rendering. Repair the plan/action/question mismatch before retrying; retain the old export and history. Then create the user-approved 60-second pineapple/cheese continuation in this same project and verify its end frame shows the finished topped, baked pizza. Reassess duplicate-session prevention against new attempts; do not promise a zero-failure guarantee.
+
+## 2026-11-21 14:30 — Claude (architecture audit, read-only)
+- Objective: architecture audit + refactoring plan per owner brief; **no code changed, awaiting approval**.
+- Branch `handoff/current-work-2026-11-21` @ `329c6be`, dirty (other sessions' untracked drafts/outputs, 5 modified tracked .pyc); not touched.
+- Added `docs/ARCHITECTURE_AUDIT_2026-11-21.md` (findings A–G). Top issues: no shared scenario schema between local Python engine and TS/hosted MotionEngine; Studio↔pipeline contract is stdout text + exit codes; 1,513-line `studio-server.mjs`; hard-coded venv path in 22 files.
+- Tests run in the Cowork Linux VM: tsc --noEmit pass; node --test 59/59; Python 28/29 (1 env failure: hard-coded Mac venv). vitest/lint/studio build/renders NOT run here.
+- Proposed phase 1 (not approved): characterization tests → additive JSON pipeline events → server/UI consume them → `SHORTS_MEDIA_PY` resolver → untrack .pyc.
+- Stale: 2026-11-17 UI/UX partial edits in the `shorts-app-artcraft-title` worktree; redo on main later.
+
+## 2026-11-21 — Claude — Phase 1 (approved) implementation
+- Branch: handoff/current-work-2026-11-21 @ 329c6be; working tree: UNCOMMITTED changes (nothing committed/pushed).
+- IMPLEMENTED: structured `@@event {json}` gate events (scripts/pipeline_events.py, pipeline-events.mjs; emitted by make-local-video.sh, add-sfx.py, studio-draft.py); server collects per-job `events`; UI (studio/src/pipeline-lines.js, App.jsx, extras.jsx) prefers events, falls back to text lines; `SHORTS_MEDIA_PY` runtime resolver replaces hard-coded .venv python; 13 tracked .pyc untracked via `git rm --cached` (staged deletions).
+- VERIFIED (Linux VM): node --test 72/72; python test_*.py 30/30 (SHORTS_MEDIA_PY=system python3); tsc --noEmit pass; characterization tests fail on injected regressions (5 failures).
+- UNVERIFIED / BLOCKED: Studio Vite build, vitest, eslint (VM npm 403 for `three`); real Studio event flow; spare-port draft/stills run. Run on Mac: `cd studio && npm run build && npm run lint && npm test`.
+- Next: verify on Mac, then commit (approval needed); phases 2–5 need separate approval; redo iShorts UI/UX brief on current main afterwards.

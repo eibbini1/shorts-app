@@ -8,6 +8,9 @@ exit 3 = still blocked (the last BLOCKED lines say why; NEEDS-CHOICE lines name 
 import argparse, os, re, subprocess, sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pipeline_events import gate as gate_event  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 SCN = re.compile(r'(drafts/generated/[^\s\'"]+\.local-scenario\.json)')
 
@@ -46,7 +49,7 @@ def checks(scn, allow_repeat):
         ('audit-local-story.py', [sys.executable, str(ROOT / 'scripts/audit-local-story.py'), scn]),
         ('evidence_gate.py', [sys.executable, str(ROOT / 'scripts/evidence_gate.py'), scn]),
     ]
-    audio_python = ROOT / 'storage/tools/ComfyUI/.venv/bin/python'
+    audio_python = Path(os.environ.get('SHORTS_MEDIA_PY') or (ROOT / 'storage/tools/ComfyUI/.venv/bin/python'))
     gates.append(('add-sfx.py', [str(audio_python), str(ROOT / 'scripts/add-sfx.py'), '--scenario', scn, '--audit']))
     for label, command in gates:
         problems, notes = run_gate(label, command)
@@ -128,7 +131,7 @@ def main():
             say(f'Story passed every check on attempt {attempt}.'); say('Plan ready:', scn); return 0
         if any(problem.startswith('unattended review required:') for problem in last):
             say('Plan saved:', scn)
-            for problem in last: say('BLOCKED:', problem)
+            for problem in last: say('BLOCKED:', problem); gate_event('story', 'blocked', 'unattended-review', problem)
             say('NEEDS-CHOICE: still-blocked')
             return 3
         if last == ['repeat topic']:
@@ -145,6 +148,7 @@ def main():
     if scn: say('Plan saved:', scn)
     for b in last:
         say('BLOCKED:', b)
+        gate_event('story', 'blocked', 'repeat-topic' if b == 'repeat topic' else 'story-check', b)
     if 'repeat topic' in last:
         say('NEEDS-CHOICE: repeat-topic')
     else:

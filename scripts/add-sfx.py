@@ -15,7 +15,19 @@ import subprocess
 import wave
 from pathlib import Path
 
+import sys
+
 import numpy as np
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pipeline_events import gate as gate_event  # noqa: E402
+
+SOUND_CODES = (('has a gap', 'asmr-gap'), ('sound line is empty', 'cue-missing'), ('needs a matching field recording', 'recording-missing'),
+               ('recordings-only mix needs', 'room-recording-missing'), ('required sound cue', 'required-cue'), ('foley sample', 'sample-invalid'))
+
+
+def sound_code(problem):
+    return next((code for text, code in SOUND_CODES if text in problem), 'sound-plan')
 
 ROOT = Path(__file__).resolve().parents[1]
 RATE = 48000
@@ -291,8 +303,10 @@ def audit_cues(data):
     if problems:
         for problem in problems:
             print('BLOCKED:', problem)
+            gate_event('sound', 'blocked', sound_code(problem), problem)
     else:
         print('Sound cue and ASMR coverage plan passed. Listen to the finished mix before release.')
+        gate_event('sound', 'passed', 'sound-plan-ok')
     return problems
 
 

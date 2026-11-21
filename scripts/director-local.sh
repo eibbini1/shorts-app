@@ -131,7 +131,7 @@ python3 scripts/preflight-short.py "$existing" --strict
 python3 scripts/audit-local-story.py "$existing"
 ((check_only == 0)) || { echo 'Story checks passed; no long render was started.'; exit 0; }
 python3 scripts/check-env.py || { echo 'Mac is not ready for local image rendering.' >&2; exit 4; }
-storage/tools/ComfyUI/.venv/bin/python scripts/preview-local-stills.py "$existing" --chain-images
+"${SHORTS_MEDIA_PY:-storage/tools/ComfyUI/.venv/bin/python}" scripts/preview-local-stills.py "$existing" --chain-images
 storyboard="storage/any-local/$(basename "$existing" .json)/stills-preview.jpg"
 python3 scripts/review-storyboard-local.py --scenario "$existing" --storyboard "$storyboard"
 read -r -p 'Do the stills show one subject, one story and the correct ending? [y/N]: ' reviewed
