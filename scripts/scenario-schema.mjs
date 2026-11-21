@@ -9,6 +9,16 @@ export function scenarioSettings({ brand = 'Billionaire Bites', format = 'short'
 export function scenarioSchema(settings) {
   const line = z.string().trim().min(1).max(1000);
   const prompt = z.string().trim().min(1).max(2000);
+  const sceneState = z.object({
+    before: line,
+    action: line,
+    after: line,
+  });
+  const visualChecks = z.object({
+    mustShow: z.array(line).min(1).max(5),
+    mustNotShow: z.array(line).max(5),
+    questions: z.array(line).max(5),
+  });
   return z.object({
     ideas: z.array(z.object({ title: line, angle: line })).length(5),
     title: line, hook: line, payoff: line,
@@ -16,6 +26,8 @@ export function scenarioSchema(settings) {
       seconds: z.number().int().min(1).max(30),
       narration: z.string().trim().min(1).max(1000),
       imagePrompt: prompt, motionPrompt: prompt, sound: line,
+      sceneState: sceneState.optional(),
+      visualChecks: visualChecks.optional(),
     })).min(2).max(Math.ceil(settings.seconds / 2)),
     claimsToCheck: z.array(line).max(100),
   });
@@ -26,5 +38,18 @@ export function verifyScenario(data, settings) {
   // Preserve the original 25–32 second default drafts.
   const minimum = settings.seconds === 30 ? 25 : settings.seconds - 2;
   if (total < minimum || total > settings.seconds + 2) throw new Error('Shot durations must match the requested runtime');
+  const withStates = plan.shots.filter(shot => shot.sceneState).length;
+  if (withStates && withStates !== plan.shots.length) throw new Error('Every shot must include sceneState when one shot defines it');
+  for (let index = 0; index < plan.shots.length; index += 1) {
+    const state = plan.shots[index].sceneState;
+    if (!state) continue;
+    const normalize = value => value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    if (normalize(state.before) === normalize(state.after)) throw new Error(`Shot ${index + 1} sceneState must change from before to after`);
+    if (index > 0 && normalize(state.before) !== normalize(plan.shots[index - 1].sceneState.after)) {
+      throw new Error(`Shot ${index + 1} sceneState.before must continue shot ${index}'s sceneState.after`);
+    }
+  }
+  const withChecks = plan.shots.filter(shot => shot.visualChecks).length;
+  if (withChecks && withChecks !== plan.shots.length) throw new Error('Every shot must include visualChecks when one shot defines them');
   return { plan, total };
 }

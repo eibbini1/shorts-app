@@ -1,0 +1,13 @@
+{
+  "createdAt": "2026-11-14T17:22:19.915574+00:00",
+  "model": "mlx-community/flux2-klein-4b-4bit",
+  "revision": "860e87183ceb29e39627c0612ebd66d8ea66e68c",
+  "runtime": "mflux==0.24.0",
+  "prompt": "The same woman with the same face, eyes, nose, lips and skin tone as the reference photo. She wears a gold sequin evening dress, her hair is auburn with soft curls, at a glamorous champagne bar with golden bokeh. Medium close portrait, photorealistic luxury commercial photography, warm natural light, sharp focus, natural skin texture.",
+  "seed": 3104,
+  "width": 384,
+  "height": 640,
+  "source": "/Users/eibbini/Documents/shorts-app/assets/muse/ruby/anchor.png",
+  "sourceSha256": "48344691c0491c24ea562c8b944a92cd65ed526238aef47595b27ce02aa327cc",
+  "outputSha256": "ee8486fa06245c4a807f1e134f6a1fcaa65795d172c9b050b93986919f22b3a4"
+}

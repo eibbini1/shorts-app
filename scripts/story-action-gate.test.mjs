@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { hasVisiblePhysicalAction, preserveOpeningHook, preserveRequestedActions } from './story-action-gate.mjs';
+import { firstRequestedActionClause, hasVisiblePhysicalAction, preserveOpeningHook, preserveRequestedActions } from './story-action-gate.mjs';
 
 test('recognizes food actions including common inflections', () => {
   for (const prompt of [
@@ -17,6 +17,68 @@ test('recognizes character and object actions', () => {
     'The small robot carries a seed upstairs and places it in the soil.',
     'A paper plane spins, floats above the harbor, then lands on a bench.',
   ]) assert.equal(hasVisiblePhysicalAction(prompt), true, prompt);
+});
+
+test('keeps a requested spreading action ahead of later recognized actions', () => {
+  const prompt = 'A baker spreads tomato sauce on pizza dough, adds pineapple and five cheeses, then bakes it until golden.';
+  assert.equal(firstRequestedActionClause(prompt), 'A baker spreads tomato sauce on pizza dough');
+});
+
+test('recognizes entering and coming out as ordered physical actions', () => {
+  const prompt = 'Pineapple pizza enters a hot oven, then comes out golden on a board.';
+  assert.equal(firstRequestedActionClause(prompt), 'Pineapple pizza enters a hot oven');
+  assert.equal(hasVisiblePhysicalAction('The pineapple pizza enters the oven, then comes out golden.'), true);
+});
+
+test('recognizes common physical entry and exit verbs', () => {
+  for (const prompt of [
+    'The pizza slides into the oven.',
+    'The cook loads the tray into the oven.',
+    'The chef puts the pizza into the oven.',
+    'The chef takes the pizza out of the oven.',
+  ]) assert.equal(hasVisiblePhysicalAction(prompt), true, prompt);
+});
+
+test('matches equivalent physical entry and exit wording without replacing the shot prompts', () => {
+  const shots = [
+    { imagePrompt: 'Raw pineapple pizza on a wooden peel.', motionPrompt: 'The baker pushes the pizza into the glowing oven.' },
+    { imagePrompt: 'Golden pizza on the wooden board.', motionPrompt: 'The baker pulls the golden pizza out of the oven and places it on the board.' },
+  ];
+  assert.deepEqual(preserveRequestedActions(shots,
+    'Pineapple pizza enters a hot oven, then comes out golden on a board.'),
+  { status: 'verified', inserted: [] });
+  assert.match(shots[1].imagePrompt, /Golden pizza/);
+});
+
+test('repairs requested action prompts with the named subject and exact first-frame state', () => {
+  const shots=[{
+    imagePrompt:'Generic start frame.',
+    motionPrompt:'The camera slowly pushes in.',
+    sceneState:{before:'Pineapple pizza rests inside the glowing oven.'},
+  }];
+  const result=preserveRequestedActions(shots,'comes out golden on a board.','Pineapple pizza');
+  assert.equal(result.status,'repaired');
+  assert.match(shots[0].motionPrompt,/Pineapple pizza comes out golden on a board/);
+  assert.equal(shots[0].imagePrompt,'First frame: Pineapple pizza rests inside the glowing oven.');
+});
+
+test('replaces generic action placeholders with the named protagonist', () => {
+  const shots=[{
+    imagePrompt:'Generic first frame.',
+    motionPrompt:'The subject performs this requested physical action now: comes out golden on a board.',
+    sceneState:{
+      before:'Pineapple pizza rests inside the glowing oven.',
+      action:'A hand pulls the pineapple pizza from the oven and places it on a wooden board.',
+      after:'Golden pineapple pizza rests on a wooden board.',
+    },
+  }];
+  const result=preserveRequestedActions(shots,'comes out golden on a board.','Pineapple pizza');
+  assert.equal(result.status,'repaired');
+  assert.match(shots[0].motionPrompt,/Pineapple pizza comes out golden on a board/);
+  assert.match(shots[0].motionPrompt,/A hand pulls the pineapple pizza from the oven/);
+  assert.match(shots[0].motionPrompt,/Starting state: Pineapple pizza rests inside the glowing oven/);
+  assert.match(shots[0].motionPrompt,/Visible end state: Golden pineapple pizza rests on a wooden board/);
+  assert.doesNotMatch(shots[0].motionPrompt,/the subject/i);
 });
 
 test('camera movement and static beauty shots do not satisfy the action gate', () => {
@@ -39,7 +101,7 @@ test('repairs a requested pour before a later slice and plating action', () => {
   assert.equal(result.status, 'repaired');
   assert.deepEqual(result.inserted.map((item) => item.shot), [1]);
   assert.match(shots[0].motionPrompt, /A chef pours warm caramel over a pear tart/);
-  assert.match(shots[0].imagePrompt, /Start frame for the requested action/);
+  assert.match(shots[0].imagePrompt, /First frame:/);
 });
 
 test('preserves comma-separated cooking actions as ordered shot requirements', () => {
@@ -60,7 +122,7 @@ test('does not count a requested action that appears only in a visibility note',
   }];
   const result = preserveRequestedActions(shots, 'Add lemon zest and sesame to the halloumi.');
   assert.equal(result.status, 'repaired');
-  assert.match(shots[0].motionPrompt, /performs this requested physical action now: Add lemon zest and sesame/);
+  assert.match(shots[0].motionPrompt, /^Add lemon zest and sesame to the halloumi\./);
   assert.doesNotMatch(shots[0].motionPrompt, /ring light/);
   assert.match(shots[0].imagePrompt, /lemon zest and sesame/);
 });
@@ -79,6 +141,6 @@ test('moves the selected opening action into the first shot when the model delay
   ];
   const result = preserveOpeningHook(shots, 'A chef pours warm caramel over a pear tart.');
   assert.equal(result.status, 'repaired');
-  assert.match(shots[0].motionPrompt, /performs the requested opening action now/);
-  assert.match(shots[0].imagePrompt, /Opening-hook start frame/);
+  assert.match(shots[0].motionPrompt, /^A chef pours warm caramel over a pear tart\./);
+  assert.match(shots[0].imagePrompt, /First frame:/);
 });

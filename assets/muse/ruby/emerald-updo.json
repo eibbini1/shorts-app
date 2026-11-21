@@ -1,0 +1,13 @@
+{
+  "createdAt": "2026-11-14T17:20:40.421500+00:00",
+  "model": "mlx-community/flux2-klein-4b-4bit",
+  "revision": "860e87183ceb29e39627c0612ebd66d8ea66e68c",
+  "runtime": "mflux==0.24.0",
+  "prompt": "The same woman with the same face, eyes, nose, lips and skin tone as the reference photo. She wears an emerald green silk evening gown, her dark hair is in an elegant low updo with a few loose strands, in a candlelit hotel restaurant. Medium close portrait, photorealistic luxury commercial photography, warm natural light, sharp focus, natural skin texture.",
+  "seed": 3101,
+  "width": 384,
+  "height": 640,
+  "source": "/Users/eibbini/Documents/shorts-app/assets/muse/ruby/anchor.png",
+  "sourceSha256": "48344691c0491c24ea562c8b944a92cd65ed526238aef47595b27ce02aa327cc",
+  "outputSha256": "6faae3b645899951f55956a11d527bf5c7cbf27f93d93021174c02931205f5f4"
+}

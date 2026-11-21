@@ -1,6 +1,7 @@
-const ACTIONS = new Set(`add arrange assemble bake baste bite bloom boil break brown build carry catch chase chew chop close coat cook curl cut dance dice dip drizzle drop eat flip float fly fold fry garnish grab grate grow knead leap lick lift look melt mince mix move open peel pedal place pour prepare press pull push race react reach reveal roll run scoop sear serve shake slice smash smile sniff spin splash sprinkle stack steer steam stir stumble taste tap toast turn unfurl walk wave whisk`.split(' '));
+const ACTIONS = new Set(`add arrange assemble bake baste bite bloom boil break brown build carry catch chase chew chop close coat cook come curl cut dance dice dip drizzle drop eat enter exit emerge flip float fly fold fry garnish grab grate grow knead leap lift load look melt mince mix move open peel pedal place pour prepare press pull push put race react reach remove retrieve reveal roll run scoop sear serve shake slide slice smash smile sniff spin splash sprinkle spread stack steer steam stir stumble take taste tap toast transfer turn unfurl walk wave whisk`.split(' '));
 const PLATE_OBJECTS = new Set(['a', 'an', 'beside', 'each', 'her', 'his', 'it', 'one', 'the', 'their']);
 const PRODUCTION_NOTES = /\b(?:film|video|vertical|horizontal|cinematic|captions?|narration|macro details|sync(?:ed|hronized)?|cooking sounds)\b/i;
+const GENERIC_SUBJECT = /\b(?:the subject|the focal subject|the food|the dish)\b/i;
 
 function roots(word) {
   const values = new Set([word]);
@@ -53,8 +54,43 @@ function actionTokens(value) {
   });
 }
 
+const ENTRY_ACTIONS = new Set(['enter', 'slide', 'push', 'load', 'place', 'put']);
+const EXIT_ACTIONS = new Set(['come', 'emerge', 'exit', 'pull', 'retrieve', 'remove', 'take']);
+const ENTRY_PHRASE = /\benter\w*\b|\b(?:slide\w*|push\w*|load\w*|place\w*|put\w*)\b[\s\S]{0,80}\b(?:into|inside)\b/i;
+const EXIT_PHRASE = /\b(?:come\w*|emerge\w*|exit\w*|pull\w*|retrieve\w*|remove\w*|take\w*)\b[\s\S]{0,80}\b(?:out|from)\b/i;
+
+function actionCovered(action, clause, motion) {
+  if (actionTokens(motion).includes(action)) return true;
+  return (ENTRY_ACTIONS.has(action) && ENTRY_PHRASE.test(clause) && ENTRY_PHRASE.test(motion))
+    || (EXIT_ACTIONS.has(action) && EXIT_PHRASE.test(clause) && EXIT_PHRASE.test(motion));
+}
+
+function subjectAction(clause, subject) {
+  const action = clause.trim().replace(/[.!?]+$/, '');
+  return subject && !action.toLowerCase().includes(subject.toLowerCase()) ? `${subject} ${action}` : action;
+}
+
+function firstFramePrompt(shot, subject, clause) {
+  const state = String(shot.sceneState?.before || '').trim().replace(/[.!?]+$/, '');
+  return state
+    ? `First frame: ${state}.`
+    : `First frame: ${subject || 'the subject'} is poised immediately before: ${clause}.`;
+}
+
+function sceneActionDetail(shot) {
+  const detail = String(shot.sceneState?.action || '').trim().replace(/[.!?]+$/, '');
+  return detail && hasVisiblePhysicalAction(detail) && !GENERIC_SUBJECT.test(detail) ? `${detail}. ` : '';
+}
+
+function sceneTransition(shot) {
+  const before = String(shot.sceneState?.before || '').trim().replace(/[.!?]+$/, '');
+  const after = String(shot.sceneState?.after || '').trim().replace(/[.!?]+$/, '');
+  if (!before || !after || before.length + after.length > 420) return '';
+  return `Starting state: ${before}. Visible end state: ${after}. `;
+}
+
 /** Keep recognized user-requested physical-action clauses in storyboard order. */
-export function preserveRequestedActions(shots, requestedText) {
+export function preserveRequestedActions(shots, requestedText, subject = '') {
   if (!Array.isArray(shots) || shots.length === 0) return { status: 'unverified', inserted: [] };
   const clauses = requestedActionClauses(requestedText);
   if (!clauses.length) return { status: 'unverified', inserted: [] };
@@ -68,7 +104,8 @@ export function preserveRequestedActions(shots, requestedText) {
     for (const action of actions) {
       let found = -1;
       for (let shotIndex = searchFrom; shotIndex < shots.length; shotIndex++) {
-        if (actionTokens(shots[shotIndex].motionPrompt).includes(action)) { found = shotIndex; break; }
+        if (actionCovered(action, clause, shots[shotIndex].motionPrompt)
+          && !GENERIC_SUBJECT.test(shots[shotIndex].motionPrompt)) { found = shotIndex; break; }
       }
       if (found < 0) { positions.length = 0; break; }
       positions.push(found);
@@ -76,9 +113,9 @@ export function preserveRequestedActions(shots, requestedText) {
     }
     if (!positions.length) {
       const target = Math.min(shots.length - 1, Math.floor(clauseIndex * shots.length / clauses.length));
-      shots[target].motionPrompt = `The subject performs this requested physical action now: ${clause}. `
-        + 'Keep the relevant ingredient and tool visible, show the change caused by the action, and use one continuous take.';
-      shots[target].imagePrompt = `Start frame for the requested action: show the subject, needed ingredient, and tool poised immediately before: ${clause}.`;
+      const action = subjectAction(clause, subject);
+      shots[target].motionPrompt = `${action}. ${sceneActionDetail(shots[target])}${sceneTransition(shots[target])}Keep ${subject || 'the subject'} and the relevant tool visible; show the change caused by the action in one continuous take.`;
+      shots[target].imagePrompt = firstFramePrompt(shots[target], subject, clause);
       inserted.push({ clause, shot: target + 1 });
       const refreshed = actionTokens(shots[target].motionPrompt);
       if (!actions.every((action) => refreshed.includes(action))) {
@@ -92,15 +129,15 @@ export function preserveRequestedActions(shots, requestedText) {
   return { status: inserted.length ? 'repaired' : 'verified', inserted };
 }
 
-export function preserveOpeningHook(shots, hookText) {
+export function preserveOpeningHook(shots, hookText, subject = '') {
   if (!Array.isArray(shots) || !shots.length) return { status: 'unverified' };
   const hook = firstRequestedActionClause(hookText);
   if (!hook) return { status: 'unverified' };
-  const missing = [...new Set(actionTokens(hook))].filter((action) => !actionTokens(shots[0].motionPrompt).includes(action));
-  if (!missing.length) return { status: 'verified' };
-  shots[0].motionPrompt = `The subject performs the requested opening action now: ${hook}. `
-    + 'Keep the subject and relevant tool visible through the action in one continuous take.';
-  shots[0].imagePrompt = `Opening-hook start frame: show the subject and tool poised immediately before: ${hook}.`;
+  const missing = [...new Set(actionTokens(hook))].filter((action) => !actionCovered(action, hook, shots[0].motionPrompt));
+  if (!missing.length && !GENERIC_SUBJECT.test(shots[0].motionPrompt)) return { status: 'verified' };
+  const action = subjectAction(hook, subject);
+  shots[0].motionPrompt = `${action}. ${sceneActionDetail(shots[0])}${sceneTransition(shots[0])}Keep ${subject || 'the subject'} and the relevant tool visible through the action in one continuous take.`;
+  shots[0].imagePrompt = firstFramePrompt(shots[0], subject, hook);
   if (!missing.every((action) => actionTokens(shots[0].motionPrompt).includes(action))) {
     throw new Error(`Could not preserve the opening hook in shot 1: ${hook}`);
   }

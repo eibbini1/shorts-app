@@ -14,7 +14,7 @@ test('a coherent idea returns one proposal without mutating its input', async ()
   const capture = {};
   const refiner = createIdeaRefiner({ fetchImpl: localModel({
     decision: 'ready', message: 'The action and payoff are clear.',
-    refinedPrompt: 'A chef chops ripe tomatoes, stirs them into a pan, then spoons the glossy sauce over pasta.',
+    refinedPrompt: 'In a warm kitchen, a chef chops ripe tomatoes, simmers them into a thick glossy sauce, then coats fresh pasta and finishes on a close view of sauce clinging to each strand.',
     hook: 'A ripe tomato splits under the knife in a tight opening shot.',
     mustShow: 'The chef chops tomatoes and stirs them into a simmering pan.',
     obstacle: 'The sauce is watery and slides off the pasta.',
@@ -27,6 +27,7 @@ test('a coherent idea returns one proposal without mutating its input', async ()
   assert.equal(result.originalPrompt, 'A chef chopping tomatoes for pasta');
   assert.equal(result.hook, result.originalPrompt, 'the first concrete user action anchors the opening hook');
   assert.equal(result.mustShow, result.originalPrompt, 'the exact request remains a binding must-show requirement');
+  assert.ok(result.refinedPrompt.split(/\s+/).length >= 18, 'short prompts expand into a concrete visual direction');
   assert.equal(capture.url, 'http://127.0.0.1:11434/api/chat');
   assert.match(capture.body.messages[1].content, /A chef chopping tomatoes for pasta/);
   assert.equal(refiner.active, false);
@@ -61,6 +62,89 @@ test('preserves a valid long idea up to the UI 600-character limit', async () =>
 test('malformed model output is rejected instead of silently used', async () => {
   const refiner = createIdeaRefiner({ fetchImpl: localModel({ decision: 'ready', message: 'ok', choices: [] }) });
   await assert.rejects(refiner.refine({ prompt: 'a chef cooks', look: 'food' }), /incomplete refinement/);
+});
+
+test('supplies a neutral explanation when the model omits the non-plan message', async () => {
+  const result = await createIdeaRefiner({ fetchImpl: localModel({
+    decision: 'ready', refinedPrompt: 'In a warm kitchen, a baker spreads sauce across one round dough, slides it into the oven, and reveals a golden pizza on a wooden board.',
+    hook: 'A baker spreads sauce.', mustShow: 'A baker spreads sauce, then bakes a pizza.',
+    obstacle: 'The dough is sticky.', turn: 'The baker dusts the dough with flour.',
+    ending: 'A baked pizza rests on a tray.', question: '', choices: [],
+  }) }).refine({ prompt: 'A baker spreads sauce, then bakes a pizza.', look: 'food' });
+
+  assert.equal(result.message, 'Review the proposed story brief before planning.');
+  assert.equal(result.decision, 'ready');
+});
+
+test('retries one incomplete local response before returning a validated proposal', async () => {
+  let calls = 0;
+  const requests = [];
+  const valid = { decision: 'ready', message: 'The plan is clear.', refinedPrompt: 'In a warm kitchen, a baker spreads sauce across one round dough, slides it into the oven, and reveals a golden pizza on a wooden board.',
+    hook: 'A baker spreads sauce.', mustShow: 'A baker spreads sauce, then bakes a pizza.',
+    obstacle: 'The dough is sticky.', turn: 'The baker dusts the dough with flour.',
+    ending: 'A baked pizza rests on a tray.', question: '', choices: [] };
+  const refiner = createIdeaRefiner({ fetchImpl: async (url, options) => {
+    calls++;
+    requests.push(JSON.parse(options.body));
+    const response = localModel(calls === 1 ? { decision: 'ready', message: 'incomplete', choices: [] } : valid);
+    return response(url, options);
+  } });
+
+  const result = await refiner.refine({ prompt: 'A baker spreads sauce, then bakes a pizza.', look: 'food' });
+  assert.equal(calls, 2);
+  assert.equal(result.decision, 'ready');
+  assert.equal(result.mustShow, 'A baker spreads sauce, then bakes a pizza.');
+  assert.match(requests[1].messages.at(-1).content, /refinedPrompt/);
+  assert.match(requests[1].messages.at(-1).content, /ending/);
+});
+
+test('keeps repair guidance separate from the exact original idea', async () => {
+  const capture = {};
+  const prompt = 'A baker spreads sauce, then bakes a pizza.';
+  const result = await createIdeaRefiner({ fetchImpl: localModel({
+    decision: 'ready', message: 'The plan is clear.',
+    refinedPrompt: 'In a warm kitchen, a baker spreads sauce across one round dough, slides it into the oven, and reveals a golden pizza on a wooden board.',
+    hook: 'A baker spreads sauce.', mustShow: 'changed by model',
+    obstacle: 'The dough is sticky.', turn: 'The baker dusts the dough with flour.',
+    ending: 'A baked pizza rests on a tray.', question: '', choices: [],
+  }, capture) }).refine({ prompt, repairGuidance: 'Keep sauce visible in the final shot.', look: 'food' });
+
+  const modelInput = JSON.parse(capture.body.messages[1].content);
+  assert.equal(modelInput.originalSentence, prompt);
+  assert.equal(modelInput.repairGuidance, 'Keep sauce visible in the final shot.');
+  assert.equal(result.mustShow, prompt);
+});
+
+test('requires a short idea to expand and anchors its hook on the first requested action', async () => {
+  const prompt = 'Pineapple pizza enters a hot oven, then comes out golden on a board.';
+  let calls = 0;
+  const requests = [];
+  const expanded = {
+    decision: 'ready', message: 'The sequence is clear.',
+    refinedPrompt: 'A raw pineapple pizza waits on a wooden peel at a glowing oven. The baker slides it inside, then a short time jump reveals the same pizza golden on the board.',
+    hook: 'The oven door opens to reveal a finished pizza.',
+    mustShow: prompt, obstacle: 'The pizza is raw.', turn: 'The oven bakes it.',
+    ending: 'A golden pineapple pizza rests on a board.', question: '', choices: [],
+  };
+  const refiner = createIdeaRefiner({ fetchImpl: async (url, options) => {
+    calls++;
+    requests.push(JSON.parse(options.body));
+    const result = calls === 1 ? {
+      ...expanded,
+      refinedPrompt: prompt,
+      obstacle: 'The transition between oven and board must be seamless.',
+      turn: 'Use a smooth camera move and warm lighting.',
+    } : expanded;
+    return localModel(result)(url, options);
+  } });
+
+  const result = await refiner.refine({ prompt, look: 'food', seconds: 10 });
+  assert.equal(calls, 2);
+  assert.match(requests[1].messages.at(-1).content, /refinedPrompt expansion/);
+  assert.match(requests[1].messages.at(-1).content, /turn must describe a story action/);
+  assert.equal(result.refinedPrompt, expanded.refinedPrompt);
+  assert.equal(result.hook, 'Pineapple pizza enters a hot oven');
+  assert.equal(result.mustShow, prompt);
 });
 
 test('empty input is rejected before contacting the local model', async () => {

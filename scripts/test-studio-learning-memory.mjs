@@ -49,7 +49,7 @@ test('local idea refiner receives evidence while keeping the exact user sentence
   let request;
   const refiner = createIdeaRefiner({ fetchImpl: async (_url, options) => {
     request = JSON.parse(options.body);
-    const answer = { decision: 'ready', message: 'Ready.', refinedPrompt: 'A chef chops a tomato, then simmers it.',
+    const answer = { decision: 'ready', message: 'Ready.', refinedPrompt: 'In a quiet kitchen, a cook cuts ripe tomatoes into small pieces, simmers them until glossy and thick, then coats fresh pasta and shows sauce clinging to every strand.',
       hook: 'A tomato splits under the knife.', mustShow: '', obstacle: 'The sauce is thin.',
       turn: 'The chef simmers it down.', ending: 'The sauce coats the spoon.', question: '', choices: [] };
     return { ok: true, json: async () => ({ message: { content: JSON.stringify(answer) } }) };

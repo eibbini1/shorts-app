@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { ideaHint } from './idea-hint.js';
-import { exportReviewStatus } from './review-status.js';
+import { exportReviewStatus, releaseQualityStatus } from './review-status.js';
+import { reviewRecommendations, suggestedRepairGuidance, suggestedShotRepairGuidance } from './review-recommendations.js';
+import { readRepairGuidance, writeRepairGuidance } from './draft-storage.js';
+import { moveQueueItem } from './queue-order.js';
 
 /* ---------- render time estimate ----------
    Calibrated from real timestamps on this Mac (LTX-2.3 MLX, 576x1024, plugged in):
@@ -275,34 +278,87 @@ export function LearnedCard() {
 }
 
 /* ---------- first frames: check the pictures before spending minutes on motion ---------- */
-export function FramesReview({ job, plan, files, onStills, onRegen, onRender, busy, blocked }) {
+export function FramesReview({ job, plan, files, onStills, onRegen, onRender, onApproveFrames, busy, blocked }) {
+  const [choices, setChoices] = useState({});
+  const [approving, setApproving] = useState(false);
   const shots = plan.shots || [];
+  const sequence = job.sequence?.stage ? job.sequence : null;
+  const sequential = Boolean(sequence?.active && sequence.stage === 'review');
+  const shotNumbers = sequential ? [sequence.currentShot] : shots.map((_, i) => i + 1);
+  const needsHumanReview = sequential || Boolean(files.needsHumanReview);
+  useEffect(() => setChoices({}), [job.id, job.scenario, job.updatedAt]);
   const still = (n) => [...(files.stills || [])].reverse().find((f) => f.shot === n);
   if (!shots.length) return null;
-  if (!(files.stills || []).length) return <section className="card"><h3>Review first frames</h3><p>This frame set has no verified selection. Make first frames to continue.</p><button className="primary" disabled={busy || blocked} onClick={onStills}>Make first frames</button></section>;
+  if (!(files.stills || []).length && !needsHumanReview) return <section className="card"><h3>Review first frames</h3><p>This frame set has no verified selection. Make first frames to continue.</p><button className="primary" disabled={busy || blocked} onClick={onStills}>Make first frames</button></section>;
   const url = (f) => '/media?p=' + encodeURIComponent(f.p) + '&v=' + Math.round(f.t);
   const all = shots.every((_, i) => still(i + 1));
   const est = planEstimate(clipsOf(shots));
+  const pendingFrames = files.pendingFrames || [];
+  const candidateForShot = (n) => pendingFrames.find((frame) => frame.shot === n);
+  const candidateChoice = (n) => {
+    const frame = candidateForShot(n);
+    if (!frame) return null;
+    const selected = choices[n] || frame.selectedCandidate;
+    return frame.candidates.find((candidate) => candidate.candidate === selected) || frame.candidates[0];
+  };
+  const selectCandidate = (shot, candidate) => setChoices((current) => ({ ...current, [shot]: candidate }));
+  const completeCandidates = shotNumbers.every((shot) => (candidateForShot(shot)?.candidates || []).length > 0);
+  const approve = async () => {
+    if (!onApproveFrames || approving || !completeCandidates) return;
+    setApproving(true);
+    try {
+      const result = await onApproveFrames(shotNumbers.map((shot) => ({
+        shot, candidate: candidateChoice(shot)?.candidate,
+      })));
+      if (result?.ok) {
+        const response = await fetch('/api/live-files?scenario=' + encodeURIComponent(job.scenario));
+        if (response.ok) window.dispatchEvent(new CustomEvent('studio-frames-approved', { detail: await response.json() }));
+      }
+    } finally {
+      setApproving(false);
+    }
+  };
   return (
     <div className="card frames">
       <h3>First frames</h3>
-      <p className="muted small">The first frame decides how each clip looks. Regenerate any frame you don't like (about 25 s each) before the long motion step.</p>
+      <p className="muted small">{sequential
+        ? `Shot ${sequence.currentShot} of ${sequence.shotCount}. Approve this frame to render its motion; Studio will use that verified clip's final frame when creating the next shot.`
+        : needsHumanReview
+        ? 'The local vision gate could not approve every frame. Choose one candidate for every shot; your explicit approval is required before motion can start.'
+        : 'Studio generates and checks three local candidates per shot, then pins the selected frame. Review every frame before the long motion step; a typical three-candidate set takes about 75 seconds.'}</p>
+      {files.pendingFramesError && <p className="bad">{files.pendingFramesError}</p>}
       <div className="tiles">
-        {shots.map((sh, i) => (
-          <div className="tile" key={i}>
-            {still(i + 1) ? <img src={url(still(i + 1))} alt={'Shot ' + (i + 1)} /> : <div className="ph">not made yet</div>}
-            <div className="cap"><b>Shot {i + 1}</b> · {sh.seconds}s</div>
-            <button className="ghost" disabled={busy} onClick={() => onRegen(i + 1)}>Regenerate</button>
-          </div>
-        ))}
+        {shotNumbers.map((shot) => {
+          const sh = shots[shot - 1];
+          return <div className="tile" key={shot}>
+            {needsHumanReview && candidateChoice(shot)
+              ? <img src={url(candidateChoice(shot))} alt={'Shot ' + shot + ' candidate ' + candidateChoice(shot).candidate} />
+              : still(shot) ? <img src={url(still(shot))} alt={'Shot ' + shot} /> : <div className="ph">not made yet</div>}
+            <div className="cap"><b>Shot {shot}</b> · {sh.seconds}s</div>
+            {needsHumanReview && candidateForShot(shot)?.candidates.map((candidate) => (
+              <label className="small" key={candidate.candidate} style={{ display: 'block', marginTop: 6 }}>
+                <input type="radio" name={'frame-' + shot} checked={candidateChoice(shot)?.candidate === candidate.candidate}
+                  onChange={() => selectCandidate(shot, candidate.candidate)} />
+                Candidate {candidate.candidate} · {candidate.status}{candidate.reason ? `: ${candidate.reason}` : ''}
+              </label>
+            ))}
+            <button className="ghost" disabled={busy} onClick={() => onRegen(shot)}>Regenerate</button>
+          </div>;
+        })}
       </div>
-      <p><button className="primary" onClick={onRender} disabled={busy || blocked || !all}>Approve frames and render video</button>
+      {needsHumanReview && <p><button className="primary" onClick={approve} disabled={busy || blocked || approving || !completeCandidates}>
+        {approving ? 'Saving frame approval...' : sequential ? 'Approve shot and render motion' : 'Approve selected frames'}
+      </button><span className="muted small">{sequential
+        ? ' Review the candidate images and any visual concerns; the exact approved file is hash-checked before motion.'
+        : ' This is a human override of the local visual gate. Review the image and listed concern for every shot.'}</span></p>}
+      {!needsHumanReview && <p><button className="primary" onClick={onRender} disabled={busy || blocked || !all}>Approve frames and render video</button>
         <span className="muted small"> about {fmt(est.mid)} ({fmt(est.low)} to {fmt(est.high)}); reuses these frames. This is the long step: nothing is sent to motion until you press it.</span></p>
+      }
     </div>
   );
 }
 
-export function FramesBlock({ job, plan, onStills, onRegen, onRender, busy, blocked }) {
+export function FramesBlock({ job, plan, onStills, onRegen, onRender, onApproveFrames, busy, blocked }) {
   const [files, setFiles] = useState({ stills: [] });
   const show = job.kind === 'stills' && job.status === 'done' && job.scenario;
   useEffect(() => {
@@ -311,8 +367,19 @@ export function FramesBlock({ job, plan, onStills, onRegen, onRender, busy, bloc
     fetch('/api/live-files?scenario=' + encodeURIComponent(job.scenario)).then((r) => (r.ok ? r.json() : null)).then((j) => { if (j && !stop) setFiles(j); }).catch(() => {});
     return () => { stop = true; };
   }, [show, job.scenario, job.updatedAt]);
+  useEffect(() => {
+    const refresh = (event) => setFiles(event.detail);
+    window.addEventListener('studio-frames-approved', refresh);
+    return () => window.removeEventListener('studio-frames-approved', refresh);
+  }, []);
+  if (job.sequence?.stage === 'ready' && job.status === 'done') {
+    return <section className="card"><h3>Shot sequence ready</h3>
+      <p className="muted">Every first frame was approved before its motion rendered. The approved Shot 1 frame is also recorded as the shared identity reference for later scenes.</p>
+      <button className="primary" onClick={onRender} disabled={busy || blocked}>Assemble final video</button>
+    </section>;
+  }
   if (!show) return null;
-  return <FramesReview job={job} plan={plan} files={files} onStills={onStills} onRegen={onRegen} onRender={onRender} busy={busy} blocked={blocked} />;
+  return <FramesReview job={job} plan={plan} files={files} onStills={onStills} onRegen={onRegen} onRender={onRender} onApproveFrames={onApproveFrames} busy={busy} blocked={blocked} />;
 }
 
 /* ---------- a block the Studio could not fix by itself: plain words and one-click next steps ---------- */
@@ -327,6 +394,7 @@ const PLAIN = [
   [/title does not name/, 'The title does not name your subject.'],
   [/timings|too few distinct shots/, 'The shots do not add up to the length you picked.'],
   [/narration/, 'A narration line is too long or cut off.'],
+  [/ASMR sound line/, 'Add a supported sound effect that fits the shot.'],
 ];
 export const plainBlock = (reason) => (PLAIN.find(([re]) => re.test(reason)) || [null, reason])[1];
 export function BlockedCard({ lines, choice, busy, onRetry, onAnyway, onEdit }) {
@@ -359,7 +427,7 @@ export function StepTrack({ job }) {
   const want = 5; // always show the whole journey; later stages stay dim
   let cur = job.kind === 'draft' ? 0 : 1;
   (job.steps || []).forEach((s) => { const i = STAGES.findIndex(([, re]) => re.test(s)); if (i > cur) cur = i; });
-  if (job.kind === 'stills') cur = 1; else if (job.kind === 'draft') cur = 0; // a frames job never moves past frames
+  if (job.kind === 'stills') cur = 1; else if (job.kind === 'sequence-motion') cur = 2; else if (job.kind === 'draft') cur = 0; // a frames job never moves past frames
   else { // render: read the pipeline's own markers (step labels also match setup lines such as 'Finishing editor: artcraft')
     const MARK = [[/^Step 3\/4|Reusing image|First frame ready/, 1], [/Generating local LTX motion/, 2], [/^Step 4\/4|Effects placed/, 3], [/Wrote qa block|Contact sheet:|Timing: checks/, 4]];
     cur = 1; (job.lines || []).forEach((l) => MARK.forEach(([re, n]) => { if (re.test(l) && n > cur) cur = n; }));
@@ -391,7 +459,14 @@ export function UpNext({ show, autoNext, setAutoNext }) {
       <h3>Up next</h3>
       <p className="muted small">Write your next idea while this one works. It uses the same look, length and sound settings.</p>
       <div className="row"><input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} placeholder="e.g. A tiny dragon toasts a marshmallow, then shares it with a mouse" /><button className="ghost" onClick={add}>Add</button></div>
-      {q.length > 0 && <ol>{q.map((t, i) => <li key={i}>{t} <button className="link" onClick={() => writeQueue(q.filter((_, k) => k !== i))}>remove</button></li>)}</ol>}
+      {q.length > 0 && <ol>{q.map((t, i) => <li key={i}>
+        <span className="queue-prompt">{t}</span>
+        <span className="queue-actions">
+          <button type="button" className="link" disabled={i === 0} aria-label={`Move idea ${i + 1} up`} onClick={() => writeQueue(moveQueueItem(q, i, -1))}>↑</button>
+          <button type="button" className="link" disabled={i === q.length - 1} aria-label={`Move idea ${i + 1} down`} onClick={() => writeQueue(moveQueueItem(q, i, 1))}>↓</button>
+          <button type="button" className="link" aria-label={`Remove idea ${i + 1}: ${t}`} onClick={() => writeQueue(q.filter((_, k) => k !== i))}>remove</button>
+        </span>
+      </li>)}</ol>}
       <label className="small"><input type="checkbox" checked={autoNext} onChange={(ev) => setAutoNext(ev.target.checked)} /> Start the next idea by itself when this job ends</label>
     </div>
   );
@@ -451,6 +526,7 @@ export function stageIndex(job) {
   if (!job.status || job.status === 'idle') return -1;
   if (job.kind === 'draft') return job.status === 'done' && job.plan ? 1 : 0;
   if (job.kind === 'stills') return 1;
+  if (job.kind === 'sequence-motion') return job.sequence?.stage === 'ready' ? 1 : 2;
   if (job.kind === 'render') return job.status === 'done' && job.video ? 3 : 2;
   return 0;
 }
@@ -470,14 +546,20 @@ export function StageBar({ job }) {
 export function jobState(job, blocked, busyElsewhere) {
   const st = job.status;
   if (!st || st === 'idle') return busyElsewhere ? { k: 'waiting', t: 'The Mac is busy with another video. New ideas wait in Up next.' } : { k: 'idle', t: '' };
-  if (st === 'running') return { k: 'running', t: job.kind === 'draft' ? 'Planning your video.' : job.kind === 'stills' ? 'Making and checking first frames. Local AI will correct a rejected frame before stopping; no motion starts until frames pass.' : 'Rendering motion. This takes several minutes; you can leave this page open.' };
+  if (st === 'running') return { k: 'running', t: job.kind === 'draft' ? 'Planning your video.' : job.kind === 'stills' ? (job.sequence?.active ? `Making and checking shot ${job.sequence.currentShot} first frames.` : 'Making and checking first frames. Local AI will correct a rejected frame before stopping; no motion starts until frames pass.') : job.kind === 'sequence-motion' ? `Rendering approved shot ${job.sequence?.currentShot || ''} motion.` : 'Rendering motion. This takes several minutes; you can leave this page open.' };
   if (st === 'stopping') return { k: 'waiting', t: 'Stopping the current job. Studio will be available when it exits.' };
   if (st === 'cancelled') return { k: 'stopped', t: 'Stopped. Your idea is kept; plan again when ready.' };
   if (st === 'interrupted') return { k: 'failed', t: 'The Mac restarted this job. Your idea is kept; try again.' };
   if (st === 'failed' && job.kind === 'stills') return { k: 'blocked', t: 'Local AI could not verify an acceptable first frame after its bounded correction attempt. Your idea and plan are saved; no motion was generated. Retry in this project to let Studio try again.' };
+  if (st === 'failed' && job.kind === 'sequence-motion') return { k: 'failed', t: 'The approved shot motion failed. Its frame approval is saved; retry this shot before continuing.' };
   if (st === 'failed') return blocked ? { k: 'blocked', t: 'Blocked by a check. Nothing was rendered. Fix the point below or try again.' } : { k: 'failed', t: 'Something went wrong. Your idea is kept; try again.' };
   if (job.kind === 'draft') return blocked ? { k: 'blocked', t: 'Blocked by a check. Nothing was rendered.' } : { k: 'approval', t: 'Plan ready. Next: make first frames, then check them before the long render.' };
+  if (job.kind === 'stills' && job.sequence?.active) return blocked
+    ? { k: 'blocked', t: 'This shot is ready for review, but a plan check still blocks motion.' }
+    : { k: 'approval', t: `Shot ${job.sequence.currentShot} first frame is ready. Review and approve it before its motion renders.` };
   if (job.kind === 'stills') return blocked ? { k: 'blocked', t: 'Blocked by a check. Fix it before rendering.' } : { k: 'approval', t: 'First frames ready. Approve them to start the render, or regenerate any frame.' };
+  if (job.kind === 'sequence-motion' && job.sequence?.stage === 'ready') return { k: 'approval', t: 'All shots are approved and rendered. Assemble the final video when ready.' };
+  if (job.kind === 'sequence-motion') return { k: 'approval', t: `Shot ${job.sequence?.currentShot || ''} motion is verified. Preparing the next first frame.` };
   return blocked ? { k: 'blocked', t: 'Final file failed a check. It is not ready.' } : { k: 'complete', t: 'Video rendered. Review the export below before using it.' };
 }
 
@@ -570,10 +652,102 @@ export function CheckpointReviewForm({ job, timeline }) {
   </div>;
 }
 
+function CopyableText({ label, value, multiline = false }) {
+  const [message, setMessage] = useState('');
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setMessage(`${label} copied.`);
+    } catch {
+      setMessage('Clipboard unavailable; select the text to copy it.');
+    }
+  };
+  return (
+    <div className="copy-field">
+      <div className="copy-field-head"><b>{label}</b><button type="button" className="ghost" onClick={copy}>Copy</button></div>
+      {multiline ? <pre>{value}</pre> : <p>{value}</p>}
+      {message && <span className="muted small" role="status">{message}</span>}
+    </div>
+  );
+}
+
+function ReleaseReadiness({ report, review }) {
+  const quality = releaseQualityStatus(report, review.videoSha256);
+  if (quality.status === 'missing') return <p className="muted small">No release quality report was found for this export.</p>;
+  if (!quality.verified) return <p className="bad small" role="status">Saved release report is not verified against this exact export; its score is not treated as current.</p>;
+  const statusText = {
+    pass: 'Release gate passed',
+    revise: 'Revise before release',
+    blocked: 'Release blocked',
+    'review-needed': 'Human review needed',
+  }[quality.status] || `Release status: ${quality.status}`;
+  const reasons = [
+    ...(Array.isArray(report.evidenceReleaseProblems) ? report.evidenceReleaseProblems : []),
+    ...(Array.isArray(report.reviewEvidenceProblems) ? report.reviewEvidenceProblems : []),
+    ...(Array.isArray(report.criticalEditorialBelow4) && report.criticalEditorialBelow4.length
+      ? [`Editorial ratings below 4/5: ${report.criticalEditorialBelow4.join(', ')}`] : []),
+  ];
+  return (
+    <div className={`release-readiness release-${quality.status}`}>
+      <b>{statusText}</b>
+      <p>{Number.isFinite(report.score) ? `${report.score}/${report.possible || 100}` : 'Score unavailable'}
+        {Number.isFinite(report.technicalPoints) && Number.isFinite(report.storyPoints) && Number.isFinite(report.editorialPoints)
+          ? ` · technical ${report.technicalPoints}, story ${report.storyPoints}, editorial ${report.editorialPoints}` : ''}</p>
+      {reasons.length > 0 && <ul>{reasons.map((reason, index) => <li key={`${reason}-${index}`}>{reason}</li>)}</ul>}
+      {report.note && <p className="muted small">{report.note}</p>}
+    </div>
+  );
+}
+
 /* ---------- export review: file gates, shot flags and human review are three different things ---------- */
-export function ExportReview({ job, review, weak, notes, busy, onRetake, onCompare }) {
+export function ExportReview({ job, review, weak, notes, busy, renderDisabled, onRetake, onRepair, onCompare }) {
   const [rated, setRated] = useState('');
+  const [artifactState, setArtifactState] = useState({ status: 'loading', items: [], pack: null, quality: null, errors: [] });
+  const recommendations = reviewRecommendations(review);
+  const suggestedGuidance = suggestedRepairGuidance(recommendations, job.options?.ending);
+  const [repairGuidance, setRepairGuidance] = useState(() => readRepairGuidance(job.id, job.video) ?? suggestedGuidance);
   useEffect(() => { setRated(''); }, [job.id]);
+  useEffect(() => {
+    const saved = readRepairGuidance(job.id, job.video);
+    const next = saved ?? suggestedGuidance;
+    setRepairGuidance(next);
+    if (saved === null && next) writeRepairGuidance(job.id, job.video, next);
+  }, [job.id, job.video, suggestedGuidance]);
+  useEffect(() => {
+    let current = true;
+    setArtifactState({ status: 'loading', items: [], pack: null, quality: null, errors: [] });
+    fetch('/api/artifacts?sessionId=' + encodeURIComponent(job.id))
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Could not load publishing files.');
+        return data;
+      })
+      .then(async (data) => {
+        const items = Array.isArray(data.artifacts) ? data.artifacts : [];
+        const readJson = async (kind) => {
+          const artifact = items.find((item) => item.kind === kind);
+          if (!artifact) return { value: null, error: null };
+          try {
+            const response = await fetch('/media?p=' + encodeURIComponent(artifact.path));
+            if (!response.ok) throw new Error(`Could not load ${artifact.label}.`);
+            const value = await response.json();
+            if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`${artifact.label} is not valid JSON.`);
+            return { value, error: null };
+          } catch (error) {
+            return { value: null, error: error.message };
+          }
+        };
+        const [pack, quality] = await Promise.all([readJson('publish-pack'), readJson('quality-report')]);
+        if (current) setArtifactState({
+          status: 'ready', items, pack: pack.value, quality: quality.value,
+          errors: [pack.error, quality.error].filter(Boolean),
+        });
+      })
+      .catch((error) => {
+        if (current) setArtifactState({ status: 'error', items: [], pack: null, quality: null, errors: [], error: error.message });
+      });
+    return () => { current = false; };
+  }, [job.id, job.video]);
   const failed = notes.filter((n) => n.startsWith('BLOCKED')).map((n) => plainBlock(n.replace(/^BLOCKED:\s*/, '')));
   const passed = job.technicalQa?.status === 'passed';
   const reviewStatus = exportReviewStatus({ failed, technicalPassed: passed, review });
@@ -584,6 +758,25 @@ export function ExportReview({ job, review, weak, notes, busy, onRetake, onCompa
       <p className={'readystate ' + reviewStatus.tone} role="status">{reviewStatus.message}</p>
       <Player src={src} />
       <p className="row"><a className="btn" href={src} download>Download video</a>{onCompare && <button type="button" className="ghost" onClick={onCompare}>Compare with another video</button>}</p>
+      {artifactState.status === 'ready' && artifactState.items.length > 0 && <div className="export-artifacts">
+        <b>Publishing files</b>
+        <ul>{artifactState.items.map((artifact) => <li key={artifact.kind}>
+          <a href={'/media?p=' + encodeURIComponent(artifact.path)} download>{artifact.label}</a>
+        </li>)}</ul>
+      </div>}
+      {artifactState.status === 'ready' && <ReleaseReadiness report={artifactState.quality} review={review} />}
+      {artifactState.status === 'ready' && artifactState.pack && <details className="publish-preview">
+        <summary>Preview publishing details</summary>
+        {artifactState.pack.title && <CopyableText label="Title" value={String(artifactState.pack.title)} />}
+        {artifactState.pack.description && <CopyableText label="Description" value={String(artifactState.pack.description)} multiline />}
+        {Array.isArray(artifactState.pack.tags) && artifactState.pack.tags.length > 0 &&
+          <CopyableText label="Tags" value={artifactState.pack.tags.map(String).join(', ')} />}
+        {Array.isArray(artifactState.pack.claimsToCheck) && artifactState.pack.claimsToCheck.length > 0 &&
+          <div className="copy-field"><b>Claims to check</b><ul>{artifactState.pack.claimsToCheck.map((claim, index) => <li key={`${claim}-${index}`}>{String(claim)}</li>)}</ul></div>}
+      </details>}
+      {artifactState.status === 'ready' && artifactState.errors.map((message, index) => <p className="bad small" role="alert" key={`${message}-${index}`}>{message}</p>)}
+      {artifactState.status === 'ready' && artifactState.items.length === 0 && <p className="muted small">No caption, publish-pack, or provenance files were found beside this export.</p>}
+      {artifactState.status === 'error' && <p className="bad small" role="alert">{artifactState.error}</p>}
       <dl className="gates">
         <dt>Technical checks on the final file</dt>
         <dd>{failed.length ? <ul>{failed.map((f) => <li key={f} className="bad">{f}</li>)}</ul> : passed ? 'Passed for this exact export.' : 'No check result was recorded for this file.'}</dd>
@@ -595,6 +788,25 @@ export function ExportReview({ job, review, weak, notes, busy, onRetake, onCompa
         <dd>{weak.length ? `${weak.length === 1 ? 'Shot ' + weak[0] + ' barely moves' : 'Shots ' + weak.join(', ') + ' barely move'}. This is a machine measure, not a verdict.` : review.status === 'complete' && review.motionChecked ? 'No shot was flagged by the motion measure.' : review.status === 'pending' ? 'Review results are loading.' : review.status === 'stale' ? 'The saved review belongs to a different version. Review this export again.' : review.status === 'complete' ? 'Motion measurement is incomplete.' : 'Review results are unavailable for this export.'}
           {review.status === 'complete' && <p className="muted">{review.visionChecked ? 'Vision screening ran.' : 'Vision screening is unverified or was skipped.'} {(review.unchecked || []).join(' ')} {(review.notMachineChecked || []).join(' ')}</p>}</dd>
         {review.status === 'complete' && Object.values(review.flags || {}).some((items) => items.length > 0) && <><dt>Automatic review flags (check these moments)</dt><dd><ul>{Object.entries(review.flags || {}).flatMap(([category, items]) => items.map((item, index) => <li key={category + index}>{category}: {item}</li>))}</ul></dd></>}
+        {review.status === 'complete' && recommendations.length > 0 && <><dt>Recommended next steps</dt><dd><ul>{recommendations.map((recommendation, index) => {
+          const { category, issue, nextStep, shot, seconds } = recommendation;
+          const canRetakeShot = Number.isInteger(shot) && job.sequence?.stage === 'ready'
+            && shot <= Number(job.sequence.shotCount) && onRetake;
+          return <li key={category + index}>
+            <b>{category}:</b> {nextStep} <span className="muted">Flag: {issue}</span>
+            {shot && <p className="muted small">Affected shot {shot}{Number.isFinite(seconds) ? ` · around ${seconds.toFixed(1)}s` : ''}</p>}
+            {shot && onRepair && <button type="button" className="ghost" disabled={busy} onClick={() => {
+              const guidance = suggestedShotRepairGuidance(recommendation, job.options?.ending);
+              setRepairGuidance(guidance);
+              writeRepairGuidance(job.id, job.video, guidance);
+              document.querySelector('[aria-label="Plan repair instructions"]')?.focus();
+            }}>Focus plan repair on shot {shot}</button>}
+            {canRetakeShot && <div>
+              <button type="button" className="ghost" disabled={busy || renderDisabled} onClick={() => onRetake(shot)}>Try new still candidates for shot {shot}</button>
+              <span className="muted small"> The prompt stays unchanged. Motion remains locked until you review and approve a candidate.</span>
+            </div>}
+          </li>;
+        })}</ul></dd></>}
         {review.status === 'complete' && review.sampleTimeline?.length > 0 && <><dt>Shot action checkpoints</dt><dd>
           <p className="muted">Start, middle and end samples are provided for your review. The contact sheet is not an automatic realism verdict.</p>
           {review.contactSheet && <details className="action-checkpoints">
@@ -607,7 +819,21 @@ export function ExportReview({ job, review, weak, notes, busy, onRetake, onCompa
         <dt>Human editorial review</dt>
         <dd>{rated ? `Rated by you: ${rated === 'up' ? 'good' : 'needs work'}.` : 'Picture and sound have not been reviewed by a person yet.'}</dd>
       </dl>
-      {weak.length > 0 && <div className="retake"><p><b>Make a new take.</b> A new take uses a new seed and re-renders by itself (about 5 minutes).</p>{weak.map((n) => <button key={n} type="button" className="ghost" disabled={busy} onClick={() => onRetake(n)}>Make a new take of shot {n}</button>)}</div>}
+      {review.status === 'complete' && recommendations.length > 0 && onRepair && <div className="retake">
+        <label><b>Revise the plan</b>
+          <textarea aria-label="Plan repair instructions" rows={4} maxLength={600} value={repairGuidance} onChange={(event) => {
+            const value = event.target.value;
+            setRepairGuidance(value);
+            writeRepairGuidance(job.id, job.video, value);
+          }} />
+        </label>
+        <p className="muted small">These instructions are saved locally for this export.</p>
+        <p className="muted">The local AI will propose a revised story plan. You review and approve that plan before any frames or video are generated; this export and its history are kept.</p>
+        <button type="button" className="primary" disabled={busy || !repairGuidance.trim()} onClick={() => onRepair(repairGuidance)}>Prepare a corrected plan</button>
+      </div>}
+      {weak.length > 0 && <div className="retake"><p><b>Make a new take.</b> A new seed regenerates the selected shot and then renders the complete video; time depends on the number of clips.</p>
+        {renderDisabled && <p className="muted">No renders remain today. You can still revise and review the story plan.</p>}
+        {weak.map((n) => <button key={n} type="button" className="ghost" disabled={busy || renderDisabled} onClick={() => onRetake(n)}>Make a new take of shot {n}</button>)}</div>}
       <Feedback sessionId={job.id} video={job.video} onRated={setRated} />
       <p className="muted small">{job.video}</p>
     </section>

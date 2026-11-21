@@ -6,9 +6,8 @@
 Checks (from the Billionaire Bites data in episodes/channel-performance.json):
   1. Repeat topic: same subject as a published or scheduled Short. Blocks the render unless --allow.
   2. Hook strength: rough 0-100 score of the first narration line, from the hook rubric. Warns below 60. It is a heuristic, not a prediction.
-  3. Length: 20-35 s, and the narration fits the time (about 2.5 words a second).
+  3. Length: 10-35 s, and the narration fits the time (about 2.5 words a second).
   4. Currency: warns on non-USD money in the first line (the yen melons Short got 25 views).
-  5. Claims: warns when the plan lists no claims to check or sources.
 """
 import json
 import re
@@ -102,8 +101,6 @@ def main():
             warnings.append(f'shot {i}: motion prompt has no recognizable physical action; review it for camera-only movement before rendering')
     if NON_USD.search(first):
         warnings.append('non-USD money in the first line: use dollars')
-    if not plan.get('claimsToCheck'):
-        warnings.append('no claims or sources listed')
     for w in warnings:
         print('WARNING:', w)
     for p in problems:

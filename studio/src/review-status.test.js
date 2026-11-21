@@ -1,9 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { exportReviewStatus } from './review-status.js';
+import { exportReviewStatus, releaseQualityStatus } from './review-status.js';
 
 describe('exportReviewStatus', () => {
   it('keeps a technical failure blocked', () => {
     expect(exportReviewStatus({ failed: ['duration'], technicalPassed: false }).tone).toBe('bad');
+  });
+
+  describe('releaseQualityStatus', () => {
+    it('accepts a quality report only when its hash matches the current export', () => {
+      expect(releaseQualityStatus({ status: 'pass', reviewedVideoSha256: 'current' }, 'current'))
+        .toEqual({ verified: true, status: 'pass' });
+      expect(releaseQualityStatus({ status: 'pass', reviewedVideoSha256: 'old' }, 'current'))
+        .toEqual({ verified: false, status: 'unverified' });
+    });
+
+    it('distinguishes a missing report from an unverifiable report', () => {
+      expect(releaseQualityStatus(null, 'current')).toEqual({ verified: false, status: 'missing' });
+      expect(releaseQualityStatus({ status: 'pass' }, null)).toEqual({ verified: false, status: 'unverified' });
+    });
   });
 
   it('surfaces automatic visual flags without calling them a verdict', () => {

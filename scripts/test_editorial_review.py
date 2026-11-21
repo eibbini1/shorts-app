@@ -56,6 +56,40 @@ class PrereviewTests(unittest.TestCase):
         self.assertEqual(pre.shot_questions(scenario, [{'questions': ['Is it a tart?']}], 0), ['Is it a tart?'])
         self.assertEqual(pre.shot_questions(scenario, [{}], 0), ['Does this image show A golden tart on a board?'])
 
+    def test_payoff_question_uses_the_planned_ending_not_first_frame_checks(self):
+        scenario = {
+            'plan': {
+                'payoff': 'A golden pineapple pizza rests on a wooden board',
+                'shots': [{'sceneState': {'after': 'The finished pizza rests on the board.'}}],
+            },
+            'visualChecks': [{'questions': ['Is the pizza inside the glowing oven?']}],
+        }
+        self.assertIn('"A golden pineapple pizza rests on a wooden board"',
+                      pre.ending_question(scenario))
+
+    def test_payoff_question_falls_back_to_last_scene_state(self):
+        scenario = {'plan': {'shots': [{'sceneState': {'after': 'The sauce coats the pasta.'}}]}}
+        self.assertIn('"The sauce coats the pasta."', pre.ending_question(scenario))
+
+    def test_missing_planned_ending_is_left_unchecked(self):
+        self.assertIsNone(pre.ending_question({'plan': {'shots': [{}]}}))
+
+    def test_middle_frame_question_checks_the_action_not_the_initial_state(self):
+        scenario = {
+            'plan': {'shots': [{
+                'imagePrompt': 'A pizza inside an oven.',
+                'sceneState': {'action': 'A hand slides the pizza onto a wooden board.'},
+            }]},
+        }
+        checks = [{'questions': ['Is the pizza fully inside the oven?']}]
+        self.assertEqual(pre.motion_questions(scenario, checks, 0), [
+            'Does this frame plausibly show the planned action underway: "A hand slides the pizza onto a wooden board."?'])
+
+    def test_middle_frame_falls_back_when_no_scene_action_is_available(self):
+        scenario = {'plan': {'shots': [{'imagePrompt': 'A pizza inside an oven.'}]}}
+        checks = [{'questions': ['Is the pizza inside the oven?']}]
+        self.assertEqual(pre.motion_questions(scenario, checks, 0), ['Is the pizza inside the oven?'])
+
 
 class RecordReviewTests(unittest.TestCase):
     FACTS = {key: True for key in rec.FACTS}

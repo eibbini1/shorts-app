@@ -12,7 +12,8 @@ import wave
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from local_video_progress import snapshot
-from studio_frames import read_manifest, write_manifest
+from studio_frames import read_manifest_details, write_manifest
+from studio_references import load_reference_manifest, manifest_sha256
 from first_checks import check_still, check_clip
 from presentation_mode import choose as choose_presentation
 from select_still_local import select as select_still_local
@@ -63,6 +64,42 @@ def prep_still(work, reference):
     return target
 
 
+def extract_end_frame(work, index, clip_path):
+    target = work / 'motion' / f'shot-{index:02d}-end-{file_hash(clip_path)[:12]}.png'
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = target.with_name(target.stem + '.tmp.png')
+    try:
+        run('ffmpeg', '-y', '-v', 'error', '-sseof', '-0.05', '-i', clip_path,
+            '-frames:v', 1, temporary)
+        if not temporary.is_file() or temporary.stat().st_size == 0:
+            raise RuntimeError(f'Could not extract the final frame from shot {index + 1}: {clip_path}')
+        os.replace(temporary, target)
+    finally:
+        temporary.unlink(missing_ok=True)
+    return target
+
+
+def select_source(shot_number, shot_reference, chain_source, previous_end_frame,
+                  chain_images, anchor, studio_frame):
+    if shot_reference:
+        return shot_reference
+    if chain_images:
+        if chain_source:
+            return chain_source
+        if previous_end_frame:
+            return previous_end_frame
+        if shot_number > 1:
+            raise ValueError(
+                f'Shot {shot_number} needs the preceding motion clip final frame for continuity; '
+                'prepare shots sequentially instead of chaining opening stills.')
+        return anchor or studio_frame
+    if anchor:
+        return anchor
+    if chain_source:
+        return chain_source
+    return studio_frame
+
+
 def still(work, index, shot, seed, source, width, height, cache_only=False):
     key = digest({'prompt': shot['imagePrompt'], 'seed': seed, 'sourceHash': file_hash(source) if source else None,
                   'model': 'flux2-klein-4b-q4', 'width': width, 'height': height})
@@ -89,7 +126,8 @@ def repair_still_prompt(prompt, subject, required, reason, attempt):
 
 
 def review_still_with_retries(initial_reference, prompt, subject, required, seed,
-                              review, generate, on_repair=None, attempts=STILL_REVIEW_ATTEMPTS):
+                              review, generate, on_repair=None, attempts=STILL_REVIEW_ATTEMPTS,
+                              allow_pending_review=False):
     reference = initial_reference
     current_prompt = prompt
     for attempt in range(1, attempts + 1):
@@ -104,8 +142,12 @@ def review_still_with_retries(initial_reference, prompt, subject, required, seed
             return reference, current_prompt
         status, reason = result
         if status == 'unavailable':
+            if allow_pending_review:
+                return reference, current_prompt
             raise RuntimeError(f'Local vision review is unavailable: {reason}')
         if attempt == attempts:
+            if allow_pending_review:
+                return reference, current_prompt
             raise RuntimeError(f'Vision review still rejects the image after {attempts} attempts: {reason}')
         current_prompt = repair_still_prompt(current_prompt, subject, required, reason, attempt + 1)
         if on_repair:
@@ -147,13 +189,32 @@ def review_vision(reference, prompt, checks, cache_dir):
     return status, reason
 
 
-def save_repaired_scenario(scenario, source_data):
+def save_repaired_scenario(scenario, source_data, work=None):
     backup = scenario.with_name(scenario.stem + '.before-still-repair.json')
     if not backup.exists():
         backup.write_text(scenario.read_text(encoding='utf-8-sig'), encoding='utf-8')
     temporary = scenario.with_name(scenario.name + '.tmp')
     temporary.write_text(json.dumps(source_data, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
     os.replace(temporary, scenario)
+    references = Path(work) / 'references.json' if work else None
+    if references and references.is_file():
+        manifest = json.loads(references.read_text(encoding='utf-8'))
+        manifest['scenarioSha256'] = file_hash(scenario)
+        reference_tmp = references.with_suffix('.json.tmp')
+        reference_tmp.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+        os.replace(reference_tmp, references)
+
+
+def save_pending_frames(work, scenario, entries):
+    """Persist exact candidate paths and review state so attended Studio users can decide on failures."""
+    manifest = {'schemaVersion': 1, 'scenarioSha256': file_hash(scenario), 'frames': entries}
+    reference_hash = manifest_sha256(work)
+    if reference_hash:
+        manifest['referenceManifestSha256'] = reference_hash
+    target = work / 'pending-first-frames.json'
+    temporary = target.with_suffix('.json.tmp')
+    temporary.write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+    os.replace(temporary, target)
 
 
 def studio_frames(studio_id):
@@ -246,13 +307,26 @@ def main():
     parser.add_argument('--allow-silence', action='store_true', help='Continue even when the voice track has gaps over 1.5 s')
     parser.add_argument('--allow-bad-first', action='store_true', help='Skip the first-picture and first-clip checks')
     parser.add_argument('--stills', type=Path, default=os.environ.get('BB_STILLS') or None, help='Folder with your own stills named shot-01.png, shot-02.png ... (for example from Google Flow). Missing shots fall back to FLUX')
-    parser.add_argument('--anchor-image', type=Path, default=os.environ.get('BB_ANCHOR_IMAGE') or None, help='Recurring character: edit this image into each shot so one face is reused across films (or set BB_ANCHOR_IMAGE)')
+    parser.add_argument('--anchor-image', type=Path, default=os.environ.get('BB_ANCHOR_IMAGE') or None, help='Shared identity reference to edit into every generated shot (or set BB_ANCHOR_IMAGE)')
+    parser.add_argument('--shot-only', type=int, help='Prepare only this 1-based shot; requires --stills-only')
+    parser.add_argument('--chain-source', type=Path, help='Verified preceding motion end frame for --shot-only')
+    parser.add_argument('--chain-source-sha256', help='Expected hash of the preceding motion end frame')
     parser.add_argument('--prep-stills', action='store_true', help='PhotoCraft auto contrast + unsharp mask on each still before motion (changes the motion cache key)')
     parser.add_argument('--stills-only', action='store_true', help='Make (or reuse) the first-frame stills and the vision check, then stop before any motion')
     parser.add_argument('--cache-only', action='store_true', help='Reuse existing FLUX/LTX assets; fail rather than start a model job on a cache miss')
     parser.add_argument('--best-of-3-stills', action='store_true', help='Generate three stills per shot and require local Qwen hand/utensil review before motion')
+    parser.add_argument('--allow-pending-visual-review', action='store_true',
+                        help='Finish attended still generation when vision rejects a frame; motion still requires human approval')
     parser.add_argument('--skip-vision-gate', action='store_true', help='Explicitly skip local Qwen still review (release still needs human frame review)')
     args = parser.parse_args()
+    if args.allow_pending_visual_review and not args.stills_only:
+        parser.error('--allow-pending-visual-review is only valid with --stills-only')
+    if args.shot_only is not None and not args.stills_only:
+        parser.error('--shot-only is only valid with --stills-only')
+    if args.chain_source and args.shot_only is None:
+        parser.error('--chain-source requires --shot-only')
+    if bool(args.chain_source) != bool(args.chain_source_sha256):
+        parser.error('--chain-source and --chain-source-sha256 must be provided together')
     scenario = args.scenario.expanduser().resolve()
     muse = Path(args.anchor_image).expanduser().resolve() if args.anchor_image else None
     if muse and not muse.is_file(): parser.error(f'Missing anchor image: {muse}')
@@ -264,11 +338,22 @@ def main():
     run('node', ROOT / 'scripts/bb-local-scenario.mjs', '--validate', scenario)
     source_data = json.loads(scenario.read_text(encoding='utf-8-sig'))
     plan, settings = source_data['plan'], source_data['settings']
+    if args.shot_only is not None and not 1 <= args.shot_only <= len(plan['shots']):
+        parser.error(f'--shot-only must be between 1 and {len(plan["shots"])}')
+    chain_source = args.chain_source.expanduser().resolve() if args.chain_source else None
+    if chain_source and not chain_source.is_file():
+        parser.error(f'Missing chain source frame: {chain_source}')
+    if chain_source and file_hash(chain_source) != args.chain_source_sha256:
+        parser.error(f'The preceding motion end frame changed: {chain_source}')
+    try:
+        shot_references = load_reference_manifest(work, scenario, len(plan['shots']))
+    except (OSError, ValueError, json.JSONDecodeError) as error:
+        parser.error(f'Studio reference images are invalid: {error}')
     frames = studio_frames(source_data.get('studio'))
     for number, shot in enumerate(plan['shots'], 1):
         if shot.get('studioFrame') and shot['studioFrame'] not in frames:
             parser.error(f"Shot {number} asks for studio frame {shot['studioFrame']!r}; studio has {sorted(frames)}")
-    visual_checks = source_data.get('visualChecks') or [{} for _ in plan['shots']]
+    visual_checks = source_data.get('visualChecks') or [shot.get('visualChecks') or {} for shot in plan['shots']]
     if len(visual_checks) != len(plan['shots']):
         parser.error('visualChecks must have one entry per shot')
     for number, checks in enumerate(visual_checks, 1):
@@ -277,14 +362,30 @@ def main():
                 any(not isinstance(value, str) for value in checks.get(key, []))
                 for key in ('mustShow', 'mustNotShow', 'questions')):
             parser.error(f'visualChecks shot {number} must contain string lists named mustShow, mustNotShow and questions')
-    if not args.skip_vision_gate:
+    pinned = None
+    human_approved_pinned = False
+    if os.environ.get('SHORTS_STUDIO_PIN_FRAMES') == '1':
+        try:
+            pinned, pinned_manifest = read_manifest_details(work, scenario, len(plan['shots']))
+        except (OSError, ValueError) as error:
+            parser.error(f'Pinned Studio frames are invalid: {error}')
+        human_approved_pinned = pinned_manifest.get('reviewMethod') == 'human'
+    if not args.skip_vision_gate and not human_approved_pinned:
         try:
             with urllib.request.urlopen('http://127.0.0.1:11434/api/tags', timeout=5) as response:
                 models = json.load(response).get('models', [])
             if not any(item.get('name') == 'qwen3-vl:4b' for item in models):
-                parser.error('Local qwen3-vl:4b is needed for the pre-motion still gate; install it or explicitly pass --skip-vision-gate')
+                message = 'Local qwen3-vl:4b is needed for the pre-motion still gate; install it or explicitly pass --skip-vision-gate'
+                if args.allow_pending_visual_review:
+                    print(message + '. Attended manual review will be required for every frame.', flush=True)
+                else:
+                    parser.error(message)
         except OSError as error:
-            parser.error(f'Local Ollama vision gate is unavailable before rendering: {error}')
+            message = f'Local Ollama vision gate is unavailable before rendering: {error}'
+            if args.allow_pending_visual_review:
+                print(message + '. Attended manual review will be required for every frame.', flush=True)
+            else:
+                parser.error(message)
     presentation = choose_presentation(source_data)
     print(f"Presentation: {presentation['mode']} ({presentation['reason']})", flush=True)
     actual_seconds = sum(shot['seconds'] for shot in plan['shots'])
@@ -303,8 +404,11 @@ def main():
     work.joinpath('refs').mkdir(parents=True, exist_ok=True)
     work.joinpath('motion').mkdir(exist_ok=True)
     references = []
+    frame_review_statuses = []
     segments = []
     previous = None
+    story_anchor = None
+    pending_frames = []
     gate = None if args.allow_bad_first else True
     bumps_file = work / 'refs' / 'seed-bumps.json'  # written by the Studio when you press Regenerate on a first frame
     try: bumps = json.loads(bumps_file.read_text()) if bumps_file.is_file() else {}
@@ -361,64 +465,125 @@ def main():
         progress_state.write_text(json.dumps({'scenarioSha256': file_hash(scenario),
             'output': str(output.resolve()), 'completed': []}) + '\n')
         print(progress(), flush=True)
-    pinned = read_manifest(work, scenario, len(plan['shots'])) if os.environ.get('SHORTS_STUDIO_PIN_FRAMES') == '1' else None
     for index, shot in enumerate(plan['shots']):
+        if args.shot_only is not None and index + 1 != args.shot_only:
+            continue
+        checks = visual_checks[index] or {}
+        candidate_paths = []
+        candidate_reviews = {}
+        selected_index = 1
         reference = pinned[index] if pinned else None
-        source = previous if args.chain_images and previous else (muse if muse_shots is None or index + 1 in muse_shots else None)
-        if source is None and shot.get('studioFrame'):
-            source = frames[shot['studioFrame']]
+        anchor = muse if muse and (muse_shots is None or index + 1 in muse_shots) else story_anchor
+        try:
+            source = select_source(index + 1, shot_references.get(index + 1),
+                                   chain_source if args.shot_only == index + 1 else None,
+                                   previous, args.chain_images, anchor,
+                                   frames.get(shot.get('studioFrame')))
+        except ValueError as error:
+            parser.error(str(error))
         if reference is None and args.stills:
             reference = own_still(args.stills.expanduser().resolve(), work, index, width, height)
         if reference is None:
             if shot.get('studioFrame'):
                 print(f"Shot {index + 1} edits studio frame '{shot['studioFrame']}'", flush=True)
             if args.best_of_3_stills:
-                candidates = [still(work, index, shot, 1200 + index + variation * 100,
+                base_seed = 1200 + index + 7919 * int(bumps.get(str(index), 0))
+                candidates = [still(work, index, shot, base_seed + variation * 100,
                                     source, width, height, args.cache_only) for variation in range(3)]
-                selected, review = select_still_local(candidates, shot['imagePrompt'])
+                candidate_paths = candidates
+                selected, review = select_still_local(candidates, shot['imagePrompt'], checks=checks)
+                selected_index = selected
                 reference = candidates[selected - 1]
+                for row in review.get('candidates', []):
+                    candidate_reviews[candidates[row['index'] - 1]] = {
+                        'status': 'passed' if all(row.get(key) for key in
+                            ('handsPlausible', 'toolContactPlausible', 'foodAndSetMatch', 'visualChecksPass'))
+                            else 'review-required',
+                        'reason': '; '.join(row.get('issues', []))[:300],
+                    }
                 (work / 'refs' / f'shot-{index:02d}-best-of-3.json').write_text(
                     json.dumps({'images': [str(path) for path in candidates], 'selectedIndex': selected,
-                                'review': review, 'note': 'Advisory vision check; human inspection required.'}, indent=2) + '\n')
+                                'visualChecks': checks, 'review': review,
+                                'note': 'Advisory vision check; human inspection required.'}, indent=2) + '\n')
                 print(f'Best of 3 stills for shot {index + 1}: candidate {selected}', flush=True)
             else:
                 reference = still(work, index, shot, 1200 + index + 7919 * int(bumps.get(str(index), 0)), source, width, height, args.cache_only)
-            checks = visual_checks[index] or {}
-        checks = visual_checks[index] or {}
+                candidate_paths = [reference]
         base_seed = 1200 + index + 7919 * int(bumps.get(str(index), 0))
         required = '; '.join(checks.get('mustShow', [])) or shot.get('motionPrompt', '').split('.', 1)[0].strip()
         subject = plan.get('title') or source_data.get('topic') or 'the planned subject'
+
+        def persist_pending(selected=None):
+            entries = []
+            for candidate_index, path in enumerate(candidate_paths, 1):
+                assessment = candidate_reviews.get(path, {})
+                entries.append({'file': str(path.relative_to(work)), 'sha256': file_hash(path),
+                                'candidate': candidate_index,
+                                'status': assessment.get('status', 'unverified'),
+                                'reason': assessment.get('reason', '')})
+            selected_file = str(selected.relative_to(work)) if selected and selected.is_relative_to(work) else None
+            entry = {'shot': index + 1, 'candidates': entries, 'selectedFile': selected_file,
+                     'visualChecks': checks}
+            pending_frames[:] = [item for item in pending_frames if item['shot'] != index + 1]
+            pending_frames.append(entry)
+            pending_frames.sort(key=lambda item: item['shot'])
+            save_pending_frames(work, scenario, pending_frames)
+
+        persist_pending(reference)
 
         def review_candidate(candidate, prompt):
             if gate and index == 0:
                 problem = check_still(candidate)
                 if problem:
+                    candidate_reviews[candidate] = {'status': 'review-required', 'reason': f'First picture: {problem}'}
+                    persist_pending(candidate)
                     return 'review-required', f'First picture: {problem}'
                 print('First picture check passed', flush=True)
-            if args.skip_vision_gate:
+            if human_approved_pinned:
+                candidate_reviews[candidate] = {'status': 'human-approved', 'reason': 'Exact frame selected in Studio'}
+                persist_pending(candidate)
                 return None
-            return review_vision(candidate, prompt, checks, work / 'refs')
+            if args.skip_vision_gate:
+                candidate_reviews[candidate] = {'status': 'unverified', 'reason': 'Vision gate explicitly skipped'}
+                persist_pending(candidate)
+                return None
+            result = review_vision(candidate, prompt, checks, work / 'refs')
+            candidate_reviews[candidate] = {'status': 'passed', 'reason': ''} if result is None else {
+                'status': result[0], 'reason': result[1][:300]}
+            persist_pending(candidate)
+            return result
 
         def generate_repair(prompt, seed):
             repaired_shot = {**shot, 'imagePrompt': prompt}
-            return still(work, index, repaired_shot, seed, source, width, height, args.cache_only)
+            candidate = still(work, index, repaired_shot, seed, source, width, height, args.cache_only)
+            if candidate not in candidate_paths:
+                candidate_paths.append(candidate)
+            persist_pending(candidate)
+            return candidate
 
         def save_repair(prompt, attempt, reason):
             shot['imagePrompt'] = prompt
-            save_repaired_scenario(scenario, source_data)
+            save_repaired_scenario(scenario, source_data, work)
             print(f'Automatically correcting shot {index + 1} from local vision feedback '
                   f'({attempt}/{STILL_REVIEW_ATTEMPTS}): {reason}', flush=True)
 
         try:
             reference, accepted_prompt = review_still_with_retries(
                 reference, shot['imagePrompt'], subject, required, base_seed,
-                review_candidate, generate_repair, save_repair)
+                review_candidate, generate_repair, save_repair,
+                allow_pending_review=args.allow_pending_visual_review)
         except RuntimeError as error:
+            persist_pending(reference)
             parser.error(f'Shot {index + 1} preview could not pass review after automatic correction: {error}. '
                          f'Inspect the still and vision report in {work / "refs"}.')
         shot['imagePrompt'] = accepted_prompt
+        if candidate_reviews.get(reference, {}).get('status') == 'passed':
+            candidate_reviews[reference] = {'status': 'passed', 'reason': 'Selected by vision gate'}
+        frame_review_statuses.append(candidate_reviews.get(reference, {}).get('status', 'unverified'))
+        persist_pending(reference)
         references.append(reference)
-        previous = reference
+        if story_anchor is None:
+            story_anchor = reference
         if args.stills_only:
             print(f'First frame ready for shot {index + 1}: {reference.name}', flush=True)
             continue
@@ -427,7 +592,7 @@ def main():
         parts = math.ceil(shot['seconds'] / 5)
         total_frames = shot['seconds'] * FPS
         frame_counts = [total_frames // parts + (1 if part < total_frames % parts else 0) for part in range(parts)]
-        for part, frames in enumerate(frame_counts):
+        for part, frame_count in enumerate(frame_counts):
             if part:
                 anchor = work / 'motion' / f'shot-{index:02d}-part-{part - 1:02d}-anchor.png'
                 run('ffmpeg', '-y', '-v', 'error', '-sseof', '-0.05', '-i', previous_clip,
@@ -440,10 +605,14 @@ def main():
                 if problem:
                     parser.error(f'First clip failed: {problem}. Stopped before the remaining clips (use --allow-bad-first to override)')
                 print('First clip check passed', flush=True)
-            segments.append({'file': str(previous_clip), 'seconds': frames / FPS})
+            segments.append({'file': str(previous_clip), 'seconds': frame_count / FPS})
+        previous = extract_end_frame(work, index, previous_clip) if args.chain_images else reference
     if args.stills_only:
-        write_manifest(work, scenario, references)
-        print('First frames ready; no motion generated.', flush=True)
+        review_required = any(status != 'passed' for status in frame_review_statuses)
+        if not review_required and args.shot_only is None:
+            write_manifest(work, scenario, references)
+        print('First frames ready for human review; no motion generated.' if review_required
+              else 'First frames ready; no motion generated.', flush=True)
         return
     manifest = {'aspect': aspect, 'shots': segments,
                 'soundtrack': 'soundtrack.wav',

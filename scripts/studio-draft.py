@@ -25,17 +25,50 @@ def checks(scn, allow_repeat):
     """Same gates the render runs before any media work; returns the BLOCKED reasons."""
     found = []
     pre = ['--strict'] + (['--allow'] if allow_repeat else [])
-    for script, extra in (('preflight-short.py', pre), ('audit-local-story.py', [])):
-        out = subprocess.run([sys.executable, str(ROOT / 'scripts' / script), scn, *extra], cwd=ROOT, capture_output=True, text=True).stdout
-        found += [l[9:] for l in out.splitlines() if l.startswith('BLOCKED: ')]
+
+    def run_gate(label, command):
+        try:
+            result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
+        except FileNotFoundError as error:
+            return [f'{label} is unavailable: {error.filename}'], []
+        output = '\n'.join(part for part in (result.stdout, result.stderr) if part)
+        lines = output.splitlines()
+        problems = [line[9:] for line in lines if line.startswith('BLOCKED: ')]
+        reviews = [line[8:] for line in lines if line.startswith('REVIEW: ')]
+        if result.returncode and not problems:
+            detail = re.sub(r'\s+', ' ', output.strip())[:240]
+            problems.append(f'{label} failed' + (f': {detail}' if detail else f' (exit {result.returncode})'))
+        return problems, reviews
+
+    reviews = []
+    gates = [
+        ('preflight-short.py', [sys.executable, str(ROOT / 'scripts/preflight-short.py'), scn, *pre]),
+        ('audit-local-story.py', [sys.executable, str(ROOT / 'scripts/audit-local-story.py'), scn]),
+        ('evidence_gate.py', [sys.executable, str(ROOT / 'scripts/evidence_gate.py'), scn]),
+    ]
+    audio_python = ROOT / 'storage/tools/ComfyUI/.venv/bin/python'
+    gates.append(('add-sfx.py', [str(audio_python), str(ROOT / 'scripts/add-sfx.py'), '--scenario', scn, '--audit']))
+    for label, command in gates:
+        problems, notes = run_gate(label, command)
+        found += problems
+        reviews += notes
     if allow_repeat:
         found = [p for p in found if p != 'repeat topic']
     found += polish(scn)
-    schema = subprocess.run(['node', str(ROOT / 'scripts/bb-local-scenario.mjs'), '--validate', scn],
-                            cwd=ROOT, capture_output=True, text=True)
-    if schema.returncode:
-        detail = re.sub(r'\s+', ' ', (schema.stderr or schema.stdout).strip())
-        found.append('scenario schema validation failed after prompt refinement' + (f': {detail[:240]}' if detail else ''))
+    schema_problems, _ = run_gate('scenario schema validation', [
+        'node', str(ROOT / 'scripts/bb-local-scenario.mjs'), '--validate', scn,
+    ])
+    found += schema_problems
+    unattended = os.environ.get('SHORTS_STUDIO_UNATTENDED') == '1'
+    for note in reviews:
+        continuity_risk = re.search(
+            r'omits the named protagonist or focal object|omits the named setting|story model repaired fields automatically',
+            note, re.I,
+        )
+        if unattended and continuity_risk:
+            found.append(f'unattended review required: {note}')
+        else:
+            say(f'REVIEW: {note}')
     return found
 
 
@@ -93,6 +126,11 @@ def main():
         last = checks(scn, a.allow_repeat)
         if not last:
             say(f'Story passed every check on attempt {attempt}.'); say('Plan ready:', scn); return 0
+        if any(problem.startswith('unattended review required:') for problem in last):
+            say('Plan saved:', scn)
+            for problem in last: say('BLOCKED:', problem)
+            say('NEEDS-CHOICE: still-blocked')
+            return 3
         if last == ['repeat topic']:
             break
         say('Fixing: ' + '; '.join(last))

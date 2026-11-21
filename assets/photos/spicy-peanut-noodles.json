@@ -1,0 +1,13 @@
+{
+  "createdAt": "2026-11-14T20:08:41.744201+00:00",
+  "model": "mlx-community/flux2-klein-4b-4bit",
+  "revision": "860e87183ceb29e39627c0612ebd66d8ea66e68c",
+  "runtime": "mflux==0.24.0",
+  "prompt": "Photorealistic editorial food photograph of glossy spicy peanut noodles in a white bowl topped with sliced scallions, sesame seeds and crushed peanuts, chopsticks lifting a twirl of noodles. Bright airy home kitchen, soft natural window light, white marble counter, shallow depth of field, shot on an 85mm lens, appetizing natural texture, steam visible, no people, no text, no logos.",
+  "seed": 5003,
+  "width": 768,
+  "height": 1152,
+  "source": null,
+  "sourceSha256": null,
+  "outputSha256": "08e286845fcca91203dd337819d7a721fb1dc9370264d1d95e98868a62838b20"
+}

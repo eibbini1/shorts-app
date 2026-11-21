@@ -10,6 +10,15 @@ export function sessionDisplayName(session, sessions = []) {
   return `${session.name} · ${time}`;
 }
 
+export function filterSessions(sessions, query) {
+  const terms = normalizePrompt(query).split(' ').filter(Boolean);
+  if (!terms.length) return sessions;
+  return sessions.filter((session) => {
+    const searchable = normalizePrompt([session.name, session.prompt, session.storyPrompt].filter(Boolean).join(' '));
+    return terms.every((term) => searchable.includes(term));
+  });
+}
+
 export function findMatchingSession(prompt, sessions = [], selectedId = null) {
   const key = normalizePrompt(prompt);
   if (key.length < 6) return null;

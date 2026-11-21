@@ -1,6 +1,6 @@
 {
   "id": "food-motion-testset-v1",
-  "status": "draft - owner to review shot list before baseline run",
+  "status": "frozen 2026-11-20 - owner approved shot list as written",
   "format": {"aspect": "9:16", "baseline_local": "576x1024, 65 frames, LTX-2.3 MLX q4", "still_model": "FLUX.2 Klein"},
   "scoring": {"scale": "0-3", "axes": ["hand_integrity", "object_permanence", "liquid_plausibility", "texture_fidelity", "prompt_adherence"], "blind": true},
   "shots": [

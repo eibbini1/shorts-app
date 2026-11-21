@@ -24,3 +24,43 @@ test('reject invalid duration, format and wrong shot totals', () => {
   assert.throws(() => scenarioSettings({ format: 'long', seconds: 10 }));
   assert.throws(() => verifyScenario(plan(5, 10), scenarioSettings()));
 });
+test('preserves explicit scene state and per-shot visual checks', () => {
+  const scenario = plan(5, 6);
+  for (const [index, shot] of scenario.shots.entries()) {
+    shot.sceneState = {
+      before: `Dough state ${index}`,
+      action: `The baker adds stage ${index + 1}`,
+      after: `Dough state ${index + 1}`,
+    };
+    shot.visualChecks = {
+      mustShow: [`stage ${index + 1}`],
+      mustNotShow: [],
+      questions: [],
+    };
+  }
+  const validated = verifyScenario(scenario, scenarioSettings());
+  assert.deepEqual(validated.plan.shots[0].sceneState, scenario.shots[0].sceneState);
+  assert.deepEqual(validated.plan.shots[0].visualChecks, scenario.shots[0].visualChecks);
+});
+test('rejects unusable visual checks and incomplete scene state', () => {
+  const scenario = plan(5, 6);
+  for (const [index, shot] of scenario.shots.entries()) {
+    shot.sceneState = { before: `Dough ${index}`, action: 'The baker adds sauce', after: `Sauce ${index}` };
+    shot.visualChecks = { mustShow: ['visible dough'], mustNotShow: [], questions: [] };
+  }
+  scenario.shots[0].sceneState = { before: 'Dough', action: 'Sauce' };
+  scenario.shots[1].visualChecks.mustShow = [];
+  assert.throws(() => verifyScenario(scenario, scenarioSettings()));
+});
+test('rejects a broken state handoff between adjacent shots', () => {
+  const scenario = plan(5, 6);
+  for (const [index, shot] of scenario.shots.entries()) {
+    shot.sceneState = {
+      before: `State ${index}`,
+      action: `The baker adds stage ${index + 1}`,
+      after: `State ${index + 1}`,
+    };
+  }
+  scenario.shots[2].sceneState.before = 'A different state';
+  assert.throws(() => verifyScenario(scenario, scenarioSettings()), /must continue shot 2/);
+});
