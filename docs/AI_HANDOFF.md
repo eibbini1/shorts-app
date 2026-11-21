@@ -1,8 +1,34 @@
 # AI handoff
 
-## Current handover — 2026-11-20: Runpod Wan 2.2 PoC and benchmark
+## Current handover — 2026-11-21: Studio and pipeline work
 
-This is the newest state; older local-only notes below are historical. The product goal is idea-agnostic video generation: cinematic/warm and realistic looks, 2D/3D animation and cartoons, ASMR or voiced outputs, in both landscape and vertical formats. The Runpod work is a standalone model PoC, **not an integration or deployment of `shorts-app`**. The 10-shot food benchmark is a narrow domain stress test; the three-case quick pilot below is a separate cross-domain directional screen.
+This is the current code handoff for `handoff/current-work-2026-11-21`, based on `main` at `4ce9f40`. It supersedes the older status snapshots below. The curated source, test, documentation, and app-asset changes are being delivered together in one PR; generated local drafts, reports, outputs, and Python bytecode caches are intentionally excluded.
+
+### Included work
+
+- **Studio UX:** clearer review/error guidance, queue reordering, persistent draft/session helpers, and a lazy-loaded Three.js baby/ball/park preview. The Studio production build succeeds; the 3D chunk is 544 KB minified and emits Vite's size advisory.
+- **Local story continuity:** the scenario path carries a visual identity bible and shot-state progression into prompts. Sequential Studio generation can use the approved first shot as a shared image anchor, with per-shot references retained as overrides and frame hashes recorded in manifests. This is a tested local-path improvement, not a universal continuity guarantee.
+- **Local review and generation tools:** prompt/action gates, shot reference handling, still-selection and cache behavior, review helpers, and focused regression tests were updated.
+- **Hosted motion foundation:** typed motion-engine capabilities and conditioning validation, hosted job dispatch/worker and artifact-transfer components, plus persistent job and spend-ledger repositories with tests. These components are not yet a production Runpod/Wan adapter or an end-to-end remote-render integration.
+- **Studio support assets:** the checked-in reference stills and muse assets used by the current Studio work are included.
+
+### Verification and limits
+
+- Passed: `npm run build`, `npm run lint`, `npm test` (33 files, 154 tests), Node script tests (59), Python script tests (133, using `storage/tools/scenedetect/.venv/bin/python`), and the Studio Vite build.
+- No paid generation was run for this handoff, and no existing export was modified. Do not treat automated visual flags as editorial approval; actual watch/listen review remains required.
+- Continuity still needs a versioned cross-pipeline Story Bible contract, provider capability-aware reference reuse, and cross-shot visual identity validation. The TypeScript visual pipeline does not yet have the same continuity integration as the local Studio path. Do not claim universal coverage or automatically retry paid generations.
+- GPT-6 Luna is not an application model/provider in this repository; do not add provider-specific prompt-cache parameters without verifying a real supported API.
+- Generated scenario drafts, output/review artifacts, benchmark draft files, and modified `.pyc` caches remain local and are not part of this curated PR.
+
+### Next for the receiving agent
+
+1. Review the local continuity prototype and carry the versioned story/identity context into the TypeScript provider-driven path, gating image references on declared provider capabilities.
+2. Add hash-based invalidation and cross-shot review evidence without bypassing existing human release gates.
+3. Keep the hosted motion foundation separate from production until a concrete adapter is integrated and its lifecycle, costs, and artifact verification are tested end to end.
+
+## Previous handover — 2026-11-20: Runpod Wan 2.2 PoC and benchmark
+
+This is a Nov 20 snapshot; the current code handoff is above. The product goal is idea-agnostic video generation: cinematic/warm and realistic looks, 2D/3D animation and cartoons, ASMR or voiced outputs, in both landscape and vertical formats. The Runpod work is a standalone model PoC, **not an integration or deployment of `shorts-app`**. The 10-shot food benchmark is a narrow domain stress test; the three-case quick pilot below is a separate cross-domain directional screen.
 
 ### Runpod infrastructure
 
