@@ -3,6 +3,7 @@ import { LearnedCard, RenderTimer, IdeaHelper, Player, ComparePanel, FramesBlock
 import { filterSessions, findMatchingSession, sessionDisplayName } from './session-label.js';
 import { readComposerDraft, readPreflightApproval, writeComposerDraft, writePreflightApproval } from './draft-storage.js';
 import { planPromptChanges, repairPreviewChanges } from './review-recommendations.js';
+import { watchdogLabel } from './watchdog-status.js';
 
 const BabyBall3DPreview = lazy(() => import('./BabyBall3DPreview.jsx'));
 
@@ -764,11 +765,14 @@ export default function App() {
               <StepTrack job={job} />
               {running && <div className="bar"><div className={prog ? 'fill' : 'fill indet'} style={prog ? { width: `${Math.round((prog.n / prog.of) * 100)}%` } : {}} /></div>}
               {running && job.lines?.length > 0 && <p className="muted">{job.lines[job.lines.length - 1]}</p>}
+              {(() => { const w = watchdogLabel(job.watchdog, job.status); return w && <p className={`hint ${w.tone}`}>{w.text}</p>; })()}
               {running && <button className="ghost" onClick={cancel}>Stop</button>}
               {job.status === 'failed' && !blocked && <p className="bad">{job.technicalQa?.status === 'failed' ? 'The final file failed technical QA.' : job.error}</p>}
               {notes.length > 0 && <ul className="notes">{notes.filter((n) => !(choice && n.startsWith('BLOCKED'))).map((n, i) => <li key={i} className={n.startsWith('BLOCKED') ? 'bad' : n.startsWith('Fixed') ? 'good' : 'muted'}>{n.startsWith('Fixed') ? '✓ ' + n : n}</li>)}</ul>}
               {['failed', 'cancelled', 'interrupted'].includes(job.status) && job.kind === 'draft' && !choice && <button className="primary" disabled={busy} onClick={retryPlanning}>Retry planning in this project</button>}
               {choice && job.status !== 'running' && <BlockedCard lines={job.lines || []} choice={choice} busy={anyRunning} onRetry={() => draftWith({ retrySessionId: job.id, prompt: job.options?.storyPrompt || job.prompt, originalPrompt: job.options?.originalPrompt || job.prompt }, { ignoreDuplicate: true })} onAnyway={() => draftWith({ allowRepeat: true, allowDuplicate: true }, { ignoreDuplicate: true })} onEdit={() => document.querySelector('.composer textarea')?.focus()} />}
+              {job.kind === 'render' && ['failed', 'interrupted'].includes(job.status) && job.scenario && !blocked &&
+                <button className="primary" disabled={busy} onClick={render}>Retry render in this project</button>}
               {job.status === 'cancelled' && <p className="muted">Stopped.</p>}
               {job.status === 'interrupted' && <p className="bad">{job.error}</p>}
               {job.sequence?.continuationError && <p className="bad">{job.sequence.continuationError}</p>}

@@ -10,6 +10,7 @@ import { inspectExport, fileHash } from './studio-export-review.mjs';
 import { blockerReasons, classifyGateLine, gateEventKey } from './studio-learning-signals.mjs';
 import { buildLearningContext } from './studio-learning-memory.mjs';
 import { createSessionId, draftIdleTimeoutMs, draftTimeoutMs, normalizeSessionPrompt, sessionTitle } from './studio-session-utils.mjs';
+import { MAX_AUTO_RETRIES, WATCHED_KINDS, checkStall, classifyExit, isLocalCommand, keepAwakeCommand, mayReapOrphan, retryDecision, stallMessage, watchdogLimits } from './studio-watchdog.mjs';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -29,6 +30,19 @@ const SESS_DIR = path.join(ROOT, 'storage', 'studio-sessions');
 fs.mkdirSync(SESS_DIR, { recursive: true });
 const ID_RE = /^\d{10,16}$/;
 const sessions = new Map(); // id -> session (see snap())
+// After a restart a detached render can outlive the server. Stop it only when both the pid and the exact command
+// line match what this studio recorded for that job; never kill by name pattern.
+function reapOrphan(x) {
+  const recorded = x.procInfo;
+  if (!recorded?.pid) return;
+  try {
+    const command = execFileSync('ps', ['-o', 'command=', '-p', String(recorded.pid)], { encoding: 'utf8' }).trim();
+    if (mayReapOrphan({ recorded, live: { pid: recorded.pid, command } })) {
+      try { process.kill(-recorded.pid, 'SIGTERM'); } catch { /* group already gone */ }
+    }
+  } catch { /* ps exits 1 when the pid no longer exists */ }
+  x.procInfo = null;
+}
 for (const f of fs.readdirSync(SESS_DIR)) {
   if (!f.endsWith('.json')) continue;
   try {
@@ -36,7 +50,10 @@ for (const f of fs.readdirSync(SESS_DIR)) {
     if (!ID_RE.test(String(x.id))) continue;
     if (!Array.isArray(x.attempts)) x.attempts = [];
     if (!Array.isArray(x.requestIds)) x.requestIds = [];
-    if (['running', 'stopping'].includes(x.status)) { x.status = 'interrupted'; x.error = 'The studio was restarted while this was running. Check the log, then run it again.'; }
+    if (['running', 'stopping'].includes(x.status)) {
+      reapOrphan(x);
+      x.status = 'interrupted'; x.error = 'The studio was restarted while this was running. Check the log, then run it again.';
+    }
     sessions.set(x.id, x);
   } catch { /* skip unreadable file */ }
 }
@@ -57,8 +74,8 @@ const STEP_RULES = [
   [/final-file|qa\b|verified|contact sheet/i, 'Quality checks'],
 ];
 
-const snap = (x = job) => x && { id: x.id, user: x.user, name: x.name, prompt: x.prompt, options: x.options, createdAt: x.createdAt, updatedAt: x.updatedAt, kind: x.kind, status: x.status, startedAt: x.startedAt, unattendedRun: x.unattendedRun, steps: x.steps, lines: x.lines.slice(-200), scenario: x.scenario, plan: x.plan, sequence: x.sequence || null, referenceFrames: x.referenceFrames || [], video: x.video, previousVideo: x.previousVideo, technicalQa: x.technicalQa, error: x.error, attempts: x.attempts || [] };
-const persist = (x, touch = true) => { if (touch) x.updatedAt = Date.now(); x.lastSave = Date.now(); try { fs.writeFileSync(path.join(SESS_DIR, x.id + '.json'), JSON.stringify({ ...snap(x), requestIds: x.requestIds || [] })); } catch { /* disk issue: keep running */ } };
+const snap = (x = job) => x && { id: x.id, user: x.user, name: x.name, prompt: x.prompt, options: x.options, createdAt: x.createdAt, updatedAt: x.updatedAt, kind: x.kind, status: x.status, startedAt: x.startedAt, unattendedRun: x.unattendedRun, steps: x.steps, lines: x.lines.slice(-200), scenario: x.scenario, plan: x.plan, sequence: x.sequence || null, referenceFrames: x.referenceFrames || [], video: x.video, previousVideo: x.previousVideo, technicalQa: x.technicalQa, error: x.error, attempts: x.attempts || [], watchdog: x.watchdog || null };
+const persist = (x, touch = true) => { if (touch) x.updatedAt = Date.now(); x.lastSave = Date.now(); try { fs.writeFileSync(path.join(SESS_DIR, x.id + '.json'), JSON.stringify({ ...snap(x), requestIds: x.requestIds || [], procInfo: x.procInfo || null })); } catch { /* disk issue: keep running */ } };
 const summary = (x) => ({ id: x.id, name: x.name, prompt: x.prompt, storyPrompt: x.options?.storyPrompt || '', createdAt: x.createdAt, updatedAt: x.updatedAt, status: x.status, kind: x.kind, hasVideo: Boolean(x.video || x.previousVideo), attemptCount: (x.attempts || []).length });
 const canSee = (user, x) => !x || !user || user.role === 'owner' || x.user === user.name;
 function legacyBrief(session) {
@@ -399,17 +416,40 @@ function start(kind, args, extra = {}) {
     ...(kind === 'draft' ? { SHORTS_STUDIO_UNATTENDED: x.options?.unattended === true ? '1' : '0' } : {}),
     ...(x.options && x.options.look && x.options.look !== 'food' ? { SHORTS_MIN_PROMPT_SCORE: '0' } : {}) } });
   x.proc = proc; // not serialised: snap() copies named fields only
+  const spawnCmd = extra.cmd ? extra.cmd[0] : 'bash';
+  const spawnArgs = extra.cmd ? [...extra.cmd.slice(1), ...args] : ['scripts/make-local-video.sh', ...args];
+  x.procInfo = { pid: proc.pid, command: [spawnCmd, ...spawnArgs].join(' ') };
+  const watched = WATCHED_KINDS.includes(kind);
+  const retriesUsed = extra.retries || 0;
+  x.watchdog = watched ? { state: 'ok', retries: retriesUsed, maxRetries: MAX_AUTO_RETRIES, lastFault: null } : null;
+  const awake = keepAwakeCommand(proc.pid);
+  if (awake) {
+    try {
+      const keeper = spawn(awake.cmd, awake.args, { stdio: 'ignore' });
+      keeper.on('error', () => x.lines.push('Keep-awake is unavailable (caffeinate not found); the Mac may sleep during this job.'));
+      keeper.unref();
+    } catch { /* keep-awake is best effort */ }
+  }
   let lastActivityAt = Date.now();
   // Longer plans call the local story model once per shot; size the hard limit to requested runtime.
   // Keep an idle watchdog too, so a truly stalled model is still stopped and recoverable.
   const plannedSeconds = Math.max(10, Number(x.options?.seconds) || 30);
   const draftTimeout = draftTimeoutMs(plannedSeconds, process.env.STUDIO_DRAFT_TIMEOUT_MS);
   const draftIdleTimeout = draftIdleTimeoutMs(plannedSeconds, process.env.STUDIO_DRAFT_IDLE_TIMEOUT_MS);
-  const watchdog = kind === 'draft' ? setInterval(() => {
+  const limits = watchdogLimits(plannedSeconds, process.env);
+  let stall = null;
+  const watchdog = (kind === 'draft' || watched) ? setInterval(() => {
     if (x.status !== 'running') return;
-    if (Date.now() - startedAt < draftTimeout && Date.now() - lastActivityAt < draftIdleTimeout) return;
+    if (kind === 'draft') {
+      if (Date.now() - startedAt < draftTimeout && Date.now() - lastActivityAt < draftIdleTimeout) return;
+      x.error = 'Planning took too long and was stopped. Your brief and previous export are saved; retry planning or shorten the idea. No new media was rendered.';
+    } else {
+      stall = checkStall({ startedAt, lastActivityAt, now: Date.now(), limits });
+      if (!stall) return;
+      x.error = stallMessage(stall);
+      if (x.watchdog) x.watchdog.state = 'stalled';
+    }
     x.timedOut = true;
-    x.error = 'Planning took too long and was stopped. Your brief and previous export are saved; retry planning or shorten the idea. No new media was rendered.';
     x.status = 'stopping';
     try { process.kill(-proc.pid, 'SIGTERM'); } catch { /* already exited */ }
     x.stopTimeout = setTimeout(() => {
@@ -446,8 +486,9 @@ function start(kind, args, extra = {}) {
   };
   proc.stdout.on('data', onData); proc.stderr.on('data', onData);
   proc.on('error', (error) => { x.error = error.message; });
-  proc.on('close', async (code) => {
+  proc.on('close', async (code, signal) => {
     clearInterval(watchdog);
+    const stoppedByUser = x.status === 'stopping' && !x.timedOut;
     clearTimeout(x.stopTimeout);
     if (buf.trim()) onData(Buffer.from('\n'));
     if (x.status === 'stopping') x.status = x.timedOut ? 'failed' : 'cancelled';
@@ -476,6 +517,21 @@ function start(kind, args, extra = {}) {
     persist(x);
     logRun(x, code);
     recordSessionFailure(x);
+    x.procInfo = null;
+    if (watched && x.status === 'failed') {
+      const classification = classifyExit({ code, signal, stoppedByUser, stalled: Boolean(stall), tail: x.lines.slice(-40) });
+      if (x.watchdog) x.watchdog.lastFault = ['stalled', 'oom', 'crash'].includes(classification) ? classification : null;
+      const decision = retryDecision({ classification, kind, retriesUsed, local: isLocalCommand(extra.cmd, args) });
+      x.lines.push(`Watchdog: ${decision.why}.`);
+      if (decision.retry && job === x) {
+        try {
+          start(kind, args, { ...extra, session: x, archiveAttempt: true, retries: retriesUsed + 1 });
+          emit();
+          return;
+        } catch (error) { x.error = error.message; }
+      }
+      persist(x);
+    }
     if (job === x && extra.unattended && x.status === 'done' && ['draft', 'stills'].includes(kind)) {
       const blocked = x.lines.some((line) => /^(BLOCKED|NEEDS-CHOICE):/.test(line));
       if (!blocked && x.plan && x.scenario) {

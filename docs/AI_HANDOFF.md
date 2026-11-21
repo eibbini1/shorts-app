@@ -1,5 +1,14 @@
 # AI handoff
 
+## 2026-11-21 — Claude: Studio watchdog (branch studio-watchdog, based on origin/main 9936cdd, not pushed)
+Plan: WD-1..WD-8 (stall detection, one bounded retry, keep-awake, UI status, restart recovery). Files: `scripts/studio-watchdog.mjs` (pure rules), `scripts/studio-server.mjs` (integration), `studio/src/watchdog-status.js` + `App.jsx` (label + "Retry render" button).
+- VERIFIED (real studio-server.mjs + stub render script, `node --test scripts/*.test.mjs`, 59/59): crash retried once then succeeds; crash twice stops after exactly one retry; QA failure is never retried; a silent job is stopped (idle limit) and retried once while an unrelated process survives; a slow job that keeps printing is not stopped; user cancel is not retried. Root `npx vitest run`: 34 files / 158 tests pass.
+- VERIFIED by mutation: raising the retry cap, retrying QA failures, or disabling stall detection each makes those tests fail.
+- IMPLEMENTED BUT UNTESTED: `caffeinate -dims -w <pid>` keep-awake (unit-tested command only; not run on macOS); restart orphan reaping (decision rule unit-tested; the ps/kill path was not exercised); UI label and retry button (App.jsx parses with esbuild; `vite build` could not run here because npm returned 403 for the studio dependencies, so the UI was not rendered or screenshotted).
+- NOT MEASURED: real `ltx-2-mlx` output cadence. Defaults are generous: idle 30 min, hard cap max(4 h, 8 min per planned second); override with STUDIO_RENDER_IDLE_TIMEOUT_MS / STUDIO_RENDER_TIMEOUT_MS. Measure on a real render before tightening.
+- Scope kept: watches render, stills, sequence-motion only; draft keeps its existing watchdog. Auto-retry only for stall, out-of-memory or signal crash, never for QA/gate failures, never for non-local commands. No automatic quality-lowering retry (decision 2).
+- Next: run a real render on the Mac with this branch, confirm caffeinate and the UI, then independent review of the process-signalling code before merge.
+
 ## Current handover — 2026-11-21: Studio and pipeline work
 
 This is the current code handoff for `handoff/current-work-2026-11-21`, based on `main` at `4ce9f40`. It supersedes the older status snapshots below. The curated source, test, documentation, and app-asset changes are being delivered together in one PR; generated local drafts, reports, outputs, and Python bytecode caches are intentionally excluded.
