@@ -1,5 +1,16 @@
 # AI handoff
 
+## 2026-11-21 — Claude: Runpod motion-model bench results (branch gpu-bench-kit)
+Pod: RTX PRO 4500 Blackwell 32 GB, $0.74/h. Pod STOPPED (container disk erased); total spend ~$1.87 of $15 (balance $13.13 per console). Pod outputs saved on the Mac in `outputs/bench-pod/` (untracked; not committed).
+- VERIFIED Wan 2.2 TI2V-5B, 704x1280x121f, 30 steps (cpu offload + vae tiling): ~449 s, $0.092/clip, 14.6 GB VRAM, 39.9 GB RAM. s01 incl. warm-up 557 s.
+- VERIFIED LTX-2.5 distilled, text-only, 704x1280x121f, 7 steps, fp8 layerwise weight storage (NOT the stock bf16 config; bf16 transformer is 54 GB and OOMs on 32 GB): 81-89 s, ~$0.017/clip, 26.0 GB VRAM, 64-82 GB RAM. s01-s05.
+- VERIFIED HunyuanVideo 1.5 480p: OOM at 121f; 73f/4 steps 159 s ~ $0.33/5 s extrapolated -> rejected on cost.
+- NOT DONE: quality judgement. No blind test yet. Only 5 of 10 shots were run on the pod. All pod runs are text-only (no FLUX keyframes / image-to-video).
+- IMPLEMENTED BUT UNTESTED: `scripts/gpu-bench/mac_baseline_t2v.sh` (+ prompts.mac.json) generates Mac baseline (LTX 2.3 q4, ltx-2-mlx) text-only, same prompts, into `outputs/bench-mac/`. The user started it; assumes ltx-2-mlx accepts no --image. These two files sit untracked in the Mac repo (branch handoff/current-work-2026-11-21), not on this branch.
+- Decision rule unchanged: switch only if blind test prefers new model >= 6/10, cost < ~$0.15/clip, VRAM < 24 GB. LTX-2.5 at 26 GB with fp8 does not yet meet the 24 GB bar; needs more offload work or a 32 GB card.
+- Next: run blind_sheet.py on bench-mac vs bench-pod clips (s01-s05), judge, then decide. A 24 GB card needs a retest.
+- Housekeeping: the HF token `runpod-bench` should be deleted by the user at huggingface.co/settings/tokens.
+
 ## Current handover — 2026-11-21: Studio and pipeline work
 
 This is the current code handoff for `handoff/current-work-2026-11-21`, based on `main` at `4ce9f40`. It supersedes the older status snapshots below. The curated source, test, documentation, and app-asset changes are being delivered together in one PR; generated local drafts, reports, outputs, and Python bytecode caches are intentionally excluded.
