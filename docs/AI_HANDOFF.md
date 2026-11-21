@@ -847,3 +847,13 @@ Next: implement audio fixes first (cheap, no GPU), then ending check.
 - DUPLICATE HISTORY: `/api/sessions` shows separate historical records for repeated prompts, including halloumi sessions `1794989792548` and `1794990312319`, and pear-tart sessions `1794987030237` and `1794987160442`. Preserve these records. Current code rejects an exact duplicate new idea unless explicitly allowed; historical duplicates were not collapsed.
 - UX GAP: `ExportReview` shows raw automatic flags. First-frame review has bounded local correction; post-render retake controls are currently limited to low-motion shots. There is no tailored recommendation or one-click repair for continuity, realism, or payoff flags. Checkpoint review and thumbs record human evidence but do not repair the export or update model weights. The pizza screen also shows narration text while the export is marked ASMR with voice disabled; check whether this is only plan display or an audio-mode UI defect.
 - NEXT: implement user-facing, flag-specific recommendations and a safe repair path that previews plan changes before expensive rendering. Repair the plan/action/question mismatch before retrying; retain the old export and history. Then create the user-approved 60-second pineapple/cheese continuation in this same project and verify its end frame shows the finished topped, baked pizza. Reassess duplicate-session prevention against new attempts; do not promise a zero-failure guarantee.
+
+
+## 2026-11-21 DECISION: GPU hosting (Claude)
+- Status: PLANNED (research done; bench not yet run).
+- Rent a 24 GB cloud GPU (Runpod RTX 4090 pod, about $0.34-0.89/h) rather than buy hardware; Mac stays controller and planner host. Break-even for own hardware is about 9 years at 2 h/day.
+- Stills: keep FLUX.2 klein 4B (verified in scripts/create-flux-image.py and setup-mflux-mac.sh; Apache 2.0 per secondary source, confirm on the model card). No stills swap.
+- Motion: undecided; run scripts/gpu-bench (RUNBOOK.md) comparing LTX-2.5, Wan 2.2 FP8 lightning, HunyuanVideo 1.5 on 10 food shots. Owner is in Jordan, so MiniMax H3's territory exclusion does not apply to the owner, but avoid it as a default for shared users.
+- Seedance-class quality is not available on 24 GB; use hosted models for hero shots.
+- Full report: Shorts app GPU hosting choice.md (research report in the Claude session).
+- Bench kit tested only with fake ffmpeg backends; no real model run yet.

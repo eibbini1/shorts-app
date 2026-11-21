@@ -1,0 +1,22 @@
+{
+  "hourly_usd": 0.89,
+  "gpu_label": "RTX 4090 24GB (Runpod Secure)",
+  "out_dir": "storage/gpu-bench",
+  "backends": [
+    {
+      "name": "ltx-2.5",
+      "command": "REPLACE: shell command that renders one clip. Placeholders: {prompt} {keyframe} {out} {seconds}",
+      "cold_command": ""
+    },
+    {
+      "name": "wan2.2-fp8-lightning",
+      "command": "REPLACE: same placeholders",
+      "cold_command": ""
+    },
+    {
+      "name": "hunyuan-1.5",
+      "command": "REPLACE: same placeholders",
+      "cold_command": ""
+    }
+  ]
+}
