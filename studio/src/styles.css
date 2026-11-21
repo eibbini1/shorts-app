@@ -278,3 +278,6 @@ button { border-radius:7px; }
 .stage-help { margin:6px 0 0; font-size:12px; color:var(--muted); }
 .stage-help b { color:var(--text); font-weight:600; }
 button.ghost.composer-secondary { align-self:flex-end; }
+.audio-line { margin:6px 0; font-size:13px; } .audio-line b { font-weight:600; }
+.length-note { margin:4px 0; font-size:12px; color:var(--acc); }
+.shotcard [dir="rtl"], .card [dir="rtl"] { text-align:right; }

@@ -3,6 +3,7 @@ import { LearnedCard, RenderTimer, IdeaHelper, Player, ComparePanel, FramesBlock
 import { filterSessions, findMatchingSession, sessionDisplayName } from './session-label.js';
 import { readComposerDraft, readPreflightApproval, writeComposerDraft, writePreflightApproval } from './draft-storage.js';
 import { planPromptChanges, repairPreviewChanges } from './review-recommendations.js';
+import { audioProfile, dirOf, lengthNote } from './plan-summary.js';
 import { notesOf, isBlocked, choiceOf, nowLine, progressOf as progressOfLines } from './pipeline-lines.js';
 
 const BabyBall3DPreview = lazy(() => import('./BabyBall3DPreview.jsx'));
@@ -189,8 +190,10 @@ function PlanCard({ job, idea, onStills, onReference, disabled, notes }) {
       {job.options?.storyPrompt && job.options.storyPrompt !== (job.options.originalPrompt || idea) &&
         <p className="muted"><b>Director’s version:</b> {job.options.storyPrompt}</p>}
       <h3>{plan.title || 'Story plan'}</h3>
-      {plan.hook && <p><b>Hook:</b> {plan.hook}</p>}
-      {plan.payoff && <p><b>Payoff:</b> {plan.payoff}</p>}
+      {plan.hook && <p dir={dirOf(plan.hook)}><b>Hook:</b> {plan.hook}</p>}
+      {plan.payoff && <p dir={dirOf(plan.payoff)}><b>Outcome:</b> {plan.payoff}</p>}
+      <p className="audio-line"><b>Audio:</b> {audioProfile(job.options?.audio, shots).label}. {audioProfile(job.options?.audio, shots).text}</p>
+      {lengthNote(job.options?.seconds, shots) && <p className="length-note" role="status">{lengthNote(job.options?.seconds, shots)}</p>}
       <p className="muted">{shots.length} shots · {total}s · render estimate about {fmt(planEstimate(clipsOf(shots)).mid)} ({fmt(planEstimate(clipsOf(shots)).low)} to {fmt(planEstimate(clipsOf(shots)).high)}) if nothing is retried</p>
       <ShotPlan shots={shots} notes={notes} events={job.events} />
       {needsPromptChangeApproval && <section className="preflight-fixes" aria-label="Prompt changes to approve">

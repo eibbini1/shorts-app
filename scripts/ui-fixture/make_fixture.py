@@ -40,5 +40,10 @@ subprocess.run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-f', 'lav
                 str(root / 'outputs/choc.mp4')], check=True)
 sess('1794900000003', name='Finished export', prompt='A baker cracks a chocolate shell.', scenario=scn, plan=plan, status='done',
      kind='render', options=opts, video='outputs/choc.mp4', technicalQa={'status': 'passed'})
+ar = {'title': 'كريمة الفستق', 'hook': 'ملعقة تكسر القشرة اللامعة.', 'payoff': 'كريمة الفستق تنساب فوق الطبق.', 'shots': [
+    {'seconds': 5, 'motionPrompt': 'ملعقة تكسر قشرة الشوكولاتة.', 'imagePrompt': 'لقطة قريبة لقبة شوكولاتة.', 'sound': 'طقطقة', 'narration': 'اكسر القشرة'},
+    {'seconds': 5, 'motionPrompt': 'كريمة الفستق تنساب على الطبق.', 'imagePrompt': 'كريمة الفستق.', 'sound': 'انسياب'}]}
+sess('1794900000004', name='Arabic voiced plan', prompt='خباز يكسر قشرة شوكولاتة.', scenario=scn, plan=ar, status='done', kind='draft',
+     options={'seconds': 20, 'orientation': 'vertical', 'audio': 'voiced', 'look': 'food'})
 (root / 'storage/studio-users.json').write_text(json.dumps({'users': [{'name': 'creator-a', 'token': 'fixture-creator-a', 'role': 'creator', 'dailyRenders': 2}]}))
 print('fixture ready:', root)

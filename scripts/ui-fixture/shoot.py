@@ -4,7 +4,7 @@ import json, pathlib, sys
 from playwright.sync_api import sync_playwright
 base, token, out = sys.argv[1], sys.argv[2], pathlib.Path(sys.argv[3]); out.mkdir(parents=True, exist_ok=True)
 SIZES = {'desktop': (1440, 900), 'mobile': (390, 844)}
-STATES = {'empty': None, 'plan': '1794900000001', 'blocked': '1794900000002', 'export': '1794900000003'}
+STATES = {'empty': None, 'plan': '1794900000001', 'blocked': '1794900000002', 'export': '1794900000003', 'arabic': '1794900000004'}
 report = {}
 with sync_playwright() as p:
     b = p.chromium.launch(executable_path='/usr/bin/google-chrome', args=['--no-sandbox'])

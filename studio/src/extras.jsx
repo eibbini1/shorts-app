@@ -1,3 +1,4 @@
+import { dirOf } from './plan-summary.js';
 import { useEffect, useRef, useState } from 'react';
 import { blockReasons, attemptCount, shotFixes } from './pipeline-lines.js';
 import { ideaHint } from './idea-hint.js';
@@ -567,15 +568,16 @@ export function jobState(job, blocked, busyElsewhere) {
 /* ---------- plan review: every shot with its action, picture, length and sound ---------- */
 export function ShotPlan({ shots, notes, events }) {
   const fixes = (n) => shotFixes(n, notes, events, plainBlock);
+  const at = (i) => shots.slice(0, i).reduce((n, x) => n + (Number(x.seconds) || 0), 0);
   return (
     <ol className="shotplan">
       {shots.map((s, i) => (
         <li key={i} className="shotcard">
-          <div className="shothead"><b>Shot {i + 1}</b><span className="muted">{s.seconds}s</span></div>
-          <p><span className="k">Action</span> {s.motionPrompt || s.imagePrompt}</p>
-          {s.imagePrompt && s.motionPrompt && <p className="muted"><span className="k">First frame</span> {s.imagePrompt}</p>}
-          {s.sound && <p className="muted"><span className="k">Sound</span> {s.sound}</p>}
-          {s.narration && <p className="muted"><span className="k">Voice</span> {s.narration}</p>}
+          <div className="shothead"><b>Shot {i + 1}</b><span className="muted">{s.seconds}s · {at(i)}s to {at(i) + (Number(s.seconds) || 0)}s</span></div>
+          <p dir={dirOf(s.motionPrompt || s.imagePrompt)}><span className="k">Action</span> {s.motionPrompt || s.imagePrompt}</p>
+          {s.imagePrompt && s.motionPrompt && <p className="muted" dir={dirOf(s.imagePrompt)}><span className="k">First frame</span> {s.imagePrompt}</p>}
+          {s.sound && <p className="muted" dir={dirOf(s.sound)}><span className="k">Sound</span> {s.sound}</p>}
+          {s.narration && <p className="muted" dir={dirOf(s.narration)}><span className="k">Voice</span> {s.narration}</p>}
           {fixes(i + 1).map((f) => <p key={f} className="shotfix"><span className="k">Fix</span> {f}</p>)}
         </li>
       ))}
