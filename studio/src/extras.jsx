@@ -5,6 +5,7 @@ import { reviewRecommendations, suggestedRepairGuidance, suggestedShotRepairGuid
 import { readRepairGuidance, writeRepairGuidance } from './draft-storage.js';
 import { moveQueueItem } from './queue-order.js';
 import { clipProgress } from './clip-progress.js';
+import { prerenderChecklist } from './prerender-checklist.js';
 
 /* ---------- render time estimate ----------
    Calibrated from real timestamps on this Mac (LTX-2.3 MLX, 576x1024, plugged in):
@@ -283,7 +284,16 @@ export function LearnedCard() {
 }
 
 /* ---------- first frames: check the pictures before spending minutes on motion ---------- */
-export function FramesReview({ job, plan, files, onStills, onRegen, onRender, onApproveFrames, busy, blocked }) {
+export function PrerenderChecklist({ checklist }) {
+  const mark = { ok: '\u2713', todo: '\u2022', blocked: '\u2717' };
+  return (
+    <ul className="precheck" aria-label="Before you render">
+      {checklist.items.map((i) => <li key={i.id} className={i.state}><span aria-hidden="true">{mark[i.state]}</span> <b>{i.label}</b> <span className="muted small">{i.detail}</span></li>)}
+    </ul>
+  );
+}
+
+export function FramesReview({ job, plan, files, onStills, onRegen, onRender, onApproveFrames, busy, blocked, anyRunning = false, rendersLeft = null }) {
   const [choices, setChoices] = useState({});
   const [approving, setApproving] = useState(false);
   const shots = plan.shots || [];
@@ -298,6 +308,7 @@ export function FramesReview({ job, plan, files, onStills, onRegen, onRender, on
   const url = (f) => '/media?p=' + encodeURIComponent(f.p) + '&v=' + Math.round(f.t);
   const all = shots.every((_, i) => still(i + 1));
   const est = planEstimate(clipsOf(shots));
+  const checklist = prerenderChecklist({ shots, hasStill: (n) => Boolean(still(n)), needsHumanReview, blocked, otherJobRunning: anyRunning, rendersLeft, clips: clipsOf(shots) });
   const pendingFrames = files.pendingFrames || [];
   const candidateForShot = (n) => pendingFrames.find((frame) => frame.shot === n);
   const candidateChoice = (n) => {
@@ -332,6 +343,7 @@ export function FramesReview({ job, plan, files, onStills, onRegen, onRender, on
         ? 'The local vision gate could not approve every frame. Choose one candidate for every shot; your explicit approval is required before motion can start.'
         : 'Studio generates and checks three local candidates per shot, then pins the selected frame. Review every frame before the long motion step; a typical three-candidate set takes about 75 seconds.'}</p>
       {files.pendingFramesError && <p className="bad">{files.pendingFramesError}</p>}
+      <PrerenderChecklist checklist={checklist} />
       <div className="tiles">
         {shotNumbers.map((shot) => {
           const sh = shots[shot - 1];
@@ -363,7 +375,7 @@ export function FramesReview({ job, plan, files, onStills, onRegen, onRender, on
   );
 }
 
-export function FramesBlock({ job, plan, onStills, onRegen, onRender, onApproveFrames, busy, blocked }) {
+export function FramesBlock({ job, plan, onStills, onRegen, onRender, onApproveFrames, busy, blocked, anyRunning, rendersLeft }) {
   const [files, setFiles] = useState({ stills: [] });
   const show = job.kind === 'stills' && job.status === 'done' && job.scenario;
   useEffect(() => {
@@ -384,7 +396,19 @@ export function FramesBlock({ job, plan, onStills, onRegen, onRender, onApproveF
     </section>;
   }
   if (!show) return null;
-  return <FramesReview job={job} plan={plan} files={files} onStills={onStills} onRegen={onRegen} onRender={onRender} onApproveFrames={onApproveFrames} busy={busy} blocked={blocked} />;
+  return <FramesReview job={job} plan={plan} files={files} onStills={onStills} onRegen={onRegen} onRender={onRender} onApproveFrames={onApproveFrames} busy={busy} blocked={blocked} anyRunning={anyRunning} rendersLeft={rendersLeft} />;
+}
+
+export function FailureCard({ help, onRetry, busy }) {
+  return (
+    <section className="card failcard" role="alert">
+      <h3>{help.title}</h3>
+      <p>{help.why}</p>
+      <ul>{help.tips.map((t) => <li key={t}>{t}</li>)}</ul>
+      {help.detail && <details><summary className="small muted">Error text</summary><pre className="small">{help.detail}</pre></details>}
+      {help.canRetry && <button className="primary" disabled={busy} onClick={onRetry}>Retry render in this project</button>}
+    </section>
+  );
 }
 
 /* ---------- a block the Studio could not fix by itself: plain words and one-click next steps ---------- */

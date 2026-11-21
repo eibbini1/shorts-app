@@ -283,3 +283,11 @@ button { border-radius:7px; }
 .clipstrip li em { font-style:normal; font-variant-numeric:tabular-nums; font-weight:400; }
 @media (prefers-reduced-motion: no-preference) { .clipstrip li.active { animation:clippulse 1.8s ease-in-out infinite; } }
 @keyframes clippulse { 50% { opacity:.6; } }
+
+/* pre-render checklist and failure card: theme variables only */
+.precheck { list-style: none; margin: 8px 0 12px; padding: 0; display: grid; gap: 4px; }
+.precheck li.ok span:first-child { color: var(--ok); }
+.precheck li.todo span:first-child { color: var(--muted, currentColor); }
+.precheck li.blocked span:first-child { color: var(--bad); }
+.failcard h3 { margin-top: 0; }
+.failcard pre { white-space: pre-wrap; overflow-wrap: anywhere; }
