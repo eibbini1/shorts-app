@@ -50,6 +50,11 @@ def read_manifest_details(work, scenario, count):
             raise ValueError('A reviewed frame changed. Make first frames again.')
         references.append(file)
     identity = data.get('sharedIdentityReference')
-    if identity is not None and (not data['frames'] or identity != data['frames'][0]):
+    if identity is not None and not data['frames']:
         raise ValueError('The shared identity reference does not match the first reviewed frame.')
+    if identity is not None:
+        # Review adds fields (scenarioSha256, reviewedAt, reviewedBy) to frames, so compare identity only.
+        keys = ('shot', 'file', 'sha256')
+        if any(identity.get(k) != data['frames'][0].get(k) for k in keys):
+            raise ValueError('The shared identity reference does not match the first reviewed frame.')
     return references, data
