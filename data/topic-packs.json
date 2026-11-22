@@ -1,0 +1,20 @@
+{
+  "version": "2026-11-22",
+  "status": "HYPOTHESES - no pack has been clip-tested; none is production-cleared.",
+  "evidence": "Trend notes were pasted by the owner from another vidIQ session (120 of 150 credits, no channel linked, worldwide Shorts sample, estimated views-per-hour). They could not be re-checked from this session (vidIQ balance here: 0 credits, reset 2026-12-09). A single high VPH estimate is not proof of a durable trend.",
+  "colorMeaning": {"green": "promising for the first local tests, not proven", "yellow": "test with simpler motion first", "red": "defer the risky version"},
+  "benchmark": "Three clips per pack with the same prompt structure, then frame review and technical QA. Keep a pack only when all three pass continuity and motion checks and a human approves the visuals. A model score alone does not establish artistic quality.",
+  "packs": [
+    {"id": "single-object-transformation", "color": "green", "signal": "satisfying cleaning/transformation visible in sample", "recipe": "One object, one fixed setting, clear before/after reveal. Check object shape and surroundings match across frames.", "safe": ["slow camera push", "light change", "gradual reveal"], "risky": ["hands doing several precise steps", "sudden object changes"]},
+    {"id": "solo-challenge-comparison", "color": "yellow", "signal": "visible; large-channel examples can skew velocity", "recipe": "One subject, simple A-versus-B test with a visible result. Check both options and the result fit the frame.", "safe": ["turn", "place", "compare", "reveal"], "risky": ["crowds", "stunts", "collisions", "many moving props"]},
+    {"id": "practical-how-to", "color": "yellow", "signal": "visible; detailed hand work can fail", "recipe": "One visible step per clip, close framing, simple tools. Check tool placement and hand-object contact in the first frame.", "safe": ["point", "pour", "assemble one large piece"], "risky": ["knots", "tiny parts", "knife work", "fast hand sequences"]},
+    {"id": "stylized-character-mini-story", "color": "yellow", "signal": "animated explainers and short dramas appeared; strength unconfirmed", "recipe": "One character, one goal, one obstacle, one solving action, one visual payoff. Check character, clothing, prop and set continuity.", "safe": ["walk", "look", "carry one large prop"], "risky": ["crowds", "complex contact", "lip-sync-dependent jokes"]},
+    {"id": "animals", "color": "yellow", "signal": "not established by the sample; evergreen test", "recipe": "One stylized animal, one simple action. Check limb count, face and prop continuity.", "safe": ["look", "step", "turn", "approach"], "risky": ["fast running", "eating from a hand", "several animals"]},
+    {"id": "gadgets-product-reveals", "color": "yellow", "signal": "not established by the sample; evergreen test", "recipe": "One device, one reveal or simple transformation. Check buttons, screen and shape stay consistent; add legible text in post.", "safe": ["rotate", "light up", "open one large panel"], "risky": ["fingers on small controls", "generated interface text"]},
+    {"id": "travel-scenic-reveal", "color": "yellow", "signal": "some examples, not enough to call a leading trend", "recipe": "One location, one smooth camera move. Check horizon, landmarks and lighting.", "safe": ["slow pan", "push toward one landmark"], "risky": ["crowds", "rapid movement", "architecture changing between shots"]},
+    {"id": "realistic-fast-sports-fights", "color": "red", "signal": "risky motion, anatomy, crowds, contact", "recipe": "Defer to a stronger or hosted model.", "safe": [], "risky": ["all fast body contact"]},
+    {"id": "realistic-hand-heavy-cooking", "color": "red", "signal": "tomato-cutting example showed the weakness", "recipe": "Red for knife and flip actions; test simple pours and plating separately.", "safe": ["pour", "plate"], "risky": ["knife work", "flips"]}
+  ],
+  "firstBenchmarkOrder": ["single-object-transformation", "stylized-character-mini-story", "gadgets-product-reveals"],
+  "notes": "The red-dress night-street test (stylized-character-mini-story family) is the first live data point: results pending."
+}
