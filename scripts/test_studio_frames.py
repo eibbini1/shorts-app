@@ -83,3 +83,22 @@ class StudioFramesTests(unittest.TestCase):
             (work / 'references.json').write_text((work / 'references.json').read_text() + ' ')
             with self.assertRaisesRegex(ValueError, 'reference images changed'):
                 read_manifest(work, scenario, 1)
+
+    def test_per_frame_review_fields_do_not_break_identity_reference(self):
+        with tempfile.TemporaryDirectory() as directory:
+            work = Path(directory)
+            scenario = work / 'story.json'
+            scenario.write_text('{}')
+            frame = work / 'frame.png'
+            frame.write_bytes(b'approved')
+            write_manifest(work, scenario, [frame])
+            manifest = work / 'first-frames.json'
+            data = json.loads(manifest.read_text())
+            data['frames'][0].update({'scenarioSha256': 'x', 'reviewedAt': '2026-11-22T13:56:58Z', 'reviewedBy': 'owner'})
+            manifest.write_text(json.dumps(data))
+            references, _ = read_manifest_details(work, scenario, 1)
+            self.assertEqual(references, [frame.resolve()])
+            data['sharedIdentityReference']['file'] = 'other.png'
+            manifest.write_text(json.dumps(data))
+            with self.assertRaisesRegex(ValueError, 'shared identity reference'):
+                read_manifest_details(work, scenario, 1)

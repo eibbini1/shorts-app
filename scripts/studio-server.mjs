@@ -11,7 +11,7 @@ import { blockerReasons, classifyGateLine, gateEventKey } from './studio-learnin
 import { EVENT_PREFIX, parseEventLine as parseEvent } from './pipeline-events.mjs';
 import { buildLearningContext } from './studio-learning-memory.mjs';
 import { createSessionId, draftIdleTimeoutMs, draftTimeoutMs, normalizeSessionPrompt, sessionTitle } from './studio-session-utils.mjs';
-import { MAX_AUTO_RETRIES, WATCHED_KINDS, checkStall, classifyExit, isLocalCommand, keepAwakeCommand, mayReapOrphan, retryDecision, stallMessage, watchdogLimits } from './studio-watchdog.mjs';
+import { MAX_AUTO_RETRIES, WATCHED_KINDS, checkStall, classifyExit, isLocalCommand, isOrphanScenarioMember, keepAwakeCommand, mayReapOrphan, parsePsProcessIdentities, parsePsProcessIdentity, retryDecision, stallMessage, watchdogLimits } from './studio-watchdog.mjs';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -31,19 +31,7 @@ const SESS_DIR = path.join(ROOT, 'storage', 'studio-sessions');
 fs.mkdirSync(SESS_DIR, { recursive: true });
 const ID_RE = /^\d{10,16}$/;
 const sessions = new Map(); // id -> session (see snap())
-// After a restart a detached render can outlive the server. Stop it only when both the pid and the exact command
-// line match what this studio recorded for that job; never kill by name pattern.
-function reapOrphan(x) {
-  const recorded = x.procInfo;
-  if (!recorded?.pid) return;
-  try {
-    const command = execFileSync('ps', ['-o', 'command=', '-p', String(recorded.pid)], { encoding: 'utf8' }).trim();
-    if (mayReapOrphan({ recorded, live: { pid: recorded.pid, command } })) {
-      try { process.kill(-recorded.pid, 'SIGTERM'); } catch { /* group already gone */ }
-    }
-  } catch { /* ps exits 1 when the pid no longer exists */ }
-  x.procInfo = null;
-}
+const pendingOrphanRecovery = [];
 for (const f of fs.readdirSync(SESS_DIR)) {
   if (!f.endsWith('.json')) continue;
   try {
@@ -52,8 +40,8 @@ for (const f of fs.readdirSync(SESS_DIR)) {
     if (!Array.isArray(x.attempts)) x.attempts = [];
     if (!Array.isArray(x.requestIds)) x.requestIds = [];
     if (['running', 'stopping'].includes(x.status)) {
-      reapOrphan(x);
       x.status = 'interrupted'; x.error = 'The studio was restarted while this was running. Check the log, then run it again.';
+      pendingOrphanRecovery.push(x);
     }
     sessions.set(x.id, x);
   } catch { /* skip unreadable file */ }
@@ -77,6 +65,93 @@ const STEP_RULES = [
 
 const snap = (x = job) => x && { id: x.id, user: x.user, name: x.name, prompt: x.prompt, options: x.options, createdAt: x.createdAt, updatedAt: x.updatedAt, kind: x.kind, status: x.status, startedAt: x.startedAt, unattendedRun: x.unattendedRun, steps: x.steps, lines: x.lines.slice(-200), events: (x.events || []).slice(-100), scenario: x.scenario, plan: x.plan, sequence: x.sequence || null, referenceFrames: x.referenceFrames || [], video: x.video, previousVideo: x.previousVideo, technicalQa: x.technicalQa, error: x.error, attempts: x.attempts || [], watchdog: x.watchdog || null };
 const persist = (x, touch = true) => { if (touch) x.updatedAt = Date.now(); x.lastSave = Date.now(); try { fs.writeFileSync(path.join(SESS_DIR, x.id + '.json'), JSON.stringify({ ...snap(x), requestIds: x.requestIds || [], procInfo: x.procInfo || null })); } catch { /* disk issue: keep running */ } };
+const ORPHAN_TERM_GRACE_MS = Math.max(100, Math.min(10_000, Number(process.env.STUDIO_ORPHAN_TERM_GRACE_MS) || 2_500));
+function processGroupMembers(pgid) {
+  try {
+    const output = execFileSync('ps', ['-axo', 'pid=', '-o', 'pgid=', '-o', 'command='], { encoding: 'utf8' });
+    return parsePsProcessIdentities(output).filter((item) => item.pgid === Number(pgid));
+  } catch { return []; }
+}
+function liveProcessIdentity(pid) {
+  try { return parsePsProcessIdentity(execFileSync('ps', ['-o', 'pid=', '-o', 'pgid=', '-o', 'command=', '-p', String(pid)], { encoding: 'utf8' })); }
+  catch { return null; }
+}
+function inspectOrphanGroup(recorded) {
+  const pgid = Number(recorded?.pid);
+  if (!Number.isSafeInteger(pgid) || pgid <= 1) return { state: 'unverified', members: [] };
+  const recordedPid = liveProcessIdentity(pgid);
+  if (recordedPid && !mayReapOrphan({ recorded, live: recordedPid })) {
+    // A recorded PID that is still alive but is not the exact detached group leader
+    // is not evidence that the intended group is gone; retain it without signaling.
+    return { state: 'unverified', members: [] };
+  }
+  const members = processGroupMembers(pgid);
+  if (!members.length) return { state: 'gone', members };
+  const leader = members.find((item) => item.pid === pgid);
+  if (leader) {
+    return mayReapOrphan({ recorded, live: leader })
+      ? { state: 'verified-leader', members }
+      : { state: 'unverified', members };
+  }
+  const targets = members.filter((item) => isOrphanScenarioMember({ recorded, live: item }));
+  return targets.length ? { state: 'verified-members', members: targets } : { state: 'unverified', members };
+}
+function signalOrphanGroup(recorded, signal) {
+  const inspection = inspectOrphanGroup(recorded);
+  if (inspection.state === 'gone' || inspection.state === 'unverified') return inspection;
+  if (inspection.state === 'verified-leader') {
+    try { process.kill(-Number(recorded.pid), signal); }
+    catch (error) { if (error.code !== 'ESRCH') return { ...inspection, state: 'signal-error' }; }
+    return inspection;
+  }
+  for (const target of inspection.members) {
+    const fresh = liveProcessIdentity(target.pid);
+    if (!fresh || fresh.pgid !== Number(recorded.pid) || fresh.command !== target.command || !isOrphanScenarioMember({ recorded, live: fresh })) continue;
+    try { process.kill(fresh.pid, signal); }
+    catch (error) { if (error.code !== 'ESRCH') return { ...inspection, state: 'signal-error' }; }
+  }
+  return inspection;
+}
+function clearRecoveredProcess(x) {
+  x.procInfo = null;
+  persist(x, false);
+}
+function recoverOrphan(x) {
+  const recorded = x.procInfo;
+  if (!recorded?.pid) { clearRecoveredProcess(x); return; }
+  const term = signalOrphanGroup(recorded, 'SIGTERM');
+  if (term.state === 'gone') { clearRecoveredProcess(x); return; }
+  x.lines ||= [];
+  if (term.state === 'unverified' || term.state === 'signal-error') {
+    x.lines.push('Watchdog: a leftover process could not be safely identified; its process record is retained for another recovery check.');
+    persist(x, false);
+    return;
+  }
+  x.lines.push('Watchdog: sent SIGTERM to the verified job process; checking whether every worker exits.');
+  persist(x, false);
+  setTimeout(() => {
+    const forced = signalOrphanGroup(recorded, 'SIGKILL');
+    if (forced.state === 'gone') { clearRecoveredProcess(x); return; }
+    if (forced.state === 'unverified' || forced.state === 'signal-error') {
+      x.lines.push('Watchdog: process identity changed during recovery; retained its record and did not signal unverified processes.');
+      persist(x, false);
+      return;
+    }
+    x.lines.push('Watchdog: a verified worker did not exit after SIGTERM; sent SIGKILL and will verify cleanup.');
+    persist(x, false);
+    setTimeout(() => {
+      const remaining = inspectOrphanGroup(recorded);
+      if (remaining.state === 'gone') clearRecoveredProcess(x);
+      else {
+        x.lines.push(remaining.state === 'verified-leader' || remaining.state === 'verified-members'
+          ? 'Watchdog: a verified worker is still present; retained its process record so a later restart can retry.'
+          : 'Watchdog: the old group could not be conclusively cleared; retained its record without signaling unverified processes.');
+        persist(x, false);
+      }
+    }, 750).unref();
+  }, ORPHAN_TERM_GRACE_MS).unref();
+}
+for (const recovered of pendingOrphanRecovery) recoverOrphan(recovered);
 const summary = (x) => ({ id: x.id, name: x.name, prompt: x.prompt, storyPrompt: x.options?.storyPrompt || '', createdAt: x.createdAt, updatedAt: x.updatedAt, status: x.status, kind: x.kind, hasVideo: Boolean(x.video || x.previousVideo), attemptCount: (x.attempts || []).length });
 const canSee = (user, x) => !x || !user || user.role === 'owner' || x.user === user.name;
 function legacyBrief(session) {
@@ -416,11 +491,12 @@ function start(kind, args, extra = {}) {
     ...(kind === 'render' && extra.pinFrames ? { SHORTS_STUDIO_PIN_FRAMES: '1' } : {}),
     ...(extra.learningEvidence ? { SHORTS_STUDIO_LEARNING_EVIDENCE: JSON.stringify(extra.learningEvidence) } : {}),
     ...(kind === 'draft' ? { SHORTS_STUDIO_UNATTENDED: x.options?.unattended === true ? '1' : '0' } : {}),
+    SHORTS_RENDER_QUALITY: x.options?.quality === 'high' ? 'high' : 'standard', // opt-in 704x1280 (scripts/render_quality.py); standard stays the fast default
     ...(x.options && x.options.look && x.options.look !== 'food' ? { SHORTS_MIN_PROMPT_SCORE: '0' } : {}) } });
   x.proc = proc; // not serialised: snap() copies named fields only
   const spawnCmd = extra.cmd ? extra.cmd[0] : 'bash';
   const spawnArgs = extra.cmd ? [...extra.cmd.slice(1), ...args] : ['scripts/make-local-video.sh', ...args];
-  x.procInfo = { pid: proc.pid, command: [spawnCmd, ...spawnArgs].join(' ') };
+  x.procInfo = { pid: proc.pid, pgid: proc.pid, command: [spawnCmd, ...spawnArgs].join(' '), scenario: extra.scenario || x.scenario || null };
   const watched = WATCHED_KINDS.includes(kind);
   const retriesUsed = extra.retries || 0;
   x.watchdog = watched ? { state: 'ok', retries: retriesUsed, maxRetries: MAX_AUTO_RETRIES, lastFault: null } : null;
@@ -517,10 +593,10 @@ function start(kind, args, extra = {}) {
       }
     }
     await recordFinalReviewEvidence(x).catch(() => {});
+    x.procInfo = null;
     persist(x);
     logRun(x, code);
     recordSessionFailure(x);
-    x.procInfo = null;
     if (watched && x.status === 'failed') {
       const classification = classifyExit({ code, signal, stoppedByUser, stalled: Boolean(stall), tail: x.lines.slice(-40) });
       if (x.watchdog) x.watchdog.lastFault = ['stalled', 'oom', 'crash'].includes(classification) ? classification : null;
@@ -1080,7 +1156,7 @@ http.createServer(async (req, res) => {
     }
     const f = path.join(ROOT, 'storage', `studio-answers-${Date.now()}-${crypto.randomUUID()}.json`);
     fs.writeFileSync(f, JSON.stringify(answers, null, 1));
-    const options = { ...(retrySession?.options || {}), look, setting, seconds: answers.seconds, orientation: answers.orientation, audio: answers.audio, ending: answers.ending, originalPrompt, storyPrompt: repairing ? prompt : retrySession?.options?.storyPrompt || prompt, brief: answers, ...(repairing ? { repairGuidance: b.repairGuidance.trim() } : {}), ideaModel: retrySession?.options?.ideaModel || refined?.model || null, learningGuidanceCount: learningEvidence.guidanceCount, allowRepeat: retrySession ? Boolean(retrySession.options?.allowRepeat) : Boolean(b.allowRepeat), chain: retrySession ? Boolean(retrySession.options?.chain) : look !== 'food', unattended: !repairing && isOwner && b.unattended === true };
+    const options = { ...(retrySession?.options || {}), look, setting, quality: b.quality === 'high' || (b.quality === undefined && retrySession?.options?.quality === 'high') ? 'high' : 'standard', seconds: answers.seconds, orientation: answers.orientation, audio: answers.audio, ending: answers.ending, originalPrompt, storyPrompt: repairing ? prompt : retrySession?.options?.storyPrompt || prompt, brief: answers, ...(repairing ? { repairGuidance: b.repairGuidance.trim() } : {}), ideaModel: retrySession?.options?.ideaModel || refined?.model || null, learningGuidanceCount: learningEvidence.guidanceCount, allowRepeat: retrySession ? Boolean(retrySession.options?.allowRepeat) : Boolean(b.allowRepeat), chain: retrySession ? Boolean(retrySession.options?.chain) : look !== 'food', unattended: !repairing && isOwner && b.unattended === true };
     const x = start('draft', ['--answers', path.relative(ROOT, f), ...(options.allowRepeat ? ['--allow-repeat'] : [])], {
       cmd: ['python3', 'scripts/studio-draft.py'], user: me.name, prompt: originalPrompt, learningEvidence,
       unattended: !repairing && isOwner && b.unattended === true, options, requestId,
@@ -1418,10 +1494,31 @@ http.createServer(async (req, res) => {
       return json(res, 409, { error: 'Approve and render every shot in the sequential review before assembling the final video.' });
     }
     try { frameManifest(sc); } catch (error) { return json(res, 409, { error: error.message }); }
+    let motionTake = null;
+    if (b.retakeMotion !== undefined) { // "Another take": same approved first frame, new motion seed; other shots' cached clips are reused
+      const shot = Number(b.retakeMotion);
+      let shotCount = 0;
+      try { shotCount = JSON.parse(fs.readFileSync(path.join(ROOT, sc), 'utf8').replace(/^\uFEFF/, '')).plan.shots.length; } catch { /* reported below */ }
+      if (!owner || !Number.isInteger(shot) || shot < 1 || shot > shotCount) return json(res, 400, { error: 'Choose a shot from this video to retake.' });
+      if ((owner.options?.chain || owner.sequence?.stage === 'ready') && shot < shotCount) {
+        return json(res, 409, { error: `This video builds each shot from the end of the one before it, so a new take of shot ${shot} would redo every later shot. Retake the last shot, or re-render the video.` });
+      }
+      let picked;
+      try {
+        picked = JSON.parse(execFileSync('python3', ['scripts/motion_takes.py', 'select', '--work', path.join(ROOT, 'storage', 'any-local', path.basename(sc, '.json')), '--shot', String(shot),
+          ...(b.take !== undefined ? ['--take', String(Number(b.take))] : [])], { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }));
+      } catch (error) {
+        let message = 'Could not change the take.';
+        try { message = JSON.parse(String(error.stdout || '')).error || message; } catch { /* keep default */ }
+        return json(res, 409, { error: message });
+      }
+      motionTake = { shot, ...picked };
+      ledger({ type: 'retake-motion', user: me.name, session: owner.id, shot, take: picked.current, scenario: sc });
+    }
     const x = start('render', ['--scenario', sc, ...(owner?.options?.allowRepeat ? ['--allow-repeat'] : []),
       ...(owner?.options?.chain || owner?.sequence?.stage === 'ready' ? ['--chain-images'] : [])],
     owner ? { session: owner, scenario: sc, pinFrames: true } : { scenario: sc, pinFrames: true, user: me.name, prompt: 'Render ' + sc.split('/').pop() });
-    return json(res, 202, snap(x));
+    return json(res, 202, motionTake ? { ...snap(x), motionTake } : snap(x));
   }
   if (url.pathname === '/api/cancel' && req.method === 'POST') {
     if (job && job.status === 'running' && canSee(me, job)) {
@@ -1499,6 +1596,7 @@ http.createServer(async (req, res) => {
       pendingFrames, pendingFramesError,
       needsHumanReview: !approved && pendingFrames.length > 0,
       clips: list('motion', /^shot-(\d+)-part-\d+-[0-9a-f]+\.mp4$/),
+      takes: (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, work, 'motion', 'takes.json'), 'utf8')); } catch { return {}; } })(), // per-shot motion takes (scripts/motion_takes.py)
     });
   }
   if (url.pathname === '/api/learning') { const l = learning(me); if (!isOwner) l.recentNotes = []; return json(res, 200, l); }

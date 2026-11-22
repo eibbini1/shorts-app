@@ -13,10 +13,17 @@ export function parseEventLine(line) {
   } catch { return null; }
 }
 
+export function displayPipelineLine(value) {
+  return String(value || '').replace(/^WARNING:\s+\[gate:(?:prompt|preflight|story|sound)\]\s*/i, 'WARNING: ');
+}
+
 export function notesOf(lines) {
   // A provisional QA score only means a human rating is pending; it is not a block.
   return (lines || []).filter((l) => /^(BLOCKED|REVIEW|WARNING|Fixed automatically)/.test(l))
-    .map((l) => (/^BLOCKED:.*provisional score/.test(l) ? 'REVIEW: waiting for your rating (thumbs up or down below)' : l));
+    .map((l) => {
+      if (/^BLOCKED:.*provisional score/.test(l)) return 'REVIEW: waiting for your rating (thumbs up or down below)';
+      return displayPipelineLine(l);
+    });
 }
 export const isBlocked = (notes) => notes.some((l) => l.startsWith('BLOCKED'));
 export const choiceOf = (lines) => ((lines || []).find((l) => l.startsWith('NEEDS-CHOICE: ')) || '').slice(14);

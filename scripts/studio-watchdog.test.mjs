@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   watchdogLimits, checkStall, stallMessage, classifyExit, isLocalCommand,
-  retryDecision, keepAwakeCommand, mayReapOrphan, MAX_AUTO_RETRIES,
+  retryDecision, keepAwakeCommand, parsePsProcessIdentity, parsePsProcessIdentities,
+  isOrphanScenarioMember, mayReapOrphan, MAX_AUTO_RETRIES,
 } from './studio-watchdog.mjs';
 
 const limits = { idleMs: 60_000, hardMs: 600_000 };
@@ -66,9 +67,37 @@ test('WD-6 keep-awake binds caffeinate to the job pid on macOS only', () => {
 
 test('WD-8 orphan reaping needs the recorded pid and the exact recorded command', () => {
   const recorded = { pid: 900, command: 'bash scripts/make-local-video.sh --scenario a.json' };
-  assert.equal(mayReapOrphan({ recorded, live: { pid: 900, command: 'bash scripts/make-local-video.sh --scenario a.json' } }), true);
-  assert.equal(mayReapOrphan({ recorded, live: { pid: 900, command: 'vim notes.txt' } }), false);
-  assert.equal(mayReapOrphan({ recorded, live: { pid: 901, command: recorded.command } }), false);
-  assert.equal(mayReapOrphan({ recorded: { pid: 900 }, live: { pid: 900, command: '' } }), false);
-  assert.equal(mayReapOrphan({ recorded: null, live: { pid: 900, command: 'x' } }), false);
+  assert.equal(mayReapOrphan({ recorded, live: { pid: 900, pgid: 900, command: recorded.command } }), true);
+  assert.equal(mayReapOrphan({ recorded, live: { pid: 900, pgid: 901, command: recorded.command } }), false);
+  assert.equal(mayReapOrphan({ recorded, live: { pid: 900, pgid: 900, command: 'vim notes.txt' } }), false);
+  assert.equal(mayReapOrphan({ recorded, live: { pid: 901, pgid: 901, command: recorded.command } }), false);
+  assert.equal(mayReapOrphan({ recorded: { pid: 900 }, live: { pid: 900, pgid: 900, command: '' } }), false);
+  assert.equal(mayReapOrphan({ recorded: null, live: { pid: 900, pgid: 900, command: 'x' } }), false);
+});
+
+test('WD-8 process identity parser fails closed on malformed ps output', () => {
+  assert.deepEqual(parsePsProcessIdentity(' 900  900 bash scripts/make-local-video.sh --scenario a.json\n'), {
+    pid: 900, pgid: 900, command: 'bash scripts/make-local-video.sh --scenario a.json',
+  });
+  assert.equal(parsePsProcessIdentity('900 bash scripts/make-local-video.sh'), null);
+  assert.equal(parsePsProcessIdentity('1 1 launchd'), null);
+  assert.equal(parsePsProcessIdentity('900 900 '), null);
+  assert.deepEqual(parsePsProcessIdentities('900 900 bash job\n901 900 python worker\n'), [
+    { pid: 900, pgid: 900, command: 'bash job' },
+    { pid: 901, pgid: 900, command: 'python worker' },
+  ]);
+});
+
+test('WD-8 orphan children require the recorded scenario/work path and process group', () => {
+  const recorded = { pid: 900, scenario: 'drafts/generated/fixture.local-scenario.json' };
+  assert.equal(isOrphanScenarioMember({ recorded, live: {
+    pid: 901, pgid: 900, command: 'ltx-2-mlx generate -o /app/storage/any-local/fixture.local-scenario/motion/shot.mp4',
+  } }), true);
+  assert.equal(isOrphanScenarioMember({ recorded, live: {
+    pid: 902, pgid: 900, command: 'python scripts/render-any-local.py --scenario drafts/generated/fixture.local-scenario.json',
+  } }), true);
+  assert.equal(isOrphanScenarioMember({ recorded, live: { pid: 903, pgid: 900, command: 'sleep 60' } }), false);
+  assert.equal(isOrphanScenarioMember({ recorded, live: {
+    pid: 904, pgid: 905, command: 'ltx-2-mlx generate -o /app/storage/any-local/fixture.local-scenario/motion/shot.mp4',
+  } }), false);
 });

@@ -70,11 +70,40 @@ export function keepAwakeCommand(pid, platform = process.platform) {
   return { cmd: 'caffeinate', args: ['-dims', '-w', String(pid)] };
 }
 
-// Orphan reaping after a studio restart: only a process whose pid AND exact command line both match what the
-// studio recorded for a running job is eligible (guards against pid reuse and bystander processes).
+// Orphan reaping after a studio restart requires the exact process, its detached process group,
+// and exact command line. This prevents kill(-pid, ...) from signaling an unrelated group.
+export function parsePsProcessIdentity(output) {
+  const match = String(output || '').trim().match(/^(\d+)\s+(\d+)\s+(.+?)\s*$/);
+  if (!match) return null;
+  const pid = Number(match[1]);
+  const pgid = Number(match[2]);
+  if (!Number.isSafeInteger(pid) || !Number.isSafeInteger(pgid) || pid <= 1 || !match[3].trim()) return null;
+  return { pid, pgid, command: match[3].trim() };
+}
+
+export function parsePsProcessIdentities(output) {
+  return String(output || '').split(/\r?\n/).map(parsePsProcessIdentity).filter(Boolean);
+}
+
 export function mayReapOrphan({ recorded, live }) {
   if (!recorded || !live) return false;
   const pid = Number(recorded.pid);
   if (!Number.isInteger(pid) || pid <= 1 || pid !== Number(live.pid)) return false;
-  return Boolean(recorded.command) && recorded.command === String(live.command || '').trim();
+  return Number(live.pgid) === pid && Boolean(recorded.command) && recorded.command === String(live.command || '').trim();
+}
+
+// If the Studio leader exited but its detached group still has workers, only treat a member as
+// belonging to that job when its command names the stored scenario or that scenario's work folder.
+// This deliberately fails closed for old/unknown commands instead of killing by PGID alone.
+export function isOrphanScenarioMember({ recorded, live }) {
+  if (!recorded || !live || Number(live.pgid) !== Number(recorded.pid)) return false;
+  let scenario = String(recorded.scenario || '');
+  if (!scenario) {
+    const match = String(recorded.command || '').match(/--scenario(?:=|\s+)(?:"([^"]+)"|'([^']+)'|(\S+))/);
+    scenario = match?.[1] || match?.[2] || match?.[3] || '';
+  }
+  if (!/^drafts\/generated\/[\w.-]+\.local-scenario\.json$/.test(scenario)) return false;
+  const workFolder = `storage/any-local/${scenario.split('/').pop().replace(/\.json$/, '')}/`;
+  const command = String(live.command || '').replaceAll('\\', '/');
+  return command.includes(scenario) || command.includes(workFolder);
 }

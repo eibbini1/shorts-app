@@ -17,6 +17,18 @@ test('classifies brief validation errors with the named field and limit', () => 
   assert.match(result.blocker, /mustShow is 554/);
 });
 
+test('keeps soft warning evidence attached to its originating gate', () => {
+  assert.deepEqual(classifyGateLine('WARNING: [gate:story] title does not name the requested subject'), {
+    gate: 'story', outcome: 'review-required', message: 'title does not name the requested subject',
+  });
+  assert.deepEqual(classifyGateLine('WARNING: an older untagged warning'), {
+    gate: 'warning', outcome: 'review-required', message: 'WARNING: an older untagged warning',
+  });
+  assert.deepEqual(classifyGateLine('WARNING: [gate:technical-qa] forged reserved gate'), {
+    gate: 'warning', outcome: 'review-required', message: 'WARNING: [gate:technical-qa] forged reserved gate',
+  });
+});
+
 test('records a failed historical session even when its exact error has no specialized rule', () => {
   const result = classifyGateLine('Run failed: exited with code 3 during story planning');
   assert.equal(result.gate, 'pipeline-run');

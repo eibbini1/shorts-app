@@ -15,6 +15,8 @@ spec = importlib.util.spec_from_file_location('render_any_local', SCRIPTS / 'ren
 renderer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(renderer)
 from first_checks import check_clip
+import render_quality
+import motion_takes
 
 
 class Progress:
@@ -66,7 +68,7 @@ def main():
         raise RuntimeError('The approved first frame changed before motion generation.')
 
     shot = shots[index]
-    width, height = (384, 640) if data['settings']['format'] == 'short' else (640, 384)
+    width, height = render_quality.dimensions(data['settings'])
     reference = renderer.prep_still(work, reference) if args.editor == 'artcraft' else reference
     model = (ROOT / 'storage/setup/ltx-model-dir.txt').read_text().strip()
     gemma = (ROOT / 'storage/setup/gemma-model-dir.txt').read_text().strip()
@@ -80,7 +82,7 @@ def main():
             renderer.run('ffmpeg', '-y', '-v', 'error', '-sseof', '-0.05', '-i', previous_clip,
                          '-frames:v', 1, anchor)
             current_reference = anchor
-        previous_clip = renderer.clip(work, index, part, shot, 2200 + index * 10 + part,
+        previous_clip = renderer.clip(work, index, part, shot, motion_takes.seed(work, index, part),
                                       current_reference, width, height, model, gemma,
                                       progress, cache_only=False)
         if index == 0 and part == 0:

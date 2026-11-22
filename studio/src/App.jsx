@@ -4,8 +4,9 @@ import { failureHelp } from './failure-help.js';
 import { filterSessions, findMatchingSession, sessionDisplayName } from './session-label.js';
 import { readComposerDraft, readPreflightApproval, writeComposerDraft, writePreflightApproval } from './draft-storage.js';
 import { planPromptChanges, repairPreviewChanges } from './review-recommendations.js';
-import { notesOf, isBlocked, choiceOf, nowLine, progressOf as progressOfLines } from './pipeline-lines.js';
+import { notesOf, isBlocked, choiceOf, nowLine, displayPipelineLine, progressOf as progressOfLines } from './pipeline-lines.js';
 import { watchdogLabel } from './watchdog-status.js';
+import { takeControls } from './motion-takes.js';
 
 const BabyBall3DPreview = lazy(() => import('./BabyBall3DPreview.jsx'));
 
@@ -361,7 +362,7 @@ const TIPS = [
   'Tip: the Setting box overrides the scene, e.g. "a rainy rooftop garden".',
 ];
 
-function RenderLive({ job, plan, sessions }) {
+function RenderLive({ job, plan, sessions, onRetakeMotion, busy }) {
   const [files, setFiles] = useState({ stills: [], clips: [] });
   const [tip, setTip] = useState(0);
   const sc = job.scenario;
@@ -394,6 +395,16 @@ function RenderLive({ job, plan, sessions }) {
             <div className="cap"><b>Shot {i + 1}</b> · {sh.seconds}s · {clip(i + 1) ? 'clip ready' : still(i + 1)?.verified === false ? 'review required; not approved' : still(i + 1) ? 'first frame ready' : 'queued'}</div>
             {still(i + 1)?.reviewReason && <div className="muted small">{still(i + 1).reviewReason}</div>}
             {sh.sound && <div className="muted small">Sound: {sh.sound}</div>}
+            {!running && job.kind === 'render' && job.status === 'done' && clip(i + 1) && onRetakeMotion && (() => {
+              const takes = takeControls(files.takes, i + 1);
+              return <div className="takes">
+                <div className="muted small">{takes.label}</div>
+                <button type="button" className="ghost" disabled={busy || !takes.canMakeNew}
+                  title="Same approved first frame, a new motion seed. Only this shot is regenerated (about 5 to 20 minutes on this Mac), then the video is assembled again. Earlier takes are kept."
+                  onClick={() => onRetakeMotion(i + 1)}>{takes.canMakeNew ? 'Another take' : 'All takes used'}</button>
+                {takes.switches.map((t) => <button type="button" key={t.take} className={t.active ? 'primary' : 'ghost'} disabled={busy || t.active} onClick={() => onRetakeMotion(i + 1, t.take)}>{t.label}</button>)}
+              </div>;
+            })()}
           </div>
         ))}
       </div>
@@ -436,6 +447,7 @@ export default function App() {
   const [seconds, setSeconds] = useState(() => composerDraft?.seconds || 10);
   const planDisabled = me?.draftsLeft === 0 || seconds > maxSeconds;
   const [orientation, setOrientation] = useState(() => composerDraft?.orientation || 'vertical');
+  const [quality, setQuality] = useState(() => (composerDraft?.quality === 'high' ? 'high' : 'standard'));
   const [audio, setAudio] = useState(() => composerDraft?.audio || 'asmr');
   const [ending, setEnding] = useState(() => composerDraft?.ending || '');
   const [refining, setRefining] = useState(false);
@@ -456,8 +468,8 @@ export default function App() {
   useEffect(() => { document.documentElement.dataset.theme = theme; try { localStorage.setItem('studio-theme', theme); } catch {} }, [theme]);
   const [setting, setSetting] = useState(() => composerDraft?.setting || '');
   useEffect(() => {
-    writeComposerDraft({ prompt, seconds, orientation, audio, ending, look, setting });
-  }, [prompt, seconds, orientation, audio, ending, look, setting]);
+    writeComposerDraft({ prompt, seconds, orientation, quality, audio, ending, look, setting });
+  }, [prompt, seconds, orientation, quality, audio, ending, look, setting]);
   const refinementInputs = useRef({});
   refinementInputs.current = { prompt, look, seconds, orientation, setting, ending };
   const [exampleContext, setExampleContext] = useState(false);
@@ -649,7 +661,7 @@ export default function App() {
     setDuplicateSession(null);
     return run(async () => {
       const runUnattended = !extra.repair && me?.canRunUnattended && unattended;
-      const r = await post('/api/draft', { prompt, seconds, orientation, audio, ending, look, setting, unattended: runUnattended, refine: !approved, requestId: globalThis.crypto.randomUUID(), ...extra });
+      const r = await post('/api/draft', { prompt, seconds, orientation, quality, audio, ending, look, setting, unattended: runUnattended, refine: !approved, requestId: globalThis.crypto.randomUUID(), ...extra });
       if (r.decision === 'needs_choices') { setRefinement(r.refinement); return; }
       if (r.options?.storyPrompt) setPrompt(r.options.storyPrompt);
       if (r.options?.ending) setEnding(r.options.ending);
@@ -677,6 +689,7 @@ export default function App() {
     retrySessionId: job.id,
     unattended: Boolean(job.options?.unattended),
   }, { ignoreDuplicate: true, approved: true });
+  const retakeMotion = (shot, take) => run(async () => { const r = await post('/api/render', { scenario: job.scenario, sessionId: job.id, retakeMotion: shot, ...(take === undefined ? {} : { take }) }); pickProject(r.id); })();
   const regen = (shot) => run(async () => { const r = await post('/api/regen', { scenario: job.scenario, sessionId: job.id, shot }); pickProject(r.id); })();
   const retakeShot = (shot) => run(async () => { retake.current = true; autoRef.current = true; autoSeen.current = ''; const r = await post('/api/regen', { scenario: job.scenario, sessionId: job.id, shot }); pickProject(r.id); })();
   useEffect(() => {
@@ -704,7 +717,7 @@ export default function App() {
     if (request !== projectRequest.current) return;
     if (!j) { setErr('Could not load that project.'); return; }
     if (id !== live.id) setStored(j);
-    setPrompt(j.prompt || ''); setSeconds(j.options?.seconds || 10); setOrientation(j.options?.orientation || 'vertical');
+    setPrompt(j.prompt || ''); setSeconds(j.options?.seconds || 10); setOrientation(j.options?.orientation || 'vertical'); setQuality(j.options?.quality === 'high' ? 'high' : 'standard');
     setExampleContext(Boolean(j.options?.ending));
     setAudio(j.options?.audio || 'asmr'); setEnding(j.options?.ending || ''); setLook(j.options?.look || 'food'); setSetting(j.options?.setting || ''); setShowLog(false);
   };
@@ -750,7 +763,7 @@ export default function App() {
               {running && <p className="muted">Elapsed {elapsed}{prog ? ` · ${prog.n} of ${prog.of}` : ''}</p>}
               <StepTrack job={job} />
               {running && <div className="bar"><div className={prog ? 'fill' : 'fill indet'} style={prog ? { width: `${Math.round((prog.n / prog.of) * 100)}%` } : {}} /></div>}
-              {running && job.lines?.length > 0 && <p className="muted">{job.lines[job.lines.length - 1]}</p>}
+              {running && job.lines?.length > 0 && <p className="muted">{displayPipelineLine(job.lines[job.lines.length - 1])}</p>}
               {(() => { const w = watchdogLabel(job.watchdog, job.status); return w && <p className={`hint ${w.tone}`}>{w.text}</p>; })()}
               {running && <button className="ghost" onClick={cancel}>Stop</button>}
               {(() => { const help = job.kind === 'render' && !blocked ? failureHelp({ status: job.status, kind: job.kind, error: job.error, watchdog: job.watchdog, technicalQa: job.technicalQa, hasScenario: Boolean(job.scenario) }) : null; return help ? <FailureCard help={help} busy={busy} onRetry={render} /> : null; })()}
@@ -779,13 +792,13 @@ export default function App() {
                   {attempt.lines?.length > 0 && <pre className="log">{attempt.lines.join('\n')}</pre>}
                 </section>;
               })}</details>}
-              {job.plan && <RenderLive job={job} plan={job.plan?.plan || job.plan} sessions={sessions} />}
+              {job.plan && <RenderLive job={job} plan={job.plan?.plan || job.plan} sessions={sessions} onRetakeMotion={retakeMotion} busy={busy || me?.rendersLeft === 0} />}
               {job.status === 'done' && job.kind === 'draft' && !job.plan && <p className="muted">Plan saved: {job.scenario}</p>}
               {job.previousVideo && job.previousVideo !== job.video && <details className="card"><summary>Previous export</summary><Player src={'/media?p=' + encodeURIComponent(job.previousVideo)} /></details>}
               {job.video && <ExportReview key={job.video} job={job} review={review.video === job.video ? review : { status: 'pending' }} weak={weak} notes={notes} busy={busy || refining} renderDisabled={me?.rendersLeft === 0} onRetake={retakeShot} onRepair={prepareRepair} onCompare={me?.canCompare && sessions.filter((p) => p.hasVideo).length > 1 ? () => setCompare(true) : undefined} />}
               <UpNext show={running} autoNext={autoNext} setAutoNext={setAutoNext} />
               {me?.canSeeLog && <button className="ghost" onClick={() => setShowLog(!showLog)}>{showLog ? 'Hide' : 'Show'} log</button>}
-              {showLog && <pre className="log" ref={logRef}>{(job.lines || []).join('\n')}</pre>}
+              {showLog && <pre className="log" ref={logRef}>{(job.lines || []).map(displayPipelineLine).join('\n')}</pre>}
             </div>
           </>
         )}
@@ -863,6 +876,7 @@ export default function App() {
           <button className="link" onClick={() => setMode('simple')}>Close advanced settings</button>
           <label>Length <select value={seconds} onChange={(e) => { invalidateRefinement(); setSeconds(+e.target.value); }}>{[10, 20, 30, 45, 60].filter((n) => n <= maxSeconds).map((n) => <option key={n} value={n}>{n}s</option>)}</select></label>
           <label>Shape <select value={orientation} onChange={(e) => { invalidateRefinement(); setOrientation(e.target.value); }}><option value="vertical">Vertical 9:16</option><option value="wide">Wide 16:9</option></select></label>
+          <label title="Standard is the fast default on this Mac. High renders at 704x1280, like the clips you scored, and takes noticeably longer per clip.">Quality <select value={quality} onChange={(e) => setQuality(e.target.value)}><option value="standard">Standard (fast)</option><option value="high">High (slower)</option></select></label>
           <label>Sound <select value={audio} onChange={(e) => setAudio(e.target.value)}><option value="asmr">ASMR (no voice)</option><option value="voiced">Voiced</option><option value="auto">Auto</option></select></label>
           <label title="Runs plan, first frames and the automatic checks by itself, and stops if any check fails."><input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} /> Auto mode</label>
           {auto && <label title="Recommended: you see the first frames before the long motion render."><input type="checkbox" checked={pauseFrames} onChange={(e) => setPauseFrames(e.target.checked)} /> pause at first frames</label>}
