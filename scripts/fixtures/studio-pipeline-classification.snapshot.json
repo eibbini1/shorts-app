@@ -1,0 +1,488 @@
+[
+ {
+  "name": "draft-failed-1795093707819",
+  "signals": [
+   {
+    "gate": "story-draft",
+    "outcome": "started",
+    "message": "Attempt 1/3: writing the story"
+   },
+   {
+    "gate": "story-draft",
+    "outcome": "started",
+    "message": "Attempt 2/3: writing the story"
+   },
+   {
+    "gate": "automatic-repair",
+    "outcome": "repaired",
+    "message": "Fixed automatically: preserved a requested physical action in shot 2"
+   },
+   {
+    "gate": "warning",
+    "outcome": "review-required",
+    "message": "WARNING: shot 2: motion prompt has no recognizable physical action; review it for camera-only movement before rendering"
+   },
+   {
+    "gate": "warning",
+    "outcome": "review-required",
+    "message": "WARNING: no claims or sources listed"
+   },
+   {
+    "gate": "pre-render",
+    "outcome": "passed",
+    "message": "Story gate: Golden Pineapple Pizza | 2 shots | 10s | 2 motion clips"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: shot 2 omits the named protagonist or focal object; inspect identity continuity"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: shot 2 omits the named setting; inspect location continuity"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: the story model repaired fields automatically; inspect those shots before render"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: generated stills and clips must be reviewed for continuity after generation"
+   },
+   {
+    "gate": "automatic-repair",
+    "outcome": "repaired",
+    "message": "Fixed automatically: picture prompts polished (64 to 97)"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: shot 2 omits the named protagonist or focal object; inspect identity continuity"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: shot 2 omits the named setting; inspect location continuity"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: the story model repaired fields automatically; inspect those shots before render"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: generated stills and clips must be reviewed for continuity after generation"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: published-signatures history is empty; populate it from actual uploads before release"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: shot 2 omits the named protagonist or focal object; inspect identity continuity"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: the story model repaired fields automatically; inspect those shots before render"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: generated stills and clips must be reviewed for continuity after generation"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: published-signatures history is empty; populate it from actual uploads before release"
+   },
+   {
+    "gate": "story-draft",
+    "outcome": "started",
+    "message": "Attempt 3/3: writing the story"
+   },
+   {
+    "gate": "release-gate",
+    "outcome": "blocked",
+    "message": "BLOCKED: shot 1: ASMR sound line is empty or has no supported Foley cue",
+    "blocker": "shot 1: ASMR sound line is empty or has no supported Foley cue"
+   },
+   {
+    "gate": "story-choice",
+    "outcome": "needs-choice",
+    "message": "NEEDS-CHOICE: still-blocked"
+   }
+  ],
+  "blockers": [
+   "shot 1: ASMR sound line is empty or has no supported Foley cue"
+  ]
+ },
+ {
+  "name": "stills-failed-1794918516801",
+  "signals": [
+   {
+    "gate": "warning",
+    "outcome": "review-required",
+    "message": "WARNING: no claims or sources listed"
+   },
+   {
+    "gate": "pre-render",
+    "outcome": "passed",
+    "message": "Story gate: Crispy Halloumi & Garlic Steak Bites | 2 shots | 10s | 2 motion clips"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: opening could name the subject sooner"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: the story model repaired fields automatically; inspect those shots before render"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: generated stills and clips must be reviewed for continuity after generation"
+   },
+   {
+    "gate": "pre-render",
+    "outcome": "passed",
+    "message": "Story structure passed. Review the actual generated frames before publishing."
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: published-signatures history is empty; populate it from actual uploads before release"
+   },
+   {
+    "gate": "pre-render",
+    "outcome": "passed",
+    "message": "Evidence gate passed; visual and audio review remain required."
+   },
+   {
+    "gate": "release-gate",
+    "outcome": "blocked",
+    "message": "BLOCKED: ASMR sound plan has a gap of at least 1.5 s before rendering",
+    "blocker": "ASMR sound plan has a gap of at least 1.5 s before rendering"
+   }
+  ],
+  "blockers": [
+   "ASMR sound plan has a gap of at least 1.5 s before rendering"
+  ]
+ },
+ {
+  "name": "render-done-1795208651638",
+  "signals": [
+   {
+    "gate": "pre-render",
+    "outcome": "passed",
+    "message": "Story gate: Ball of Laughter | 2 shots | 10s | 2 motion clips"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: shot 1 omits the named setting; inspect location continuity"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: the story model repaired fields automatically; inspect those shots before render"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: generated stills and clips must be reviewed for continuity after generation"
+   },
+   {
+    "gate": "pre-render",
+    "outcome": "passed",
+    "message": "Story structure passed. Review the actual generated frames before publishing."
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: creative signature missing; variety cannot be verified for this draft"
+   },
+   {
+    "gate": "pre-render",
+    "outcome": "passed",
+    "message": "Evidence gate passed; visual and audio review remain required."
+   },
+   {
+    "gate": "pre-render",
+    "outcome": "passed",
+    "message": "First picture check passed"
+   },
+   {
+    "gate": "pre-render",
+    "outcome": "passed",
+    "message": "First clip check passed"
+   },
+   {
+    "gate": "release-gate",
+    "outcome": "blocked",
+    "message": "BLOCKED: provisional score 50/100 (technical 30/30, story 20/20, editorial 0/50)",
+    "blocker": "provisional score 50/100 (technical 30/30, story 20/20, editorial 0/50)"
+   }
+  ],
+  "blockers": [
+   "provisional score 50/100 (technical 30/30, story 20/20, editorial 0/50)"
+  ]
+ },
+ {
+  "name": "draft-done-1795123796348",
+  "signals": [
+   {
+    "gate": "story-draft",
+    "outcome": "started",
+    "message": "Attempt 1/3: writing the story"
+   },
+   {
+    "gate": "automatic-repair",
+    "outcome": "repaired",
+    "message": "Fixed automatically: matched beat 2 start state to the previous beat's end state"
+   },
+   {
+    "gate": "story-draft",
+    "outcome": "started",
+    "message": "Attempt 2/3: writing the story"
+   },
+   {
+    "gate": "story-draft",
+    "outcome": "started",
+    "message": "Attempt 3/3: writing the story"
+   },
+   {
+    "gate": "automatic-repair",
+    "outcome": "repaired",
+    "message": "Fixed automatically: matched beat 3 start state to the previous beat's end state"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: the opening hook could not be checked by the English action gate; inspect shot 1 before motion."
+   },
+   {
+    "gate": "automatic-repair",
+    "outcome": "repaired",
+    "message": "Fixed automatically: made imagePrompt distinct in beat 2"
+   },
+   {
+    "gate": "warning",
+    "outcome": "review-required",
+    "message": "WARNING: shot 3: motion prompt has no recognizable physical action; review it for camera-only movement before rendering"
+   },
+   {
+    "gate": "pre-render",
+    "outcome": "passed",
+    "message": "Story gate: The Keeper's Light | 3 shots | 15s | 3 motion clips"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: opening could name the subject sooner"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: the story model repaired fields automatically; inspect those shots before render"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: generated stills and clips must be reviewed for continuity after generation"
+   },
+   {
+    "gate": "pre-render",
+    "outcome": "passed",
+    "message": "Story structure passed. Review the actual generated frames before publishing."
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: opening could name the subject sooner"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: the story model repaired fields automatically; inspect those shots before render"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: generated stills and clips must be reviewed for continuity after generation"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: creative signature missing; variety cannot be verified for this draft"
+   },
+   {
+    "gate": "story-plan",
+    "outcome": "passed",
+    "message": "Story passed every check on attempt 3."
+   },
+   {
+    "gate": "story-plan",
+    "outcome": "passed",
+    "message": "Plan ready: drafts/generated/guided-20261120-004526-b9447c.local-scenario.json"
+   }
+  ],
+  "blockers": []
+ },
+ {
+  "name": "stills-done-1794935858645",
+  "signals": [
+   {
+    "gate": "warning",
+    "outcome": "review-required",
+    "message": "WARNING: no claims or sources listed"
+   },
+   {
+    "gate": "pre-render",
+    "outcome": "passed",
+    "message": "Story gate: Crispy Hot Honey Halloumi & Garlic Butter Steak Bites | 2 shots | 10s | 2 motion clips"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: opening could name the subject sooner"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: the story model repaired fields automatically; inspect those shots before render"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: generated stills and clips must be reviewed for continuity after generation"
+   },
+   {
+    "gate": "pre-render",
+    "outcome": "passed",
+    "message": "Story structure passed. Review the actual generated frames before publishing."
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: published-signatures history is empty; populate it from actual uploads before release"
+   },
+   {
+    "gate": "pre-render",
+    "outcome": "passed",
+    "message": "Evidence gate passed; visual and audio review remain required."
+   },
+   {
+    "gate": "pre-render",
+    "outcome": "passed",
+    "message": "First picture check passed"
+   }
+  ],
+  "blockers": []
+ },
+ {
+  "name": "stills-failed-1795073652638",
+  "signals": [
+   {
+    "gate": "warning",
+    "outcome": "review-required",
+    "message": "WARNING: length outside the 10-35 s local Short band"
+   },
+   {
+    "gate": "warning",
+    "outcome": "review-required",
+    "message": "WARNING: no claims or sources listed"
+   },
+   {
+    "gate": "pre-render",
+    "outcome": "passed",
+    "message": "Story gate: Golden Pineapple Pizza | 12 shots | 60s | 12 motion clips"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: opening could name the subject sooner"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: the story model repaired fields automatically; inspect those shots before render"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: generated stills and clips must be reviewed for continuity after generation"
+   },
+   {
+    "gate": "pre-render",
+    "outcome": "passed",
+    "message": "Story structure passed. Review the actual generated frames before publishing."
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: published-signatures history is empty; populate it from actual uploads before release"
+   },
+   {
+    "gate": "pre-render",
+    "outcome": "passed",
+    "message": "Evidence gate passed; visual and audio review remain required."
+   },
+   {
+    "gate": "pre-render",
+    "outcome": "passed",
+    "message": "First picture check passed"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: Close-up: broad, thin ivory cheese slices land on the pizza while pineapple and shredded cheese remain visible underneath: No pineapple visible; toppings are zucchini and shredded cheese"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: At oven level, the baker watches the pineapple-and-cheese pizza through oven glass as the crust browns and the cheese melts: Oven door open; pizza being removed, not watched through glass"
+   },
+   {
+    "gate": "human-review",
+    "outcome": "review-required",
+    "message": "REVIEW: At oven level, the baker watches the pineapple-and-cheese pizza through oven glass as the crust browns and the cheese melts: Pizza on tray, not in oven; no oven glass visible"
+   }
+  ],
+  "blockers": []
+ },
+ {
+  "name": "draft-failed-1794987030237",
+  "signals": [
+   {
+    "gate": "story-draft",
+    "outcome": "started",
+    "message": "Attempt 1/3: writing the story"
+   },
+   {
+    "gate": "story-draft",
+    "outcome": "started",
+    "message": "Attempt 2/3: writing the story"
+   },
+   {
+    "gate": "story-draft",
+    "outcome": "started",
+    "message": "Attempt 3/3: writing the story"
+   },
+   {
+    "gate": "story-choice",
+    "outcome": "needs-choice",
+    "message": "NEEDS-CHOICE: still-blocked"
+   }
+  ],
+  "blockers": []
+ }
+]

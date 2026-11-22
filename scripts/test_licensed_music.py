@@ -1,3 +1,4 @@
+import os
 import json
 import subprocess
 import tempfile
@@ -5,7 +6,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PYTHON = ROOT / 'storage/tools/ComfyUI/.venv/bin/python'
+PYTHON = Path(os.environ.get('SHORTS_MEDIA_PY') or (ROOT / 'storage/tools/ComfyUI/.venv/bin/python'))
 SCRIPT = ROOT / 'scripts/sound-any-local.py'
 SCENARIO = ROOT / 'examples/local-scenarios/red-curry-dumpling-bake-30.local-scenario.json'
 

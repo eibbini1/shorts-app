@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# Python with the media extras (numpy, audio libs). Override with SHORTS_MEDIA_PY; default is the Mac venv.
+MEDIA_PY="${SHORTS_MEDIA_PY:-storage/tools/ComfyUI/.venv/bin/python}"
+# Structured events for the Studio, printed next to the human text (see studio/src/pipeline-lines.js).
+gate_event() { printf '@@event {"type":"gate","gate":"%s","status":"%s","code":"%s","exitCode":%d}\n' "$1" "$2" "$3" "${4:-1}"; }
+on_error() { local rc=$? step; step=$(grep -oE 'scripts/[A-Za-z0-9_.-]+' <<<"$BASH_COMMAND" | head -1 || true); gate_event "${step:-pipeline}" failed command-failed "$rc"; }
+trap on_error ERR
 
 usage() {
   cat <<'USAGE'
@@ -71,7 +77,7 @@ if [[ -n "$status" ]]; then
   if ((watch)); then status_args+=(--watch); fi
   if ((preview)); then status_args+=(--preview); fi
   if ((preview)); then
-    storage/tools/ComfyUI/.venv/bin/python scripts/local_video_progress.py "${status_args[@]}"
+    "$MEDIA_PY" scripts/local_video_progress.py "${status_args[@]}"
   else
     python3 scripts/local_video_progress.py "${status_args[@]}"
   fi
@@ -86,10 +92,10 @@ if [[ -z "$scenario" ]]; then
   [[ -z "$studio" ]] || brief_args+=(--studio "$studio")
   [[ -z "$answers" ]] || brief_args+=(--answers "$answers")
   scenario="$(python3 scripts/director-brief.py "${brief_args[@]}")"
-  [[ -f "$scenario" ]] || { echo 'The director brief did not save a scenario.' >&2; exit 3; }
+  [[ -f "$scenario" ]] || { gate_event brief blocked no-scenario 3; echo 'The director brief did not save a scenario.' >&2; exit 3; }
   if [[ -n "$studio" ]]; then
     # Master-prompt pass: studio set, lighting, lens, camera move, mood and kitchen plate per shot (docs/MASTER_PROMPTS.md).
-    python3 scripts/refine-prompts.py "$scenario" --studio "$studio" --in-place || { echo 'Prompt refinement failed.' >&2; exit 3; }
+    python3 scripts/refine-prompts.py "$scenario" --studio "$studio" --in-place || { gate_event prompt-refine blocked refine-failed 3; echo 'Prompt refinement failed.' >&2; exit 3; }
   fi
   echo "Review the shot plan: $scenario"
   python3 - "$scenario" <<'PY'
@@ -126,19 +132,19 @@ t_start=$SECONDS
 echo "Step 1/4  Environment check"
 echo "Finishing editor: $editor"
 if [[ "$editor" == artcraft ]]; then
-  python3 scripts/check-artcraft-mac.py --require-cli || { echo 'ArtCraft version check failed before rendering.' >&2; exit 4; }
+  python3 scripts/check-artcraft-mac.py --require-cli || { gate_event artcraft-check blocked tool-missing 4; echo 'ArtCraft version check failed before rendering.' >&2; exit 4; }
 fi
 env_args=()
 [[ -z "$cache_only" ]] || env_args+=(--skip-gpu)
-python3 scripts/check-env.py ${env_args[@]+"${env_args[@]}"} || { echo "Fix the FAIL lines above, then run this again." >&2; exit 4; }
+python3 scripts/check-env.py ${env_args[@]+"${env_args[@]}"} || { gate_event environment blocked env-check-failed 4; echo "Fix the FAIL lines above, then run this again." >&2; exit 4; }
 echo "Step 2/4  Pre-render check (topic, hook, length, currency, claims)"
 if [[ -z "$cache_only" ]]; then
-  python3 scripts/prompt-lint.py "$scenario" --min-prompts="${SHORTS_MIN_PROMPT_SCORE:-85}" || { echo "Prompt gate blocked this scenario before any FLUX/LTX time. Run: python3 scripts/refine-prompts.py '$scenario' --studio luxury-kitchen --in-place (or set SHORTS_MIN_PROMPT_SCORE)." >&2; exit 3; }
+  python3 scripts/prompt-lint.py "$scenario" --min-prompts="${SHORTS_MIN_PROMPT_SCORE:-85}" || { gate_event prompt blocked prompt-score-low 3; echo "Prompt gate blocked this scenario before any FLUX/LTX time. Run: python3 scripts/refine-prompts.py '$scenario' --studio luxury-kitchen --in-place (or set SHORTS_MIN_PROMPT_SCORE)." >&2; exit 3; }
 fi
-python3 scripts/preflight-short.py "$scenario" --strict ${allow_repeat:+$allow_repeat} || { echo "Preflight blocked this scenario. Fix the listed problems before rendering." >&2; exit 3; }
-python3 scripts/audit-local-story.py "$scenario" || { echo 'Story gate blocked this scenario. Edit the plan before rendering.' >&2; exit 3; }
-python3 scripts/evidence_gate.py "$scenario" || { echo 'Evidence gate blocked this scenario. Correct claims, prices or variety before rendering.' >&2; exit 3; }
-storage/tools/ComfyUI/.venv/bin/python scripts/add-sfx.py --scenario "$scenario" --audit || { echo 'Sound cue gate blocked this scenario. Edit its shot sound lines before rendering.' >&2; exit 3; }
+python3 scripts/preflight-short.py "$scenario" --strict ${allow_repeat:+$allow_repeat} || { gate_event preflight blocked preflight-blocked 3; echo "Preflight blocked this scenario. Fix the listed problems before rendering." >&2; exit 3; }
+python3 scripts/audit-local-story.py "$scenario" || { gate_event story blocked story-blocked 3; echo 'Story gate blocked this scenario. Edit the plan before rendering.' >&2; exit 3; }
+python3 scripts/evidence_gate.py "$scenario" || { gate_event evidence blocked evidence-blocked 3; echo 'Evidence gate blocked this scenario. Correct claims, prices or variety before rendering.' >&2; exit 3; }
+"$MEDIA_PY" scripts/add-sfx.py --scenario "$scenario" --audit || { gate_event sound blocked sound-plan-blocked 3; echo 'Sound cue gate blocked this scenario. Edit its shot sound lines before rendering.' >&2; exit 3; }
 t_checks=$SECONDS
 if [[ -n "$cache_only" ]]; then
   echo "Step 3/4  Reassembling cached local video to $output (no FLUX/LTX generation; missing cache stops the job)"
@@ -152,7 +158,7 @@ if [[ -n "${stills_only:-}" ]]; then echo "First frames ready (no motion generat
 t_render=$SECONDS
 echo "Base render complete: $output (not release approved)"
 echo "Step 4/4  Shot-synced ASMR, captions, upload pack and quality check"
-storage/tools/ComfyUI/.venv/bin/python scripts/add-sfx.py --scenario "$scenario" --video "$output"
+"$MEDIA_PY" scripts/add-sfx.py --scenario "$scenario" --video "$output"
 finished_video="${output%.mp4}.sfx.mp4"
 python3 scripts/finish-local-video.py --scenario "$scenario" --video "$finished_video" && echo "Captioned ASMR video and upload pack are next to $finished_video"
 pack="${finished_video%.mp4}.pack.json"

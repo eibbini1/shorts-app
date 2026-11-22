@@ -6,6 +6,7 @@
       Opening-frame price text (0 to 2.6 s, fades out) and the 'Genius Approved' seal that slams in at the last shot
       with a low thump. Run after the captioned video exists.
 """
+import os
 import argparse, textwrap, json, subprocess, tempfile, sys
 from pathlib import Path
 
@@ -60,7 +61,7 @@ def seal(a):
     stamp = a.stamp or ROOT / 'outputs/_check/stamp.png'
     if not stamp.exists():
         stamp.parent.mkdir(parents=True, exist_ok=True)
-        local_python = ROOT / 'storage/tools/ComfyUI/.venv/bin/python'
+        local_python = Path(os.environ.get('SHORTS_MEDIA_PY') or (ROOT / 'storage/tools/ComfyUI/.venv/bin/python'))
         run([str(local_python if local_python.is_file() else sys.executable),
              str(ROOT / 'scripts/make-stamp.py'), '--out', str(stamp)])
     with tempfile.TemporaryDirectory() as tmp:

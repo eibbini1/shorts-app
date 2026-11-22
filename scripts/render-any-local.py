@@ -422,7 +422,7 @@ def main():
         with ThreadPoolExecutor(max_workers=2) as pool:
             voice_job = (pool.submit(run, 'node', ROOT / 'scripts/narrate-any-local.mjs', scenario, work)
                          if presentation['voice'] else None)
-            sound_job = pool.submit(run, ROOT / 'storage/tools/ComfyUI/.venv/bin/python',
+            sound_job = pool.submit(run, Path(os.environ.get('SHORTS_MEDIA_PY') or (ROOT / 'storage/tools/ComfyUI/.venv/bin/python')),
                                     ROOT / 'scripts/sound-any-local.py', scenario, work)
             if voice_job:
                 voice_job.result()
