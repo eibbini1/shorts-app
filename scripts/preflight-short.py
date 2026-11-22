@@ -24,6 +24,14 @@ NUMBER = re.compile(r'\d|\b(one|two|three|four|five|six|seven|eight|nine|ten|ele
 VAGUE_OPEN = re.compile(r'^(this|these|the|a|an)\b', re.I)
 VISIBLE_ACTION = re.compile(r'\b(lift\w*|lower\w*|spread\w*|pull\w*|push\w*|pour\w*|drizzl\w*|drip\w*|jump\w*|run\w*|walk\w*|roll\w*|spin\w*|bite\w*|chew\w*|slic\w*|chop\w*|stir\w*|grab\w*|reach\w*|open\w*|clos\w*|arrang\w*|coat\w*|melt\w*|bubbl\w*|rac\w*|carry\w*|drop\w*|catch\w*|cross\w*|serv\w*|eat\w*|driv\w*|pedal\w*|sprinkl\w*|squeez\w*|sear\w*|bast\w*|dip\w*|taste\w*|flip\w*|toss\w*|fold\w*|trac\w*|step\w*|climb\w*|break\w*|crack\w*|glid\w*|add\w*|present\w*|adjust\w*|smash\w*|press\w*|toast\w*|stack\w*)\b', re.I)
 PLATE_ACTION = re.compile(r'\b(?:plate|plates|plating)\s+(?:the|a|an|one|each|it|their|her|his|beside)\b', re.I)
+# Hand-and-tool contact actions that the local motion model renders poorly (seen on a patty flip, 2026-11-22 bench).
+# Heuristic, warning only: it never blocks a render.
+HARD_CONTACT = re.compile(r'\b(flip|flips|flipping|flipped|toss|tosses|tossing|catch|catches|catching|juggl\w*|knead\w*|whisking|twirl\w*|chopping|slicing|peeling)\b', re.I)
+
+
+def hard_motion(prompt):
+    """Sorted, de-duplicated hand-tool contact verbs found in a motion prompt."""
+    return sorted({m.group(0).lower() for m in HARD_CONTACT.finditer(prompt or '')})
 
 
 def hook_score(line, topic=''):
@@ -99,6 +107,9 @@ def main():
                 warnings.append(f'shot {i}: line needs about {speech:.1f} s but the shot is {shot["seconds"]} s; trim words or lengthen the shot')
         if not VISIBLE_ACTION.search(shot['motionPrompt']) and not PLATE_ACTION.search(shot['motionPrompt']):
             warnings.append(f'shot {i}: motion prompt has no recognizable physical action; review it for camera-only movement before rendering')
+        risky = hard_motion(shot['motionPrompt'])
+        if risky:
+            warnings.append(f'shot {i}: hand-tool contact action ({", ".join(risky)}) often looks fake in local motion; prefer the moment before or after (melt, steam, drop, slow push-in) or keep hands still')
     if NON_USD.search(first):
         warnings.append('non-USD money in the first line: use dollars')
     for w in warnings:
