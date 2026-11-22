@@ -194,7 +194,7 @@ function PlanCard({ job, idea, onStills, onReference, disabled, notes }) {
       <h3>{plan.title || 'Story plan'}</h3>
       {plan.hook && <p><b>Hook:</b> {plan.hook}</p>}
       {plan.payoff && <p><b>Payoff:</b> {plan.payoff}</p>}
-      <p className="muted">{shots.length} shots · {total}s · render estimate about {fmt(planEstimate(clipsOf(shots)).mid)} ({fmt(planEstimate(clipsOf(shots)).low)} to {fmt(planEstimate(clipsOf(shots)).high)}) if nothing is retried</p>
+      <p className="muted">{shots.length} shots · {total}s · render estimate about {fmt(planEstimate(clipsOf(shots), job.options?.quality).mid)} ({fmt(planEstimate(clipsOf(shots), job.options?.quality).low)} to {fmt(planEstimate(clipsOf(shots), job.options?.quality).high)}) if nothing is retried</p>
       <ShotPlan shots={shots} notes={notes} events={job.events} />
       {needsPromptChangeApproval && <section className="preflight-fixes" aria-label="Prompt changes to approve">
         <h4>Prompt changes to review</h4>

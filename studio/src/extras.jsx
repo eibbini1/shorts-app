@@ -14,11 +14,8 @@ import { prerenderChecklist } from './prerender-checklist.js';
    first-cold-night-10: clips 229 s + 259 s; red-curry 8 shots: ~223-225 s per clip.
    One clip per shot, so time scales with the shot count, not the seconds. A retry or a vision-gate
    regeneration adds more; the live estimate corrects itself after the first clip. */
-export const EST = { cycle: 274, cycleLow: 240, cycleHigh: 315, finish: 70, start: 10 };
-export const fmt = (s) => { s = Math.max(0, Math.round(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
-// the pipeline cuts a shot into ceil(seconds / 5) clips, so time follows clips, not shots
-export const clipsOf = (shots) => (shots || []).reduce((n, sh) => n + Math.max(1, Math.ceil((sh.seconds || 5) / 5)), 0);
-export const planEstimate = (n) => ({ low: EST.start + n * EST.cycleLow + EST.finish - 10, mid: EST.start + n * EST.cycle + EST.finish, high: EST.start + n * EST.cycleHigh + EST.finish + 15 });
+import { EST, estFor, fmt, clipsOf, planEstimate } from './render-estimate.js';
+export { EST, fmt, clipsOf, planEstimate };
 
 export function RenderTimer({ job, plan }) {
   const [now, setNow] = useState(Date.now());
@@ -38,7 +35,7 @@ export function RenderTimer({ job, plan }) {
   if (job.kind !== 'render' || !n || !job.startedAt) return null;
   if (!running) {
     if (job.status !== 'done') return null;
-    const est = planEstimate(n);
+    const est = planEstimate(n, job.options?.quality);
     return <div className="timer done">Finished. The estimate for {n} clip{n > 1 ? 's' : ''} was about {fmt(est.mid)}; the real time is in the log.</div>;
   }
   // one finished clip per shot (latest file per shot), only files written after this render started
@@ -46,9 +43,10 @@ export function RenderTimer({ job, plan }) {
   files.clips.filter((c) => c.t >= job.startedAt).forEach((c) => done.set(c.n, c));
   const k = done.size;
   const last = k ? Math.max(...[...done.values()].map((c) => c.t)) : 0;
-  const prior = learned || EST.cycle;
-  const cycle = k ? Math.min(EST.cycleHigh * 1.5, Math.max(EST.cycleLow * 0.7, (last - job.startedAt - EST.start * 1000) / 1000 / k)) : prior;
-  const endAt = job.startedAt + (EST.start + n * cycle + EST.finish) * 1000;
+  const E = estFor(job.options?.quality);
+  const prior = (job.options?.quality === 'high' ? null : learned) || E.cycle; // the learned average mixes Standard runs
+  const cycle = k ? Math.min(E.cycleHigh * 1.5, Math.max(E.cycleLow * 0.7, (last - job.startedAt - E.start * 1000) / 1000 / k)) : prior;
+  const endAt = job.startedAt + (E.start + n * cycle + E.finish) * 1000;
   const remaining = (endAt - now) / 1000;
   const elapsed = (now - job.startedAt) / 1000;
   const spread = k ? 0.06 : 0.12; // after a clip is measured the range tightens
@@ -62,7 +60,7 @@ export function RenderTimer({ job, plan }) {
         <span className="muted">{k}/{n} clips · est. finish {new Date(endAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
       </div>
       <div className="bar"><div className="fill" style={{ width: pct + '%' }} /></div>
-      {n > 1 && <ol className="clipstrip" aria-label="Clip progress">{clipProgress({ total: n, doneShots: [...done.values()].map((c) => c.shot), startedAt: job.startedAt, lastDoneAt: last, now, cycleSec: cycle, startSec: EST.start }).map((c) => (
+      {n > 1 && <ol className="clipstrip" aria-label="Clip progress">{clipProgress({ total: n, doneShots: [...done.values()].map((c) => c.shot), startedAt: job.startedAt, lastDoneAt: last, now, cycleSec: cycle, startSec: E.start }).map((c) => (
         <li key={c.shot} className={`${c.state}${c.slow ? ' slow' : ''}`} title={c.state === 'active' ? `Clip ${c.shot} rendering for ${fmt(c.elapsedSec)}${c.slow ? ', longer than usual' : ''}` : `Clip ${c.shot} ${c.state === 'done' ? 'finished' : 'waiting'}`}>
           <span>{c.shot}</span>{c.state === 'active' && <em>{fmt(c.elapsedSec)}</em>}
         </li>))}</ol>}
@@ -308,7 +306,7 @@ export function FramesReview({ job, plan, files, onStills, onRegen, onRender, on
   if (!(files.stills || []).length && !needsHumanReview) return <section className="card"><h3>Review first frames</h3><p>This frame set has no verified selection. Make first frames to continue.</p><button className="primary" disabled={busy || blocked} onClick={onStills}>Make first frames</button></section>;
   const url = (f) => '/media?p=' + encodeURIComponent(f.p) + '&v=' + Math.round(f.t);
   const all = shots.every((_, i) => still(i + 1));
-  const est = planEstimate(clipsOf(shots));
+  const est = planEstimate(clipsOf(shots), job.options?.quality);
   const checklist = prerenderChecklist({ shots, hasStill: (n) => Boolean(still(n)), needsHumanReview, blocked, otherJobRunning: anyRunning, rendersLeft, clips: clipsOf(shots) });
   const pendingFrames = files.pendingFrames || [];
   const candidateForShot = (n) => pendingFrames.find((frame) => frame.shot === n);
