@@ -61,6 +61,13 @@ Plan: WD-1..WD-8 (stall detection, one bounded retry, keep-awake, UI status, res
 - Scope kept: watches render, stills, sequence-motion only; draft keeps its existing watchdog. Auto-retry only for stall, out-of-memory or signal crash, never for QA/gate failures, never for non-local commands. No automatic quality-lowering retry (decision 2).
 - IMPLEMENTED, UNIT-TESTED, NOT SEEN: per-clip progress strip in the render timer (`studio/src/clip-progress.js`, `extras.jsx`, `styles.css`): clips shown done / rendering (with elapsed) / queued, red when a clip runs 1.5x past the measured pace. Assumes clips are written in order (first missing file = active); App/extras JSX parse with esbuild but the UI was never rendered (vite build blocked here). Vitest: 35 files / 163 tests pass.
 - Next: run a real render on the Mac with this branch, confirm caffeinate and the UI, then independent review of the process-signalling code before merge.
+## 2026-11-22 - Claude: motion-risk warning in preflight (branch motion-risk-warning, from origin/main 9936cdd, not pushed)
+- Source: Mac image-to-video bench (LTX 2.3 q4 from real FLUX stills). User scores: motion 4/5/5, matches-still 4/5/5, food realism 1/1/4. User says the shot-4 patty FLIP looks clearly AI. Shots with lowering/dropping held up.
+- IMPLEMENTED + unit-tested: `scripts/preflight-short.py` warns (never blocks) when a motion prompt has a hand-tool contact verb (flip, toss, catch, juggle, knead, whisking, twirl, chopping, slicing, peeling). Narrowed after a first draft flagged 51/61 example shots (cut/slices/crackle are edit terms or nouns); now flags 1/61, the burger flip.
+- Evidence limit: only the flip is observed failing; the other verbs are a heuristic.
+- NOT built, on purpose: budget caps (the Studio calls no paid providers today) and a per-shot provider log (only one motion engine is wired; recording it needs the render scripts to pass the real engine and model hash, not a guess). Both PLANNED if paid providers or a second engine are added.
+- Idea source: OpenMontage (AGPL-3.0). Ideas only; no code copied.
+- Tests: new test_preflight_motion_risk.py 3/3, mutation check fails it as expected. Full `unittest discover scripts`: pre-existing failures from missing node deps (zod) in this worktree, unrelated.
 
 ## Current handover — 2026-11-21: Studio and pipeline work
 
