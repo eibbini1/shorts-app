@@ -6,7 +6,7 @@ import {parseArgs} from 'node:util';
 import {z} from 'zod';
 import {scenarioSettings, verifyScenario} from './scenario-schema.mjs';
 import {normalizeShot} from './shot-normalize.mjs';
-import {applyVisualIdentityLock, collectPromptChanges, fitOutlineIdeas, hasSupportedAsmrCue, narrationWordBand, reconcileSceneStateBefore} from './story-draft-utils.mjs';
+import {applyVisualIdentityLock, collectPromptChanges, firstClause, fitOutlineIdeas, hasSupportedAsmrCue, narrationWordBand, reconcileSceneStateBefore, repairSceneState, shortenNarration} from './story-draft-utils.mjs';
 import {hasVisiblePhysicalAction, preserveOpeningHook, preserveRequestedActions, requestedActionClauses} from './story-action-gate.mjs';
 
 const args=parseArgs({allowPositionals:true,options:{style:{type:'string',default:'cinematic'},ending:{type:'string',default:''},title:{type:'string',default:''},set:{type:'string',default:''},hook:{type:'string',default:''},'must-show':{type:'string',default:''},obstacle:{type:'string',default:''},turn:{type:'string',default:''},audio:{type:'string',default:'auto'},format:{type:'string',default:'short'},seconds:{type:'string',default:'30'},model:{type:'string',default:'qwen3:1.7b'}}});
@@ -271,15 +271,8 @@ function fallbackNarration(beat){
   if(label.includes('setback')||label.includes('complication')||label.includes('obstacle')) return `The obstacle blocks the next step.`;
   if(label.includes('new plan')) return `A safer new plan takes shape.`;
   if(label.includes('action')||label.includes('attempt')) return `${protagonist} puts the plan into motion.`;
+  if(label.includes('hook')||label.includes('goal')) return `${firstClause(protagonist,6)} begins the journey.`;
   return `One journey leads toward ${goal}.`;
-}
-function shortenNarration(text,seconds){
-  const {min:minimum,max:limit}=narrationWordBand(seconds);
-  const words=text.trim().split(/\s+/);
-  if(words.length<=limit) return text;
-  const sentences=text.match(/[^.!?]+[.!?]?/g)?.map(item=>item.trim())??[];
-  const fit=sentences.find(sentence=>sentence.split(/\s+/).length>=minimum && sentence.split(/\s+/).length<=limit);
-  return fit || words.slice(0,limit).join(' ').replace(/[,;:]+$/,'')+'.';
 }
 for(let i=0;i<count;i++){
   const beat=beats[i];
@@ -317,8 +310,9 @@ for(let i=0;i<count;i++){
       }
       if(issues.includes('state')){
         const previous=shots.at(-1)?.sceneState;
+        repairSceneState(shot.sceneState,shot.motionPrompt,hasVisiblePhysicalAction);
         const hasValidAction=hasVisiblePhysicalAction(shot.sceneState.action)&&normalize(shot.sceneState.before)!==normalize(shot.sceneState.after);
-        if(!previous||!hasValidAction||!reconcileSceneStateBefore(shot.sceneState,previous.after))
+        if(!hasValidAction||(previous&&!reconcileSceneStateBefore(shot.sceneState,previous.after)))
           throw new Error(`Beat ${i+1} broke the before/action/after scene-state chain. No scenario was saved or rendered.`);
         issues=issues.filter(issue=>issue!=='state');
         fallbackCount++;

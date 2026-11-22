@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {applyVisualIdentityLock, collectPromptChanges, fitOutlineIdeas, hasSupportedAsmrCue, narrationWordBand, reconcileSceneStateBefore} from './story-draft-utils.mjs';
+import {applyVisualIdentityLock, collectPromptChanges, fitOutlineIdeas, hasSupportedAsmrCue, narrationWordBand, reconcileSceneStateBefore, shortenNarration, firstClause, repairSceneState} from './story-draft-utils.mjs';
 
 test('extra Gemma outline ideas are capped without another model call', () => {
   const original={ideas:Array.from({length:7},(_,i)=>({title:`Idea ${i+1}`,angle:'filmable'})),title:'Chicken'};
@@ -65,4 +65,31 @@ test('preflight prompt changes retain exact before and after text for the select
       after: 'The baker slides it in, showing the requested handoff.',
     }],
   }]);
+});
+
+test('shortened narration never ends on a dangling word and stays in the band', () => {
+  const out = shortenNarration('One journey leads toward The cape flutters in the wind as the superhero stands tall on the rooftop', 5);
+  const words = out.replace(/[.]$/, '').split(/\s+/);
+  const { min, max } = narrationWordBand(5);
+  assert.ok(words.length >= min && words.length <= max, out);
+  assert.doesNotMatch(out, /\b(?:the|a|an|to|and|of|with|for|as|in|on|at|toward)\.?$/i);
+});
+
+test('firstClause cuts a long character description to a clean short subject', () => {
+  assert.equal(firstClause('A cartoon superhero guardian, tall, muscular build, bright blue eyes', 6), 'A cartoon superhero guardian');
+  assert.equal(firstClause('The brave little fox runs to the', 5), 'The brave little fox runs');
+});
+
+test('repairSceneState reuses the motion prompt when the action is static and fixes identical before/after', () => {
+  const hasAction = text => /\b(?:lands|turns|lifts|swings)\b/i.test(text);
+  const state = { before: 'Hero stands on the roof', action: 'Hero stands tall', after: 'Hero stands on the roof' };
+  assert.equal(repairSceneState(state, 'The hero lands softly and turns toward the city. The cape swings.', hasAction), true);
+  assert.match(state.action, /lands softly/);
+  assert.notEqual(state.before, state.after);
+});
+
+test('repairSceneState leaves a valid state alone', () => {
+  const hasAction = text => /\blifts\b/i.test(text);
+  const state = { before: 'a', action: 'He lifts the lid', after: 'b' };
+  assert.equal(repairSceneState(state, 'x', hasAction), false);
 });
