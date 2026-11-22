@@ -67,3 +67,11 @@ Recommended next, in order:
 6. Optional, needs approval: FLUX 3 Image Klein vs FLUX.2 klein 4B on the same shot-5 stills (download, FLUX Kommunity License, untested on this Mac).
 7. Housekeeping needing the owner: delete the HF token `runpod-bench`; decide whether to keep `qwen3-vl:8b` (6.2 GB on disk, no current use); delete the merged local branch `warn-not-block` when ready.
 8. Later goal (unchanged, BLOCKED on owner): hosted GPU provider and monthly cap for Seedance/Flow-class capability; the local M1 will not match it.
+
+### Decisions and actions taken (2026-11-22 20:30, Claude, per owner's instruction to act without further asks)
+- DECIDED: remove `qwen3-vl:8b` (6.2 GB). Done with `ollama rm`; `qwen3-vl:4b` stays for the existing still-vs-shot yes/no check. Neither size separated the Test A clips, and the pairwise run showed pure position bias (first-listed clip won in both orders, 4 of 4 requests, one pair only; the other pairs and 8B were not run). Realism is judged by the owner's ratings plus pixel proxies; no VLM realism judge is used.
+- DONE: Studio server restarted from `main` (merged #34 backend); the burger project and video reload correctly. Merged local branch `warn-not-block` deleted.
+- DONE: draft PRs #35 (this plan) and #36 (quality-aware render estimate) marked ready for review. Merging them was blocked by a permission check in the session; they need a merge click (or an explicit merge instruction).
+- NOT DONE (security setting): deleting the Hugging Face token `runpod-bench` needs the owner's HF account.
+- NOT DONE: FLUX 3 Image Klein A/B (download size unknown; mflux support not verified); over-long idea fail-fast (original failing input unknown).
+
