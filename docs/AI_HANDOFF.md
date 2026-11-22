@@ -1,5 +1,15 @@
 # AI handoff
 
+## 2026-11-22 22:47  — Claude: non-food planning fixes + opening-hook bank (branch fix/nonfood-shot-normalize, NOT pushed)
+- Branch `fix/nonfood-shot-normalize`, HEAD `d74be51`, four local commits after `80bc1f8` base work (`bad50a8`, `80bc1f8`, `5e835a3`, `d74be51`). Working tree: no tracked changes; pre-existing untracked drafts/benchmarks left alone. Old `stash@{0}` is not mine.
+- VERIFIED (unit/regression): shot normalizer, setting-override fix, identity/lighting/emblem rules, back-view face-question skip, look_drift continuity flag, narration fallback, scene-state repair, wider action verbs. Run at HEAD: vitest 181/181, node tests 37/37, watchdog 12/12, python look_drift+hook_bank 8/8, test_gate_severity 15/15, `git diff --check` clean.
+- IMPLEMENTED BUT UNTESTED end to end: the full hero plan->render still fails on refiner output (static ending, fragment hook, scene-state chain). Not fixed.
+- NEW, IMPLEMENTED (unit-tested, not yet judged on a real render): `data/hook-bank.json` (23 original hook patterns, 11 mechanisms from the hook-writer method; each has spoken line, on-screen text, first-frame visual, motion-safe note), `scripts/hook-bank.mjs` (stable per-topic pick of 3 patterns, injected into the outline prompt in `story-scenario.mjs`), `scripts/hook_bank.py` (mechanism label + banned-template warning in `preflight-short.py`; hook score unchanged). Tests: `scripts/hook-bank.test.mjs` 6, `scripts/test_hook_bank.py` 5. Preflight smoke on `bacon-gruyere-egg-bites-v2` printed score 100 and mechanisms "timeliness, question, specificity".
+- Caveat: adding ~400 chars to the outline prompt may change what the small local planner returns; compare a real draft before relying on it. Mechanism detection is regex heuristic.
+- PLANNED: reference-image identity lock for recurring original characters; first-vs-last-frame identity check; look_drift thresholds untuned (one case). BLOCKED: topic packs need vidIQ credits (0, reset 2026-12-09) or a go-ahead to build ASMR/Ambient/Cooking packs without trend data.
+- Owner-only: watch hero + burger exports, score v5, merge PRs #35/#36, FLUX 3 Klein HF login, hosted-GPU decision.
+- Next: draft one real topic with the hook bank on and compare against the previous draft; fix refiner static-ending failures.
+
 ## 2026-11-22 17:37 +03 — Codex: reliability hardening, second review, validation
 - Branch: `warn-not-block`; four commits ahead of `origin/main` (three earlier branch commits plus this reliability commit). At the time of this check, the remote branch did not exist and no PR was open. The verified source changes are committed locally; pre-existing untracked drafts, rendered files and research assets remain untouched and unstaged.
 - Implemented: restart orphan cleanup parses PID, process-group ID and command from `ps`, and signals only when the PID is the group ID and the command exactly matches the stored job. The integration test now uses the Studio-style `bash scripts/make-local-video.sh ...` command, allows delayed SIGTERM exit, and proves that both a command-matching non-leader process group and an unrelated bystander survive.
