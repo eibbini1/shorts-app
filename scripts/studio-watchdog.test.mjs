@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   watchdogLimits, checkStall, stallMessage, classifyExit, isLocalCommand,
-  retryDecision, keepAwakeCommand, parsePsProcessIdentity, mayReapOrphan, MAX_AUTO_RETRIES,
+  retryDecision, keepAwakeCommand, parsePsProcessIdentity, parsePsProcessIdentities,
+  isOrphanScenarioMember, mayReapOrphan, MAX_AUTO_RETRIES,
 } from './studio-watchdog.mjs';
 
 const limits = { idleMs: 60_000, hardMs: 600_000 };
@@ -81,4 +82,22 @@ test('WD-8 process identity parser fails closed on malformed ps output', () => {
   assert.equal(parsePsProcessIdentity('900 bash scripts/make-local-video.sh'), null);
   assert.equal(parsePsProcessIdentity('1 1 launchd'), null);
   assert.equal(parsePsProcessIdentity('900 900 '), null);
+  assert.deepEqual(parsePsProcessIdentities('900 900 bash job\n901 900 python worker\n'), [
+    { pid: 900, pgid: 900, command: 'bash job' },
+    { pid: 901, pgid: 900, command: 'python worker' },
+  ]);
+});
+
+test('WD-8 orphan children require the recorded scenario/work path and process group', () => {
+  const recorded = { pid: 900, scenario: 'drafts/generated/fixture.local-scenario.json' };
+  assert.equal(isOrphanScenarioMember({ recorded, live: {
+    pid: 901, pgid: 900, command: 'ltx-2-mlx generate -o /app/storage/any-local/fixture.local-scenario/motion/shot.mp4',
+  } }), true);
+  assert.equal(isOrphanScenarioMember({ recorded, live: {
+    pid: 902, pgid: 900, command: 'python scripts/render-any-local.py --scenario drafts/generated/fixture.local-scenario.json',
+  } }), true);
+  assert.equal(isOrphanScenarioMember({ recorded, live: { pid: 903, pgid: 900, command: 'sleep 60' } }), false);
+  assert.equal(isOrphanScenarioMember({ recorded, live: {
+    pid: 904, pgid: 905, command: 'ltx-2-mlx generate -o /app/storage/any-local/fixture.local-scenario/motion/shot.mp4',
+  } }), false);
 });
