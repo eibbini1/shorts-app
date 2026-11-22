@@ -5,6 +5,7 @@ import {promisify} from 'node:util';
 import {parseArgs} from 'node:util';
 import {z} from 'zod';
 import {scenarioSettings, verifyScenario} from './scenario-schema.mjs';
+import {normalizeShot} from './shot-normalize.mjs';
 import {applyVisualIdentityLock, collectPromptChanges, fitOutlineIdeas, hasSupportedAsmrCue, narrationWordBand, reconcileSceneStateBefore} from './story-draft-utils.mjs';
 import {hasVisiblePhysicalAction, preserveOpeningHook, preserveRequestedActions, requestedActionClauses} from './story-action-gate.mjs';
 
@@ -114,7 +115,7 @@ async function ask(schema,system,payload){
       if(typeof raw!=='string') throw new Error('Local model returned no text');
       const body=raw.slice(raw.indexOf('{'),raw.lastIndexOf('}')+1);
       const parsed=JSON.parse(body);
-      return schema.parse(schema===outlineSchema?fitOutlineIdeas(parsed):parsed);
+      return schema.parse(schema===outlineSchema?fitOutlineIdeas(parsed):schema===shotSchema?normalizeShot(parsed):parsed);
     }catch(error){
       last=error;
       if(model==='gemma-local' && error.code!==undefined){
