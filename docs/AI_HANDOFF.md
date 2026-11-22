@@ -1,5 +1,38 @@
 # AI handoff
 
+## 2026-11-22 — Claude: motion-model decision, image-to-video results, next steps (branch gpu-bench-kit)
+
+State at writing: branch gpu-bench-kit (PR #29), Mac repo on handoff/current-work-2026-11-21 with the bench scripts untracked there (copies committed here). Pod `early_yellow_lobster` stopped; spend about $1.87.
+
+### Decisions (VERIFIED by user scoring)
+- Do NOT switch the motion model or rent a GPU. Blind text-only test, 5 shots (s01–s05), 3 backends, user scored blind: best clip = Mac LTX 2.3 q4 on 3 shots, pod LTX-2.5 fp8 on 2, Wan 2.2 5B on 0; Wan rated worst on both shots where a worst was named. LTX-2.5 also needs 26 GB VRAM (fails the 24 GB bar). Decision rule (≥6/10 wins) not met.
+- Always start motion from a real FLUX still. Mac image-to-video (LTX 2.3 q4, 704x1280x121, seed 42, burger stills shot-04/05/06): first scoring motion 4/5/5, matches-still 4/5/5, food realism 1/1/4. ~18 min/clip, 15.6 GB peak.
+- Hand-tool contact actions (flip) look AI. User called the shot-4 flip clearly unrealistic. Preflight now warns (PR #31).
+
+### Observed but unresolved (treat with care)
+- On 2026-11-22 the user pasted different scores for the same three clips (s04 5/5/5, s05 5/5/5, s06 2/2/5); unconfirmed whether that was a rescore. Either way: quality varies a lot between clips/seeds and between viewings.
+- Shot-4 retry (simpler prompt, no flip, seeds 42/7/11): rendered, NOT scored. Claude frame check only: seed 11 cleanest (push-in, melting cheese); seed 7 broken (spatula reshapes, cheese colour shifts); seed 42 cheese appears on second patty. Scoring page: https://claude.ai/artifact/VS3BZeU5vBJ6suBVs1qwCU
+
+### Ready, not run
+- Test A (is the still the realism bottleneck?): `bash scripts/gpu-bench/mac_still_test_a.sh` — shot 5 with v1 still enlarged to 704x1280, v2 still edited by FLUX klein 4B with a food-photo prompt, optional v3 real photo at outputs/bench-mac-i2v/real_s05.jpg. ~40 min. Tracking sheet: https://claude.ai/artifact/MKz54ns3mM9Aj9ny8bBJgn
+- Blind review tooling: `scripts/gpu-bench/blind_review.py` (dummy-clip tested, then used for the real test).
+
+### Research (sourced, mostly UNTESTED here) — docs/research/2026-11-realistic-motion-food-shorts.md
+- Stills: klein 4B ranks low (arena Elo 840); candidates FLUX 3 Klein (free < $5M revenue) and Z-Image Turbo (Apache-2.0), both in mflux / Draw Things. LTX guidance: input still should be ≥ output size; 384x640 is below it.
+- Contact motion in ltx-2-mlx (flags quoted from repo HEAD 747b30e): end-state anchors `--image PATH FRAME STRENGTH replace 0` (replace only at frame 0 or 1+8k), shorter clips (49–73 frames), seed sweeps + `retake --distilled`, IC-LoRA Union Control from a phone video of a real hand (q4 untested).
+- Local VLM judges are near chance on physics; use only to rank seeds, human picks.
+- Paid reference only: Seedance 2.5 ≈ $40–70 per 30 s Short; Kling/Wan class ≈ $8–15.
+- OpenMontage (AGPL-3.0) reviewed: not adopted (duplicates Studio, slower PyTorch-MPS path, licence risk); ideas only.
+
+### Next recommended actions (in order)
+1. Run Test A on the Mac; score it.
+2. Score the shot-4 retry page; confirm what the 2026-11-22 pasted scores referred to.
+3. Studio: render 3 seeds per shot by default and let the first-frames/motion review pick the best (free; biggest cheap gain).
+4. If Test A shows better stills help: trial FLUX 3 Klein / Z-Image at ~1088x1920 (needs download — get approval).
+5. Fix Desktop Commander on the Mac (`npm login`, restart Claude app) so Claude can start/monitor renders itself.
+6. Not built on purpose: budget caps and per-shot provider log — only when a paid provider or second engine is added.
+- User still to do: delete HF token `runpod-bench`; review/merge PRs #29–#31 (#30 needs an independent review of process signalling).
+
 ## 2026-11-21 — Claude: Runpod motion-model bench results (branch gpu-bench-kit)
 Pod: RTX PRO 4500 Blackwell 32 GB, $0.74/h. Pod STOPPED (container disk erased); total spend ~$1.87 of $15 (balance $13.13 per console). Pod outputs saved on the Mac in `outputs/bench-pod/` (untracked; not committed).
 - VERIFIED Wan 2.2 TI2V-5B, 704x1280x121f, 30 steps (cpu offload + vae tiling): ~449 s, $0.092/clip, 14.6 GB VRAM, 39.9 GB RAM. s01 incl. warm-up 557 s.
