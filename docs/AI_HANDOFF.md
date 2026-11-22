@@ -1,5 +1,13 @@
 # AI handoff
 
+## 2026-11-22 — Claude: all open PRs merged into main (clean baseline)
+- User asked to merge every open PR so the next agent starts from main. Merged in order: #29 (bench kit, results, research, standing direction), #26 (phase 1 pipeline events), #28 (planner gate stress), #30 (watchdog, failure card, pre-render checklist), #31 (motion-risk preflight warning). No open PRs remain.
+- Conflicts resolved: docs/AI_HANDOFF.md (kept every entry from both sides); studio-server.mjs snap/persist (kept #26 `events` + #30 `watchdog`/`procInfo`); App.jsx (both imports; #26 BlockedCard `events` prop + #30 render failure card); styles.css (both blocks).
+- Integration fix: scripts/test_studio_workflow.py now copies scripts/studio-watchdog.mjs into its fixture (the server imports it since #30).
+- Verified on main in the cloud sandbox: node --test 62/62; vitest 173/173; tsc --noEmit pass; python unittest discover 142 run, 1 error = test_licensed_music, which fails the same way on the previous main (needs the Mac-only ComfyUI venv).
+- NOT verified: Studio in a real browser on the Mac (vite build blocked in sandbox); watchdog caffeinate/orphan reaping on macOS; #30 process-signalling code merged at user's request WITHOUT the independent review recommended earlier — review it.
+- Mac sync: the Mac checkout is on branch handoff/current-work-2026-11-21 with untracked drafts and outputs. Before `git checkout main && git pull`, move the untracked copies of scripts/gpu-bench/{mac_*.sh,prompts.mac.json} aside (now tracked on main) and keep other untracked work; never `git clean`.
+
 ## 2026-11-22 — Claude: motion-model decision, image-to-video results, next steps (branch gpu-bench-kit)
 
 State at writing: branch gpu-bench-kit (PR #29), Mac repo on handoff/current-work-2026-11-21 with the bench scripts untracked there (copies committed here). Pod `early_yellow_lobster` stopped; spend about $1.87.
