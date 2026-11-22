@@ -17,6 +17,7 @@ from studio_references import load_reference_manifest, manifest_sha256
 from first_checks import check_still, check_clip
 from presentation_mode import choose as choose_presentation
 import render_quality
+import motion_takes
 from select_still_local import select as select_still_local
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -255,6 +256,7 @@ def clip(work, index, part, shot, seed, reference, width, height, model, gemma, 
     target = work / 'motion' / f'shot-{index:02d}-part-{part:02d}-{key}.mp4'
     if valid_video(target):
         print(f'Reusing motion {index + 1}.{part + 1}: {target.name}', flush=True)
+        target.touch()  # the Studio shows the newest clip per shot, so a reused earlier take becomes the current one
         progress.mark_complete(index, part)
         print(progress(), flush=True)
         return target
@@ -601,7 +603,7 @@ def main():
                 run('ffmpeg', '-y', '-v', 'error', '-sseof', '-0.05', '-i', previous_clip,
                     '-frames:v', 1, anchor)
                 reference = anchor
-            previous_clip = clip(work, index, part, shot, 2200 + index * 10 + part,
+            previous_clip = clip(work, index, part, shot, motion_takes.seed(work, index, part),
                                  reference, width, height, model, gemma, progress, args.cache_only)
             if gate and index == 0 and part == 0:
                 problem = check_clip(previous_clip)

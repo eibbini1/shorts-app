@@ -6,6 +6,7 @@ import { readComposerDraft, readPreflightApproval, writeComposerDraft, writePref
 import { planPromptChanges, repairPreviewChanges } from './review-recommendations.js';
 import { notesOf, isBlocked, choiceOf, nowLine, progressOf as progressOfLines } from './pipeline-lines.js';
 import { watchdogLabel } from './watchdog-status.js';
+import { takeControls } from './motion-takes.js';
 
 const BabyBall3DPreview = lazy(() => import('./BabyBall3DPreview.jsx'));
 
@@ -361,7 +362,7 @@ const TIPS = [
   'Tip: the Setting box overrides the scene, e.g. "a rainy rooftop garden".',
 ];
 
-function RenderLive({ job, plan, sessions }) {
+function RenderLive({ job, plan, sessions, onRetakeMotion, busy }) {
   const [files, setFiles] = useState({ stills: [], clips: [] });
   const [tip, setTip] = useState(0);
   const sc = job.scenario;
@@ -394,6 +395,16 @@ function RenderLive({ job, plan, sessions }) {
             <div className="cap"><b>Shot {i + 1}</b> · {sh.seconds}s · {clip(i + 1) ? 'clip ready' : still(i + 1)?.verified === false ? 'review required; not approved' : still(i + 1) ? 'first frame ready' : 'queued'}</div>
             {still(i + 1)?.reviewReason && <div className="muted small">{still(i + 1).reviewReason}</div>}
             {sh.sound && <div className="muted small">Sound: {sh.sound}</div>}
+            {!running && job.kind === 'render' && job.status === 'done' && clip(i + 1) && onRetakeMotion && (() => {
+              const takes = takeControls(files.takes, i + 1);
+              return <div className="takes">
+                <div className="muted small">{takes.label}</div>
+                <button type="button" className="ghost" disabled={busy || !takes.canMakeNew}
+                  title="Same approved first frame, a new motion seed. Only this shot is regenerated (about 5 to 20 minutes on this Mac), then the video is assembled again. Earlier takes are kept."
+                  onClick={() => onRetakeMotion(i + 1)}>{takes.canMakeNew ? 'Another take' : 'All takes used'}</button>
+                {takes.switches.map((t) => <button type="button" key={t.take} className={t.active ? 'primary' : 'ghost'} disabled={busy || t.active} onClick={() => onRetakeMotion(i + 1, t.take)}>{t.label}</button>)}
+              </div>;
+            })()}
           </div>
         ))}
       </div>
@@ -678,6 +689,7 @@ export default function App() {
     retrySessionId: job.id,
     unattended: Boolean(job.options?.unattended),
   }, { ignoreDuplicate: true, approved: true });
+  const retakeMotion = (shot, take) => run(async () => { const r = await post('/api/render', { scenario: job.scenario, sessionId: job.id, retakeMotion: shot, ...(take === undefined ? {} : { take }) }); pickProject(r.id); })();
   const regen = (shot) => run(async () => { const r = await post('/api/regen', { scenario: job.scenario, sessionId: job.id, shot }); pickProject(r.id); })();
   const retakeShot = (shot) => run(async () => { retake.current = true; autoRef.current = true; autoSeen.current = ''; const r = await post('/api/regen', { scenario: job.scenario, sessionId: job.id, shot }); pickProject(r.id); })();
   useEffect(() => {
@@ -780,7 +792,7 @@ export default function App() {
                   {attempt.lines?.length > 0 && <pre className="log">{attempt.lines.join('\n')}</pre>}
                 </section>;
               })}</details>}
-              {job.plan && <RenderLive job={job} plan={job.plan?.plan || job.plan} sessions={sessions} />}
+              {job.plan && <RenderLive job={job} plan={job.plan?.plan || job.plan} sessions={sessions} onRetakeMotion={retakeMotion} busy={busy || me?.rendersLeft === 0} />}
               {job.status === 'done' && job.kind === 'draft' && !job.plan && <p className="muted">Plan saved: {job.scenario}</p>}
               {job.previousVideo && job.previousVideo !== job.video && <details className="card"><summary>Previous export</summary><Player src={'/media?p=' + encodeURIComponent(job.previousVideo)} /></details>}
               {job.video && <ExportReview key={job.video} job={job} review={review.video === job.video ? review : { status: 'pending' }} weak={weak} notes={notes} busy={busy || refining} renderDisabled={me?.rendersLeft === 0} onRetake={retakeShot} onRepair={prepareRepair} onCompare={me?.canCompare && sessions.filter((p) => p.hasVideo).length > 1 ? () => setCompare(true) : undefined} />}

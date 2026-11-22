@@ -8,6 +8,7 @@ def run_fixture():
     for folder in ['scripts','outputs','storage/studio-sessions','storage/studio-learning','drafts/generated','bin']:
         (root/folder).mkdir(parents=True)
     shutil.copy('scripts/studio-server.mjs',root/'scripts')
+    shutil.copy('scripts/motion_takes.py',root/'scripts')
     shutil.copy('scripts/studio-session-utils.mjs',root/'scripts')
     shutil.copy('scripts/studio-export-review.mjs',root/'scripts')
     shutil.copy('scripts/studio-ideas.mjs',root/'scripts')
@@ -51,7 +52,7 @@ def run_fixture():
         'hook':'A golden halloumi bite catches the light','mustShow':legacy_prompt,
         'obstacle':'The halloumi risks sticking in the pan.','turn':'The chef lowers the heat and bastes it with garlic butter.',
         'ending':'A crisp bite dips into cool herbed yogurt.','audio':'voiced','seconds':60,'orientation':'vertical'}))
-    (root/'storage/studio-users.json').write_text(json.dumps({'users':[{'name':n,'token':n,'role':'creator','dailyRenders':2} for n in ('creator-a','creator-b')]}))
+    (root/'storage/studio-users.json').write_text(json.dumps({'users':[{'name':n,'token':n,'role':'creator','dailyRenders':8} for n in ('creator-a','creator-b')]}))
     seeded_learning=[
         {'type':'run','session':'seed-a','user':'creator-a','look':'food'},
         {'type':'feedback','session':'seed-a','user':'creator-a','look':'food','rating':'down','note':'Keep the same tomato shape between shots.','videoSha256':'fixture-video-hash'},
@@ -483,6 +484,31 @@ directory=work/'sequence'; directory.mkdir(parents=True,exist_ok=True)
             except ConnectionRefusedError: time.sleep(.03)
         replay_status, replay=req('/api/draft','creator-a',{'prompt':chosen['prompt'],'originalPrompt':'tomatoes','requestId':'approval-replay'})
         assert replay_status==200 and replay['id']==approved['id'],replay
+        # Another take: same approved first frame, new motion seed. The sequential video chains each shot from the
+        # previous one, so only the last shot may be retaken; every refusal must leave the take untouched.
+        takes_file=work.parent/'motion'/'takes.json'
+        assert req('/api/render','creator-a',{**payload,'retakeMotion':99})[0]==400
+        assert req('/api/render','creator-a',{**payload,'retakeMotion':0})[0]==400
+        chained=req('/api/render','creator-a',{**payload,'retakeMotion':1})
+        assert chained[0]==409 and 'redo every later shot' in chained[1]['error'],chained
+        assert not takes_file.exists()
+        assert req('/api/render','creator-b',{**payload,'retakeMotion':2})[0] in (403,404)
+        assert not takes_file.exists()
+        taken=req('/api/render','fixture-owner',{**payload,'retakeMotion':2})
+        assert taken[0]==202 and taken[1]['motionTake']['current']==1 and taken[1]['motionTake']['highest']==1,taken
+        assert json.loads(takes_file.read_text())=={'1':{'current':1,'highest':1}}
+        finish()
+        assert req('/api/live-files?scenario='+scenario,'creator-a')[1]['takes']=={'1':{'current':1,'highest':1}}
+        bad=req('/api/render','fixture-owner',{**payload,'retakeMotion':2,'take':5}); assert bad[0]==409 and 'not been made' in bad[1]['error'],bad
+        back=req('/api/render','fixture-owner',{**payload,'retakeMotion':2,'take':0})
+        assert back[0]==202 and back[1]['motionTake']['current']==0 and back[1]['motionTake']['highest']==1,back
+        finish()
+        assert req('/api/render','fixture-owner',{**payload,'retakeMotion':2})[0]==202
+        finish()
+        assert json.loads(takes_file.read_text())=={'1':{'current':2,'highest':2}}
+        exhausted=req('/api/render','fixture-owner',{**payload,'retakeMotion':2})
+        assert exhausted[0]==409 and 'takes' in exhausted[1]['error'],exhausted
+        assert json.loads(takes_file.read_text())=={'1':{'current':2,'highest':2}}
         (root/'scripts/make-local-video.sh').write_text("trap '' TERM\necho armed > armed\nsleep 1\n")
         assert req('/api/render','creator-a',payload)[0]==202
         for _ in range(100):

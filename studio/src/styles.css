@@ -295,3 +295,4 @@ button.ghost.composer-secondary { align-self:flex-end; }
 .precheck li.blocked span:first-child { color: var(--bad); }
 .failcard h3 { margin-top: 0; }
 .failcard pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.tile .takes { display:flex; flex-wrap:wrap; gap:4px; align-items:center; margin-top:6px; } .tile .takes button { font-size:11px; padding:3px 7px; }

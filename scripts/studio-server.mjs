@@ -1419,10 +1419,31 @@ http.createServer(async (req, res) => {
       return json(res, 409, { error: 'Approve and render every shot in the sequential review before assembling the final video.' });
     }
     try { frameManifest(sc); } catch (error) { return json(res, 409, { error: error.message }); }
+    let motionTake = null;
+    if (b.retakeMotion !== undefined) { // "Another take": same approved first frame, new motion seed; other shots' cached clips are reused
+      const shot = Number(b.retakeMotion);
+      let shotCount = 0;
+      try { shotCount = JSON.parse(fs.readFileSync(path.join(ROOT, sc), 'utf8').replace(/^\uFEFF/, '')).plan.shots.length; } catch { /* reported below */ }
+      if (!owner || !Number.isInteger(shot) || shot < 1 || shot > shotCount) return json(res, 400, { error: 'Choose a shot from this video to retake.' });
+      if ((owner.options?.chain || owner.sequence?.stage === 'ready') && shot < shotCount) {
+        return json(res, 409, { error: `This video builds each shot from the end of the one before it, so a new take of shot ${shot} would redo every later shot. Retake the last shot, or re-render the video.` });
+      }
+      let picked;
+      try {
+        picked = JSON.parse(execFileSync('python3', ['scripts/motion_takes.py', 'select', '--work', path.join(ROOT, 'storage', 'any-local', path.basename(sc, '.json')), '--shot', String(shot),
+          ...(b.take !== undefined ? ['--take', String(Number(b.take))] : [])], { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }));
+      } catch (error) {
+        let message = 'Could not change the take.';
+        try { message = JSON.parse(String(error.stdout || '')).error || message; } catch { /* keep default */ }
+        return json(res, 409, { error: message });
+      }
+      motionTake = { shot, ...picked };
+      ledger({ type: 'retake-motion', user: me.name, session: owner.id, shot, take: picked.current, scenario: sc });
+    }
     const x = start('render', ['--scenario', sc, ...(owner?.options?.allowRepeat ? ['--allow-repeat'] : []),
       ...(owner?.options?.chain || owner?.sequence?.stage === 'ready' ? ['--chain-images'] : [])],
     owner ? { session: owner, scenario: sc, pinFrames: true } : { scenario: sc, pinFrames: true, user: me.name, prompt: 'Render ' + sc.split('/').pop() });
-    return json(res, 202, snap(x));
+    return json(res, 202, motionTake ? { ...snap(x), motionTake } : snap(x));
   }
   if (url.pathname === '/api/cancel' && req.method === 'POST') {
     if (job && job.status === 'running' && canSee(me, job)) {
@@ -1500,6 +1521,7 @@ http.createServer(async (req, res) => {
       pendingFrames, pendingFramesError,
       needsHumanReview: !approved && pendingFrames.length > 0,
       clips: list('motion', /^shot-(\d+)-part-\d+-[0-9a-f]+\.mp4$/),
+      takes: (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, work, 'motion', 'takes.json'), 'utf8')); } catch { return {}; } })(), // per-shot motion takes (scripts/motion_takes.py)
     });
   }
   if (url.pathname === '/api/learning') { const l = learning(me); if (!isOwner) l.recentNotes = []; return json(res, 200, l); }
