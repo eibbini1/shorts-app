@@ -1,5 +1,13 @@
 # AI handoff
 
+## 2026-11-22 20:15 +03 — Claude: post-merge status and updated plan (branch docs/post-merge-plan, from main 317d447, NOT pushed)
+- VERIFIED (GitHub): PR #34 merged 17:02:44Z (head f740854) and PR #33 merged 17:02:59Z. Local `main` fast-forwarded to origin/main 317d447. Old local branch `warn-not-block` is merged; not deleted.
+- Plan: see "Plan after PRs #33 and #34" at the end of docs/ROADMAP.md (recommendations in order).
+- Corrects the 18:10 entry below: its fixes and the "NOT pushed" status are superseded: the assembly fix 9484d0d shipped inside PR #34. The Stage 0 judge test has now run: qwen3-vl:4b and qwen3-vl:8b (8B downloaded, 6.2 GB) gave 5/5 to every Test A clip; absolute VLM scoring is not usable. Pairwise A/B test is the next cheap check (no download).
+- VERIFIED: Studio server PID 62189 started 14:55, so it still runs pre-merge backend code. Restart it with its launch/auth environment preserved. Python-side changes (e.g. studio_frames.py) apply per job without a restart.
+- Not done: owner picture/audio review of the burger export; v5 scoring; HF token `runpod-bench` deletion; no full render on merged code.
+- Untracked user drafts/outputs untouched. Nothing pushed.
+
 ## 2026-11-22 17:37 +03 — Codex: reliability hardening, second review, validation
 - Branch: `warn-not-block`; four commits ahead of `origin/main` (three earlier branch commits plus this reliability commit). At the time of this check, the remote branch did not exist and no PR was open. The verified source changes are committed locally; pre-existing untracked drafts, rendered files and research assets remain untouched and unstaged.
 - Implemented: restart orphan cleanup parses PID, process-group ID and command from `ps`, and signals only when the PID is the group ID and the command exactly matches the stored job. The integration test now uses the Studio-style `bash scripts/make-local-video.sh ...` command, allows delayed SIGTERM exit, and proves that both a command-matching non-leader process group and an unrelated bystander survive.

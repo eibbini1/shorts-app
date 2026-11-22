@@ -1,6 +1,6 @@
 # Roadmap
 
-Updated 2026-11-14. Read [AI_HANDOFF.md](AI_HANDOFF.md) for the active render and review branch. See [the food Short review](FOOD_SHORTS_REVIEW_20261114.md) for sampled hooks and their evidence limits.
+Updated 2026-11-22. Read [AI_HANDOFF.md](AI_HANDOFF.md) for the active render and review branch. See [the food Short review](FOOD_SHORTS_REVIEW_20261114.md) for sampled hooks and their evidence limits.
 
 For tool choices, see [the local montage assessment](MONTAGE_TOOLS_20261114.md).
 
@@ -46,3 +46,24 @@ The render now prepares Kokoro narration and the original soundtrack concurrentl
 - PLANNED: a studio "rich with capability to create anything described", comparable to Google Flow, on top of the Seedance-level goal. Not started.
 - Needs: a gap analysis against Flow's CURRENT feature set from fresh sources (not memory), then a mapping to what the local Mac pipeline can and cannot do. Local M1 16 GB (LTX-2.3, ~4.5 min per 5 s clip) will not match it; hosted GPUs (Phase 1, needs owner decision on provider and monthly cap) are the likely route.
 - Already moving that way: guided plans with self-repair, first-frames review, per-shot retake, chained frames for scene continuity, private/relative access for testing and learning.
+
+## Plan after PRs #33 and #34 (2026-11-22, Claude)
+
+State: PR #34 (soft story gates, High render quality, "Another take", reaper hardening, assembly fix) and PR #33 (public npm registry) are merged to `main` (GitHub, 17:02 UTC). Tests recorded by the PR author: watchdog 12/12, Vitest 181/181, gate tests 15/15, learning signals 5/5, TypeScript and Studio builds. No full render was run on the merged code.
+
+- VERIFIED: a full Studio High run (704x1280, 97 frames, two shots, 10 s) on the 16 GB M1 produced a 10.0 s file with audio and passing technical QA. Costs: plan ~4 min, first frames 4.5-8.5 min each, LTX motion 14-15 min per clip, assembly+sound+QA ~2 min. Peak Metal 11.46 GB (footprint 15.6 GB): never run two heavy jobs at once.
+- VERIFIED: the Studio's own render estimate ("about 10:28") understates High quality.
+- VERIFIED LIMIT: shot 1 ignored the planned flip and cheese melt; hand motion reads AI in all clips. Technical QA passing says nothing about cinematic quality. Owner picture/audio review of the burger export is still pending.
+- VERIFIED: qwen3-vl:4b and qwen3-vl:8b both scored every Test A clip 5/5 on motion and realism (owner scored realism 1, 3, 4). Absolute-score VLM judging is not usable as built. 3 clips only; method failure, not a final verdict on VLM judges.
+- IMPLEMENTED BUT UNTESTED: restart orphan recovery (leader-dead and SIGKILL escalation, per the PR author); no live restart against a production orphan.
+- OPERATIONAL: the running Studio server (started 14:55) predates the merged backend changes. Restart it with its launch/auth environment preserved before relying on them.
+
+Recommended next, in order:
+1. Owner reviews the burger export (`outputs/guided-20261122-164055-924093-20261122-180504.sfx.mp4`) for picture and sound, then restart the Studio server to load the merged backend. Closes the open gate from #34.
+2. Small PR: make the render estimate quality-aware (High is ~14-15 min per clip, not Standard timing) and fail fast on over-length idea text.
+3. Pairwise judge test (same 3 Test A clips, A/B and B/A, no download) before any model decision. If it also fails to track the owner's scores, stop using a VLM for realism and rely on owner ratings plus pixel proxies.
+4. Owner scores v5 on the Test A page; grow the golden set toward 60-100 pairs before trusting any automatic judge (Wilson intervals, both orders).
+5. Motion fidelity, the real gap: use "Another take" (up to 3 seeds per shot) and keep hand-contact shots out of food plans where a still-life macro shot works; owner compares seeds blind.
+6. Optional, needs approval: FLUX 3 Image Klein vs FLUX.2 klein 4B on the same shot-5 stills (download, FLUX Kommunity License, untested on this Mac).
+7. Housekeeping needing the owner: delete the HF token `runpod-bench`; decide whether to keep `qwen3-vl:8b` (6.2 GB on disk, no current use); delete the merged local branch `warn-not-block` when ready.
+8. Later goal (unchanged, BLOCKED on owner): hosted GPU provider and monthly cap for Seedance/Flow-class capability; the local M1 will not match it.
