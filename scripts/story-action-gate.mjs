@@ -119,7 +119,7 @@ export function preserveRequestedActions(shots, requestedText, subject = '') {
     if (!positions.length) {
       const target = Math.min(shots.length - 1, Math.floor(clauseIndex * shots.length / clauses.length));
       const action = subjectAction(clause, subject);
-      shots[target].motionPrompt = `${action}. ${sceneActionDetail(shots[target])}${sceneTransition(shots[target])}Keep ${subject || 'the subject'} and the relevant tool visible; show the change caused by the action in one continuous take.`;
+      shots[target].motionPrompt = `${action}. ${sceneActionDetail(shots[target])}${sceneTransition(shots[target])}Keep ${subject || 'the subject'} and any prop it uses visible; show the change caused by the action in one continuous take.`;
       shots[target].imagePrompt = firstFramePrompt(shots[target], subject, clause);
       inserted.push({ clause, shot: target + 1 });
       const refreshed = actionTokens(shots[target].motionPrompt);
@@ -141,7 +141,7 @@ export function preserveOpeningHook(shots, hookText, subject = '') {
   const missing = [...new Set(actionTokens(hook))].filter((action) => !actionCovered(action, hook, shots[0].motionPrompt));
   if (!missing.length && !GENERIC_SUBJECT.test(shots[0].motionPrompt)) return { status: 'verified' };
   const action = subjectAction(hook, subject);
-  shots[0].motionPrompt = `${action}. ${sceneActionDetail(shots[0])}${sceneTransition(shots[0])}Keep ${subject || 'the subject'} and the relevant tool visible through the action in one continuous take.`;
+  shots[0].motionPrompt = `${action}. ${sceneActionDetail(shots[0])}${sceneTransition(shots[0])}Keep ${subject || 'the subject'} and any prop it uses visible through the action in one continuous take.`;
   shots[0].imagePrompt = firstFramePrompt(shots[0], subject, hook);
   if (!missing.every((action) => actionTokens(shots[0].motionPrompt).includes(action))) {
     throw new Error(`Could not preserve the opening hook in shot 1: ${hook}`);

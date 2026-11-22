@@ -39,3 +39,10 @@ test('normalizeShot fixes both problems together and leaves valid shots unchange
     visualChecks: { mustShow: ['x'], mustNotShow: [], questions: [] } };
   assert.deepEqual(normalizeShot(good), good);
 });
+
+test('face questions are dropped when the shot is seen from behind', () => {
+  const shot = { narration: 'n', imagePrompt: 'The hero seen from behind on a rooftop', motionPrompt: 'm', sound: 's',
+    sceneState: { before: 'b', action: 'a', after: 'c' },
+    visualChecks: { mustShow: ['rooftop'], mustNotShow: [], questions: ['Does the hero look confident in expression?', 'Is the cape gold?'] } };
+  assert.deepEqual(normalizeShot(shot).visualChecks.questions, ['Is the cape gold?']);
+});

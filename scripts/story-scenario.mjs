@@ -137,7 +137,7 @@ const selected=count===2?['Hook and goal','Payoff and closing image']:
   Array.from({length:count},(_,i)=>core[Math.round(i*(core.length-1)/(count-1))]);
 const beats=selected.map((label,i)=>({number:i+1,label,seconds:durations[i]}));
 const outlineInstruction=`You are a visual story editor. ${masterPrompts.story} ${foodProcess?masterPrompts.foodStory:''} ${masterPrompts.montage} ${subjectRules} ${briefRules} Develop one concrete, filmable story from the user's subject. The title must describe the subject or visible payoff, and the hook must start the same story. Pick a specific protagonist or focal object, one setting, a visible goal, a physical obstacle that temporarily prevents the goal, a change of approach, and a satisfying visible outcome. ${foodProcess?'For a cooking transformation, make the obstacle a real texture or heat constraint and resolve it through visible cooking technique; never invent a disaster or unrelated mission. Filming, lighting, camera, narration, sound, and caption requirements are never story obstacles, plot turns, props, or goals. The six beats are hook, preparation, heat, build, finish, and payoff.':''} If the user gives an ending, the goal and payoff MUST directly be that ending. Do not invent another mission, destination or unrelated stakes. The requested ending is success, never the obstacle. The turn must visibly solve the obstacle, and the payoff must answer the opening. Avoid vague metaphors, repeated beauty shots, fabricated facts, and unsupported claims. Keep one consistent subject, lighting progression, props and location. Write compact JSON fields only.`;
-const visualIdentityRule='The visualBible is the locked identity reference for the whole story: describe each recurring person or creature by stable face, hair, clothing, accessories and proportions, and each recurring object by exact shape, color, material, size and distinctive markings; also specify the fixed art style, palette and set. Keep these details unchanged across shots.';
+const visualIdentityRule='The visualBible is the locked identity reference for the whole story: describe each recurring person or creature by stable face, hair, clothing, accessories and proportions, and each recurring object by exact shape, color, material, size and distinctive markings; also specify the fixed art style, palette and set. Keep these details unchanged across shots. Also lock the time of day, weather and lighting for the whole story (a rainy night stays a rainy night in every shot). Any costume emblem must be a plain original geometric shape such as a circle, crescent, key or star; never a shield, letter or logo copied from an existing character.';
 const anchorWords=new Set((visualEnding.toLowerCase().match(/[a-z]{5,}/g)||[]).filter(word=>!['after','around','before','driver','takes','taking','reaches','reach','along','while','through','there','their','where','which','empty','small','safe','sunrise','sunset','morning','night'].includes(word)));
 function endingMatches(goal){
   if(!anchorWords.size) return true;
@@ -173,9 +173,13 @@ if(visualEnding && !endingMatches(outline.payoff)){
   console.log('Locked the final payoff to the exact ending you requested');
 }
 if(args.values.title) outline.title=args.values.title;
-if(creativeBrief.set){
+const genericLookSet=/\bthat fits the (?:story|idea)\b/i.test(creativeBrief.set||'');
+if(creativeBrief.set&&!genericLookSet){
   outline.setting=creativeBrief.set;
   outline.visualBible=`Locked setting: ${creativeBrief.set}. ${outline.visualBible}`.slice(0,1000);
+}else if(genericLookSet&&outline.setting){
+  // The look chip's placeholder setting must not replace the setting the idea itself names.
+  outline.visualBible=`Locked setting: ${outline.setting}. ${outline.visualBible}`.slice(0,1000);
 }
 if(foodProcess&&!creativeBrief.obstacle&&!creativeBrief.turn&&/\b(?:camera|filming|lighting|ring light|captions?|narration|voiceover|synced)\b/i.test(`${outline.obstacle} ${outline.turn}`)){
   outline.obstacle='The dish is still unfinished; the requested result cannot be served until its preparation and cooking actions are complete.';
@@ -332,11 +336,11 @@ for(let i=0;i<count;i++){
   const narration=shot.narration;
   const identity=foodProcess?`${outline.title||storySubject}. `:'';
   let image=issues.includes('image')
-    ?`${identity}Start frame: show the named food and relevant tools poised immediately before this beat: ${action}. Same ${outline.protagonist} in ${outline.setting}. ${args.values.style}.`
+    ?`${identity}Start frame: show the named subject and any props it uses poised immediately before this beat: ${action}. Same ${outline.protagonist} in ${outline.setting}. ${args.values.style}.`
     :`${identity}${shot.imagePrompt}${/consistent subject/i.test(shot.imagePrompt)?'':` Consistent subject: ${outline.protagonist.replace(/[.!?]+$/,'')}.`} Visual style: ${args.values.style}.`;
   const actor=foodProcess?'The chef':outline.protagonist;
   const focus=foodProcess?'the food':'the subject';
-  let motion=issues.includes('motion')?`${action}. ${actor} performs this step with one deliberate visible movement, keeping ${focus} and the relevant tool clearly in view. As the action continues, the camera makes one slow close push-in and follows the movement. Warm side light reveals the visible change in ${focus} in real time. The motion ends when the described action is complete in the same continuous take.`:
+  let motion=issues.includes('motion')?`${action}. ${actor} performs this step with one deliberate visible movement, keeping ${focus} clearly in view${foodProcess?' with the relevant tool':''}. As the action continues, the camera makes one slow close push-in and follows the movement. Warm side light reveals the visible change in ${focus} in real time. The motion ends when the described action is complete in the same continuous take.`:
     `${shot.motionPrompt}${/one continuous take|no cuts/i.test(shot.motionPrompt)?'':' One continuous take, no cuts.'}`;
   if(!hasVisiblePhysicalAction(motion)) throw new Error(`Beat ${i+1} has no clear physical action after repair. No scenario was saved or rendered; describe what the subject visibly does.`);
   if(i<count-2 && !['build','finish'].includes(beat.label.toLowerCase()) && /\b(pan|sear|bast|cook)\b/i.test(image) && /\b(plate|serv)\w*/i.test(outline.goal+' '+outline.payoff)){
@@ -353,6 +357,7 @@ for(let i=0;i<count;i++){
   if(!prehistoricCars && (hotDog || /\b(kitchen|chef|pan|sausage|dish|food|chocolate|steak|pizza|cheese|scallop)\b/i.test(`${topic} ${outline.setting}`))){
     image+=` Continuity: same ${creativeBrief.set||outline.setting}; retain the same named dish, tools, surface and lighting from the visual bible.`;
   }
+  if(!foodProcess) motion=`Begin exactly from the first frame: same pose, facing direction, costume and lighting. ${motion}`;
   const lockedImage=applyVisualIdentityLock(image,outline.protagonist,outline.visualBible);
   const lockedMotion=applyVisualIdentityLock(motion,outline.protagonist,outline.visualBible);
   shots.push({seconds:beat.seconds,narration:shortenNarration(narration,beat.seconds),

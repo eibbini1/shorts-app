@@ -3,6 +3,9 @@
 // write one very long motionPrompt. These are fixable shape problems, not bad stories.
 const MAX_LINE = 1000;
 const MAX_ITEMS = 5;
+const BACK_VIEW = /\b(?:from behind|back view|back to (?:the )?camera|rear view|seen from the back|turned away)\b/i;
+const FACE_QUESTION = /\b(?:expression|smil\w*|face|facial|eyes?)\b/i;
+const showsBack = shot => BACK_VIEW.test(`${shot.imagePrompt || ''} ${shot.motionPrompt || ''}`);
 
 export function clipLine(value, max = MAX_LINE) {
   if (typeof value !== 'string') return value;
@@ -47,5 +50,10 @@ export function normalizeShot(raw) {
     shot.sceneState = Object.fromEntries(Object.entries(shot.sceneState).map(([k, v]) => [k, clipLine(v)]));
   }
   if ('visualChecks' in shot) shot.visualChecks = normalizeVisualChecks(shot.visualChecks);
+  if (shot.visualChecks && typeof shot.visualChecks === 'object' && showsBack(shot)) {
+    // A face cannot be judged from behind; asking would force a pointless still regeneration.
+    const kept = shot.visualChecks.questions.filter(q => !FACE_QUESTION.test(q));
+    shot.visualChecks = { ...shot.visualChecks, questions: kept };
+  }
   return shot;
 }
