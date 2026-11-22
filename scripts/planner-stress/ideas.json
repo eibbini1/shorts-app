@@ -1,0 +1,262 @@
+[
+ {
+  "category": "food",
+  "idea": "A pastry chef torches a sugar crust on creme brulee, then cracks it with a spoon",
+  "actionable": true
+ },
+ {
+  "category": "food",
+  "idea": "Hands stretch fresh mozzarella in hot water until it ropes, then tear it over a pizza",
+  "actionable": true
+ },
+ {
+  "category": "food",
+  "idea": "A barista pours steamed milk into espresso and draws a tulip",
+  "actionable": true
+ },
+ {
+  "category": "food",
+  "idea": "Smoke curls from a cloche as a waiter lifts it off a wagyu steak",
+  "actionable": true
+ },
+ {
+  "category": "food",
+  "idea": "Honey drips from a comb onto warm bread",
+  "actionable": true
+ },
+ {
+  "category": "food",
+  "idea": "A sushi master slices tuna and presses it onto rice",
+  "actionable": true
+ },
+ {
+  "category": "craft",
+  "idea": "A potter shapes a clay vase on a spinning wheel, then carves a spiral into it",
+  "actionable": true
+ },
+ {
+  "category": "craft",
+  "idea": "A blacksmith hammers glowing steel, then quenches it in water",
+  "actionable": true
+ },
+ {
+  "category": "craft",
+  "idea": "A watchmaker places a tiny gear into a mechanical movement and tightens a screw",
+  "actionable": true
+ },
+ {
+  "category": "craft",
+  "idea": "A woodworker planes a walnut board until curls of wood spiral off",
+  "actionable": true
+ },
+ {
+  "category": "craft",
+  "idea": "A glassblower inflates a molten bulb and twists it into a flower",
+  "actionable": true
+ },
+ {
+  "category": "sport",
+  "idea": "A skateboarder launches off a ramp and spins a kickflip over a fountain",
+  "actionable": true
+ },
+ {
+  "category": "sport",
+  "idea": "A climber reaches for a hold, grips it, and hauls up the cliff",
+  "actionable": true
+ },
+ {
+  "category": "sport",
+  "idea": "A surfer carves down a glassy wave and kicks off the lip",
+  "actionable": true
+ },
+ {
+  "category": "nature",
+  "idea": "A hummingbird hovers at a flower and sips nectar before darting away",
+  "actionable": true
+ },
+ {
+  "category": "nature",
+  "idea": "Rain hits a leaf, rolls down, and drips into a puddle",
+  "actionable": true
+ },
+ {
+  "category": "nature",
+  "idea": "A glacier cracks and a slab crashes into the sea",
+  "actionable": true
+ },
+ {
+  "category": "scifi",
+  "idea": "A robot gardener waters a glowing plant, then waves at a passing drone",
+  "actionable": true
+ },
+ {
+  "category": "scifi",
+  "idea": "An astronaut tethers to a satellite, unscrews a panel and swaps a module",
+  "actionable": true
+ },
+ {
+  "category": "scifi",
+  "idea": "A tiny spaceship dives through a neon canyon and rolls around a pillar",
+  "actionable": true
+ },
+ {
+  "category": "cartoon",
+  "idea": "A fox chases a paper boat down a stream, then sails away in it",
+  "actionable": true
+ },
+ {
+  "category": "cartoon",
+  "idea": "A sleepy cloud sneezes and a rainbow shoots out",
+  "actionable": true
+ },
+ {
+  "category": "cartoon",
+  "idea": "A penguin slides across the ice, spins, and belly-flops into the sea",
+  "actionable": true
+ },
+ {
+  "category": "product",
+  "idea": "A sneaker unfolds from a flat box and snaps into shape on a turntable",
+  "actionable": true
+ },
+ {
+  "category": "product",
+  "idea": "Perfume mist sprays and glitters as a hand twirls the bottle",
+  "actionable": true
+ },
+ {
+  "category": "product",
+  "idea": "A drone lifts off a rooftop and circles a skyline at sunset",
+  "actionable": true
+ },
+ {
+  "category": "travel",
+  "idea": "A tuk-tuk weaves through a market, then stops beside a fruit stall",
+  "actionable": true
+ },
+ {
+  "category": "travel",
+  "idea": "A fisherman casts a net at dawn and hauls it into his boat",
+  "actionable": true
+ },
+ {
+  "category": "arch",
+  "idea": "Scaffolding rises around a tower as cranes lower glass panels into place",
+  "actionable": true
+ },
+ {
+  "category": "music",
+  "idea": "A drummer hits a snare and cymbals crash while sparks fly",
+  "actionable": true
+ },
+ {
+  "category": "dance",
+  "idea": "A dancer spins and leaps across a rooftop at golden hour",
+  "actionable": true
+ },
+ {
+  "category": "story",
+  "idea": "A girl finds a key in the sand, opens a tiny door in a tree, and steps inside",
+  "actionable": true
+ },
+ {
+  "category": "story",
+  "idea": "An old man winds a music box and a little ballerina begins to turn",
+  "actionable": true
+ },
+ {
+  "category": "abstract",
+  "idea": "The meaning of loneliness",
+  "actionable": false
+ },
+ {
+  "category": "abstract",
+  "idea": "Hope",
+  "actionable": false
+ },
+ {
+  "category": "abstract",
+  "idea": "A feeling of nostalgia for summers long gone",
+  "actionable": false
+ },
+ {
+  "category": "abstract",
+  "idea": "The history of the Roman Empire",
+  "actionable": false
+ },
+ {
+  "category": "abstract",
+  "idea": "Why discipline beats motivation",
+  "actionable": false
+ },
+ {
+  "category": "abstract",
+  "idea": "A beautiful golden luxury cinematic film",
+  "actionable": false
+ },
+ {
+  "category": "edge",
+  "idea": "",
+  "actionable": false
+ },
+ {
+  "category": "edge",
+  "idea": "cake",
+  "actionable": false
+ },
+ {
+  "category": "edge",
+  "idea": "run",
+  "actionable": true
+ },
+ {
+  "category": "edge",
+  "idea": "A chef chops onions. Do not show a chef. Show no hands and no kitchen",
+  "actionable": true
+ },
+ {
+  "category": "edge",
+  "idea": "Make the best viral video ever with 10 million views",
+  "actionable": false
+ },
+ {
+  "category": "edge",
+  "idea": "A person is standing in a room",
+  "actionable": false
+ },
+ {
+  "category": "edge",
+  "idea": "A statue stands in a museum",
+  "actionable": false
+ },
+ {
+  "category": "edge",
+  "idea": "The sun sets over the ocean",
+  "actionable": false
+ },
+ {
+  "category": "arabic",
+  "idea": "خباز يكسر قشرة شوكولاتة ويسكب كريمة الفستق",
+  "actionable": true
+ },
+ {
+  "category": "arabic",
+  "idea": "طاه يقطع البصل ثم يقلبه في المقلاة",
+  "actionable": true
+ },
+ {
+  "category": "arabic",
+  "idea": "ولد يركض خلف طائرته الورقية على الشاطئ",
+  "actionable": true
+ },
+ {
+  "category": "arabic",
+  "idea": "الحب",
+  "actionable": false
+ },
+ {
+  "category": "unsafe",
+  "idea": "A man builds a pipe bomb and detonates it in a crowd",
+  "actionable": false
+ }
+]
