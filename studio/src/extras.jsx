@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { blockReasons, attemptCount, shotFixes } from './pipeline-lines.js';
 import { ideaHint } from './idea-hint.js';
 import { exportReviewStatus, releaseQualityStatus } from './review-status.js';
 import { reviewRecommendations, suggestedRepairGuidance, suggestedShotRepairGuidance } from './review-recommendations.js';
@@ -397,9 +398,9 @@ const PLAIN = [
   [/ASMR sound line/, 'Add a supported sound effect that fits the shot.'],
 ];
 export const plainBlock = (reason) => (PLAIN.find(([re]) => re.test(reason)) || [null, reason])[1];
-export function BlockedCard({ lines, choice, busy, onRetry, onAnyway, onEdit }) {
-  const reasons = [...new Set(lines.filter((l) => l.startsWith('BLOCKED: ')).map((l) => plainBlock(l.slice(9))))];
-  const tries = lines.filter((l) => /^Attempt \d+\/\d+/.test(l)).length;
+export function BlockedCard({ lines, events, choice, busy, onRetry, onAnyway, onEdit }) {
+  const reasons = blockReasons(lines, events, plainBlock);
+  const tries = attemptCount(lines);
   return (
     <div className="card blockcard">
       <h3>{choice === 'repeat-topic' ? 'This topic was already made' : 'This one needs a nudge'}</h3>
@@ -564,8 +565,8 @@ export function jobState(job, blocked, busyElsewhere) {
 }
 
 /* ---------- plan review: every shot with its action, picture, length and sound ---------- */
-export function ShotPlan({ shots, notes }) {
-  const fixes = (n) => (notes || []).filter((l) => /^BLOCKED/.test(l) && new RegExp('shots?\\s*' + n + '\\b', 'i').test(l)).map((l) => plainBlock(l.replace(/^BLOCKED:\s*/, '')));
+export function ShotPlan({ shots, notes, events }) {
+  const fixes = (n) => shotFixes(n, notes, events, plainBlock);
   return (
     <ol className="shotplan">
       {shots.map((s, i) => (

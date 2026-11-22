@@ -1,3 +1,4 @@
+import os
 import json
 import subprocess
 import tempfile
@@ -6,7 +7,7 @@ import wave
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-VENVPY = ROOT / 'storage/tools/ComfyUI/.venv/bin/python'
+VENVPY = Path(os.environ.get('SHORTS_MEDIA_PY') or (ROOT / 'storage/tools/ComfyUI/.venv/bin/python'))
 
 
 class SoundtrackIntentTests(unittest.TestCase):
