@@ -46,6 +46,8 @@ class MakeLocalVideoEventTests(unittest.TestCase):
         (root / 'scripts').mkdir()
         (root / 'drafts/generated').mkdir(parents=True)
         shutil.copy(ROOT / 'scripts/make-local-video.sh', root / 'scripts')
+        for helper in ('soft_gate.py', 'gate_severity.py'):  # make-local-video.sh runs its gates through soft_gate.py
+            shutil.copy(ROOT / 'scripts' / helper, root / 'scripts')
         for name, code in stubs.items():
             (root / 'scripts' / name).write_text(f'import sys\nprint("stub {name}")\nsys.exit({code})\n')
         scenario = root / 'drafts/generated/fixture.local-scenario.json'

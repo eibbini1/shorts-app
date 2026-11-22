@@ -10,6 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pipeline_events import gate as gate_event  # noqa: E402
+from gate_severity import split as split_problems  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SCN = re.compile(r'(drafts/generated/[^\s\'"]+\.local-scenario\.json)')
@@ -143,6 +144,12 @@ def main():
         last = checks(scn, a.allow_repeat)
         if not last:
             say(f'Story passed every check after automatic fixes (attempt {attempt}).'); say('Plan ready:', scn); return 0
+        hard, soft = split_problems(last)
+        if not hard:  # only style/quality rules remain: warn and keep the owner's idea instead of a dead end
+            for problem in soft: say('WARNING:', problem)
+            say(f'Story ready with {len(soft)} style warning(s) after automatic fixes (attempt {attempt}); rendering is not blocked.')
+            say('Plan ready:', scn); return 0
+        last = hard
         if attempt < a.tries:
             say('Fixing: still not right (' + '; '.join(last) + '); writing a fresh version')
     if scn: say('Plan saved:', scn)
