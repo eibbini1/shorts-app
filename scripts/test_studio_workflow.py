@@ -17,6 +17,7 @@ def run_fixture():
     shutil.copy('scripts/story-action-gate.mjs',root/'scripts')
     shutil.copy('scripts/creative-learning.mjs',root/'scripts')
     shutil.copy('scripts/pipeline-events.mjs',root/'scripts')
+    shutil.copy('scripts/studio-watchdog.mjs',root/'scripts')
     (root/'scripts/check-env.py').write_text("import sys\nprint('OK  ffmpeg')\nprint('FAIL FLUX model  -> run the setup script')\nsys.exit(1)\n")
     (root/'studio/dist').mkdir(parents=True)
     (root/'studio/dist/index.html').write_text('<html>Studio fixture</html>')
