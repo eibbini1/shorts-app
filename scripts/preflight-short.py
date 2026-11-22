@@ -15,6 +15,7 @@ import subprocess
 import sys
 from pathlib import Path
 from presentation_mode import choose as choose_presentation
+import hook_bank
 
 ROOT = Path(__file__).resolve().parents[1]
 NON_USD = re.compile(r'\b(yen|dirhams?|rupees?|pounds?|euros?|£|€)\b|[£€¥]', re.I)
@@ -81,6 +82,11 @@ def main():
     score, notes = hook_score(first, data.get('topic', '') or plan.get('title', ''))
     if presentation['voice']:
         print(f'Hook: "{first}" -> {score}/100 ({"; ".join(notes)})')
+        mechanisms = hook_bank.detect_mechanisms(first)
+        print(f'Hook mechanism: {", ".join(mechanisms) if mechanisms else "none detected"}')
+        template = hook_bank.anti_pattern_hit(first)
+        if template:
+            warnings.append(f'hook uses a banned template phrase: "{template}"')
     else:
         print('Visual hook: ASMR mode; inspect the first moving shot before release.')
     if presentation['voice'] and score < 60:
