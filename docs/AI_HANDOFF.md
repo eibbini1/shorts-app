@@ -24,6 +24,10 @@ State at writing: branch gpu-bench-kit (PR #29), Mac repo on handoff/current-wor
 - Paid reference only: Seedance 2.5 ≈ $40–70 per 30 s Short; Kling/Wan class ≈ $8–15.
 - OpenMontage (AGPL-3.0) reviewed: not adopted (duplicates Studio, slower PyTorch-MPS path, licence risk); ideas only.
 
+### Standing direction (user, 2026-11-22)
+- Recorded in docs/AI_PROJECT_CONTEXT.md under STANDING DIRECTION: quality and idea-fidelity first, every feature runs on the current Mac, a faster device later adds speed only.
+- Planned next feature (not started, user to choose): per-shot "Another take" motion retake (option A), opt-in, one extra clip per press. Note: the Studio renders motion at 384x640, below the 704x1280 bench size.
+
 ### Next recommended actions (in order)
 1. Run Test A on the Mac; score it.
 2. Score the shot-4 retry page; confirm what the 2026-11-22 pasted scores referred to.
