@@ -1,5 +1,13 @@
 # AI handoff
 
+## 2026-11-22 - Claude: motion-risk warning in preflight (branch motion-risk-warning, from origin/main 9936cdd, not pushed)
+- Source: Mac image-to-video bench (LTX 2.3 q4 from real FLUX stills). User scores: motion 4/5/5, matches-still 4/5/5, food realism 1/1/4. User says the shot-4 patty FLIP looks clearly AI. Shots with lowering/dropping held up.
+- IMPLEMENTED + unit-tested: `scripts/preflight-short.py` warns (never blocks) when a motion prompt has a hand-tool contact verb (flip, toss, catch, juggle, knead, whisking, twirl, chopping, slicing, peeling). Narrowed after a first draft flagged 51/61 example shots (cut/slices/crackle are edit terms or nouns); now flags 1/61, the burger flip.
+- Evidence limit: only the flip is observed failing; the other verbs are a heuristic.
+- NOT built, on purpose: budget caps (the Studio calls no paid providers today) and a per-shot provider log (only one motion engine is wired; recording it needs the render scripts to pass the real engine and model hash, not a guess). Both PLANNED if paid providers or a second engine are added.
+- Idea source: OpenMontage (AGPL-3.0). Ideas only; no code copied.
+- Tests: new test_preflight_motion_risk.py 3/3, mutation check fails it as expected. Full `unittest discover scripts`: pre-existing failures from missing node deps (zod) in this worktree, unrelated.
+
 ## Current handover — 2026-11-21: Studio and pipeline work
 
 This is the current code handoff for `handoff/current-work-2026-11-21`, based on `main` at `4ce9f40`. It supersedes the older status snapshots below. The curated source, test, documentation, and app-asset changes are being delivered together in one PR; generated local drafts, reports, outputs, and Python bytecode caches are intentionally excluded.
