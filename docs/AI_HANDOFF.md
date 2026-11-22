@@ -1,11 +1,18 @@
 # AI handoff
 
+## 2026-11-23 — Codex: motion review before assembly
+- Branch `fix/nonfood-shot-normalize`, base `8a9a612`. Local working-tree changes, no commit or deployment.
+- Implemented manual per-shot playback, frame samples, timestamped findings tied to the clip hash, and reuse of the three-take selector before advancing the sequence. Unattended continuation remains automatic. For multipart shots the review currently shows the final segment.
+- Verified the red-dress first clip exists and runs 4.04 seconds. The opening and near-end frames preserve the dress and street lighting. No full-speed editorial judgment or sound review.
+- Verified the Studio build, Node syntax and motion take tests. Live authenticated review, take switching through assembly, and final QA on an assembled red-dress export still need verification. Next action: coordinate the Studio restart with the active film owner and review the cached take before advancing.
+
 ## 2026-11-23 00:01  — Claude → Codex handover point (owner is moving to Codex; branch fix/nonfood-shot-normalize, NOT pushed)
 - Live job to NOT disturb: Studio session `1795377206998` ("Fair Skinned Woman Red Dress") was in `sequence-motion` (shot 1 of 2) when Claude stopped. Check `curl -s http://127.0.0.1:8787/api/state` (fields `status`, `sequence.stage`, `sequence.currentShot`) before starting anything; `busyReason()` blocks parallel renders and the Mac cannot hold two (about 15.6 GB footprint). Do not restart the Studio server or cancel the job without the owner.
 - Next steps when shot 1 motion is `done`: `POST /api/sequence/next` with `{"sessionId":"1795377206998","scenario":"drafts/generated/guided-20261122-225327-ee9e7f.local-scenario.json"}` (makes shot 2 stills), review the frame, `POST /api/approve-frames` with `selections:[{"shot":2,"candidate":N}]`, then `POST /api/sequence/next` again, then Studio render/assembly and QA. The owner must watch the result; no quality claim until then.
 - Then Plan B (comparison): re-plan shot 2 so one or two figures turn their heads as she passes; yellow/red risk for the local model.
 - Uncommitted: none tracked. Local commits not pushed: `bad50a8`, `80bc1f8`, `5e835a3`, `d74be51`, `68c9341`, `3af1036`, `7398c04`, `8a9a612` and this entry's commit. Owner approval needed to push or merge.
 - UPDATE at 00:0x: shot 1 motion finished (`sequence-motion` status done; clip `storage/any-local/guided-20261122-225327-ee9e7f.local-scenario/motion/shot-00-part-00-7a2ff97fdfadcfff.mp4`, not yet reviewed). Two tracked files are modified in the working tree that Claude did NOT edit: `scripts/studio-server.mjs` and `studio/src/App.jsx` (likely Codex or the owner); left untouched.
+- Codex: start with `docs/TOP10_ENHANCEMENTS.md` (ranked plan, acceptance criteria per item).
 - Open PLANNED work (ranked): best-of-N motion seeds with a cheap pre-filter; reference-image identity lock for recurring characters; first-vs-last-frame identity check; refiner static-ending failures in non-food planning; topic-pack benchmarks (object transformation, mini-story, gadget reveal). All untested or unbuilt.
 - Honesty notes: the red-dress shot 1 first frame has only a blank/dark check (vision review unverified). Hook-bank effect on planning is not isolated. Viral teardown is a 7-video public-metadata sample, not proof. vidIQ balance here is 0 credits (reset 2026-12-09); the pasted trend notes came from another session.
 
