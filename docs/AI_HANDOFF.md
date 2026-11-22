@@ -47,6 +47,20 @@ Pod: RTX PRO 4500 Blackwell 32 GB, $0.74/h. Pod STOPPED (container disk erased);
 - Decision rule unchanged: switch only if blind test prefers new model >= 6/10, cost < ~$0.15/clip, VRAM < 24 GB. LTX-2.5 at 26 GB with fp8 does not yet meet the 24 GB bar; needs more offload work or a 32 GB card.
 - Next: run blind_sheet.py on bench-mac vs bench-pod clips (s01-s05), judge, then decide. A 24 GB card needs a retest.
 - Housekeeping: the HF token `runpod-bench` should be deleted by the user at huggingface.co/settings/tokens.
+## 2026-11-21 (later) - Claude: failure helper card + pre-render checklist (branch studio-watchdog)
+- IMPLEMENTED, unit-tested, NOT rendered: `studio/src/failure-help.js` (plain-language card for failed/interrupted render jobs from watchdog.lastFault / technicalQa / status; retry button only for kind=render) and `studio/src/prerender-checklist.js` (plan, first frames, review, blocks, Mac free, renders left) shown above the first-frames tiles.
+- Deliberately NOT built: "retry with lower memory settings". The render API has no such option (grep of studio-server.mjs found none); inventing one would be a guess. Needs a real, measured option first.
+- Tests: vitest 173/173 (incl. 10 new); JSX compiles with esbuild. `vite build` and screenshots are still blocked in the cloud sandbox, so layout and theme colours are UNVERIFIED until the studio is opened on the Mac.
+
+## 2026-11-21 — Claude: Studio watchdog (branch studio-watchdog, based on origin/main 9936cdd, draft PR #30)
+Plan: WD-1..WD-8 (stall detection, one bounded retry, keep-awake, UI status, restart recovery). Files: `scripts/studio-watchdog.mjs` (pure rules), `scripts/studio-server.mjs` (integration), `studio/src/watchdog-status.js` + `App.jsx` (label + "Retry render" button).
+- VERIFIED (real studio-server.mjs + stub render script, `node --test scripts/*.test.mjs`, 59/59): crash retried once then succeeds; crash twice stops after exactly one retry; QA failure is never retried; a silent job is stopped (idle limit) and retried once while an unrelated process survives; a slow job that keeps printing is not stopped; user cancel is not retried. Root `npx vitest run`: 34 files / 158 tests pass.
+- VERIFIED by mutation: raising the retry cap, retrying QA failures, or disabling stall detection each makes those tests fail.
+- IMPLEMENTED BUT UNTESTED: `caffeinate -dims -w <pid>` keep-awake (unit-tested command only; not run on macOS); restart orphan reaping (decision rule unit-tested; the ps/kill path was not exercised); UI label and retry button (App.jsx parses with esbuild; `vite build` could not run here because npm returned 403 for the studio dependencies, so the UI was not rendered or screenshotted).
+- NOT MEASURED: real `ltx-2-mlx` output cadence. Defaults are generous: idle 30 min, hard cap max(4 h, 8 min per planned second); override with STUDIO_RENDER_IDLE_TIMEOUT_MS / STUDIO_RENDER_TIMEOUT_MS. Measure on a real render before tightening.
+- Scope kept: watches render, stills, sequence-motion only; draft keeps its existing watchdog. Auto-retry only for stall, out-of-memory or signal crash, never for QA/gate failures, never for non-local commands. No automatic quality-lowering retry (decision 2).
+- IMPLEMENTED, UNIT-TESTED, NOT SEEN: per-clip progress strip in the render timer (`studio/src/clip-progress.js`, `extras.jsx`, `styles.css`): clips shown done / rendering (with elapsed) / queued, red when a clip runs 1.5x past the measured pace. Assumes clips are written in order (first missing file = active); App/extras JSX parse with esbuild but the UI was never rendered (vite build blocked here). Vitest: 35 files / 163 tests pass.
+- Next: run a real render on the Mac with this branch, confirm caffeinate and the UI, then independent review of the process-signalling code before merge.
 
 ## Current handover — 2026-11-21: Studio and pipeline work
 

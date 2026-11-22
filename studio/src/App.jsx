@@ -1,9 +1,11 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { LearnedCard, RenderTimer, IdeaHelper, Player, ComparePanel, FramesBlock, clipsOf, planEstimate, fmt, LookChips, DirectorsChair, guessResult, BlockedCard, StepTrack, UpNext, readQueue, writeQueue, StageBar, ShotPlan, ExportReview, jobState } from './extras.jsx';
+import { LearnedCard, RenderTimer, IdeaHelper, Player, ComparePanel, FramesBlock, clipsOf, planEstimate, fmt, LookChips, DirectorsChair, guessResult, BlockedCard, StepTrack, UpNext, readQueue, writeQueue, StageBar, ShotPlan, ExportReview, jobState, FailureCard } from './extras.jsx';
+import { failureHelp } from './failure-help.js';
 import { filterSessions, findMatchingSession, sessionDisplayName } from './session-label.js';
 import { readComposerDraft, readPreflightApproval, writeComposerDraft, writePreflightApproval } from './draft-storage.js';
 import { planPromptChanges, repairPreviewChanges } from './review-recommendations.js';
 import { notesOf, isBlocked, choiceOf, nowLine, progressOf as progressOfLines } from './pipeline-lines.js';
+import { watchdogLabel } from './watchdog-status.js';
 
 const BabyBall3DPreview = lazy(() => import('./BabyBall3DPreview.jsx'));
 
@@ -749,13 +751,15 @@ export default function App() {
               <StepTrack job={job} />
               {running && <div className="bar"><div className={prog ? 'fill' : 'fill indet'} style={prog ? { width: `${Math.round((prog.n / prog.of) * 100)}%` } : {}} /></div>}
               {running && job.lines?.length > 0 && <p className="muted">{job.lines[job.lines.length - 1]}</p>}
+              {(() => { const w = watchdogLabel(job.watchdog, job.status); return w && <p className={`hint ${w.tone}`}>{w.text}</p>; })()}
               {running && <button className="ghost" onClick={cancel}>Stop</button>}
-              {job.status === 'failed' && !blocked && <p className="bad">{job.technicalQa?.status === 'failed' ? 'The final file failed technical QA.' : job.error}</p>}
+              {(() => { const help = job.kind === 'render' && !blocked ? failureHelp({ status: job.status, kind: job.kind, error: job.error, watchdog: job.watchdog, technicalQa: job.technicalQa, hasScenario: Boolean(job.scenario) }) : null; return help ? <FailureCard help={help} busy={busy} onRetry={render} /> : null; })()}
+              {job.status === 'failed' && !blocked && job.kind !== 'render' && <p className="bad">{job.technicalQa?.status === 'failed' ? 'The final file failed technical QA.' : job.error}</p>}
               {notes.length > 0 && <ul className="notes">{notes.filter((n) => !(choice && n.startsWith('BLOCKED'))).map((n, i) => <li key={i} className={n.startsWith('BLOCKED') ? 'bad' : n.startsWith('Fixed') ? 'good' : 'muted'}>{n.startsWith('Fixed') ? '✓ ' + n : n}</li>)}</ul>}
               {['failed', 'cancelled', 'interrupted'].includes(job.status) && job.kind === 'draft' && !choice && <button className="primary" disabled={busy} onClick={retryPlanning}>Retry planning in this project</button>}
               {choice && job.status !== 'running' && <BlockedCard lines={job.lines || []} events={job.events} choice={choice} busy={anyRunning} onRetry={() => draftWith({ retrySessionId: job.id, prompt: job.options?.storyPrompt || job.prompt, originalPrompt: job.options?.originalPrompt || job.prompt }, { ignoreDuplicate: true })} onAnyway={() => draftWith({ allowRepeat: true, allowDuplicate: true }, { ignoreDuplicate: true })} onEdit={() => document.querySelector('.composer textarea')?.focus()} />}
               {job.status === 'cancelled' && <p className="muted">Stopped.</p>}
-              {job.status === 'interrupted' && <p className="bad">{job.error}</p>}
+              {job.status === 'interrupted' && job.kind !== 'render' && <p className="bad">{job.error}</p>}
               {job.sequence?.continuationError && <p className="bad">{job.sequence.continuationError}</p>}
               {job.kind === 'stills' && job.status === 'failed' && job.sequence?.active &&
                 <button className="primary" disabled={busy} onClick={stills}>Retry shot {job.sequence.currentShot} frame preparation</button>}
@@ -764,7 +768,7 @@ export default function App() {
               {['failed', 'interrupted'].includes(job.status) && me?.canRunUnattended && job.options?.unattended && job.scenario && job.plan && <button className="primary" disabled={busy} onClick={resumeUnattended}>Resume automatically</button>}
               {job.plan && <PlanCard job={job} idea={job.prompt} onStills={stills} onReference={attachReference} disabled={busy || blocked} notes={notes} />}
               {job.plan && supportsBabyBallPreview(job) && <BabyBallPreviewCard />}
-              {job.plan && <FramesBlock job={job} plan={job.plan?.plan || job.plan} onStills={stills} onRegen={regen} onRender={render} onApproveFrames={approveFrames} busy={busy || me?.rendersLeft === 0} blocked={blocked} />}
+              {job.plan && <FramesBlock job={job} plan={job.plan?.plan || job.plan} onStills={stills} onRegen={regen} onRender={render} onApproveFrames={approveFrames} busy={busy || me?.rendersLeft === 0} blocked={blocked} anyRunning={anyRunning} rendersLeft={me?.rendersLeft ?? null} />}
               {job.plan && <RenderTimer job={job} plan={job.plan?.plan || job.plan} />}
               {(job.attempts || []).length > 0 && <details className="card"><summary>Previous planning attempts ({job.attempts.length})</summary>{job.attempts.map((attempt, index) => {
                 const previousPlan = attempt.plan?.plan || attempt.plan;
