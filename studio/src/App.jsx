@@ -4,7 +4,7 @@ import { failureHelp } from './failure-help.js';
 import { filterSessions, findMatchingSession, sessionDisplayName } from './session-label.js';
 import { readComposerDraft, readPreflightApproval, writeComposerDraft, writePreflightApproval } from './draft-storage.js';
 import { planPromptChanges, repairPreviewChanges } from './review-recommendations.js';
-import { notesOf, isBlocked, choiceOf, nowLine, progressOf as progressOfLines } from './pipeline-lines.js';
+import { notesOf, isBlocked, choiceOf, nowLine, displayPipelineLine, progressOf as progressOfLines } from './pipeline-lines.js';
 import { watchdogLabel } from './watchdog-status.js';
 import { takeControls } from './motion-takes.js';
 
@@ -763,7 +763,7 @@ export default function App() {
               {running && <p className="muted">Elapsed {elapsed}{prog ? ` · ${prog.n} of ${prog.of}` : ''}</p>}
               <StepTrack job={job} />
               {running && <div className="bar"><div className={prog ? 'fill' : 'fill indet'} style={prog ? { width: `${Math.round((prog.n / prog.of) * 100)}%` } : {}} /></div>}
-              {running && job.lines?.length > 0 && <p className="muted">{job.lines[job.lines.length - 1]}</p>}
+              {running && job.lines?.length > 0 && <p className="muted">{displayPipelineLine(job.lines[job.lines.length - 1])}</p>}
               {(() => { const w = watchdogLabel(job.watchdog, job.status); return w && <p className={`hint ${w.tone}`}>{w.text}</p>; })()}
               {running && <button className="ghost" onClick={cancel}>Stop</button>}
               {(() => { const help = job.kind === 'render' && !blocked ? failureHelp({ status: job.status, kind: job.kind, error: job.error, watchdog: job.watchdog, technicalQa: job.technicalQa, hasScenario: Boolean(job.scenario) }) : null; return help ? <FailureCard help={help} busy={busy} onRetry={render} /> : null; })()}
@@ -798,7 +798,7 @@ export default function App() {
               {job.video && <ExportReview key={job.video} job={job} review={review.video === job.video ? review : { status: 'pending' }} weak={weak} notes={notes} busy={busy || refining} renderDisabled={me?.rendersLeft === 0} onRetake={retakeShot} onRepair={prepareRepair} onCompare={me?.canCompare && sessions.filter((p) => p.hasVideo).length > 1 ? () => setCompare(true) : undefined} />}
               <UpNext show={running} autoNext={autoNext} setAutoNext={setAutoNext} />
               {me?.canSeeLog && <button className="ghost" onClick={() => setShowLog(!showLog)}>{showLog ? 'Hide' : 'Show'} log</button>}
-              {showLog && <pre className="log" ref={logRef}>{(job.lines || []).join('\n')}</pre>}
+              {showLog && <pre className="log" ref={logRef}>{(job.lines || []).map(displayPipelineLine).join('\n')}</pre>}
             </div>
           </>
         )}

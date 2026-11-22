@@ -11,7 +11,7 @@ import { blockerReasons, classifyGateLine, gateEventKey } from './studio-learnin
 import { EVENT_PREFIX, parseEventLine as parseEvent } from './pipeline-events.mjs';
 import { buildLearningContext } from './studio-learning-memory.mjs';
 import { createSessionId, draftIdleTimeoutMs, draftTimeoutMs, normalizeSessionPrompt, sessionTitle } from './studio-session-utils.mjs';
-import { MAX_AUTO_RETRIES, WATCHED_KINDS, checkStall, classifyExit, isLocalCommand, keepAwakeCommand, mayReapOrphan, retryDecision, stallMessage, watchdogLimits } from './studio-watchdog.mjs';
+import { MAX_AUTO_RETRIES, WATCHED_KINDS, checkStall, classifyExit, isLocalCommand, keepAwakeCommand, mayReapOrphan, parsePsProcessIdentity, retryDecision, stallMessage, watchdogLimits } from './studio-watchdog.mjs';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -37,8 +37,9 @@ function reapOrphan(x) {
   const recorded = x.procInfo;
   if (!recorded?.pid) return;
   try {
-    const command = execFileSync('ps', ['-o', 'command=', '-p', String(recorded.pid)], { encoding: 'utf8' }).trim();
-    if (mayReapOrphan({ recorded, live: { pid: recorded.pid, command } })) {
+    const output = execFileSync('ps', ['-o', 'pid=', '-o', 'pgid=', '-o', 'command=', '-p', String(recorded.pid)], { encoding: 'utf8' });
+    const live = parsePsProcessIdentity(output);
+    if (mayReapOrphan({ recorded, live })) {
       try { process.kill(-recorded.pid, 'SIGTERM'); } catch { /* group already gone */ }
     }
   } catch { /* ps exits 1 when the pid no longer exists */ }

@@ -68,6 +68,26 @@ class SoftGateWrapperTests(unittest.TestCase):
         self.assertIn('WARNING: title does not name the requested subject', r.stdout)
         self.assertNotIn('BLOCKED:', r.stdout)
 
+    def test_warning_can_carry_its_gate_for_learning(self):
+        r = run_gate("print('BLOCKED: title does not name the requested subject'); raise SystemExit(1)", '--stage', 'story')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn('WARNING: [gate:story] title does not name the requested subject', r.stdout)
+
+    def test_native_warning_is_tagged_and_legacy_warning_stays_unchanged(self):
+        native = run_gate("print('WARNING: shot 1: hand-tool contact is unclear')", '--stage', 'preflight')
+        self.assertEqual(native.returncode, 0, native.stdout + native.stderr)
+        self.assertIn('WARNING: [gate:preflight] shot 1: hand-tool contact is unclear', native.stdout)
+        legacy = run_gate("print('WARNING: older untagged note')")
+        self.assertEqual(legacy.stdout.strip(), 'WARNING: older untagged note')
+
+    def test_stage_requires_an_allowed_name(self):
+        missing = run_gate("print('never')", '--stage')
+        self.assertNotEqual(missing.returncode, 0)
+        self.assertIn('--stage requires a gate name', missing.stderr)
+        invalid = run_gate("print('never')", '--stage', 'technical-qa')
+        self.assertNotEqual(invalid.returncode, 0)
+        self.assertIn('must be one of', invalid.stderr)
+
     def test_a_hard_line_keeps_the_exit_code_and_the_soft_line_still_warns(self):
         r = run_gate("print('BLOCKED: weak hook (10/100): x'); print('BLOCKED: payoff changed the requested ending'); raise SystemExit(3)")
         self.assertEqual(r.returncode, 3)
@@ -84,6 +104,11 @@ class SoftGateWrapperTests(unittest.TestCase):
         self.assertIn('WARNING:', scored.stdout)
         crashed = run_gate("raise RuntimeError('crash')", '--soft-all')
         self.assertNotEqual(crashed.returncode, 0)
+
+    def test_soft_all_summary_keeps_its_source_gate(self):
+        r = run_gate("print('== a.json overall 70 (prompts 78, story 60)'); raise SystemExit(1)", '--soft-all', '--stage', 'prompt')
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn('WARNING: [gate:prompt] this check failed', r.stdout)
 
     def test_passing_gate_is_untouched(self):
         r = run_gate("print('all good')")
@@ -136,6 +161,8 @@ class RenderScriptWiringTests(unittest.TestCase):
             self.assertIn('scripts/soft_gate.py', line, gate)
         evidence = next(l for l in sh.splitlines() if 'evidence_gate.py' in l and 'gate_event' in l)
         self.assertNotIn('soft_gate.py', evidence)
+        for gate in ('prompt', 'preflight', 'story', 'sound'):
+            self.assertIn(f'--stage {gate}', sh)
 
 
 if __name__ == '__main__':

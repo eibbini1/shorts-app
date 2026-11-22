@@ -24,6 +24,9 @@ export function classifyGateLine(value) {
   if (/^Technical QA failed|^Quality check failed/i.test(line)) return { gate: 'technical-qa', outcome: 'failed', message: line.slice(0, 400) };
   if (/^NEEDS-CHOICE:/i.test(line)) return { gate: 'story-choice', outcome: 'needs-choice', message: line.slice(0, 400) };
   if (/^REVIEW:/i.test(line)) return { gate: 'human-review', outcome: 'review-required', message: line.slice(0, 400) };
+  if ((match = /^WARNING:\s+\[gate:(prompt|preflight|story|sound)\]\s*(.*)$/i.exec(line))) {
+    return { gate: match[1].toLowerCase(), outcome: 'review-required', message: match[2].slice(0, 400) };
+  }
   if (/^WARNING:/i.test(line)) return { gate: 'warning', outcome: 'review-required', message: line.slice(0, 400) };
   if (/^Fixed automatically:/i.test(line)) return { gate: 'automatic-repair', outcome: 'repaired', message: line.slice(0, 400) };
   if (/^PASS:/i.test(line)) return { gate: 'production-gate', outcome: 'passed', message: line.slice(0, 400) };
