@@ -1,5 +1,53 @@
 # AI handoff
 
+## 2026-11-22 — Claude: motion-model decision, image-to-video results, next steps (branch gpu-bench-kit)
+
+State at writing: branch gpu-bench-kit (PR #29), Mac repo on handoff/current-work-2026-11-21 with the bench scripts untracked there (copies committed here). Pod `early_yellow_lobster` stopped; spend about $1.87.
+
+### Decisions (VERIFIED by user scoring)
+- Do NOT switch the motion model or rent a GPU. Blind text-only test, 5 shots (s01–s05), 3 backends, user scored blind: best clip = Mac LTX 2.3 q4 on 3 shots, pod LTX-2.5 fp8 on 2, Wan 2.2 5B on 0; Wan rated worst on both shots where a worst was named. LTX-2.5 also needs 26 GB VRAM (fails the 24 GB bar). Decision rule (≥6/10 wins) not met.
+- Always start motion from a real FLUX still. Mac image-to-video (LTX 2.3 q4, 704x1280x121, seed 42, burger stills shot-04/05/06): first scoring motion 4/5/5, matches-still 4/5/5, food realism 1/1/4. ~18 min/clip, 15.6 GB peak.
+- Hand-tool contact actions (flip) look AI. User called the shot-4 flip clearly unrealistic. Preflight now warns (PR #31).
+
+### Observed but unresolved (treat with care)
+- On 2026-11-22 the user pasted different scores for the same three clips (s04 5/5/5, s05 5/5/5, s06 2/2/5); unconfirmed whether that was a rescore. Either way: quality varies a lot between clips/seeds and between viewings.
+- Shot-4 retry (simpler prompt, no flip, seeds 42/7/11): rendered, NOT scored. Claude frame check only: seed 11 cleanest (push-in, melting cheese); seed 7 broken (spatula reshapes, cheese colour shifts); seed 42 cheese appears on second patty. Scoring page: https://claude.ai/artifact/VS3BZeU5vBJ6suBVs1qwCU
+
+### Ready, not run
+- Test A (is the still the realism bottleneck?): `bash scripts/gpu-bench/mac_still_test_a.sh` — shot 5 with v1 still enlarged to 704x1280, v2 still edited by FLUX klein 4B with a food-photo prompt, optional v3 real photo at outputs/bench-mac-i2v/real_s05.jpg. ~40 min. Tracking sheet: https://claude.ai/artifact/MKz54ns3mM9Aj9ny8bBJgn
+- Blind review tooling: `scripts/gpu-bench/blind_review.py` (dummy-clip tested, then used for the real test).
+
+### Research (sourced, mostly UNTESTED here) — docs/research/2026-11-realistic-motion-food-shorts.md
+- Stills: klein 4B ranks low (arena Elo 840); candidates FLUX 3 Klein (free < $5M revenue) and Z-Image Turbo (Apache-2.0), both in mflux / Draw Things. LTX guidance: input still should be ≥ output size; 384x640 is below it.
+- Contact motion in ltx-2-mlx (flags quoted from repo HEAD 747b30e): end-state anchors `--image PATH FRAME STRENGTH replace 0` (replace only at frame 0 or 1+8k), shorter clips (49–73 frames), seed sweeps + `retake --distilled`, IC-LoRA Union Control from a phone video of a real hand (q4 untested).
+- Local VLM judges are near chance on physics; use only to rank seeds, human picks.
+- Paid reference only: Seedance 2.5 ≈ $40–70 per 30 s Short; Kling/Wan class ≈ $8–15.
+- OpenMontage (AGPL-3.0) reviewed: not adopted (duplicates Studio, slower PyTorch-MPS path, licence risk); ideas only.
+
+### Standing direction (user, 2026-11-22)
+- Recorded in docs/AI_PROJECT_CONTEXT.md under STANDING DIRECTION: quality and idea-fidelity first, every feature runs on the current Mac, a faster device later adds speed only.
+- Planned next feature (not started, user to choose): per-shot "Another take" motion retake (option A), opt-in, one extra clip per press. Note: the Studio renders motion at 384x640, below the 704x1280 bench size.
+
+### Next recommended actions (in order)
+1. Run Test A on the Mac; score it.
+2. Score the shot-4 retry page; confirm what the 2026-11-22 pasted scores referred to.
+3. Studio: render 3 seeds per shot by default and let the first-frames/motion review pick the best (free; biggest cheap gain).
+4. If Test A shows better stills help: trial FLUX 3 Klein / Z-Image at ~1088x1920 (needs download — get approval).
+5. Fix Desktop Commander on the Mac (`npm login`, restart Claude app) so Claude can start/monitor renders itself.
+6. Not built on purpose: budget caps and per-shot provider log — only when a paid provider or second engine is added.
+- User still to do: delete HF token `runpod-bench`; review/merge PRs #29–#31 (#30 needs an independent review of process signalling).
+
+## 2026-11-21 — Claude: Runpod motion-model bench results (branch gpu-bench-kit)
+Pod: RTX PRO 4500 Blackwell 32 GB, $0.74/h. Pod STOPPED (container disk erased); total spend ~$1.87 of $15 (balance $13.13 per console). Pod outputs saved on the Mac in `outputs/bench-pod/` (untracked; not committed).
+- VERIFIED Wan 2.2 TI2V-5B, 704x1280x121f, 30 steps (cpu offload + vae tiling): ~449 s, $0.092/clip, 14.6 GB VRAM, 39.9 GB RAM. s01 incl. warm-up 557 s.
+- VERIFIED LTX-2.5 distilled, text-only, 704x1280x121f, 7 steps, fp8 layerwise weight storage (NOT the stock bf16 config; bf16 transformer is 54 GB and OOMs on 32 GB): 81-89 s, ~$0.017/clip, 26.0 GB VRAM, 64-82 GB RAM. s01-s05.
+- VERIFIED HunyuanVideo 1.5 480p: OOM at 121f; 73f/4 steps 159 s ~ $0.33/5 s extrapolated -> rejected on cost.
+- NOT DONE: quality judgement. No blind test yet. Only 5 of 10 shots were run on the pod. All pod runs are text-only (no FLUX keyframes / image-to-video).
+- IMPLEMENTED BUT UNTESTED: `scripts/gpu-bench/mac_baseline_t2v.sh` (+ prompts.mac.json) generates Mac baseline (LTX 2.3 q4, ltx-2-mlx) text-only, same prompts, into `outputs/bench-mac/`. The user started it; assumes ltx-2-mlx accepts no --image. These two files sit untracked in the Mac repo (branch handoff/current-work-2026-11-21), not on this branch.
+- Decision rule unchanged: switch only if blind test prefers new model >= 6/10, cost < ~$0.15/clip, VRAM < 24 GB. LTX-2.5 at 26 GB with fp8 does not yet meet the 24 GB bar; needs more offload work or a 32 GB card.
+- Next: run blind_sheet.py on bench-mac vs bench-pod clips (s01-s05), judge, then decide. A 24 GB card needs a retest.
+- Housekeeping: the HF token `runpod-bench` should be deleted by the user at huggingface.co/settings/tokens.
+
 ## Current handover — 2026-11-21: Studio and pipeline work
 
 This is the current code handoff for `handoff/current-work-2026-11-21`, based on `main` at `4ce9f40`. It supersedes the older status snapshots below. The curated source, test, documentation, and app-asset changes are being delivered together in one PR; generated local drafts, reports, outputs, and Python bytecode caches are intentionally excluded.
@@ -847,3 +895,13 @@ Next: implement audio fixes first (cheap, no GPU), then ending check.
 - DUPLICATE HISTORY: `/api/sessions` shows separate historical records for repeated prompts, including halloumi sessions `1794989792548` and `1794990312319`, and pear-tart sessions `1794987030237` and `1794987160442`. Preserve these records. Current code rejects an exact duplicate new idea unless explicitly allowed; historical duplicates were not collapsed.
 - UX GAP: `ExportReview` shows raw automatic flags. First-frame review has bounded local correction; post-render retake controls are currently limited to low-motion shots. There is no tailored recommendation or one-click repair for continuity, realism, or payoff flags. Checkpoint review and thumbs record human evidence but do not repair the export or update model weights. The pizza screen also shows narration text while the export is marked ASMR with voice disabled; check whether this is only plan display or an audio-mode UI defect.
 - NEXT: implement user-facing, flag-specific recommendations and a safe repair path that previews plan changes before expensive rendering. Repair the plan/action/question mismatch before retrying; retain the old export and history. Then create the user-approved 60-second pineapple/cheese continuation in this same project and verify its end frame shows the finished topped, baked pizza. Reassess duplicate-session prevention against new attempts; do not promise a zero-failure guarantee.
+
+
+## 2026-11-21 DECISION: GPU hosting (Claude)
+- Status: PLANNED (research done; bench not yet run).
+- Rent a 24 GB cloud GPU (Runpod RTX 4090 pod, about $0.34-0.89/h) rather than buy hardware; Mac stays controller and planner host. Break-even for own hardware is about 9 years at 2 h/day.
+- Stills: keep FLUX.2 klein 4B (verified in scripts/create-flux-image.py and setup-mflux-mac.sh; Apache 2.0 per secondary source, confirm on the model card). No stills swap.
+- Motion: undecided; run scripts/gpu-bench (RUNBOOK.md) comparing LTX-2.5, Wan 2.2 FP8 lightning, HunyuanVideo 1.5 on 10 food shots. Owner is in Jordan, so MiniMax H3's territory exclusion does not apply to the owner, but avoid it as a default for shared users.
+- Seedance-class quality is not available on 24 GB; use hosted models for hero shots.
+- Full report: Shorts app GPU hosting choice.md (research report in the Claude session).
+- Bench kit tested only with fake ffmpeg backends; no real model run yet.

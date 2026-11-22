@@ -1,0 +1,15 @@
+{
+  "note": "10 vertical (9:16) luxury-food shots for the motion-model blind test. Pair each with a keyframe still made by the current stills model (FLUX.2 klein 4B) for image-to-video, and also run text-only where the backend supports it.",
+  "shots": [
+    {"id": "s01", "prompt": "Slow push-in on a glossy chocolate lava cake being cut, molten centre flowing onto a white plate, warm side light, shallow depth of field"},
+    {"id": "s02", "prompt": "Close macro of honey drizzling over a seared salmon fillet, steam rising, slow motion, dark moody background"},
+    {"id": "s03", "prompt": "Chef's hand sprinkling flaky salt over a thick ribeye steak, crust crackling, handheld-feel close shot"},
+    {"id": "s04", "prompt": "Cheese pull: a slice of hot pizza lifted away, long stretching mozzarella strands, rustic table, soft daylight"},
+    {"id": "s05", "prompt": "Pouring espresso over a scoop of vanilla gelato in a glass, liquid swirling and melting, tight overhead then tilt"},
+    {"id": "s06", "prompt": "Gold leaf being placed on a dessert with tweezers, hands visible, steady macro, luxury restaurant lighting"},
+    {"id": "s07", "prompt": "Sizzling wok flames tossing noodles with sauce, motion blur, fast action, kitchen ambience"},
+    {"id": "s08", "prompt": "Orbit around a stacked burger with dripping sauce, cheese melting, rotating slowly on a turntable, studio lighting"},
+    {"id": "s09", "prompt": "A tiny chef mascot character stirring a pot on a countertop, consistent small character, cozy kitchen, gentle camera drift"},
+    {"id": "s10", "prompt": "Hands tearing open warm bread, steam escaping, butter melting on the crumb, close-up, golden hour light"}
+  ]
+}
