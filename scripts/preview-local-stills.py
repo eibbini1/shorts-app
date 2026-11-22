@@ -12,6 +12,7 @@ sys.path.insert(0, str(ROOT / 'scripts'))
 spec = importlib.util.spec_from_file_location('local_renderer', ROOT / 'scripts/render-any-local.py')
 renderer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(renderer)
+import render_quality
 
 
 def main():
@@ -25,7 +26,7 @@ def main():
     shots = data['plan']['shots']
     work = ROOT / 'storage/any-local' / scenario.stem
     (work / 'refs').mkdir(parents=True, exist_ok=True)
-    width, height = (384, 640) if data['settings']['format'] == 'short' else (640, 384)
+    width, height = render_quality.dimensions(data['settings'])
     stills = []
     for i, shot in enumerate(shots):
         previous = stills[-1] if a.chain_images and stills else None

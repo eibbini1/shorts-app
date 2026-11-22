@@ -16,6 +16,7 @@ from studio_frames import read_manifest_details, write_manifest
 from studio_references import load_reference_manifest, manifest_sha256
 from first_checks import check_still, check_clip
 from presentation_mode import choose as choose_presentation
+import render_quality
 from select_still_local import select as select_still_local
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -46,7 +47,8 @@ def valid_video(path):
         stream = json.loads(subprocess.check_output(['ffprobe', '-v', 'error',
             '-select_streams', 'v:0', '-show_entries',
             'stream=nb_frames,width,height,r_frame_rate', '-of', 'json', str(path)]))['streams'][0]
-        return stream['nb_frames'] == '97' and stream['r_frame_rate'] == '24/1' and (stream['width'], stream['height']) in ((384, 640), (640, 384))
+        return (stream['nb_frames'] == str(render_quality.FRAMES) and stream['r_frame_rate'] == '24/1'
+                and (int(stream['width']), int(stream['height'])) in render_quality.known_sizes())
     except (KeyError, IndexError, ValueError, subprocess.CalledProcessError):
         return False
 
@@ -400,7 +402,8 @@ def main():
             parser.error(f'Repeated {field} across shots. Edit the story before spending time on motion generation')
     if settings['seconds'] > 60: parser.error('Interactive local renderer supports up to 60 seconds per run')
     aspect = settings['format']
-    width, height = (384, 640) if aspect == 'short' else (640, 384)
+    width, height = render_quality.dimensions(settings)
+    print(f'Render quality: {render_quality.pick(settings)} ({width}x{height})', flush=True)
     work.joinpath('refs').mkdir(parents=True, exist_ok=True)
     work.joinpath('motion').mkdir(exist_ok=True)
     references = []

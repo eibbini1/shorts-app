@@ -436,6 +436,7 @@ export default function App() {
   const [seconds, setSeconds] = useState(() => composerDraft?.seconds || 10);
   const planDisabled = me?.draftsLeft === 0 || seconds > maxSeconds;
   const [orientation, setOrientation] = useState(() => composerDraft?.orientation || 'vertical');
+  const [quality, setQuality] = useState(() => (composerDraft?.quality === 'high' ? 'high' : 'standard'));
   const [audio, setAudio] = useState(() => composerDraft?.audio || 'asmr');
   const [ending, setEnding] = useState(() => composerDraft?.ending || '');
   const [refining, setRefining] = useState(false);
@@ -456,8 +457,8 @@ export default function App() {
   useEffect(() => { document.documentElement.dataset.theme = theme; try { localStorage.setItem('studio-theme', theme); } catch {} }, [theme]);
   const [setting, setSetting] = useState(() => composerDraft?.setting || '');
   useEffect(() => {
-    writeComposerDraft({ prompt, seconds, orientation, audio, ending, look, setting });
-  }, [prompt, seconds, orientation, audio, ending, look, setting]);
+    writeComposerDraft({ prompt, seconds, orientation, quality, audio, ending, look, setting });
+  }, [prompt, seconds, orientation, quality, audio, ending, look, setting]);
   const refinementInputs = useRef({});
   refinementInputs.current = { prompt, look, seconds, orientation, setting, ending };
   const [exampleContext, setExampleContext] = useState(false);
@@ -649,7 +650,7 @@ export default function App() {
     setDuplicateSession(null);
     return run(async () => {
       const runUnattended = !extra.repair && me?.canRunUnattended && unattended;
-      const r = await post('/api/draft', { prompt, seconds, orientation, audio, ending, look, setting, unattended: runUnattended, refine: !approved, requestId: globalThis.crypto.randomUUID(), ...extra });
+      const r = await post('/api/draft', { prompt, seconds, orientation, quality, audio, ending, look, setting, unattended: runUnattended, refine: !approved, requestId: globalThis.crypto.randomUUID(), ...extra });
       if (r.decision === 'needs_choices') { setRefinement(r.refinement); return; }
       if (r.options?.storyPrompt) setPrompt(r.options.storyPrompt);
       if (r.options?.ending) setEnding(r.options.ending);
@@ -704,7 +705,7 @@ export default function App() {
     if (request !== projectRequest.current) return;
     if (!j) { setErr('Could not load that project.'); return; }
     if (id !== live.id) setStored(j);
-    setPrompt(j.prompt || ''); setSeconds(j.options?.seconds || 10); setOrientation(j.options?.orientation || 'vertical');
+    setPrompt(j.prompt || ''); setSeconds(j.options?.seconds || 10); setOrientation(j.options?.orientation || 'vertical'); setQuality(j.options?.quality === 'high' ? 'high' : 'standard');
     setExampleContext(Boolean(j.options?.ending));
     setAudio(j.options?.audio || 'asmr'); setEnding(j.options?.ending || ''); setLook(j.options?.look || 'food'); setSetting(j.options?.setting || ''); setShowLog(false);
   };
@@ -863,6 +864,7 @@ export default function App() {
           <button className="link" onClick={() => setMode('simple')}>Close advanced settings</button>
           <label>Length <select value={seconds} onChange={(e) => { invalidateRefinement(); setSeconds(+e.target.value); }}>{[10, 20, 30, 45, 60].filter((n) => n <= maxSeconds).map((n) => <option key={n} value={n}>{n}s</option>)}</select></label>
           <label>Shape <select value={orientation} onChange={(e) => { invalidateRefinement(); setOrientation(e.target.value); }}><option value="vertical">Vertical 9:16</option><option value="wide">Wide 16:9</option></select></label>
+          <label title="Standard is the fast default on this Mac. High renders at 704x1280, like the clips you scored, and takes noticeably longer per clip.">Quality <select value={quality} onChange={(e) => setQuality(e.target.value)}><option value="standard">Standard (fast)</option><option value="high">High (slower)</option></select></label>
           <label>Sound <select value={audio} onChange={(e) => setAudio(e.target.value)}><option value="asmr">ASMR (no voice)</option><option value="voiced">Voiced</option><option value="auto">Auto</option></select></label>
           <label title="Runs plan, first frames and the automatic checks by itself, and stops if any check fails."><input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} /> Auto mode</label>
           {auto && <label title="Recommended: you see the first frames before the long motion render."><input type="checkbox" checked={pauseFrames} onChange={(e) => setPauseFrames(e.target.checked)} /> pause at first frames</label>}
