@@ -1095,3 +1095,12 @@ Next: implement audio fixes first (cheap, no GPU), then ending check.
 
 - Branch `fix/nonfood-shot-normalize`, implementation based on plan commit `3a0248f`. The dated entry above records the real render and last independent verdict. This checkpoint includes the subsequent local fixes and focused tests. The generated film, model caches, authentication files and unrelated drafts stay outside Git.
 - Claude should review the four remaining checklist assertions against this implementation commit. Start with the live-worker restart case and switch rejection. Reuse the existing watchdog and Studio integration coverage, add only missing regression cases, and put test changes in a separate commit. Report any required production fix before expanding the test-only follow-up.
+
+## 2026-11-23 — Claude: independent check of item 1a (dfb7953), tests-only follow-up (fccf529)
+- Branch fix/nonfood-shot-normalize, local only, nothing pushed. Tracked files clean at fccf529; untracked drafts/benchmarks untouched.
+- VERIFIED by test: live TERM-ignoring take worker after restart keeps its process record and reservation, committed takes byte-identical, new retake gets 409, record released only after the worker is dead (new `studio-take-worker-recovery.integration.test.mjs`; fails when the busyReason orphan guard is removed). Explicit cached-take switch on an earlier shot of a chained film is refused, takes.json unchanged (`test_studio_workflow.py`; not mutation-tested).
+- VERIFIED by existing tests + code read: stale/altered takes drop out of live-files and takeScreen; selected-take preview resolves from the manifest (`selectedClips`), not mtime. `progressClips` still uses mtime, for progress counts only.
+- Deviation from plan wording (not a defect): reservations live in the session record (`takeJob`/`procInfo`), not as pending rows in takes.json; protection is equivalent and tested.
+- Observation, untested: a take with an unscreened part gets no `technicalFlags`, so it is omitted from `takeScreen` instead of shown as unknown.
+- dfb7953 bundles 47 files (items 1a, 2, 6, 8-adjacent, planner edits); it cannot be reverted per item.
+- Not done: real Studio render and owner review for item 1a; full `npm test` re-run at fccf529 (added tests only; watchdog suite 13/13 pass).
