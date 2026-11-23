@@ -9,6 +9,8 @@ import { watchdogLabel } from './watchdog-status.js';
 import MotionTakeReview from './MotionTakeReview.jsx';
 import CharacterReferences from './CharacterReferences.jsx';
 import { takeControls } from './motion-takes.js';
+import { NotificationBell, useNotifications } from './NotificationBell.jsx';
+import { COALESCE_MS, flushNow } from './notifications.js';
 import { estFor } from './render-estimate.js';
 
 const BabyBall3DPreview = lazy(() => import('./BabyBall3DPreview.jsx'));
@@ -57,17 +59,24 @@ function useJob() {
   const [job, setJob] = useState({ status: 'idle' });
   useEffect(() => {
     const es = new EventSource('/api/events');
-    es.onmessage = (e) => setJob(JSON.parse(e.data));
-    return () => es.close();
+    let shown = null; let latest = null; let timer = null;
+    const flush = () => { timer = null; if (latest) { shown = latest; latest = null; setJob(shown); } };
+    es.onmessage = (e) => {
+      try { latest = JSON.parse(e.data); } catch { return; }
+      // One event arrives per log line; render at most ~4 times a second, but never delay a status or job change.
+      if (flushNow(shown, latest)) { clearTimeout(timer); flush(); } else if (!timer) timer = setTimeout(flush, COALESCE_MS);
+    };
+    return () => { clearTimeout(timer); es.close(); };
   }, []);
   return job;
 }
 
-function useElapsed(job) {
+// Ticks only while a job is running, and only this small component re-renders each second (not the whole app).
+function Elapsed({ startedAt }) {
   const [, tick] = useState(0);
   useEffect(() => { const t = setInterval(() => tick((n) => n + 1), 1000); return () => clearInterval(t); }, []);
-  if (!job.startedAt) return '';
-  const sec = Math.max(0, Math.round((Date.now() - job.startedAt) / 1000));
+  if (!startedAt) return null;
+  const sec = Math.max(0, Math.round((Date.now() - startedAt) / 1000));
   return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
 }
 
@@ -462,6 +471,7 @@ export default function App() {
   const [stored, setStored] = useState(null);
   const [sessions, setSessions] = useState([]);
   const [duplicateSession, setDuplicateSession] = useState(null);
+  const notifier = useNotifications({ live, sessions });
   const job = selectedId == null ? { status: 'idle' } : selectedId === live.id ? live : stored?.id === selectedId ? stored : { status: 'idle' };
   const anyRunning = ['running', 'stopping'].includes(live.status);
   const maxSeconds = me?.maxSeconds ?? 60;
@@ -608,19 +618,12 @@ export default function App() {
   const [showLog, setShowLog] = useState(false);
   const endRef = useRef(null);
   const running = job.status === 'running' && job.id === live.id;
-  const elapsed = useElapsed(job);
   const prog = progressOf(job);
   const prevStatus = useRef('idle');
   const sequenceSeen = useRef('');
   useEffect(() => {
     const icon = { running: '⏳', done: '✅', failed: '⚠️', cancelled: '⏹' }[job.status] || '';
     document.title = `${icon} iShorts`;
-    if (prevStatus.current === 'running' && job.status === 'done') { try { const c = new (window.AudioContext || window.webkitAudioContext)(); const o = c.createOscillator(); const g = c.createGain(); o.connect(g); g.connect(c.destination); o.frequency.value = 880; g.gain.setValueAtTime(0.12, c.currentTime); g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.6); o.start(); o.stop(c.currentTime + 0.6); } catch { /* sound blocked */ } }
-    if (prevStatus.current === 'running' && job.status !== 'running' && 'Notification' in window && Notification.permission === 'granted') {
-      new Notification('iShorts', { body: job.status === 'done'
-        ? (job.kind === 'render' ? 'Your video is ready.' : job.kind === 'sequence-motion' ? 'The approved shot motion is ready.' : 'Your plan is ready to review.')
-        : 'Job ' + job.status });
-    }
     prevStatus.current = job.status;
   }, [job.status]);
   const logRef = useRef(null);
@@ -776,6 +779,7 @@ export default function App() {
         <button className="projects-toggle" aria-controls="projects" aria-expanded={projectsOpen} onClick={() => setProjectsOpen(!projectsOpen)}>Projects</button>
         <span className="logo"><img src="/logo.svg" alt="" className="logo-mark"/><span className="logo-word">i<b>Shorts</b></span></span>
         {me && <span className="muted account">{me.name === me.role ? me.role : `${me.name} · ${me.role}`}</span>}
+        <NotificationBell notifier={notifier} selectedId={selectedId} onOpen={select} />
         <details className="appearance">
           <summary>Appearance</summary>
           <div className="themes">{THEMES.map(([k, n]) => <button key={k} aria-pressed={theme === k} className={theme === k ? 'on' : ''} onClick={() => setTheme(k)}>{n}</button>)}</div>
@@ -798,7 +802,7 @@ export default function App() {
                 ))}
                 {running && !(job.steps || []).length && <li className="now">Starting</li>}
               </ul>
-              {running && <p className="muted">Elapsed {elapsed}{prog ? ` · ${prog.n} of ${prog.of}` : ''}</p>}
+              {running && <p className="muted">Elapsed <Elapsed startedAt={job.startedAt} />{prog ? ` · ${prog.n} of ${prog.of}` : ''}</p>}
               <StepTrack job={job} />
               {running && <div className="bar"><div className={prog ? 'fill' : 'fill indet'} style={prog ? { width: `${Math.round((prog.n / prog.of) * 100)}%` } : {}} /></div>}
               {running && job.lines?.length > 0 && <p className="muted">{displayPipelineLine(job.lines[job.lines.length - 1])}</p>}
