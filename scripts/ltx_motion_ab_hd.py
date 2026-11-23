@@ -37,7 +37,13 @@ def main():
     parser.add_argument('--still', required=True, type=Path)
     parser.add_argument('--out', required=True, type=Path)
     parser.add_argument('--seed', type=int, default=2200)
+    parser.add_argument('--prompts', type=Path, help='JSON file {"A": "...", "B": "..."}; defaults to the pizza pair')
     args = parser.parse_args()
+    prompts = PROMPTS
+    if args.prompts:
+        prompts = json.loads(args.prompts.read_text())
+        if set(prompts) != {'A', 'B'} or not all(isinstance(v, str) and v.strip() for v in prompts.values()):
+            parser.error('--prompts must hold non-empty "A" and "B" strings')
     still = args.still.expanduser().resolve()
     out = args.out.expanduser().resolve()
     if not still.is_file():
@@ -62,7 +68,7 @@ def main():
         def __call__(self, *args, **kwargs):
             return ''
 
-    for variant, prompt in PROMPTS.items():
+    for variant, prompt in prompts.items():
         folder = out / variant
         (folder / 'motion').mkdir(parents=True)
         started = time.monotonic()
