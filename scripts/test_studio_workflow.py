@@ -634,6 +634,10 @@ subprocess.run([sys.executable,'scripts/take-report-fixture.py',a.scenario,str(a
         chained=req('/api/render','creator-a',{**payload,'retakeMotion':1})
         assert chained[0]==409 and 'redo every later shot' in chained[1]['error'],chained
         original_state=takes_file.read_bytes()
+        # Switching an earlier shot to a cached take is refused in a chained film too, and leaves the selection untouched.
+        switched=req('/api/render','creator-a',{**payload,'retakeMotion':1,'take':0})
+        assert switched[0]==409 and 'redo every later shot' in switched[1]['error'],switched
+        assert takes_file.read_bytes()==original_state
         assert req('/api/render','creator-b',{**payload,'retakeMotion':2})[0] in (403,404)
         assert takes_file.read_bytes()==original_state
         (root/'take-fail').touch()
