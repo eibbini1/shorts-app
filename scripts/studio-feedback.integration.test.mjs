@@ -7,6 +7,7 @@ import path from 'node:path';
 import net from 'node:net';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import zlib from 'node:zlib';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -106,7 +107,8 @@ test('product feedback: submit, privacy, owner management, persistence', { timeo
     assert.equal((await ana('POST', '/api/product-feedback', { category: 'nope', title: 'abc', comment: 'abcdef' })).status, 400);
     assert.equal((await ana('POST', '/api/product-feedback', { category: 'bug', title: '', comment: 'abcdef' })).status, 400);
     assert.equal((await ana('POST', '/api/product-feedback', null, 'not json{')).status, 400);
-    const huge = JSON.stringify({ category: 'bug', title: 'big', comment: 'x'.repeat(40 * 1024) });
+    assert.equal((await ana('POST', '/api/product-feedback', { category: 'bug', title: 'big', comment: 'x'.repeat(40 * 1024) })).status, 400);
+    const huge = JSON.stringify({ category: 'bug', title: 'big', comment: 'x'.repeat(4 * 1024 * 1024) });
     assert.equal((await ana('POST', '/api/product-feedback', null, huge)).status, 413);
     const again = await ana('POST', '/api/product-feedback', { category: 'bug', title: 'Export button stuck', comment: 'It never finishes on my phone.', rating: 2 });
     assert.equal(again.status, 200);
@@ -136,6 +138,69 @@ test('product feedback: submit, privacy, owner management, persistence', { timeo
     assert.equal(after.status, 200);
     assert.equal(after.data.status, 'reviewing');
     assert.equal((await api(server.base, ANA)('GET', '/api/product-feedback')).data.items.length, 3);
+  } finally {
+    server?.child.kill();
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+const crcTable = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
+const crc32 = (buf) => { let c = 0xffffffff; for (const b of buf) c = crcTable[(c ^ b) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+const chunk = (type, data) => { const len = Buffer.alloc(4); len.writeUInt32BE(data.length); const body = Buffer.concat([Buffer.from(type), data]); const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(body)); return Buffer.concat([len, body, crc]); };
+const png = (w = 64, h = 64) => {
+  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr[8] = 8; ihdr[9] = 2;
+  return Buffer.concat([Buffer.from('89504e470d0a1a0a', 'hex'), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(Buffer.alloc((w * 3 + 1) * h, 0x7f))), chunk('IEND', Buffer.alloc(0))]);
+};
+
+test('product feedback screenshots: stored privately, served only to author and owner, bad files leave nothing behind', { timeout: 60_000 }, async () => {
+  const root = setupRoot();
+  let server;
+  try {
+    server = await start(root);
+    const owner = api(server.base, OWNER), ana = api(server.base, ANA), ben = api(server.base, BEN);
+    const image = png();
+    const dataUrl = `data:image/png;base64,${image.toString('base64')}`;
+    const base = { category: 'bug', title: 'With picture', comment: 'See the attached screenshot.' };
+    const filesDir = path.join(root, 'storage', 'studio-feedback', 'files');
+
+    const made = await ana('POST', '/api/product-feedback', { ...base, screenshot: dataUrl });
+    assert.equal(made.status, 201, made.text);
+    const id = made.data.item.id;
+    assert.deepEqual(made.data.item.attachment, { mime: 'image/png', bytes: image.length });
+    assert.ok(!made.text.includes('.png"'), 'the stored file name must not be returned');
+    assert.equal(fs.readdirSync(filesDir).length, 1);
+    assert.ok(!fs.readFileSync(path.join(root, 'storage', 'studio-feedback', 'submissions.jsonl'), 'utf8').includes('base64'), 'image data must not be copied into the log');
+
+    // Author and owner get the exact bytes with safe headers; everyone else gets the same 404 as a missing item.
+    for (const who of [ana, owner]) {
+      const res = await fetch(server.base + `/api/product-feedback/screenshot?id=${id}`, { headers: { cookie: `studio_token=${who === ana ? ANA : OWNER}` } });
+      assert.equal(res.status, 200);
+      assert.equal(res.headers.get('content-type'), 'image/png');
+      assert.equal(res.headers.get('x-content-type-options'), 'nosniff');
+      assert.match(res.headers.get('cache-control'), /no-store/);
+      assert.ok(Buffer.from(await res.arrayBuffer()).equals(image));
+    }
+    assert.equal((await ben('GET', `/api/product-feedback/screenshot?id=${id}`)).status, 404);
+    assert.equal((await api(server.base, '')('GET', `/api/product-feedback/screenshot?id=${id}`)).status, 401);
+    assert.equal((await ben('GET', '/api/product-feedback/screenshot?id=../../etc/passwd')).status, 404);
+
+    // Refused uploads store nothing: wrong type, mislabelled bytes, too small, too big.
+    const bad = (screenshot, title) => ana('POST', '/api/product-feedback', { ...base, title, screenshot });
+    assert.equal((await bad('data:image/gif;base64,R0lGODlhAQABAAAAACw=', 'gif one')).status, 400);
+    assert.equal((await bad(`data:image/jpeg;base64,${image.toString('base64')}`, 'mislabelled')).status, 400);
+    assert.equal((await bad(`data:image/png;base64,${png(16, 16).toString('base64')}`, 'tiny one')).status, 400);
+    assert.equal((await bad(`data:image/png;base64,${Buffer.concat([image, Buffer.alloc(2.1 * 1024 * 1024)]).toString('base64')}`, 'too large')).status, 413);
+    assert.equal(fs.readdirSync(filesDir).length, 1, 'rejected uploads must not leave files');
+
+    // The same submission again is a duplicate and does not store a second copy.
+    const again = await ana('POST', '/api/product-feedback', { ...base, screenshot: dataUrl });
+    assert.equal(again.data.duplicate, true);
+    assert.equal(fs.readdirSync(filesDir).length, 1);
+
+    // A creator-b submission with its own screenshot stays out of Ana's reach.
+    const other = await ben('POST', '/api/product-feedback', { ...base, title: 'Ben picture', screenshot: dataUrl });
+    assert.equal(other.status, 201);
+    assert.equal((await ana('GET', `/api/product-feedback/screenshot?id=${other.data.item.id}`)).status, 404);
   } finally {
     server?.child.kill();
     fs.rmSync(root, { recursive: true, force: true });

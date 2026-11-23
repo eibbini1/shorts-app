@@ -353,3 +353,5 @@ button.ghost.composer-secondary { align-self:flex-end; }
 .fbnotes li { border-inline-start:2px solid var(--line); padding-inline-start:8px; }
 .fbfilters { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; } .fbfilters input { flex:1 1 140px; min-width:0; }
 .fbmanage { border-top:1px solid var(--line); padding-top:8px; margin-top:4px; }
+.fbshot { display:flex; flex-direction:column; gap:6px; } .fbfile input { color:var(--muted); font-size:12px; }
+.fbpreview { display:flex; flex-direction:column; align-items:flex-start; gap:4px; } .fbpreview img, .fbshotlink img { max-width:100%; max-height:180px; border-radius:8px; border:1px solid var(--line); object-fit:contain; background:var(--code); display:block; }

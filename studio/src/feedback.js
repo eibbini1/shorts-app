@@ -6,6 +6,15 @@ export const STATUSES = [
   ['new', 'New'], ['reviewing', 'Reviewing'], ['planned', 'Planned'], ['resolved', 'Resolved'], ['closed', 'Closed'],
 ];
 export const LIMITS = { title: [3, 120], comment: [3, 4000], note: 2000, reply: 2000 };
+export const SCREENSHOT_MAX_BYTES = 2 * 1024 * 1024;
+
+// Quick check before reading a chosen file; the server re-checks the real image header.
+export function checkScreenshotFile(file) {
+  if (!file) return '';
+  if (!['image/png', 'image/jpeg'].includes(file.type)) return 'Choose a PNG or JPEG image.';
+  if (file.size > SCREENSHOT_MAX_BYTES) return 'That image is over 2 MB. Choose a smaller screenshot.';
+  return '';
+}
 
 export const labelOf = (list, key) => (list.find(([k]) => k === key) || [key, key || ''])[1];
 
@@ -31,12 +40,13 @@ export function newClientKey(random = () => Math.random().toString(36).slice(2, 
   return `c${Date.now().toString(36)}${random()}${random()}`.slice(0, 40);
 }
 
-export function buildPayload(draft, clientKey) {
+export function buildPayload(draft, clientKey, screenshot = '') {
   const payload = {
     category: draft.category, title: String(draft.title).trim(), comment: String(draft.comment).trim(), clientKey,
   };
   if (draft.rating >= 1 && draft.rating <= 5) payload.rating = draft.rating;
   if (draft.sessionId) payload.sessionId = String(draft.sessionId);
+  if (screenshot) payload.screenshot = screenshot;
   return payload;
 }
 

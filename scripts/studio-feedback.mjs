@@ -81,6 +81,44 @@ export function boundedJson(req, limit) {
   });
 }
 
+// Screenshots: PNG or JPEG only, proven by the file's own header (the declared type is not trusted).
+export const SCREENSHOT = { maxBytes: 2 * 1024 * 1024, minSide: 64, maxSide: 8192, maxPixels: 40_000_000, submitBody: 3.4 * 1024 * 1024 };
+
+function imageSize(buffer) {
+  if (buffer.length >= 24 && buffer.subarray(0, 8).equals(Buffer.from('89504e470d0a1a0a', 'hex')) && buffer.toString('ascii', 12, 16) === 'IHDR') {
+    return { mime: 'image/png', width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
+  }
+  if (buffer.length < 4 || buffer[0] !== 0xff || buffer[1] !== 0xd8) return null;
+  const frames = new Set([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf]);
+  let at = 2;
+  while (at + 4 < buffer.length) {
+    if (buffer[at] !== 0xff) { at += 1; continue; }
+    while (buffer[at] === 0xff) at += 1;
+    const marker = buffer[at++];
+    if (marker === 0xd8 || marker === 0xd9 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) continue;
+    if (at + 2 > buffer.length) return null;
+    const length = buffer.readUInt16BE(at);
+    if (length < 2 || at + length > buffer.length) return null;
+    if (frames.has(marker) && length >= 7) return { mime: 'image/jpeg', height: buffer.readUInt16BE(at + 3), width: buffer.readUInt16BE(at + 5) };
+    at += length;
+  }
+  return null;
+}
+
+const SHOT_MESSAGE = 'Attach a PNG or JPEG screenshot up to 2 MB.';
+export function parseScreenshot(dataUrl) {
+  const match = /^data:(image\/(?:png|jpeg));base64,([A-Za-z0-9+/]+={0,2})$/.exec(String(dataUrl || ''));
+  if (!match || match[2].length > Math.ceil(SCREENSHOT.maxBytes / 3) * 4) fail('bad-screenshot', SHOT_MESSAGE, match ? 413 : 400);
+  const buffer = Buffer.from(match[2], 'base64');
+  if (buffer.length > SCREENSHOT.maxBytes) fail('bad-screenshot', SHOT_MESSAGE, 413);
+  const size = imageSize(buffer);
+  if (!size || size.mime !== match[1] || size.width < SCREENSHOT.minSide || size.height < SCREENSHOT.minSide
+    || size.width > SCREENSHOT.maxSide || size.height > SCREENSHOT.maxSide || size.width * size.height > SCREENSHOT.maxPixels) {
+    fail('bad-screenshot', 'That file is not a usable PNG or JPEG screenshot.');
+  }
+  return { buffer, mime: size.mime, ext: size.mime === 'image/png' ? 'png' : 'jpg' };
+}
+
 export function createFeedbackStore({ dir, now = () => Date.now(), randomHex = (bytes) => crypto.randomBytes(bytes).toString('hex') }) {
   const submissionsFile = path.join(dir, 'submissions.jsonl');
   const eventsFile = path.join(dir, 'events.jsonl');
@@ -189,6 +227,23 @@ export function createFeedbackStore({ dir, now = () => Date.now(), randomHex = (
       if (!isFeedbackId(id)) return null;
       const item = replay().find((row) => row.id === id);
       return item?.attachment && mayRead(viewer, item) ? item.attachment : null;
+    },
+
+    // Files are written whole (temp file, then rename) under a random name; the name is only ever read from our own records.
+    saveScreenshot({ buffer, mime }) {
+      const filesDir = path.join(dir, 'files');
+      fs.mkdirSync(filesDir, { recursive: true, mode: 0o700 });
+      const file = `${randomHex(16)}.${mime === 'image/png' ? 'png' : 'jpg'}`;
+      const temp = path.join(filesDir, `.${file}.tmp`);
+      fs.writeFileSync(temp, buffer, { mode: 0o600 });
+      fs.renameSync(temp, path.join(filesDir, file));
+      return { file, mime, bytes: buffer.length };
+    },
+    discardScreenshot(attachment) {
+      if (attachment && /^[0-9a-f]{32}\.(png|jpg)$/.test(attachment.file)) fs.rmSync(path.join(dir, 'files', attachment.file), { force: true });
+    },
+    screenshotPath(attachment) {
+      return attachment && /^[0-9a-f]{32}\.(png|jpg)$/.test(attachment.file) ? path.join(dir, 'files', attachment.file) : null;
     },
 
     update({ id, viewer, status, note, reply }) {

@@ -13,7 +13,7 @@ import { buildLearningContext } from './studio-learning-memory.mjs';
 import { createSessionId, draftIdleTimeoutMs, draftTimeoutMs, normalizeSessionPrompt, sessionTitle } from './studio-session-utils.mjs';
 import { MAX_AUTO_RETRIES, WATCHED_KINDS, checkStall, classifyExit, isLocalCommand, isOrphanScenarioMember, keepAwakeCommand, mayReapOrphan, parsePsProcessIdentities, parsePsProcessIdentity, retryDecision, stallMessage, watchdogLimits } from './studio-watchdog.mjs';
 import { availableTakes, commitTakes, motionState, reserveTake, sha256, summarizeTakeScreens, technicalObservations, verifiedTake } from './studio-motion-state.mjs';
-import { FeedbackError, LIMITS as FEEDBACK_LIMITS, boundedJson, createFeedbackStore, validateSubmission } from './studio-feedback.mjs';
+import { FeedbackError, LIMITS as FEEDBACK_LIMITS, SCREENSHOT as FEEDBACK_SCREENSHOT, boundedJson, createFeedbackStore, parseScreenshot, validateSubmission } from './studio-feedback.mjs';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -2077,10 +2077,11 @@ http.createServer(async (req, res) => {
         return item ? json(res, 200, item) : json(res, 404, { error: 'That feedback was not found.' });
       }
       if (url.pathname === '/api/product-feedback' && req.method === 'POST') {
-        const read = await boundedJson(req, FEEDBACK_LIMITS.textBody);
+        const read = await boundedJson(req, FEEDBACK_SCREENSHOT.submitBody);
         if (read.error) return json(res, read.status, { error: read.error });
         const parsed = validateSubmission(read.value);
         if (parsed.error) return json(res, 400, { error: parsed.error });
+        const shot = parsed.value.screenshot ? parseScreenshot(parsed.value.screenshot) : null;
         // Only identifiers the Studio already holds for this video are stored. Prompt text is never copied.
         const context = {};
         if (parsed.value.sessionId) {
@@ -2092,9 +2093,22 @@ http.createServer(async (req, res) => {
           const exported = sess.video ? path.resolve(ROOT, sess.video) : null;
           if (exported && exported.startsWith(path.resolve(ROOT, 'outputs') + path.sep) && fs.existsSync(exported)) context.videoSha256 = await fileHash(exported);
         }
-        const result = productFeedback.submit({ user: me, value: parsed.value, context,
-          dailyLimit: isOwner ? FEEDBACK_DAILY_LIMIT * 10 : FEEDBACK_DAILY_LIMIT });
+        const attachment = shot ? productFeedback.saveScreenshot(shot) : null;
+        let result;
+        try {
+          result = productFeedback.submit({ user: me, value: parsed.value, context, attachment,
+            dailyLimit: isOwner ? FEEDBACK_DAILY_LIMIT * 10 : FEEDBACK_DAILY_LIMIT });
+        } catch (error) { productFeedback.discardScreenshot(attachment); throw error; }
+        if (result.duplicate) productFeedback.discardScreenshot(attachment);
         return json(res, result.duplicate ? 200 : 201, result);
+      }
+      if (url.pathname === '/api/product-feedback/screenshot' && req.method === 'GET') {
+        const attachment = productFeedback.attachmentOf(query.get('id'), me);
+        const file = productFeedback.screenshotPath(attachment);
+        if (!file || !fs.existsSync(file)) return json(res, 404, { error: 'That feedback was not found.' });
+        res.writeHead(200, { 'Content-Type': attachment.mime, 'Content-Length': fs.statSync(file).size, 'X-Content-Type-Options': 'nosniff',
+          'Content-Security-Policy': "default-src 'none'; sandbox", 'Cache-Control': 'private, no-store', 'Content-Disposition': 'inline' });
+        return fs.createReadStream(file).pipe(res);
       }
       if (url.pathname === '/api/product-feedback/update' && req.method === 'POST') {
         const read = await boundedJson(req, FEEDBACK_LIMITS.textBody);

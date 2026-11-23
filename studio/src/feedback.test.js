@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildPayload, emptyDraft, labelOf, listQuery, newClientKey, validateDraft, CATEGORIES } from './feedback.js';
+import { buildPayload, checkScreenshotFile, emptyDraft, labelOf, listQuery, newClientKey, validateDraft, CATEGORIES } from './feedback.js';
 
 describe('validateDraft', () => {
   it('accepts a complete draft', () => {
@@ -42,5 +42,20 @@ describe('listQuery and keys', () => {
   });
   it('labels categories', () => {
     expect(labelOf(CATEGORIES, 'feature')).toBe('Feature request');
+  });
+});
+
+describe('screenshots', () => {
+  it('accepts PNG and JPEG within 2 MB and explains refusals', () => {
+    expect(checkScreenshotFile(null)).toBe('');
+    expect(checkScreenshotFile({ type: 'image/png', size: 1000 })).toBe('');
+    expect(checkScreenshotFile({ type: 'image/jpeg', size: 2 * 1024 * 1024 })).toBe('');
+    expect(checkScreenshotFile({ type: 'image/gif', size: 10 })).toMatch(/PNG or JPEG/);
+    expect(checkScreenshotFile({ type: 'image/png', size: 2 * 1024 * 1024 + 1 })).toMatch(/2 MB/);
+  });
+  it('adds the image to the payload only when one is attached', () => {
+    const draft = { ...emptyDraft(), title: 'abc', comment: 'abc' };
+    expect(buildPayload(draft, 'key12345')).not.toHaveProperty('screenshot');
+    expect(buildPayload(draft, 'key12345', 'data:image/png;base64,AAAA').screenshot).toBe('data:image/png;base64,AAAA');
   });
 });

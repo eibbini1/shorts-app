@@ -4,7 +4,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { Readable } from 'node:stream';
 import test from 'node:test';
-import { CATEGORIES, FeedbackError, STATUSES, boundedJson, createFeedbackStore, validateSubmission } from './studio-feedback.mjs';
+import zlib from 'node:zlib';
+import { CATEGORIES, FeedbackError, STATUSES, SCREENSHOT, boundedJson, createFeedbackStore, parseScreenshot, validateSubmission } from './studio-feedback.mjs';
 
 const owner = { name: 'owner', role: 'owner' };
 const mum = { name: 'Mum', role: 'creator' };
@@ -186,4 +187,55 @@ test('boundedJson accepts normal bodies and returns 413 for oversized or 400 for
   assert.equal((await boundedJson(body(['x'.repeat(200)]), 100)).status, 413);
   assert.equal((await boundedJson(body(['{oops']), 100)).status, 400);
   assert.deepEqual((await boundedJson(body([]), 100)).value, {});
+});
+
+// ---- S3 screenshots ----
+const crcTable = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
+const crc32 = (buf) => { let c = 0xffffffff; for (const b of buf) c = crcTable[(c ^ b) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+const chunk = (type, data) => { const len = Buffer.alloc(4); len.writeUInt32BE(data.length); const body = Buffer.concat([Buffer.from(type), data]); const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(body)); return Buffer.concat([len, body, crc]); };
+export function makePng(width = 64, height = 64) {
+  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(width, 0); ihdr.writeUInt32BE(height, 4); ihdr[8] = 8; ihdr[9] = 2;
+  const raw = Buffer.alloc((width * 3 + 1) * height, 0x7f);
+  return Buffer.concat([Buffer.from('89504e470d0a1a0a', 'hex'), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
+}
+const makeJpeg = (width = 64, height = 64) => {
+  const sof = Buffer.from([0xff, 0xc0, 0, 11, 8, height >> 8, height & 255, width >> 8, width & 255, 1, 1, 0x11, 0]);
+  return Buffer.concat([Buffer.from([0xff, 0xd8]), sof, Buffer.from([0xff, 0xd9])]);
+};
+const url = (mime, buf) => `data:${mime};base64,${buf.toString('base64')}`;
+const refuses = (fn, status) => assert.throws(fn, (e) => e instanceof FeedbackError && (status === undefined || e.status === status));
+
+test('S3 screenshots: PNG and JPEG are accepted and identified by their own header', () => {
+  assert.deepEqual({ ...parseScreenshot(url('image/png', makePng())), buffer: undefined }, { buffer: undefined, mime: 'image/png', ext: 'png' });
+  assert.equal(parseScreenshot(url('image/jpeg', makeJpeg())).ext, 'jpg');
+});
+
+test('S3 screenshots: other types, mislabelled bytes, tiny or oversized images are refused', () => {
+  refuses(() => parseScreenshot(url('image/gif', Buffer.from('GIF89a......'))), 400);
+  refuses(() => parseScreenshot(url('image/png', makeJpeg())), 400); // declared PNG, JPEG bytes
+  refuses(() => parseScreenshot(url('image/jpeg', makePng())), 400);
+  refuses(() => parseScreenshot('data:image/png;base64,AAAA'), 400);
+  refuses(() => parseScreenshot('not a data url'), 400);
+  refuses(() => parseScreenshot(url('image/png', makePng(32, 32))), 400);
+  refuses(() => parseScreenshot(url('image/png', makePng(9000, 64))), 400);
+  refuses(() => parseScreenshot(url('image/png', Buffer.concat([makePng(), Buffer.alloc(SCREENSHOT.maxBytes)]))), 413);
+});
+
+test('S3 screenshots: saved whole under a random name, readable by the author and owner only, never exposed as a path', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'feedback-shot-'));
+  const store = createFeedbackStore({ dir });
+  const shot = parseScreenshot(url('image/png', makePng()));
+  const attachment = store.saveScreenshot(shot);
+  assert.match(attachment.file, /^[0-9a-f]{32}\.png$/);
+  assert.deepEqual(fs.readdirSync(path.join(dir, 'files')), [attachment.file]); // no temp leftovers
+  const { item } = store.submit({ user: mum, value: validateSubmission(good).value, attachment });
+  assert.deepEqual(item.attachment, { mime: 'image/png', bytes: shot.buffer.length });
+  assert.ok(!JSON.stringify(item).includes(attachment.file));
+  assert.equal(store.attachmentOf(item.id, mum).file, attachment.file);
+  assert.equal(store.attachmentOf(item.id, owner).file, attachment.file);
+  assert.equal(store.attachmentOf(item.id, dad), null);
+  assert.equal(store.screenshotPath({ file: '../../etc/passwd' }), null);
+  assert.equal(store.screenshotPath({ file: 'a'.repeat(32) + '.png' }), path.join(dir, 'files', 'a'.repeat(32) + '.png')); // well-formed names resolve inside files/
+  store.discardScreenshot(attachment);
+  assert.deepEqual(fs.readdirSync(path.join(dir, 'files')), []);
 });

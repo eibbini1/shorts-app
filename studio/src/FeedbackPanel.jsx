@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  CATEGORIES, LIMITS, STATUSES, buildPayload, emptyDraft, labelOf, listQuery, newClientKey, statusHint, validateDraft,
+  CATEGORIES, LIMITS, STATUSES, buildPayload, checkScreenshotFile, emptyDraft, labelOf, listQuery, newClientKey, statusHint, validateDraft,
 } from './feedback.js';
 import { relativeTime } from './notifications.js';
 
@@ -37,7 +37,19 @@ function SendForm({ job, onSent }) {
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState('');
   const key = useRef(newClientKey());
+  const [shot, setShot] = useState(null); // { dataUrl, name }
   const set = (patch) => setDraft((d) => ({ ...d, ...patch }));
+
+  const pick = (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    const problem = checkScreenshotFile(file);
+    if (problem || !file) { setFailure(problem); return; }
+    const reader = new FileReader();
+    reader.onload = () => { setFailure(''); setShot({ dataUrl: String(reader.result), name: file.name }); };
+    reader.onerror = () => setFailure('That image could not be read.');
+    reader.readAsDataURL(file);
+  };
 
   const submit = async (event) => {
     event.preventDefault();
@@ -46,9 +58,9 @@ function SendForm({ job, onSent }) {
     if (Object.keys(found).length) return;
     setBusy(true); setFailure('');
     try {
-      await call('POST', '/api/product-feedback', buildPayload({ ...draft, sessionId: about && hasVideo ? job.id : '' }, key.current));
+      await call('POST', '/api/product-feedback', buildPayload({ ...draft, sessionId: about && hasVideo ? job.id : '' }, key.current, shot?.dataUrl));
       key.current = newClientKey();
-      setDraft(emptyDraft()); setAbout(false);
+      setDraft(emptyDraft()); setAbout(false); setShot(null);
       onSent();
     } catch (error) { setFailure(error.message); } finally { setBusy(false); }
   };
@@ -69,6 +81,17 @@ function SendForm({ job, onSent }) {
         {errors.comment && <span className="bad fberr">{errors.comment}</span>}
       </label>
       <div className="fbrow"><span>How is it working for you? <span className="muted">(optional)</span></span><Stars value={draft.rating} onChange={(rating) => set({ rating })} /></div>
+      <div className="fbshot">
+        <label className="fbfile">Screenshot <span className="muted">(optional, PNG or JPEG, up to 2 MB)</span>
+          <input type="file" accept="image/png,image/jpeg" onChange={pick} />
+        </label>
+        {shot && (
+          <div className="fbpreview">
+            <img src={shot.dataUrl} alt="Screenshot you are about to send" />
+            <button type="button" className="ghost" onClick={() => setShot(null)}>Remove screenshot</button>
+          </div>
+        )}
+      </div>
       {hasVideo && (
         <label className="fbcheck"><input type="checkbox" checked={about} onChange={(e) => setAbout(e.target.checked)} /> This is about the video I have open</label>
       )}
@@ -77,6 +100,11 @@ function SendForm({ job, onSent }) {
     </form>
   );
 }
+
+const Shot = ({ item }) => item.attachment
+  ? <a className="fbshotlink" href={`/api/product-feedback/screenshot?id=${encodeURIComponent(item.id)}`} target="_blank" rel="noopener noreferrer">
+    <img src={`/api/product-feedback/screenshot?id=${encodeURIComponent(item.id)}`} alt={`Screenshot attached to ${item.title}`} loading="lazy" /></a>
+  : null;
 
 function Replies({ item, now }) {
   if (!item.replies?.length) return null;
@@ -116,6 +144,7 @@ function MyFeedback({ active }) {
             <div className="fbtop"><b>{item.title}</b><span className={`fbstatus s-${item.status}`}>{labelOf(STATUSES, item.status)}</span></div>
             <span className="muted">{labelOf(CATEGORIES, item.category)} · {relativeTime(item.ts, now)} · {statusHint(item.status)}</span>
             <p className="fbbody">{item.comment}</p>
+            <Shot item={item} />
             <Replies item={item} now={now} />
           </li>
         ))}
@@ -188,6 +217,7 @@ function Inbox({ active }) {
             {openId === item.id && (
               <>
                 <p className="fbbody">{item.comment}</p>
+                <Shot item={item} />
                 {item.context?.sessionId && <p className="muted">About a video (project {item.context.sessionId}{item.context.look ? `, ${item.context.look}` : ''})</p>}
                 <Replies item={item} now={now} />
                 <Manage item={item} onSaved={list.patch} />
