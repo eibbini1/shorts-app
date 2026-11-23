@@ -358,8 +358,8 @@ for(let i=0;i<count;i++){
     image+=` Continuity: same ${creativeBrief.set||outline.setting}; retain the same named dish, tools, surface and lighting from the visual bible.`;
   }
   if(!foodProcess) motion=`Begin exactly from the first frame: same pose, facing direction, costume and lighting. ${motion}`;
-  const lockedImage=applyVisualIdentityLock(image,outline.protagonist,outline.visualBible);
-  const lockedMotion=applyVisualIdentityLock(motion,outline.protagonist,outline.visualBible);
+  const lockedImage=applyVisualIdentityLock(image,outline.protagonist,outline.visualBible,shot.sceneState.before);
+  const lockedMotion=applyVisualIdentityLock(motion,outline.protagonist,outline.visualBible,shot.sceneState.action);
   shots.push({seconds:beat.seconds,narration:shortenNarration(narration,beat.seconds),
     imagePrompt:lockedImage,motionPrompt:lockedMotion,sound:shot.sound,
     sceneState:shot.sceneState,visualChecks:shot.visualChecks});

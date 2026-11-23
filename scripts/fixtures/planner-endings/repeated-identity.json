@@ -1,0 +1,32 @@
+{
+  "protagonist": "A small wooden toy boat",
+  "visualBible": "Locked setting: A colourful, stylized pond with a smooth, grey stone at its edge.. The world is a hand-drawn 2D cartoon, reminiscent of classic storybooks. The boat is a simple wooden toy with red paint and a small black sail. The stone is smooth, grey, and round. The pond is blue with gentle ripples. The art style is bold, with flat colors and thick outlines. Lighting is soft and diffused, creating a warm, inviting atmosphere.",
+  "requestedEnding": "The boat comes to rest on the smooth stone, with the same water and stone visible in the final frame",
+  "shot": {
+    "seconds": 5,
+    "narration": "The requested result holds in one final image.",
+    "imagePrompt": "Shared visual identity reference for every scene: A small wooden toy boat. Locked setting: A colourful, stylized pond with a smooth, grey stone at its edge.. The world is a hand-drawn 2D cartoon, reminiscent of classic storybooks. The boat is a simple wooden toy with red paint and a small black sail. The stone is smooth, grey, and round. The pond is blue with gentle ripples. The art style is bold, with flat colors and thick outline. Preserve the same defining face, hair, clothing, accessories and proportions for characters, and the same shape, color, material, size and distinctive markings for objects. Do not redesign recurring subjects between shots unless the story explicitly changes them. Shared visual identity reference for every scene: A small wooden toy boat. Locked setting: A colourful, stylized pond with a smooth, grey stone at its edge.. The world is a hand-drawn 2D cartoon, reminiscent of classic storybooks. The boat is a simple wooden toy with red paint and a small black sai",
+    "motionPrompt": "Final physical moment: The boat comes to rest on the smooth stone, with the same water and stone visible in the final frame. Shared visual identity reference for every scene: A small wooden toy boat. Locked setting: A colourful, stylized pond with a smooth, grey stone at its edge.. The world is a hand-drawn 2D cartoon, reminiscent of classic storybooks. The boat is a simple wooden toy with red paint and a small black sail. The stone is smooth, grey, and round. The pond is blue with gentle ripples. The art style is bold, with flat colors and thick outline. Preserve the same defining face, hair, clothing, accessories and proportions for characters, and the same shape, color, material, size and distinctive markings for objects. Do not redesign recurring subjects between shots unless the story explicitly changes them. Begin exactly from the first frame: same pose, facing direction, costume and lighting. Shared visual identity reference for every scene: A small wooden toy boat. Locked setting: A colourful, stylized pond with a smooth, grey stone at its edge.. The world is a hand-drawn 2D cartoon, reminiscent of c",
+    "sound": "pat",
+    "sceneState": {
+      "before": "The small wooden toy boat rests gently against the smooth stone at the bank of the pond.",
+      "action": "The small wooden toy boat settles against the smooth stone, its black sail still gently fluttering. The camera smoothly tracks the boat, maintaining a medium shot, as it comes to rest. The boat comes to rest on the smooth stone, with the same water and stone visible in the final frame.",
+      "after": "The boat comes to rest on the smooth stone, with the same water and stone visible in the final frame."
+    },
+    "visualChecks": {
+      "mustShow": [
+        "The boat is red with a black sail.",
+        "The stone is smooth and grey.",
+        "The pond is blue with ripples."
+      ],
+      "mustNotShow": [
+        "Any other objects in the scene.",
+        "A different boat or stone."
+      ],
+      "questions": [
+        "Is the boat still clearly a toy boat?",
+        "Does the stone still look smooth?"
+      ]
+    }
+  }
+}

@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {applyVisualIdentityLock, collectPromptChanges, fitOutlineIdeas, hasSupportedAsmrCue, lockRequestedEnding, narrationWordBand, reconcileSceneStateBefore, shortenNarration, firstClause, repairSceneState} from './story-draft-utils.mjs';
@@ -111,4 +112,35 @@ test('repairSceneState leaves a valid state alone', () => {
   const hasAction = text => /\blifts\b/i.test(text);
   const state = { before: 'a', action: 'He lifts the lid', after: 'b' };
   assert.equal(repairSceneState(state, 'x', hasAction), false);
+});
+
+test('repeated identity from the failed boat plan preserves the action and ending within the prompt limit', () => {
+  const fixture = JSON.parse(fs.readFileSync(new URL('./fixtures/planner-endings/repeated-identity.json', import.meta.url)));
+  const shot = structuredClone(fixture.shot);
+  const image = applyVisualIdentityLock(shot.imagePrompt, fixture.protagonist,
+    fixture.visualBible, shot.sceneState.before);
+  assert.ok(image.startsWith(shot.sceneState.before));
+  assert.ok(image.length <= 1000);
+  assert.equal((image.match(/Shared visual identity reference/g) || []).length, 1);
+  shot.motionPrompt = applyVisualIdentityLock(shot.motionPrompt, fixture.protagonist,
+    fixture.visualBible, shot.sceneState.action);
+  lockRequestedEnding(shot, fixture.requestedEnding);
+  assert.ok(shot.motionPrompt.includes('The small wooden toy boat settles against the smooth stone'));
+  assert.ok(shot.motionPrompt.startsWith('Final physical moment: ' + fixture.requestedEnding));
+  assert.ok(shot.motionPrompt.length <= 1000);
+  assert.equal((shot.motionPrompt.match(/Shared visual identity reference/g) || []).length, 1);
+  assert.ok(shot.motionPrompt.indexOf('settles against') < shot.motionPrompt.indexOf('Shared visual identity'));
+});
+
+test('identity wrapping is idempotent even when a model echoes it or truncates its tail', () => {
+  const action = 'The fox drops the pinecone beside a lantern.';
+  const once = applyVisualIdentityLock(action, 'A red fox', 'Orange coat and black paws.');
+  assert.equal(applyVisualIdentityLock(once, 'A red fox', 'Orange coat and black paws.'), once);
+  const echoed = once + ' ' + once;
+  const fixed = applyVisualIdentityLock(echoed, 'A red fox', 'Orange coat and black paws.', action);
+  assert.equal((fixed.match(/Shared visual identity reference/g) || []).length, 1);
+  assert.ok(fixed.startsWith(action));
+  const truncated = 'Shared visual identity reference for every scene: A red fox. Orange coat';
+  assert.ok(applyVisualIdentityLock(truncated, 'A red fox', 'Orange coat and black paws.', action).startsWith(action));
+  assert.throws(() => applyVisualIdentityLock(truncated, 'A red fox', 'Orange coat'), /no visual content/);
 });

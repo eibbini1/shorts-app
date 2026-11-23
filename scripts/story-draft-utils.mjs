@@ -1,3 +1,5 @@
+import { clipLine } from './shot-normalize.mjs';
+
 export function fitOutlineIdeas(value, count = 5) {
   if (!Array.isArray(value?.ideas) || value.ideas.length <= count) return value;
   return {...value, ideas: value.ideas.slice(0, count)};
@@ -80,7 +82,7 @@ export function lockRequestedEnding(shot, requested) {
     const oldEnd = state.after.trim().replace(/[.!?؟]+$/u, '');
     motion = motion.replace(`Visible end state: ${oldEnd}.`, '').trim();
   }
-  shot.motionPrompt = motion.includes(instruction) ? motion : `${instruction} ${motion}`.trim();
+  shot.motionPrompt = clipLine(`${instruction} ${motion.replaceAll(instruction, '').trim()}`.trim());
   if (state) {
     const action = String(state.action || '').trim();
     if (!action.toLowerCase().includes(ending.toLowerCase())) {
@@ -91,13 +93,25 @@ export function lockRequestedEnding(shot, requested) {
   }
 }
 
-export function applyVisualIdentityLock(prompt, protagonist, visualBible) {
+export function applyVisualIdentityLock(prompt, protagonist, visualBible, requiredContent = '') {
   const subject = String(protagonist || '').trim().slice(0, 120);
   const identity = String(visualBible || '').trim().slice(0, 360);
   if (!subject || !identity) throw new Error('A shared visual identity reference needs a subject and visual bible.');
+  // Model retries can echo the preceding shot's generated identity wrapper.
+  // Remove only that known wrapper, including a trailing wrapper cut off by the model.
+  const stripLock = value => String(value || '')
+    .replace(/Shared visual identity reference for every scene:[\s\S]*?Do not redesign recurring subjects between shots unless the story explicitly changes them\./g, '')
+    .replace(/Shared visual identity reference for every scene:[\s\S]*$/, '')
+    .replace(/\s+/g, ' ').trim();
+  const action = stripLock(requiredContent);
+  let content = stripLock(prompt);
+  if (action && !content.includes(action)) content = action + ' ' + content;
+  if (!content.trim()) throw new Error('The shot has no visual content after removing repeated identity instructions.');
   const lock = `Shared visual identity reference for every scene: ${subject}. ${identity}. Preserve the same defining face, hair, clothing, accessories and proportions for characters, and the same shape, color, material, size and distinctive markings for objects. Do not redesign recurring subjects between shots unless the story explicitly changes them.`;
-  const remaining = Math.max(0, 1000 - lock.length - 1);
-  return `${lock} ${String(prompt || '').trim().slice(0, remaining)}`.trim();
+  // The shot action gets the first 650 characters. Identity uses the remaining budget.
+  const visual = clipLine(content, 650);
+  const remaining = 1000 - visual.length - 1;
+  return `${visual} ${clipLine(lock, remaining)}`;
 }
 
 export function collectPromptChanges(beforeShots, afterShots, shotNumbers, reason) {
