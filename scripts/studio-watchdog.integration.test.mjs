@@ -21,7 +21,7 @@ echo run >> "$ROOT/runs.txt"
 N=$(wc -l < "$ROOT/runs.txt" | tr -d ' ')
 MODE="$(cat "$ROOT/mode.txt")"
 echo "stub start mode=$MODE attempt=$N"
-ok() { mkdir -p "$ROOT/outputs"; echo fake > "$ROOT/outputs/ok.mp4"; echo "Studio verified export: outputs/ok.mp4"; exit 0; }
+ok() { mkdir -p "$ROOT/outputs"; echo fake > "$ROOT/outputs/ok.mp4"; echo "Studio verified export: outputs/ok.mp4"; node "$ROOT/scripts/fixture-take-report.mjs"; exit 0; }
 case "$MODE" in
   crash-once) if [ "$N" = 1 ]; then kill -9 $$; fi; ok ;;
   crash-always) kill -9 $$ ;;
@@ -65,6 +65,23 @@ before(async () => {
   fs.writeFileSync(path.join(work, 'first-frames.json'), JSON.stringify({
     schemaVersion: 1, scenarioSha256: sha(scenarioFile), referenceManifestSha256: null,
     frames: [{ shot: 1, file: 'f1.png', sha256: sha(path.join(work, 'f1.png')) }] }));
+  fs.writeFileSync(path.join(root, 'scripts', 'fixture-take-report.mjs'), `
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+const hash = p => crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
+const work = 'storage/any-local/t.local-scenario';
+const clip = path.join(work, 'motion.mp4');
+fs.writeFileSync(clip, 'fixture motion');
+const clipSha256 = hash(clip);
+const row = {schemaVersion:1,shot:1,take:0,parts:1,
+  scenarioSha256:hash('drafts/generated/t.local-scenario.json'),
+  approvedReferenceSha256:hash(path.join(work,'f1.png')),
+  clip:'motion.mp4',clipSha256,
+  segments:[{clip:'motion.mp4',sha256:clipSha256,seed:2200}],
+  renderSettings:{quality:'standard',width:384,height:640,frames:97,fps:24,editor:'ffmpeg',model:null,gemma:null}};
+fs.writeFileSync(process.env.SHORTS_STUDIO_TAKE_REPORT,JSON.stringify([row]));
+`);
   port = await freePort();
   server = spawn(process.execPath, [path.join(root, 'scripts', 'studio-server.mjs')], {
     cwd: root, stdio: ['ignore', 'pipe', 'pipe'],
