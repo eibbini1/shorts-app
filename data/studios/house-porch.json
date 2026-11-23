@@ -1,0 +1,19 @@
+{
+  "id": "house-porch",
+  "name": "House Porch",
+  "status": "prompt-only",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One sheltered house porch: pale timber floor, cream exterior wall, simple chair left, small side table and plant right; the same doorway throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent.",
+  "referenceFrames": {},
+  "lighting": "Gentle morning light from the front left",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "warm, grounded, quiet everyday life",
+  "depth": "Doorway behind the subject; garden softly visible beyond",
+  "props": [
+    "simple chair",
+    "side table",
+    "potted plant"
+  ]
+}

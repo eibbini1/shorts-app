@@ -1,0 +1,19 @@
+{
+  "id": "workshop-table",
+  "name": "Craft Workshop",
+  "status": "prompt-only",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One small craft workshop: worn oak table, pale plaster wall, plain stool, closed wooden box and folded cloth; the same table and wall throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent.",
+  "referenceFrames": {},
+  "lighting": "Soft daylight from a high left window",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "warm, grounded, quiet everyday life",
+  "depth": "Work surface foreground with a subdued rear wall",
+  "props": [
+    "plain stool",
+    "closed wooden box",
+    "folded cloth"
+  ]
+}

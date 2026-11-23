@@ -1,0 +1,18 @@
+{
+  "id": "garden-path",
+  "name": "Quiet Garden",
+  "status": "prompt-only",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One enclosed garden: stone path, low green hedge left, timber bench right, terracotta pot; the same plants, path and bench throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent.",
+  "referenceFrames": {},
+  "lighting": "Soft late-afternoon side light",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "warm, grounded, quiet everyday life",
+  "depth": "Foreground leaves, clear path, softly separated hedge",
+  "props": [
+    "timber bench",
+    "terracotta pot"
+  ]
+}

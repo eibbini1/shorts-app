@@ -1,0 +1,19 @@
+{
+  "id": "cozy-living-room",
+  "name": "Cozy Living Room",
+  "status": "prompt-only",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One home living room: warm wood floor, cream sofa left, oak side table right, small plant; the same furniture positions and window throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent.",
+  "referenceFrames": {},
+  "lighting": "Soft warm window light from the right",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "warm, grounded, quiet everyday life",
+  "depth": "Clear space between foreground and sofa",
+  "props": [
+    "cream sofa",
+    "oak side table",
+    "small plant"
+  ]
+}

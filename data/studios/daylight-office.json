@@ -1,0 +1,19 @@
+{
+  "id": "daylight-office",
+  "name": "Daylight Office",
+  "status": "prompt-only",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One quiet office: pale oak desk, cream walls, window left, plain chair, closed notebook and unbranded desk lamp; the same desk layout throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent.",
+  "referenceFrames": {},
+  "lighting": "Diffused daylight from the left window",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "warm, grounded, quiet everyday life",
+  "depth": "Desk foreground; softly separated rear wall",
+  "props": [
+    "plain chair",
+    "closed notebook",
+    "desk lamp"
+  ]
+}
