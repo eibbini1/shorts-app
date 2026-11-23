@@ -35,6 +35,23 @@ def hard_motion(prompt):
     return sorted({m.group(0).lower() for m in HARD_CONTACT.finditer(prompt or '')})
 
 
+def motion_pack(pack_id):
+    if not isinstance(pack_id, str):
+        return None
+    data = json.loads((ROOT / 'data/topic-packs.json').read_text(encoding='utf-8'))
+    return next((pack for pack in data['packs'] if pack['id'] == pack_id), None)
+
+
+def pack_motion_warning(pack, prompt):
+    if not pack or not (pattern := pack.get('motionRiskPattern')):
+        return None
+    matches = sorted({match.group().lower() for match in re.finditer(pattern, prompt, re.I)})
+    if not matches:
+        return None
+    alternatives = f' Try {", ".join(pack["safe"])} if it still serves the story.' if pack['safe'] else ''
+    return f'{pack["id"]}: local motion risk ({", ".join(matches)}). Review the action before rendering.{alternatives}'
+
+
 def hook_score(line, topic=''):
     words = line.split()
     score, notes = 40, []
@@ -72,6 +89,7 @@ def main():
     data = json.loads(Path(args[0]).read_text(encoding='utf-8-sig'))
     plan, settings = data['plan'], data['settings']
     presentation = choose_presentation(data)
+    pack = motion_pack(data.get('motionPackId'))
     problems, warnings = [], []
     topic = subprocess.run([sys.executable, str(ROOT / 'scripts/topic-check.py'), plan['title'] + ' ' + data.get('topic', ''), '--allow'],
                            capture_output=True, text=True)
@@ -113,6 +131,9 @@ def main():
                 warnings.append(f'shot {i}: line needs about {speech:.1f} s but the shot is {shot["seconds"]} s; trim words or lengthen the shot')
         if not VISIBLE_ACTION.search(shot['motionPrompt']) and not PLATE_ACTION.search(shot['motionPrompt']):
             warnings.append(f'shot {i}: motion prompt has no recognizable physical action; review it for camera-only movement before rendering')
+        pack_warning = pack_motion_warning(pack, shot['motionPrompt'])
+        if pack_warning:
+            warnings.append(f'shot {i}: {pack_warning}')
         risky = hard_motion(shot['motionPrompt'])
         if risky:
             warnings.append(f'shot {i}: hand-tool contact action ({", ".join(risky)}) often looks fake in local motion; prefer the moment before or after (melt, steam, drop, slow push-in) or keep hands still')

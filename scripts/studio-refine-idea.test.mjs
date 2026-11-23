@@ -167,3 +167,24 @@ test('output validation rejects choices that do not preserve concrete endings', 
     { label: 'Two', prompt: 'A chef cooks pasta.', ending: 'A finished bowl.' },
   ] }), false);
 });
+
+test('retries a non-food brief with a static payoff and a dangling hook', async () => {
+  const requests = [];
+  const valid = {
+    decision: 'ready', message: 'Review the story.',
+    refinedPrompt: 'A tiny robot starts beside a dark greenhouse and carefully lifts a key, opens the glass door, and brings sunlight to the garden.',
+    hook: 'The robot lifts a brass key.', mustShow: 'A robot at an empty greenhouse',
+    obstacle: 'The greenhouse is locked.', turn: 'The robot unlocks the door.',
+    ending: 'The robot opens the door and sunlight reaches the seedlings.', question: '', choices: [],
+  };
+  const first = { ...valid, hook: 'The robot reaches for the', ending: 'The robot remains still.' };
+  const refiner = createIdeaRefiner({ fetchImpl: async (url, options) => {
+    requests.push(JSON.parse(options.body));
+    return localModel(requests.length === 1 ? first : valid)(url, options);
+  } });
+  const result = await refiner.refine({ prompt: 'A robot at an empty greenhouse', look: 'cartoon' });
+  assert.equal(requests.length, 2);
+  assert.match(requests[1].messages.at(-1).content, /hook ends mid-sentence/);
+  assert.match(requests[1].messages.at(-1).content, /ending needs a visible action/);
+  assert.equal(result.ending, valid.ending);
+});

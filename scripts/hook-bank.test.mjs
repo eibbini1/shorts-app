@@ -40,3 +40,12 @@ test('hookGuidance stays short and states the truth rule',()=>{
   assert.match(text,/muted/);
   assert.match(text,/promise only what the film delivers/);
 });
+
+test('opening overlay requires a known selected pattern and grounded text', async () => {
+  const { openingHookOverlay } = await import('./hook-bank.mjs');
+  const candidates = [{ id: 'cg-hidden-center' }];
+  assert.deepEqual(openingHookOverlay({ hookPatternId: 'cg-hidden-center', hookText: 'Inside the chocolate shell' }, candidates),
+    { patternId: 'cg-hidden-center', text: 'Inside the chocolate shell', startSeconds: 0, endSeconds: 1.5 });
+  assert.equal(openingHookOverlay({ hookPatternId: 'unknown', hookText: 'Look inside' }, candidates), null);
+  assert.equal(openingHookOverlay({ hookPatternId: 'cg-hidden-center', hookText: 'The $100 shell' }, candidates), null);
+});

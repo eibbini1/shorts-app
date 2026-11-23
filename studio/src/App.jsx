@@ -6,7 +6,10 @@ import { readComposerDraft, readPreflightApproval, writeComposerDraft, writePref
 import { planPromptChanges, repairPreviewChanges } from './review-recommendations.js';
 import { notesOf, isBlocked, choiceOf, nowLine, displayPipelineLine, progressOf as progressOfLines } from './pipeline-lines.js';
 import { watchdogLabel } from './watchdog-status.js';
+import MotionTakeReview from './MotionTakeReview.jsx';
+import CharacterReferences from './CharacterReferences.jsx';
 import { takeControls } from './motion-takes.js';
+import { estFor } from './render-estimate.js';
 
 const BabyBall3DPreview = lazy(() => import('./BabyBall3DPreview.jsx'));
 
@@ -131,7 +134,7 @@ function Sidebar({ sessions, selectedId, liveId, onSelect, onNew, onRename, onDe
   );
 }
 
-function PlanCard({ job, idea, onStills, onReference, disabled, notes }) {
+function PlanCard({ job, idea, onStills, onReference, onCharacter, disabled, notes }) {
   const plan = job.plan?.plan || job.plan || {};
   const shots = plan.shots || [];
   const total = shots.reduce((n, s) => n + (s.seconds || 0), 0);
@@ -194,7 +197,7 @@ function PlanCard({ job, idea, onStills, onReference, disabled, notes }) {
       <h3>{plan.title || 'Story plan'}</h3>
       {plan.hook && <p><b>Hook:</b> {plan.hook}</p>}
       {plan.payoff && <p><b>Payoff:</b> {plan.payoff}</p>}
-      <p className="muted">{shots.length} shots · {total}s · render estimate about {fmt(planEstimate(clipsOf(shots)).mid)} ({fmt(planEstimate(clipsOf(shots)).low)} to {fmt(planEstimate(clipsOf(shots)).high)}) if nothing is retried</p>
+      <p className="muted">{shots.length} shots · {total}s · render estimate about {fmt(planEstimate(clipsOf(shots), job.options?.quality).mid)} ({fmt(planEstimate(clipsOf(shots), job.options?.quality).low)} to {fmt(planEstimate(clipsOf(shots), job.options?.quality).high)}) if nothing is retried</p>
       <ShotPlan shots={shots} notes={notes} events={job.events} />
       {needsPromptChangeApproval && <section className="preflight-fixes" aria-label="Prompt changes to approve">
         <h4>Prompt changes to review</h4>
@@ -221,6 +224,11 @@ function PlanCard({ job, idea, onStills, onReference, disabled, notes }) {
         <label className="preflight-approval"><input type="checkbox" checked={approvedPreflightFixes} onChange={(event) => approvePromptChanges(event.target.checked)} />
           I reviewed and approve these prompt changes before first-frame generation.</label>
       </section>}
+      {onCharacter && <CharacterReferences key={job.id} job={job} canApply={canAttachReferences && !job.sequence?.active}
+        disabled={disabled} onApply={async (id) => {
+          const result = await onCharacter(id);
+          setLocalReferences(result.references || []);
+        }} />}
       {canAttachReferences && <section className="shot-references">
         <h4>Optional per-shot reference images</h4>
         <p className="muted">A per-shot reference overrides the shared Shot 1 identity reference for that scene. Details can still change, so review every generated frame.</p>
@@ -362,7 +370,7 @@ const TIPS = [
   'Tip: the Setting box overrides the scene, e.g. "a rainy rooftop garden".',
 ];
 
-function RenderLive({ job, plan, sessions, onRetakeMotion, busy }) {
+function RenderLive({ job, plan, sessions, onRetakeMotion, onSequenceTake, onContinue, busy }) {
   const [files, setFiles] = useState({ stills: [], clips: [] });
   const [tip, setTip] = useState(0);
   const sc = job.scenario;
@@ -370,18 +378,34 @@ function RenderLive({ job, plan, sessions, onRetakeMotion, busy }) {
   useEffect(() => {
     if (!sc) return undefined;
     let stop = false;
-    const load = () => fetch('/api/live-files?scenario=' + encodeURIComponent(sc)).then((r) => (r.ok ? r.json() : null)).then((j) => { if (j && !stop) setFiles(j); }).catch(() => {});
+    const load = () => fetch('/api/live-files?scenario=' + encodeURIComponent(sc) + '&sessionId=' + encodeURIComponent(job.id)).then((r) => (r.ok ? r.json() : null)).then((j) => { if (j && !stop) setFiles(j); }).catch(() => {});
     load();
     if (!running) return () => { stop = true; };
     const t = setInterval(load, 4000);
     return () => { stop = true; clearInterval(t); };
-  }, [sc, running]);
+  }, [sc, running, job.id, job.updatedAt]);
   useEffect(() => { if (!running) return undefined; const t = setInterval(() => setTip((n) => (n + 1) % TIPS.length), 9000); return () => clearInterval(t); }, [running]);
   const shots = plan.shots || [];
+  if (job.kind === 'sequence-motion' && job.status === 'done' && job.sequence?.stage === 'motion' && !job.options?.unattended) {
+    const takes = takeControls(files.takes, job.sequence.currentShot);
+    const estimate = estFor(job.options?.quality);
+    return <>
+      <MotionTakeReview key={job.id + ':' + job.startedAt} sessionId={job.id} />
+      <button type="button" disabled={busy || !takes.canMakeNew} onClick={() => onSequenceTake()}>Another take</button>
+      {takes.canMakeNew && <button type="button" className="ghost" disabled={busy} onClick={() => onSequenceTake(undefined, true)}
+        title={`Render remaining seeds one at a time. Allow ${fmt(estimate.cycleLow)}–${fmt(estimate.cycleHigh)} per new clip.`}>Fill all three takes</button>}
+      {takes.switches.filter((take) => !take.active).map((take) =>
+        <button key={take.take} type="button" disabled={busy} onClick={() => onSequenceTake(take.take)}>{take.label}</button>)}
+      <button type="button" className="primary" disabled={busy} onClick={onContinue}>
+        {job.sequence.currentShot < job.sequence.shotCount ? 'Use take and continue' : 'Use take for assembly'}
+      </button>
+    </>;
+  }
   if ((job.kind !== 'render' && job.kind !== 'stills') || !shots.length) return null;
   const still = (n) => [...files.stills].reverse().find((f) => f.shot === n);
-  const clip = (n) => [...files.clips].reverse().find((f) => f.shot === n);
-  const url = (f) => '/media?p=' + encodeURIComponent(f.p) + '&v=' + Math.round(f.t);
+  const selectedParts = (n) => (files.selectedClips || []).filter((f) => f.shot === n);
+  const clip = (n) => selectedParts(n)[0];
+  const url = (f) => '/media?p=' + encodeURIComponent(f.p) + '&v=' + (f.sha256 || Math.round(f.t));
   return (
     <div className="card live">
       <h3>{running ? 'Behind the scenes' : 'What was made'}</h3>
@@ -389,7 +413,11 @@ function RenderLive({ job, plan, sessions, onRetakeMotion, busy }) {
       <div className="tiles">
         {shots.map((sh, i) => (
           <div className="tile" key={i}>
-            {clip(i + 1) ? <video src={url(clip(i + 1))} autoPlay muted loop playsInline />
+            {clip(i + 1) ? selectedParts(i + 1).map((part) =>
+              <div key={part.sha256 + ':' + part.part}>
+                {selectedParts(i + 1).length > 1 && <span className="muted small">Segment {part.part}</span>}
+                <video src={url(part)} controls muted loop playsInline />
+              </div>)
               : still(i + 1) ? <img className="develop" src={url(still(i + 1))} alt={'Shot ' + (i + 1)} />
               : <div className="ph">{running ? 'waiting...' : 'no file'}</div>}
             <div className="cap"><b>Shot {i + 1}</b> · {sh.seconds}s · {clip(i + 1) ? 'clip ready' : still(i + 1)?.verified === false ? 'review required; not approved' : still(i + 1) ? 'first frame ready' : 'queued'}</div>
@@ -409,7 +437,7 @@ function RenderLive({ job, plan, sessions, onRetakeMotion, busy }) {
         ))}
       </div>
       {running && <p className="muted tip">{TIPS[tip]}</p>}
-      {running && <DirectorsChair job={job} plan={plan} stills={shots.map((_, i) => still(i + 1)).filter(Boolean)} clipsDone={files.clips.length} sessions={sessions} />}
+      {running && <DirectorsChair job={job} plan={plan} stills={shots.map((_, i) => still(i + 1)).filter(Boolean)} clipsDone={files.progressClips?.length || 0} sessions={sessions} />}
       {!running && guessResult(job) && <p className="guessres">{guessResult(job)}</p>}
     </div>
   );
@@ -447,6 +475,7 @@ export default function App() {
   const [seconds, setSeconds] = useState(() => composerDraft?.seconds || 10);
   const planDisabled = me?.draftsLeft === 0 || seconds > maxSeconds;
   const [orientation, setOrientation] = useState(() => composerDraft?.orientation || 'vertical');
+  const [continuityAnchor, setContinuityAnchor] = useState(() => composerDraft?.continuityAnchor || 'identity');
   const [quality, setQuality] = useState(() => (composerDraft?.quality === 'high' ? 'high' : 'standard'));
   const [audio, setAudio] = useState(() => composerDraft?.audio || 'asmr');
   const [ending, setEnding] = useState(() => composerDraft?.ending || '');
@@ -468,8 +497,8 @@ export default function App() {
   useEffect(() => { document.documentElement.dataset.theme = theme; try { localStorage.setItem('studio-theme', theme); } catch {} }, [theme]);
   const [setting, setSetting] = useState(() => composerDraft?.setting || '');
   useEffect(() => {
-    writeComposerDraft({ prompt, seconds, orientation, quality, audio, ending, look, setting });
-  }, [prompt, seconds, orientation, quality, audio, ending, look, setting]);
+    writeComposerDraft({ prompt, seconds, orientation, quality, continuityAnchor, audio, ending, look, setting });
+  }, [prompt, seconds, orientation, quality, continuityAnchor, audio, ending, look, setting]);
   const refinementInputs = useRef({});
   refinementInputs.current = { prompt, look, seconds, orientation, setting, ending };
   const [exampleContext, setExampleContext] = useState(false);
@@ -620,7 +649,7 @@ export default function App() {
     else autoRef.current = false;
   }, [job.status, job.kind, job.id]);
   useEffect(() => {
-    if (job.kind !== 'sequence-motion' || job.status !== 'done' || job.sequence?.stage !== 'motion') return;
+    if (!job.options?.unattended || job.kind !== 'sequence-motion' || job.status !== 'done' || job.sequence?.stage !== 'motion') return;
     const key = `${job.id}:${job.sequence.currentShot}:${job.sequence.stage}`;
     if (sequenceSeen.current === key) return;
     sequenceSeen.current = key;
@@ -661,7 +690,7 @@ export default function App() {
     setDuplicateSession(null);
     return run(async () => {
       const runUnattended = !extra.repair && me?.canRunUnattended && unattended;
-      const r = await post('/api/draft', { prompt, seconds, orientation, quality, audio, ending, look, setting, unattended: runUnattended, refine: !approved, requestId: globalThis.crypto.randomUUID(), ...extra });
+      const r = await post('/api/draft', { prompt, seconds, orientation, quality, continuityAnchor, audio, ending, look, setting, unattended: runUnattended, refine: !approved, requestId: globalThis.crypto.randomUUID(), ...extra });
       if (r.decision === 'needs_choices') { setRefinement(r.refinement); return; }
       if (r.options?.storyPrompt) setPrompt(r.options.storyPrompt);
       if (r.options?.ending) setEnding(r.options.ending);
@@ -679,6 +708,14 @@ export default function App() {
     try { return await post('/api/approve-frames', { scenario: job.scenario, sessionId: job.id, selections }); }
     catch (error) { setErr(error.message); return null; }
   };
+  const continueSequence = run(async () => {
+    const result = await post('/api/sequence/next', { scenario: job.scenario, sessionId: job.id });
+    await pickProject(result.id || job.id);
+  });
+  const sequenceTake = (take, batchTakes = false) => run(async () => {
+    const result = await post('/api/sequence/retry', { scenario: job.scenario, sessionId: job.id, motionTake: true, take, batchTakes });
+    await pickProject(result.id);
+  })();
   const retrySequence = run(async () => {
     const result = await post('/api/sequence/retry', { scenario: job.scenario, sessionId: job.id });
     pickProject(result.id);
@@ -718,6 +755,7 @@ export default function App() {
     if (!j) { setErr('Could not load that project.'); return; }
     if (id !== live.id) setStored(j);
     setPrompt(j.prompt || ''); setSeconds(j.options?.seconds || 10); setOrientation(j.options?.orientation || 'vertical'); setQuality(j.options?.quality === 'high' ? 'high' : 'standard');
+    setContinuityAnchor(j.options?.continuityAnchor === 'previous-end' ? 'previous-end' : 'identity');
     setExampleContext(Boolean(j.options?.ending));
     setAudio(j.options?.audio || 'asmr'); setEnding(j.options?.ending || ''); setLook(j.options?.look || 'food'); setSetting(j.options?.setting || ''); setShowLog(false);
   };
@@ -773,13 +811,15 @@ export default function App() {
               {choice && job.status !== 'running' && <BlockedCard lines={job.lines || []} events={job.events} choice={choice} busy={anyRunning} onRetry={() => draftWith({ retrySessionId: job.id, prompt: job.options?.storyPrompt || job.prompt, originalPrompt: job.options?.originalPrompt || job.prompt }, { ignoreDuplicate: true })} onAnyway={() => draftWith({ allowRepeat: true, allowDuplicate: true }, { ignoreDuplicate: true })} onEdit={() => document.querySelector('.composer textarea')?.focus()} />}
               {job.status === 'cancelled' && <p className="muted">Stopped.</p>}
               {job.status === 'interrupted' && job.kind !== 'render' && <p className="bad">{job.error}</p>}
+              {job.sequence?.takeError && <p role="status" className="muted">{job.sequence.takeError}</p>}
               {job.sequence?.continuationError && <p className="bad">{job.sequence.continuationError}</p>}
               {job.kind === 'stills' && job.status === 'failed' && job.sequence?.active &&
                 <button className="primary" disabled={busy} onClick={stills}>Retry shot {job.sequence.currentShot} frame preparation</button>}
-              {job.kind === 'sequence-motion' && (['failed', 'cancelled'].includes(job.status) || job.sequence?.continuationError) && job.sequence?.stage === 'motion' &&
+              {job.kind === 'sequence-motion' && (['failed', 'cancelled', 'interrupted'].includes(job.status) || job.sequence?.continuationError) && job.sequence?.stage === 'motion' &&
                 <button className="primary" disabled={busy} onClick={retrySequence}>Retry approved shot motion</button>}
               {['failed', 'interrupted'].includes(job.status) && me?.canRunUnattended && job.options?.unattended && job.scenario && job.plan && <button className="primary" disabled={busy} onClick={resumeUnattended}>Resume automatically</button>}
-              {job.plan && <PlanCard job={job} idea={job.prompt} onStills={stills} onReference={attachReference} disabled={busy || blocked} notes={notes} />}
+              {job.plan && <PlanCard job={job} idea={job.prompt} onStills={stills} onReference={attachReference} onCharacter={me?.role === 'owner' ? (characterId) =>
+                post('/api/reference-frame', { scenario: job.scenario, sessionId: job.id, characterId }) : null} disabled={busy || blocked} notes={notes} />}
               {job.plan && supportsBabyBallPreview(job) && <BabyBallPreviewCard />}
               {job.plan && <FramesBlock job={job} plan={job.plan?.plan || job.plan} onStills={stills} onRegen={regen} onRender={render} onApproveFrames={approveFrames} busy={busy || me?.rendersLeft === 0} blocked={blocked} anyRunning={anyRunning} rendersLeft={me?.rendersLeft ?? null} />}
               {job.plan && <RenderTimer job={job} plan={job.plan?.plan || job.plan} />}
@@ -792,7 +832,7 @@ export default function App() {
                   {attempt.lines?.length > 0 && <pre className="log">{attempt.lines.join('\n')}</pre>}
                 </section>;
               })}</details>}
-              {job.plan && <RenderLive job={job} plan={job.plan?.plan || job.plan} sessions={sessions} onRetakeMotion={retakeMotion} busy={busy || me?.rendersLeft === 0} />}
+              {job.plan && <RenderLive job={job} plan={job.plan?.plan || job.plan} sessions={sessions} onRetakeMotion={retakeMotion} onSequenceTake={sequenceTake} onContinue={continueSequence} busy={busy || me?.rendersLeft === 0} />}
               {job.status === 'done' && job.kind === 'draft' && !job.plan && <p className="muted">Plan saved: {job.scenario}</p>}
               {job.previousVideo && job.previousVideo !== job.video && <details className="card"><summary>Previous export</summary><Player src={'/media?p=' + encodeURIComponent(job.previousVideo)} /></details>}
               {job.video && <ExportReview key={job.video} job={job} review={review.video === job.video ? review : { status: 'pending' }} weak={weak} notes={notes} busy={busy || refining} renderDisabled={me?.rendersLeft === 0} onRetake={retakeShot} onRepair={prepareRepair} onCompare={me?.canCompare && sessions.filter((p) => p.hasVideo).length > 1 ? () => setCompare(true) : undefined} />}
@@ -876,6 +916,10 @@ export default function App() {
           <button className="link" onClick={() => setMode('simple')}>Close advanced settings</button>
           <label>Length <select value={seconds} onChange={(e) => { invalidateRefinement(); setSeconds(+e.target.value); }}>{[10, 20, 30, 45, 60].filter((n) => n <= maxSeconds).map((n) => <option key={n} value={n}>{n}s</option>)}</select></label>
           <label>Shape <select value={orientation} onChange={(e) => { invalidateRefinement(); setOrientation(e.target.value); }}><option value="vertical">Vertical 9:16</option><option value="wide">Wide 16:9</option></select></label>
+          <label title="Applies to the first frame of each later shot in attended review. Custom shot references take priority.">Shot continuity <select value={continuityAnchor} onChange={(event) => setContinuityAnchor(event.target.value)}>
+            <option value="identity">Match the first approved frame</option>
+            <option value="previous-end">Continue the previous shot's pose</option>
+          </select></label>
           <label title="Standard is the fast default on this Mac. High renders at 704x1280, like the clips you scored, and takes noticeably longer per clip.">Quality <select value={quality} onChange={(e) => setQuality(e.target.value)}><option value="standard">Standard (fast)</option><option value="high">High (slower)</option></select></label>
           <label>Sound <select value={audio} onChange={(e) => setAudio(e.target.value)}><option value="asmr">ASMR (no voice)</option><option value="voiced">Voiced</option><option value="auto">Auto</option></select></label>
           <label title="Runs plan, first frames and the automatic checks by itself, and stops if any check fails."><input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} /> Auto mode</label>

@@ -12,6 +12,11 @@ export function narrationWordBand(seconds) {
 
 const DANGLING_TAIL = new Set(['the', 'a', 'an', 'to', 'and', 'of', 'with', 'for', 'as', 'in', 'on', 'at', 'by', 'from', 'that', 'while', 'into', 'toward', 'towards', 'over', 'across', 'its', 'their', 'his', 'her']);
 
+export function hasDanglingTail(text) {
+  const last = String(text || '').toLowerCase().match(/([a-z]+)[^a-z]*$/);
+  return Boolean(last && DANGLING_TAIL.has(last[1]));
+}
+
 // Fill a missing or static scene-state action from the shot's own motion prompt. Local models often write
 // "stands tall" as the action or repeat the same text for before and after; the motion prompt already
 // holds a concrete movement, so reuse it instead of discarding the whole plan.
@@ -62,6 +67,28 @@ export function reconcileSceneStateBefore(sceneState, previousAfter) {
   if (normalize(sceneState.before) === normalize(previousAfter)) return false;
   sceneState.before = previousAfter;
   return true;
+}
+
+export function lockRequestedEnding(shot, requested) {
+  const ending = requested.trim().replace(/[.!?؟]+$/u, '');
+  if (!ending) return;
+  const sentence = `${ending}.`;
+  const instruction = `Final physical moment: ${sentence}`;
+  const state = shot.sceneState;
+  let motion = shot.motionPrompt;
+  if (state?.after && state.after !== sentence) {
+    const oldEnd = state.after.trim().replace(/[.!?؟]+$/u, '');
+    motion = motion.replace(`Visible end state: ${oldEnd}.`, '').trim();
+  }
+  shot.motionPrompt = motion.includes(instruction) ? motion : `${instruction} ${motion}`.trim();
+  if (state) {
+    const action = String(state.action || '').trim();
+    if (!action.toLowerCase().includes(ending.toLowerCase())) {
+      const sequence = action ? `${action.replace(/[.!?؟]+$/u, '')}. ${sentence}` : sentence;
+      state.action = sequence.length <= 1000 ? sequence : sentence;
+    }
+    state.after = sentence;
+  }
 }
 
 export function applyVisualIdentityLock(prompt, protagonist, visualBible) {

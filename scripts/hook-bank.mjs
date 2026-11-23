@@ -30,3 +30,12 @@ export function hookGuidance(topic,{foodProcess=false,count=3}={}){
   const lines=picks.map(p=>`${p.mechanism}: "${p.spoken}"`).join('; ');
   return `Hook patterns to adapt to this exact subject (do not copy the braces or the wording): ${lines}. The first frame must work muted, show one visible action, and promise only what the film delivers.`;
 }
+
+/** Turn a selected pattern into a short, literal opening title for the editor. */
+export function openingHookOverlay(selection, candidates) {
+  const pattern = candidates.find(({ id }) => id === selection?.hookPatternId);
+  const text = typeof selection?.hookText === 'string' ? selection.hookText.trim().replace(/\s+/g, ' ') : '';
+  if (!pattern || text.length < 4 || text.length > 48 ||
+      /[{}\\\d$€£¥]|\b(?:world['’]s|guaranteed|best ever)\b/i.test(text)) return null;
+  return { patternId: pattern.id, text, startSeconds: 0, endSeconds: 1.5 };
+}

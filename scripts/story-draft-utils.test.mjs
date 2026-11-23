@@ -1,6 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {applyVisualIdentityLock, collectPromptChanges, fitOutlineIdeas, hasSupportedAsmrCue, narrationWordBand, reconcileSceneStateBefore, shortenNarration, firstClause, repairSceneState} from './story-draft-utils.mjs';
+import {applyVisualIdentityLock, collectPromptChanges, fitOutlineIdeas, hasSupportedAsmrCue, lockRequestedEnding, narrationWordBand, reconcileSceneStateBefore, shortenNarration, firstClause, repairSceneState} from './story-draft-utils.mjs';
+
+test('the requested ending survives a matching subject and an incomplete generated payoff', () => {
+  const unlock = 'The robot turns the brass key in the greenhouse latch.';
+  const ending = 'The robot opens the greenhouse door and steps inside.';
+  const shot = {
+    motionPrompt: `${unlock} Visible end state: The latch is now unlocked. Keep the robot visible.`,
+    sceneState: { before: 'The robot holds the brass key.', action: unlock, after: 'The latch is now unlocked.' },
+  };
+  lockRequestedEnding(shot, ending);
+  assert.ok(shot.motionPrompt.startsWith(`Final physical moment: ${ending}`));
+  assert.ok(shot.motionPrompt.includes(unlock));
+  assert.doesNotMatch(shot.motionPrompt, /Visible end state: The latch is now unlocked/);
+  assert.equal(shot.sceneState.before, 'The robot holds the brass key.');
+  assert.equal(shot.sceneState.after, ending);
+  assert.equal(shot.sceneState.action, `${unlock} ${ending}`);
+  const once = structuredClone(shot);
+  lockRequestedEnding(shot, ending);
+  assert.deepEqual(shot, once);
+});
 
 test('extra Gemma outline ideas are capped without another model call', () => {
   const original={ideas:Array.from({length:7},(_,i)=>({title:`Idea ${i+1}`,angle:'filmable'})),title:'Chicken'};

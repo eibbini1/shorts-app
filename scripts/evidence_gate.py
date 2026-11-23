@@ -8,6 +8,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 FORMATS = json.loads((ROOT / 'data/format-rotation.json').read_text())['formats']
+NON_FOOD_FORMATS = {'single-subject-story'} | {
+    pack['id'] for pack in json.loads((ROOT / 'data/topic-packs.json').read_text())['packs']
+    if pack['id'] != 'realistic-hand-heavy-cooking'
+}
 MONEY = re.compile(r'(?<!\w)(?:\$\s?\d[\d,]*(?:\.\d{1,2})?|€\s?\d[\d,]*(?:\.\d{1,2})?|(?:\d[\d,]*\s?(?:dollars?|euros?)))', re.I)
 NUM = r'(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|and|a)'
 WORD_MONEY = re.compile(rf'\b{NUM}(?:[\s-]+{NUM})*[\s-]+(?:dollars?|euros?|bucks)\b', re.I)
@@ -23,6 +27,9 @@ def visible_text(data):
     parts = [plan.get('title', ''), plan.get('hook', ''), plan.get('payoff', '')]
     parts += [shot.get('narration', '') for shot in plan.get('shots', [])]
     parts += [str(x) for x in data.get('onScreenText', [])]
+    overlay = data.get('hookOverlay')
+    if isinstance(overlay, dict):
+        parts.append(str(overlay.get('text', '')))
     parts += [str(x) for x in data.get('priceLevels', []) if isinstance(x, str)]
     return ' '.join(parts)
 
@@ -106,7 +113,7 @@ def check(data, prices, history):
     if not signature or any(not signature.get(k) for k in ('format', 'set', 'hookPattern')):
         notes.append('creative signature missing; variety cannot be verified for this draft')
     else:
-        if signature['format'] not in FORMATS:
+        if signature['format'] not in FORMATS and signature['format'] not in NON_FOOD_FORMATS:
             notes.append(f"format is outside the four-format rotation: {signature['format']}")
         if not films:
             notes.append('published-signatures history is empty; populate it from actual uploads before release')
@@ -115,7 +122,7 @@ def check(data, prices, history):
             if all(signature[k].strip().lower() == previous.get(k, '').strip().lower() for k in ('format', 'set', 'hookPattern')):
                 problems.append('same format, set and hook pattern as the previous published film')
             next_format = FORMATS[(FORMATS.index(previous.get('format')) + 1) % len(FORMATS)] if previous.get('format') in FORMATS else None
-            if next_format and signature['format'] != next_format:
+            if next_format and signature['format'] in FORMATS and signature['format'] != next_format:
                 notes.append(f'rotation suggestion after {previous.get("format")}: {next_format}')
     return problems, notes, sorted(set(sources))
 

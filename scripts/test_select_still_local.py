@@ -51,6 +51,22 @@ class StillSelectorTests(unittest.TestCase):
         self.assertEqual(chosen, 2)
         self.assertEqual(review['status'], 'review-required')
 
+    def test_mixed_picture_checks_offer_only_survivors_for_manual_review(self):
+        images = [Path(f'{i}.png') for i in range(3)]
+        with patch('select_still_local.check_still', side_effect=['too dark', None, 'blank']), \
+                patch('select_still_local.urllib.request.urlopen') as vision:
+            chosen, review = select(images, 'woman in a red dress at night')
+        self.assertEqual(chosen, 2)
+        self.assertEqual(review['status'], 'unverified')
+        self.assertEqual(review['rejectedCandidates'], {1: 'too dark', 3: 'blank'})
+        vision.assert_not_called()
+
+    def test_all_bad_pictures_require_regeneration(self):
+        images = [Path(f'{i}.png') for i in range(3)]
+        with patch('select_still_local.check_still', return_value='blank'):
+            with self.assertRaisesRegex(ValueError, 'All three still candidates'):
+                select(images, 'woman in a red dress at night')
+
     def test_empty_vision_reply_is_provisional_and_does_not_retry(self):
         response = io.BytesIO(json.dumps({'message': {'content': ''}, 'done_reason': 'length'}).encode())
         with tempfile.TemporaryDirectory() as folder:

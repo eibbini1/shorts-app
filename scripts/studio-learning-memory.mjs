@@ -22,10 +22,11 @@ export function buildLearningContext(rows, { user, look, limit = 4 } = {}) {
     .sort((a, b) => b.count - a.count).slice(0, limit);
 
   const humanNotes = relevant.filter((row) =>
-    (row.type === 'feedback' && row.note) || (row.type === 'checkpoint-review' && row.notes))
+    (row.type === 'feedback' && row.note) || (row.type === 'checkpoint-review' && row.notes) ||
+    (row.type === 'motion-take-review' && row.clipSha256 && row.notes))
     .slice(-limit).map((row) => ({
-      source: row.type === 'feedback' ? 'creator-rating' : 'shot-review',
-      rating: row.rating || null,
+      source: row.type === 'feedback' ? 'creator-rating' : row.type === 'motion-take-review' ? 'motion-review' : 'shot-review',
+      rating: row.rating || row.outcome || null,
       note: clean(row.note || row.notes),
     }));
   const feedbackRows = relevant.filter((row) => row.type === 'feedback');
@@ -38,7 +39,7 @@ export function buildLearningContext(rows, { user, look, limit = 4 } = {}) {
 
   return { version: 1, look: look || 'all', repeatedFailures, humanNotes,
     ratings, machineFindings,
-    evidenceCount: relevant.filter((row) => ['gate-event', 'feedback', 'checkpoint-review', 'machine-review'].includes(row.type)).length,
+    evidenceCount: relevant.filter((row) => ['gate-event', 'feedback', 'checkpoint-review', 'motion-take-review', 'machine-review'].includes(row.type)).length,
     guidanceCount: repeatedFailures.length + humanNotes.length + machineFindings.length + (feedbackRows.length ? 1 : 0) };
 }
 

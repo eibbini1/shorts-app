@@ -288,6 +288,23 @@ def clip(work, index, part, shot, seed, reference, width, height, model, gemma, 
     return target
 
 
+def matches_approved_take(take, scenario_hash, reference_hash, render_settings):
+    return (take is not None
+            and take.get('scenarioSha256') == scenario_hash
+            and take.get('approvedReferenceSha256') == reference_hash
+            and take.get('renderSettings') == render_settings)
+
+
+def select_motion_segment(work, index, part, shot, seed, reference, width, height, model, gemma,
+                          progress, cache_only=False, expected=None):
+    path = clip(work, index, part, shot, seed, reference, width, height, model, gemma, progress,
+                cache_only=cache_only or expected is not None)
+    segment = {'clip': str(path.relative_to(work)), 'sha256': file_hash(path), 'seed': seed}
+    if expected is not None and segment != expected:
+        raise RuntimeError(f'Shot {index + 1}: selected motion cache no longer matches the reviewed take.')
+    return path, segment
+
+
 def voice_gaps(wav, limit=1.5):
     out = subprocess.run(['ffmpeg', '-hide_banner', '-i', str(wav), '-af', f'silencedetect=noise=-35dB:d={limit}', '-f', 'null', '-'],
                          capture_output=True, text=True).stderr
@@ -409,6 +426,11 @@ def main():
     work.joinpath('refs').mkdir(parents=True, exist_ok=True)
     work.joinpath('motion').mkdir(exist_ok=True)
     references = []
+    take_report = os.environ.get('SHORTS_STUDIO_TAKE_REPORT')
+    take_shot = int(os.environ.get('SHORTS_STUDIO_TAKE_SHOT', '0'))
+    take_index = int(os.environ.get('SHORTS_STUDIO_TAKE_INDEX', '0'))
+    motion_rows = []
+    committed_takes = motion_takes.load(work)
     frame_review_statuses = []
     segments = []
     previous = None
@@ -476,7 +498,7 @@ def main():
         checks = visual_checks[index] or {}
         candidate_paths = []
         candidate_reviews = {}
-        selected_index = 1
+        partial_batch = False
         reference = pinned[index] if pinned else None
         anchor = muse if muse and (muse_shots is None or index + 1 in muse_shots) else story_anchor
         try:
@@ -495,9 +517,13 @@ def main():
                 base_seed = 1200 + index + 7919 * int(bumps.get(str(index), 0))
                 candidates = [still(work, index, shot, base_seed + variation * 100,
                                     source, width, height, args.cache_only) for variation in range(3)]
-                candidate_paths = candidates
                 selected, review = select_still_local(candidates, shot['imagePrompt'], checks=checks)
-                selected_index = selected
+                rejected = review.get('rejectedCandidates', {})
+                candidate_paths = [path for number, path in enumerate(candidates, 1) if number not in rejected]
+                partial_batch = bool(rejected)
+                if rejected:
+                    for number, reason in rejected.items():
+                        print(f'Shot {index + 1}, candidate {number} excluded: {reason}', flush=True)
                 reference = candidates[selected - 1]
                 for row in review.get('candidates', []):
                     candidate_reviews[candidates[row['index'] - 1]] = {
@@ -576,6 +602,8 @@ def main():
             reference, accepted_prompt = review_still_with_retries(
                 reference, shot['imagePrompt'], subject, required, base_seed,
                 review_candidate, generate_repair, save_repair,
+                attempts=1 if partial_batch and args.stills_only and args.allow_pending_visual_review
+                else STILL_REVIEW_ATTEMPTS,
                 allow_pending_review=args.allow_pending_visual_review)
         except RuntimeError as error:
             persist_pending(reference)
@@ -592,26 +620,67 @@ def main():
         if args.stills_only:
             print(f'First frame ready for shot {index + 1}: {reference.name}', flush=True)
             continue
+        approved_reference = reference
         if args.prep_stills:
             reference = prep_still(work, reference)
         parts = math.ceil(shot['seconds'] / 5)
         total_frames = shot['seconds'] * FPS
         frame_counts = [total_frames // parts + (1 if part < total_frames % parts else 0) for part in range(parts)]
+        take = take_index if take_shot == index + 1 else motion_takes.state(work, index)['current']
+        committed = committed_takes.get(str(index), {}).get('completed', {}).get(str(take))
+        scenario_hash = file_hash(scenario)
+        reference_hash = file_hash(approved_reference)
+        render_settings = {'quality': render_quality.pick(settings), 'width': width, 'height': height,
+                           'frames': render_quality.FRAMES, 'fps': FPS,
+                           'editor': 'artcraft' if args.prep_stills else 'ffmpeg', 'model': model, 'gemma': gemma}
+        if take_shot and take_shot != index + 1 and committed and committed.get('renderSettings') != render_settings:
+            raise RuntimeError(f'Shot {index + 1}: render settings changed. Render the full video before retaking a shot.')
+        selected_segments = None
+        if take_shot != index + 1 and matches_approved_take(committed, scenario_hash, reference_hash, render_settings):
+            selected_segments = committed.get('segments')
+            if (not isinstance(selected_segments, list) or len(selected_segments) != parts
+                    or not all(isinstance(segment, dict) for segment in selected_segments)):
+                raise RuntimeError(f'Shot {index + 1}: incomplete reviewed take.')
+        shot_segments = []
+        started_take = time.monotonic()
+        technical_flags = []
+        technical_screen = []
         for part, frame_count in enumerate(frame_counts):
             if part:
                 anchor = work / 'motion' / f'shot-{index:02d}-part-{part - 1:02d}-anchor.png'
                 run('ffmpeg', '-y', '-v', 'error', '-sseof', '-0.05', '-i', previous_clip,
                     '-frames:v', 1, anchor)
                 reference = anchor
-            previous_clip = clip(work, index, part, shot, motion_takes.seed(work, index, part),
-                                 reference, width, height, model, gemma, progress, args.cache_only)
-            if gate and index == 0 and part == 0:
+            seed = motion_takes.seed(work, index, part, take=take)
+            previous_clip, segment = select_motion_segment(
+                work, index, part, shot, seed, reference, width, height, model, gemma, progress,
+                cache_only=args.cache_only or bool(take_shot and take_shot != index + 1),
+                expected=selected_segments[part] if selected_segments is not None else None)
+            shot_segments.append(segment)
+            screen_first = gate and index == 0 and part == 0
+            problem = None
+            if screen_first or (take_report and take_shot == index + 1):
                 problem = check_clip(previous_clip)
+                technical_screen.append({'part': part + 1, 'clipSha256': segment['sha256'], 'reason': problem})
+                if problem:
+                    technical_flags.append(problem)
+            if screen_first:
                 if problem:
                     parser.error(f'First clip failed: {problem}. Stopped before the remaining clips (use --allow-bad-first to override)')
                 print('First clip check passed', flush=True)
             segments.append({'file': str(previous_clip), 'seconds': frame_count / FPS})
         previous = extract_end_frame(work, index, previous_clip) if args.chain_images else reference
+        if take_report:
+            motion_rows.append({
+                'schemaVersion': 1, 'shot': index + 1, 'take': take, 'parts': parts,
+                'scenarioSha256': scenario_hash, 'approvedReferenceSha256': reference_hash,
+                **({'technicalFlags': technical_flags, 'elapsedSeconds': round(time.monotonic() - started_take, 1)}
+                   if take_shot == index + 1 else {}),
+                'clip': shot_segments[-1]['clip'], 'clipSha256': shot_segments[-1]['sha256'], 'segments': shot_segments,
+                'renderSettings': render_settings,
+                **({'technicalScreen': technical_screen} if technical_screen else {}),
+                **({'endFrame': str(previous.relative_to(work)), 'endFrameSha256': file_hash(previous)} if args.chain_images else {}),
+            })
     if args.stills_only:
         review_required = any(status != 'passed' for status in frame_review_statuses)
         if not review_required and args.shot_only is None:
@@ -622,6 +691,8 @@ def main():
     manifest = {'aspect': aspect, 'shots': segments,
                 'soundtrack': 'soundtrack.wav',
                 'voice': {'file': 'voice-timeline.wav', 'startSeconds': 0}}
+    if take_report:
+        Path(take_report).write_text(json.dumps(motion_rows), encoding='utf-8')
     manifest_path = work / 'film-manifest.json'
     manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
     print(progress(), flush=True)

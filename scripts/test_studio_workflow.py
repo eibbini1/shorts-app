@@ -8,11 +8,13 @@ def run_fixture():
     for folder in ['scripts','outputs','storage/studio-sessions','storage/studio-learning','drafts/generated','bin']:
         (root/folder).mkdir(parents=True)
     shutil.copy('scripts/studio-server.mjs',root/'scripts')
+    shutil.copy('scripts/studio-motion-state.mjs',root/'scripts')
     shutil.copy('scripts/motion_takes.py',root/'scripts')
     shutil.copy('scripts/studio-session-utils.mjs',root/'scripts')
     shutil.copy('scripts/studio-export-review.mjs',root/'scripts')
     shutil.copy('scripts/studio-ideas.mjs',root/'scripts')
     shutil.copy('scripts/studio-refine-idea.mjs',root/'scripts')
+    shutil.copy('scripts/story-draft-utils.mjs',root/'scripts')
     shutil.copy('scripts/studio-learning-signals.mjs',root/'scripts')
     shutil.copy('scripts/studio-learning-memory.mjs',root/'scripts')
     shutil.copy('scripts/story-action-gate.mjs',root/'scripts')
@@ -28,6 +30,12 @@ def run_fixture():
     (root/scenario).write_text('{}')
     session='1794900000000'
     (root/'storage/studio-sessions'/f'{session}.json').write_text(json.dumps(dict(id=session, user='creator-a', name='fixture', scenario=scenario, status='done', kind='stills', lines=[], steps=[])))
+    character_session='1794900000011'
+    character_scenario='drafts/generated/character-target.local-scenario.json'
+    (root/character_scenario).write_text(json.dumps({'plan':{'shots':[{},{}]}}))
+    (root/'storage/studio-sessions'/f'{character_session}.json').write_text(json.dumps(dict(
+        id=character_session, user='creator-a', name='reuse a character', scenario=character_scenario,
+        status='done', kind='draft', lines=[], steps=[])))
     unattended_session='1794900000009'
     (root/'storage/studio-sessions'/f'{unattended_session}.json').write_text(json.dumps(dict(
         id=unattended_session, user='creator-a', name='unattended fixture',
@@ -52,7 +60,10 @@ def run_fixture():
         'hook':'A golden halloumi bite catches the light','mustShow':legacy_prompt,
         'obstacle':'The halloumi risks sticking in the pan.','turn':'The chef lowers the heat and bastes it with garlic butter.',
         'ending':'A crisp bite dips into cool herbed yogurt.','audio':'voiced','seconds':60,'orientation':'vertical'}))
-    (root/'storage/studio-users.json').write_text(json.dumps({'users':[{'name':n,'token':n,'role':'creator','dailyRenders':8} for n in ('creator-a','creator-b')]}))
+    (root/'storage/studio-users.json').write_text(json.dumps({'users':[
+        *[{'name':n,'token':n,'role':'creator','dailyRenders':10} for n in ('creator-a','creator-b')],
+        {'name':'owner','token':'reserved-creator','role':'creator'},
+    ]}))
     seeded_learning=[
         {'type':'run','session':'seed-a','user':'creator-a','look':'food'},
         {'type':'feedback','session':'seed-a','user':'creator-a','look':'food','rating':'down','note':'Keep the same tomato shape between shots.','videoSha256':'fixture-video-hash'},
@@ -199,6 +210,7 @@ def run_fixture():
             except ConnectionRefusedError: time.sleep(.02)
         assert req('/','%ZZ')[0]==401
         assert req('/','fixture-owner')[0]==200
+        assert req('/api/me','reserved-creator')[0]==401
         assert req('/api/me','fixture-owner',origin=tailnet_origin)[0]==200
         assert req('/api/me',origin=tailnet_origin)[0]==401
         assert req('/api/me','fixture-owner',origin='https://untrusted.example')[0]==403
@@ -335,6 +347,7 @@ def run_fixture():
         pixels=b''.join(b'\0'+bytes([70,120,180])*256 for _ in range(256))
         png=(b'\x89PNG\r\n\x1a\n'+png_chunk(b'IHDR',struct.pack('!IIBBBBB',256,256,8,2,0,0,0))
             +png_chunk(b'IDAT',zlib.compress(pixels))+png_chunk(b'IEND',b''))
+        (root/'fixture.png').write_bytes(png)
         data_url='data:image/png;base64,'+base64.b64encode(png).decode()
         reference_payload={'scenario':scenario,'sessionId':session,'shot':1,'dataUrl':data_url}
         assert req('/api/reference-frame','creator-b',reference_payload)[0]==403
@@ -348,7 +361,38 @@ def run_fixture():
         assert req('/api/reference-frame','creator-a',{**reference_payload,'shot':3})[0]==400
         assert req('/api/reference-frame','creator-a',{**reference_payload,'dataUrl':'data:image/svg+xml;base64,PHN2Zy8+'})[0]==400
         (root/'scripts/pin-fixture.py').write_text("import hashlib,json,sys\nfrom pathlib import Path\nscenario=Path(sys.argv[1])\nwork=Path('storage/any-local')/scenario.stem\nframes=[]\nfor i in range(2):\n    file=work/'refs'/f'shot-{i:02d}-aa.png'\n    file.write_bytes(bytes([i]))\n    frames.append(dict(shot=i+1,file=str(file.relative_to(work)),sha256=hashlib.sha256(file.read_bytes()).hexdigest()))\ndata=dict(schemaVersion=1,scenarioSha256=hashlib.sha256(scenario.read_bytes()).hexdigest(),frames=frames)\nrefs=work/'references.json'\nif refs.is_file(): data['referenceManifestSha256']=hashlib.sha256(refs.read_bytes()).hexdigest()\n(work/'first-frames.json').write_text(json.dumps(data))\n")
-        (root/'scripts/pending-fixture.py').write_text("import hashlib,json,sys\nfrom pathlib import Path\nscenario=Path(sys.argv[1])\nshot=int(sys.argv[2])\nwork=Path('storage/any-local')/scenario.stem\nframes=[]\ni=shot-1\ncandidates=[]\nfor number in range(1,4):\n    file=work/'refs'/f'shot-{i:02d}-{number:02x}.png'\n    file.write_bytes(f'{i}-{number}'.encode())\n    candidates.append(dict(candidate=number,file=str(file.relative_to(work)),sha256=hashlib.sha256(file.read_bytes()).hexdigest(),status='review-required' if number==1 else 'passed',reason='ingredient mismatch' if number==1 else ''))\nframes.append(dict(shot=shot,selectedFile=candidates[0]['file'],candidates=candidates))\ndata=dict(schemaVersion=1,scenarioSha256=hashlib.sha256(scenario.read_bytes()).hexdigest(),frames=frames)\nrefs=work/'references.json'\nif refs.is_file(): data['referenceManifestSha256']=hashlib.sha256(refs.read_bytes()).hexdigest()\n(work/'pending-first-frames.json').write_text(json.dumps(data))\n")
+        (root/'scripts/pending-fixture.py').write_text("import hashlib,json,sys\nfrom pathlib import Path\nscenario=Path(sys.argv[1])\nshot=int(sys.argv[2])\nwork=Path('storage/any-local')/scenario.stem\nframes=[]\ni=shot-1\ncandidates=[]\nfor number in range(1,4):\n    file=work/'refs'/f'shot-{i:02d}-{number:02x}.png'\n    file.write_bytes(Path('fixture.png').read_bytes())\n    candidates.append(dict(candidate=number,file=str(file.relative_to(work)),sha256=hashlib.sha256(file.read_bytes()).hexdigest(),status='review-required' if number==1 else 'passed',reason='ingredient mismatch' if number==1 else ''))\nframes.append(dict(shot=shot,selectedFile=candidates[0]['file'],candidates=candidates))\ndata=dict(schemaVersion=1,scenarioSha256=hashlib.sha256(scenario.read_bytes()).hexdigest(),frames=frames)\nrefs=work/'references.json'\nif refs.is_file(): data['referenceManifestSha256']=hashlib.sha256(refs.read_bytes()).hexdigest()\n(work/'pending-first-frames.json').write_text(json.dumps(data))\n")
+        (root/'scripts/take-report-fixture.py').write_text("""import hashlib,json,os,sys
+from pathlib import Path
+scenario=Path(sys.argv[1]); work=Path('storage/any-local')/scenario.stem
+directory=work/'motion'; directory.mkdir(parents=True,exist_ok=True)
+state_file=directory/'takes.json'
+state=json.loads(state_file.read_text()) if state_file.exists() else {}
+sha=lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
+def row(shot, ref):
+    take=int(os.environ['SHORTS_STUDIO_TAKE_INDEX']) if os.environ.get('SHORTS_STUDIO_TAKE_SHOT')==str(shot) else state.get(str(shot-1),{}).get('current',0)
+    clip=directory/f'fixture-shot-{shot}-{take}.mp4'
+    committed=state.get(str(shot-1),{}).get('completed',{}).get(str(take))
+    if len(sys.argv)==2 and not os.environ.get('SHORTS_STUDIO_TAKE_SHOT') and committed:
+        if not clip.exists() or sha(clip)!=committed['clipSha256']: sys.exit(4)
+        if shot==2 and Path('substitute-selected-clip').exists():
+            clip=directory/'substitute.mp4'
+    clip.write_bytes(f'clip-{shot}-{take}'.encode())
+    end=directory/f'fixture-shot-{shot}-{take}-end.png'; end.write_bytes(f'end-{shot}-{take}'.encode())
+    return {'schemaVersion':1,'scenarioSha256':sha(scenario),'shot':shot,'take':take,'parts':1,
+      'approvedReferenceSha256':sha(ref),'clip':str(clip.relative_to(work)), 'clipSha256':sha(clip),
+      'renderSettings':{'quality':os.environ.get('SHORTS_RENDER_QUALITY','standard'),'width':384,'height':640,
+                        'frames':97,'fps':24,'editor':'ffmpeg','model':None,'gemma':None},
+      'segments':[dict(clip=str(clip.relative_to(work)),sha256=sha(clip),seed=2200+(shot-1)*10+take*7919)],
+      'endFrame':str(end.relative_to(work)),'endFrameSha256':sha(end),'technicalFlags':[],
+      'technicalScreen':[dict(part=1,clipSha256=sha(clip),reason=None)]}
+if len(sys.argv)>2:
+    rows=[row(int(sys.argv[2]),Path(sys.argv[3]))]
+else:
+    pins=json.loads((work/'first-frames.json').read_text())
+    rows=[row(frame['shot'],work/frame['file']) for frame in pins['frames']]
+Path(os.environ['SHORTS_STUDIO_TAKE_REPORT']).write_text(json.dumps(rows))
+""")
         (root/'scripts/make-local-video.sh').write_text("""set -e
 echo "Fixture args: $*"
 if [ "$3" = '--stills-only' ]; then
@@ -358,10 +402,20 @@ if [ "$3" = '--stills-only' ]; then
       if [ "$5" = '--allow-pending-visual-review' ]; then python3 scripts/pending-fixture.py "$2" "$7"; else python3 scripts/pin-fixture.py "$2"; fi
       exit 0
     fi
-    cp cached.mp4 outputs/fresh-approved.mp4
-    echo 'Studio verified export: outputs/fresh-approved.mp4'
+    if [ -n "${SHORTS_STUDIO_TAKE_REPORT:-}" ]; then python3 scripts/take-report-fixture.py "$2"; fi
+    if [ -f take-fail ]; then echo 'Technical QA failed: fixture'; exit 5; fi
+    if [ -f take-hold ]; then sleep 10; fi
+    sleep 0.12
+    if [ -f substitute-selected-clip ]; then
+      output="outputs/substitute-${SHORTS_STUDIO_TAKE_REPORT##*/}.mp4"
+      printf 'replacement export' > "$output"
+    else
+      output=outputs/fresh-approved.mp4
+      cp cached.mp4 "$output"
+    fi
+    echo "Studio verified export: $output"
     """)
-        (root/'scripts/render-studio-shot.py').write_text("""import argparse,hashlib,json
+        (root/'scripts/render-studio-shot.py').write_text("""import argparse, subprocess, sys, time
 from pathlib import Path
 p=argparse.ArgumentParser()
 p.add_argument('--scenario',required=True)
@@ -370,17 +424,13 @@ p.add_argument('--shot',required=True,type=int)
 p.add_argument('--reference',required=True)
 p.add_argument('--reference-sha256',required=True)
 p.add_argument('--editor',required=True)
+p.add_argument('--cache-only',action='store_true')
+p.add_argument('--technical-screen',action='store_true')
 a=p.parse_args()
-scenario=Path(a.scenario); work=Path('storage/any-local')/scenario.stem
-motion=work/'motion'; motion.mkdir(parents=True,exist_ok=True)
-clip=motion/f'fixture-shot-{a.shot}.mp4'; clip.write_bytes(f'clip-{a.shot}'.encode())
-end=motion/f'fixture-shot-{a.shot}-end.png'; end.write_bytes(f'end-{a.shot}'.encode())
-sha=lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
-result={'schemaVersion':1,'scenarioSha256':sha(scenario),'shot':a.shot,
- 'approvedReferenceSha256':sha(Path(a.reference)),'clip':str(clip.relative_to(work)),
- 'clipSha256':sha(clip),'endFrame':str(end.relative_to(work)),'endFrameSha256':sha(end)}
-directory=work/'sequence'; directory.mkdir(parents=True,exist_ok=True)
-(directory/f'shot-{a.shot:02d}.json').write_text(json.dumps(result))
+print('Cache only:',a.cache_only,'Technical screen:',a.technical_screen,flush=True)
+if Path('sequence-take-fail').exists(): sys.exit(1)
+if Path('sequence-take-hold').exists(): time.sleep(10)
+subprocess.run([sys.executable,'scripts/take-report-fixture.py',a.scenario,str(a.shot),a.reference],check=True)
 """)
         (root/'cached.mp4').write_bytes(bytes(256))
         payload={'scenario':scenario,'sessionId':session}
@@ -408,7 +458,97 @@ directory=work/'sequence'; directory.mkdir(parents=True,exist_ok=True)
         assert approved_status==200 and approved_frames['ok'] is True and approved_frames['sequential'] is True,approved_frames
         motion=finish(session)
         assert motion['kind']=='sequence-motion' and motion['status']=='done',motion
-        motion_data=json.loads((work.parent/'sequence/shot-01.json').read_text())
+        motion_data=json.loads((work.parent/'motion/takes.json').read_text())['0']['completed']['0']
+        assert req('/api/character-references','creator-a')[0]==403
+        character_body={'sessionId':session,'shot':1,'name':'Copper Kite'}
+        character_status, saved_character=req('/api/character-references','fixture-owner',character_body)
+        assert character_status==201,saved_character
+        assert req('/api/character-references','fixture-owner',character_body)[0]==409
+        character=saved_character['character']
+        assert req('/api/character-references','fixture-owner')[1]['characters']==[character]
+        character_project={'scenario':character_scenario,'sessionId':character_session}
+        assert req('/api/reference-frame','creator-a',{**character_project,'characterId':character['id']})[0]==403
+        assert req('/api/reference-frame','fixture-owner',{**character_project,'shot':2,'dataUrl':data_url})[0]==201
+        reuse_status,reused=req('/api/reference-frame','fixture-owner',{**character_project,'characterId':character['id']})
+        assert reuse_status==201 and len(reused['references'])==2,reused
+        character_manifest=root/'storage/any-local/character-target.local-scenario/references.json'
+        character_rows=json.loads(character_manifest.read_text())['references']
+        assert character_rows[0]['characterId']==character['id'] and character_rows[0]['sha256']==character['sha256']
+        assert 'characterId' not in character_rows[1]
+        review_url='/api/sequence/motion-review'
+        assert req(review_url+'?sessionId='+session,'creator-b')[0]==404
+        review_status, motion_review=req(review_url+'?sessionId='+session,'creator-a')
+        assert review_status==200 and motion_review['segments'][0]['sha256']==motion_data['clipSha256'],motion_review
+        (root/'sequence-take-fail').touch()
+        assert req('/api/sequence/retry','creator-a',{**payload,'motionTake':True})[0]==202
+        optional_failure=finish(session)
+        assert optional_failure['status']=='done' and optional_failure['sequence']['takeError'],optional_failure
+        (root/'sequence-take-fail').unlink()
+        (root/'sequence-take-hold').touch()
+        assert req('/api/sequence/retry','creator-a',{**payload,'motionTake':True})[0]==202
+        assert req('/api/cancel','creator-a',{'test':True})[1]['status']=='stopping'
+        optional_cancel=finish(session)
+        assert optional_cancel['status']=='done' and optional_cancel['sequence']['takeError'],optional_cancel
+        (root/'sequence-take-hold').unlink()
+        (root/'sequence-take-hold').touch()
+        assert req('/api/sequence/retry','creator-a',{**payload,'motionTake':True})[0]==202
+        for _ in range(100):
+            running_job=req('/api/sessions/'+session,'creator-a')[1]
+            if any('Technical screen:' in line for line in running_job['lines']): break
+            time.sleep(.02)
+        reservation=json.loads((root/'storage/studio-sessions'/f'{session}.json').read_text())
+        assert reservation['takeJob']['take']==1 and reservation['procInfo']['pid']
+        proc.terminate()
+        proc.wait(timeout=5)
+        proc=subprocess.Popen(['node','scripts/studio-server.mjs'],cwd=root,env={**os.environ,
+            'STUDIO_PORT':str(port),'STUDIO_TOKEN':'fixture-owner','STUDIO_ALLOWED_ORIGINS':tailnet_origin,
+            'STUDIO_ORPHAN_TERM_GRACE_MS':'100','PATH':str(root/'bin')+':'+os.environ['PATH']})
+        for _ in range(120):
+            try:
+                recovered=req('/api/sessions/'+session,'creator-a')[1]
+                if recovered['status']=='done': break
+            except ConnectionRefusedError: pass
+            time.sleep(.04)
+        assert recovered['status']=='done' and recovered['sequence']['takeError'],recovered
+        (root/'sequence-take-hold').unlink()
+        still_selected=req(review_url+'?sessionId='+session,'creator-a')[1]
+        assert still_selected['take']==0 and still_selected['segments'][0]['sha256']==motion_data['clipSha256']
+        batch_status,batch_job=req('/api/sequence/retry','creator-a',{
+            **payload,'motionTake':True,'batchTakes':True})
+        assert batch_status==202 and batch_job['kind']=='sequence-motion',batch_job
+        assert 'Cache only: False Technical screen: True' in finish(session)['lines'][0]
+        reviewed_takes=req('/api/live-files?scenario='+scenario+'&sessionId='+session,'creator-a')[1]['takes']['0']
+        assert reviewed_takes=={'current':0,'completed':[0,1,2]},reviewed_takes
+        alternate_file=work.parent/'motion/fixture-shot-1-1.mp4'
+        original_alt=alternate_file.read_bytes()
+        alternate_file.write_bytes(b'stale alternate')
+        assert req('/api/sequence/retry','creator-a',{**payload,'motionTake':True,'take':1})[0]==409
+        available=req('/api/live-files?scenario='+scenario+'&sessionId='+session,'creator-a')[1]['takes']['0']
+        assert available['completed']==[0,2],available
+        screens=req(review_url+'?sessionId='+session,'creator-a')[1]['takeScreen']
+        assert {item['take'] for item in screens}=={0,2},screens
+        alternate_file.write_bytes(original_alt)
+        model=(root/'storage/setup/ltx-model-dir.txt')
+        model.parent.mkdir(exist_ok=True)
+        model.write_text('updated model')
+        assert req('/api/live-files?scenario='+scenario+'&sessionId='+session,'creator-a')[1]['takes']['0']['completed']==[]
+        model.unlink()
+
+        review_submission={'sessionId':session,'part':1,'sha256':motion_data['clipSha256'],
+                           'seconds':0.25,'outcome':'holds-up','ratings':{'identity':4,'action':5,'realism':3}}
+        assert req(review_url,'creator-a',{**review_submission,'sha256':'stale'})[0]==409
+        assert req(review_url,'creator-a',{**review_submission,'ratings':{'identity':6}})[0]==400
+        assert req(review_url,'creator-a',review_submission)[0]==200
+        evidence=[json.loads(line) for line in (root/'storage/studio-learning/runs.jsonl').read_text().splitlines()]
+        last_rating=evidence[-1]
+        assert last_rating['ratings']==review_submission['ratings'] and last_rating['clipSha256']==review_submission['sha256']
+        assert last_rating['reviewerRole']=='creator',last_rating
+        assert any(item.get('type')=='motion-clip-gate' and item.get('gate')=='technical-screen'
+                   and item.get('clipSha256')==last_rating['clipSha256'] and item.get('flagged') is False
+                   and item.get('gateVersion')=='first-checks-v1' for item in evidence),evidence
+        assert req(review_url,'fixture-owner',review_submission)[0]==200
+        owner_rating=json.loads((root/'storage/studio-learning/runs.jsonl').read_text().splitlines()[-1])
+        assert owner_rating['reviewerRole']=='owner' and owner_rating['clipSha256']==last_rating['clipSha256']
         end_frame=work.parent/motion_data['endFrame']
         original_end=end_frame.read_bytes()
         end_frame.write_bytes(original_end+b'tampered')
@@ -418,6 +558,8 @@ directory=work/'sequence'; directory.mkdir(parents=True,exist_ok=True)
         assert finish(session)['status']=='done'
         next_status,next_job=req('/api/sequence/next','creator-a',payload)
         assert next_status==202 and next_job['kind']=='stills' and next_job['sequence']['currentShot']==2,next_job
+        assert next_job['sequence']['chainSourceHashes']['2']==motion_data['endFrameSha256']
+        assert req('/api/sequence/retry','creator-a',{**payload,'motionTake':True,'take':2})[0]==409
         next_stills=finish(session)
         assert next_stills['status']=='done' and '--chain-source' in next_stills['lines'][0] and '--chain-source-sha256' in next_stills['lines'][0] and '--anchor-image' in next_stills['lines'][0] and 'shot-00-02.png' in next_stills['lines'][0],next_stills['lines']
         approved_status, approved_frames=req('/api/approve-frames','creator-a',{
@@ -491,26 +633,70 @@ directory=work/'sequence'; directory.mkdir(parents=True,exist_ok=True)
         assert req('/api/render','creator-a',{**payload,'retakeMotion':0})[0]==400
         chained=req('/api/render','creator-a',{**payload,'retakeMotion':1})
         assert chained[0]==409 and 'redo every later shot' in chained[1]['error'],chained
-        assert not takes_file.exists()
+        original_state=takes_file.read_bytes()
         assert req('/api/render','creator-b',{**payload,'retakeMotion':2})[0] in (403,404)
-        assert not takes_file.exists()
+        assert takes_file.read_bytes()==original_state
+        (root/'take-fail').touch()
         taken=req('/api/render','fixture-owner',{**payload,'retakeMotion':2})
-        assert taken[0]==202 and taken[1]['motionTake']['current']==1 and taken[1]['motionTake']['highest']==1,taken
-        assert json.loads(takes_file.read_text())=={'1':{'current':1,'highest':1}}
-        finish()
-        assert req('/api/live-files?scenario='+scenario,'creator-a')[1]['takes']=={'1':{'current':1,'highest':1}}
-        bad=req('/api/render','fixture-owner',{**payload,'retakeMotion':2,'take':5}); assert bad[0]==409 and 'not been made' in bad[1]['error'],bad
+        assert taken[0]==202 and taken[1]['motionTake']['take']==1,taken
+        assert takes_file.read_bytes()==original_state
+        failed_take=finish()
+        assert failed_take['status']=='failed' and failed_take['video']==final['video'],failed_take
+        assert takes_file.read_bytes()==original_state
+        (root/'take-fail').unlink()
+        taken=req('/api/render','fixture-owner',{**payload,'retakeMotion':2})
+        assert taken[0]==202 and taken[1]['motionTake']['take']==1,taken
+        assert finish()['status']=='done'
+        live_takes=req('/api/live-files?scenario='+scenario+'&sessionId='+session,'creator-a')[1]
+        assert live_takes['takes']['1']=={'current':1,'completed':[0,1]},live_takes
+        assert any(clip['shot']==2 and clip['take']==1 and 'fixture-shot-2-1' in clip['p'] for clip in live_takes['selectedClips'])
+        before_cancel=takes_file.read_bytes()
+        (root/'take-hold').touch()
+        pending=req('/api/render','fixture-owner',{**payload,'retakeMotion':2})
+        assert pending[0]==202 and pending[1]['motionTake']['take']==2,pending
+        while_pending=req('/api/live-files?scenario='+scenario+'&sessionId='+session,'creator-a')[1]
+        assert while_pending['takes']['1']=={'current':1,'completed':[0,1]}
+        assert req('/api/cancel','fixture-owner',{'test':True})[1]['status']=='stopping'
+        cancelled=finish()
+        assert cancelled['status']=='cancelled' and cancelled['video']==final['video'],cancelled
+        assert takes_file.read_bytes()==before_cancel
+        (root/'take-hold').unlink()
+        original_clip=work.parent/'motion/fixture-shot-2-0.mp4'
+        original_bytes=original_clip.read_bytes()
+        original_clip.write_bytes(b'changed clip')
+        assert req('/api/render','fixture-owner',{**payload,'retakeMotion':2,'take':0})[0]==409
+        original_clip.write_bytes(original_bytes)
+        bad=req('/api/render','fixture-owner',{**payload,'retakeMotion':2,'take':5})
+        assert bad[0]==409 and 'not been made' in bad[1]['error'],bad
         back=req('/api/render','fixture-owner',{**payload,'retakeMotion':2,'take':0})
-        assert back[0]==202 and back[1]['motionTake']['current']==0 and back[1]['motionTake']['highest']==1,back
-        finish()
+        assert back[0]==202 and back[1]['motionTake']['take']==0,back
+        assert '--cache-only' in finish()['lines'][0]
         assert req('/api/render','fixture-owner',{**payload,'retakeMotion':2})[0]==202
-        finish()
-        assert json.loads(takes_file.read_text())=={'1':{'current':2,'highest':2}}
+        assert finish()['status']=='done'
         exhausted=req('/api/render','fixture-owner',{**payload,'retakeMotion':2})
         assert exhausted[0]==409 and 'takes' in exhausted[1]['error'],exhausted
-        assert json.loads(takes_file.read_text())=={'1':{'current':2,'highest':2}}
+        assert json.loads(takes_file.read_text())['1']['current']==2
+        selected_cache=work.parent/'motion/fixture-shot-2-2.mp4'
+        saved_cache=selected_cache.read_bytes()
+        selected_cache.unlink()
+        prior_registry=takes_file.read_bytes()
+        assert req('/api/render','fixture-owner',payload)[0]==202
+        stale_assembly=finish()
+        assert stale_assembly['status']=='failed' and stale_assembly['video']==final['video'],stale_assembly
+        assert takes_file.read_bytes()==prior_registry and not selected_cache.exists()
+        selected_cache.write_bytes(saved_cache)
+        (root/'substitute-selected-clip').touch()
+        prior_export=(root/final['video']).read_bytes()
+        assert req('/api/render','fixture-owner',payload)[0]==202
+        substituted=finish()
+        assert substituted['status']=='failed' and substituted['video']==final['video'],substituted
+        assert 'Assembly did not reuse the selected take' in substituted['error'],substituted
+        assert takes_file.read_bytes()==prior_registry and (root/final['video']).read_bytes()==prior_export
+        (root/'substitute-selected-clip').unlink()
+
         (root/'scripts/make-local-video.sh').write_text("trap '' TERM\necho armed > armed\nsleep 1\n")
-        assert req('/api/render','creator-a',payload)[0]==202
+        render_status, render_result=req('/api/render','creator-a',payload)
+        assert render_status==202,render_result
         for _ in range(100):
             if (root/'armed').exists():break
             time.sleep(.02)
@@ -537,6 +723,7 @@ if [ "$3" = '--stills-only' ]; then
       exit 0
     fi
     echo 'fixture render completed' >> phases.log
+    python3 scripts/take-report-fixture.py "$2"
     cp cached.mp4 outputs/fresh-auto.mp4
     printf 'Studio verified export: outputs/fresh-auto.mp4'
     """)

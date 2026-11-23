@@ -14,6 +14,28 @@ spec.loader.exec_module(preflight)
 
 
 class HardMotionTest(unittest.TestCase):
+    def test_pack_warnings_are_specific_to_the_selected_pack(self):
+        pack = preflight.motion_pack('gadgets-product-reveals')
+        self.assertIn('tiny buttons', preflight.pack_motion_warning(pack, 'A hand presses tiny buttons'))
+        self.assertIsNone(preflight.pack_motion_warning(pack, 'A device rotates in warm light'))
+        self.assertIsNone(preflight.pack_motion_warning(preflight.motion_pack('unknown'), 'tiny buttons'))
+
+    def test_all_pack_patterns_compile_and_find_a_risk(self):
+        examples = {
+            'single-object-transformation': 'disassembling',
+            'solo-challenge-comparison': 'collisions',
+            'practical-how-to': 'tying a knot',
+            'stylized-character-mini-story': 'crowds',
+            'animals': 'sprinting',
+            'gadgets-product-reveals': 'tiny buttons',
+            'travel-scenic-reveal': 'whip pan',
+            'realistic-fast-sports-fights': 'tackling',
+            'realistic-hand-heavy-cooking': 'flipping',
+        }
+        for pack_id, action in examples.items():
+            with self.subTest(pack_id=pack_id):
+                self.assertIn(action, preflight.pack_motion_warning(preflight.motion_pack(pack_id), action))
+
     def test_flags_contact_actions(self):
         self.assertEqual(preflight.hard_motion('A hand flips the patty while slicing the bun'), ['flips', 'slicing'])
 
