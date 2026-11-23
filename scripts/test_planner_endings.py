@@ -1,4 +1,4 @@
-import json, pathlib, unittest, copy, importlib.util
+import json, pathlib, shutil, subprocess, tempfile, unittest, copy, importlib.util
 here = pathlib.Path(__file__).parent
 spec = importlib.util.spec_from_file_location('planner_endings', here / 'planner_endings.py')
 pe = importlib.util.module_from_spec(spec); spec.loader.exec_module(pe)
@@ -6,62 +6,65 @@ pe = importlib.util.module_from_spec(spec); spec.loader.exec_module(pe)
 def load(key):
     return json.loads((here / 'fixtures' / 'planner-endings' / f'{key}.json').read_text())['plan']
 
-# What the owner asked for, per bench-nonfood-planning.py case, as observable end states.
-ENDINGS = {
-    'animal': {'after': [[r'pinecone', r'(rests?|lies|sits?|lays?|dropped).*lantern|beside the lantern']],
-               'visible': [[r'pinecone'], [r'lantern']]},
-    'character': {'after': [[r'door', r'(opens?|open|opened)'], [r'(inside|steps?|enters?|stepp)']],
-                  'visible': [[r'door'], [r'robot|rusty']]},
-    'gadget': {'after': [[r'panel', r'open']], 'visible': [[r'panel', r'open'], [r'lamp|glow|light']]},
-    'object': {'after': [[r'polished'], [r'compass']], 'visible': [[r'compass'], [r'polished|gleam|bright']]},
-    'travel': {'after': [[r'plane', r'(rests?|lands?|landed|settl)', r'dock']],
-               'visible': [[r'plane'], [r'dock']]},
+# Requested endings from bench-nonfood-planning.py: (ending text passed as --ending, end-state regex groups).
+CASES = {
+    'animal': ('The fox drops the pinecone beside a lantern.',
+               {'after': [[r'pinecone'], [r'beside (the|a) lantern']]}),
+    'character': ('The robot opens the greenhouse door and steps inside.',
+                  {'after': [[r'door', r'opens?\b'], [r'steps?\b|inside']]}),
+    'gadget': ('The gadget opens one large panel and the lamp inside lights up.',
+               {'after': [[r'panel', r'open']]}),
+    'object': ('A polished brass compass catches a band of light as it turns.',
+               {'after': [[r'polished'], [r'compass']]}),
+    'travel': ('The paper plane lands on the wooden dock.',
+               {'after': [[r'plane', r'(rests?|lands?|landed|settl)', r'dock']]}),
 }
 
 class PlannerEndings(unittest.TestCase):
     def problems(self, key, plan=None):
-        return pe.ending_problems(plan or load(key), ENDINGS[key])
+        return pe.ending_problems(plan or load(key), CASES[key][1])
 
-    # Frozen Gemma plans from bench run 20261122-213927. These record today's observed
-    # behaviour; if the planner improves, update the expected list and say why.
-    def test_animal_plan_reaches_its_ending(self):
+    # Frozen plans from bench run 20261122-213927 (gemma-local), generated BEFORE commit
+    # dfb7953 added lockRequestedEnding. They record what the older planner produced.
+    def test_older_animal_plan_reached_its_ending(self):
         self.assertEqual(self.problems('animal'), [])
 
-    def test_object_final_frame_check_never_requires_the_polished_face(self):
-        # The story text reaches "polished"; mustShow lists brass, needle and rose only, so a
-        # clip that stays tarnished would still pass the final-frame check. (First guess was
-        # that this case passed; the run showed the gap.)
-        self.assertEqual(self.problems('object'), ['final-frame-check-omits-ending'])
+    def test_older_object_and_gadget_plans_reached_their_endings(self):
+        self.assertEqual(self.problems('object'), [])
+        self.assertEqual(self.problems('gadget'), [])
 
-    def test_character_plan_stops_before_the_door_opens_and_forbids_it(self):
-        # Payoff says "opens the greenhouse door and steps inside"; the last shot ends
-        # with the latch unlocked and mustNotShow forbids an open door and a walking robot.
-        self.assertEqual(self.problems('character'),
-                         ['ending-not-reached', 'rejects-the-ending'])
+    def test_older_character_plan_stopped_before_the_door_opened(self):
+        self.assertEqual(self.problems('character'), ['ending-not-reached'])
 
-    def test_gadget_final_frame_check_never_requires_the_open_panel(self):
-        self.assertEqual(self.problems('gadget'), ['final-frame-check-omits-ending'])
-
-    def test_travel_checks_are_questions_not_observable_statements(self):
+    def test_older_travel_plan_wrote_its_checks_as_questions(self):
         self.assertEqual(self.problems('travel'), ['check-written-as-question'])
 
-    # The checker must also be able to pass a correct plan and catch a regression.
     def test_corrected_character_plan_passes(self):
         plan = copy.deepcopy(load('character'))
-        last = plan['shots'][-1]
-        last['sceneState']['after'] = 'The greenhouse door swings open and Rusty steps inside, key in hand.'
-        last['visualChecks'] = {'mustShow': ['Rusty the teal robot is inside the doorway', 'Greenhouse door is open'],
-                                'mustNotShow': ['Greenhouse door is closed'], 'questions': []}
+        plan['shots'][-1]['sceneState']['after'] = 'The greenhouse door swings open and Rusty steps inside.'
         self.assertEqual(self.problems('character', plan), [])
 
-    def test_removing_the_landing_from_a_good_plan_is_caught(self):
+    def test_a_plan_that_stops_short_of_the_landing_is_caught(self):
         plan = copy.deepcopy(load('travel'))
         plan['shots'][-1]['sceneState']['after'] = 'The paper plane drifts over the water.'
-        plan['shots'][-1]['visualChecks'] = {'mustShow': ['Paper plane in flight', 'Wooden dock below'], 'mustNotShow': []}
-        self.assertEqual(self.problems('travel', plan), ['ending-not-reached'])
+        self.assertIn('ending-not-reached', self.problems('travel', plan))
 
     def test_empty_plan_is_reported(self):
-        self.assertEqual(pe.ending_problems({'shots': []}, ENDINGS['animal']), ['no-shots'])
+        self.assertEqual(pe.ending_problems({'shots': []}, CASES['animal'][1]), ['no-shots'])
+
+    @unittest.skipUnless(shutil.which('node'), 'node not available')
+    def test_current_ending_lock_makes_every_frozen_plan_reach_its_ending(self):
+        # Applies the real lockRequestedEnding from scripts/story-draft-utils.mjs to each frozen
+        # final shot, so this fails if that function stops setting sceneState.after.
+        script = ("import fs from 'node:fs';"
+                  "import {lockRequestedEnding} from process.argv[1];").replace('process.argv[1]', json.dumps((here / 'story-draft-utils.mjs').as_uri()))
+        script += ("const [plan, ending] = JSON.parse(fs.readFileSync(0, 'utf8'));"
+                   "const last = plan.shots.at(-1); last.motionPrompt = 'placeholder';"
+                   "lockRequestedEnding(last, ending); console.log(JSON.stringify(plan));")
+        for key, (ending, spec_) in CASES.items():
+            out = subprocess.run(['node', '--input-type=module', '-e', script], input=json.dumps([load(key), ending]),
+                                 capture_output=True, text=True, check=True).stdout
+            self.assertEqual(pe.ending_problems(json.loads(out), spec_).count('ending-not-reached'), 0, key)
 
 
 if __name__ == '__main__':

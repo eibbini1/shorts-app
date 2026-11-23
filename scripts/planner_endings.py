@@ -1,16 +1,21 @@
-"""Model-free checks that a planned story reaches the ending the owner asked for.
+"""Model-free checks on a planned story's last shot. Nothing here calls a model.
 
-The checks read only the last planned shot: what the story says happens (sceneState.after),
-what the first-frame/motion reviewer is told to look for (visualChecks.mustShow) and what it
-is told to reject (mustNotShow). Nothing here calls a model.
+What is checked, and why only this:
+  * ending-not-reached: the last shot's sceneState.after must express the requested ending.
+    (Current code forces this through lockRequestedEnding; older plans did not.)
+  * check-written-as-question: mustShow/mustNotShow are fed to the still selector as
+    "required visible items" / "forbidden items", so a line such as "Is the dock pristine?"
+    is ill-formed. Reported only; fixing it automatically could invert its meaning.
+  * no-shots.
+
+Deliberately NOT checked: that mustShow/mustNotShow describe the ending. The still selector
+applies them to a shot's first-frame candidates and the motion pre-review applies them to the
+middle frame; the final frame is judged separately against the plan's ending. Requiring the
+ending in mustShow would fail every correct first frame.
 """
 import re
 
 QUESTION = re.compile(r'\?\s*$|^\s*(is|are|does|do|has|have|was|were|can)\b', re.I)
-
-
-def _texts(items):
-    return [str(item) for item in (items or [])]
 
 
 def _matches(patterns, text):
@@ -18,34 +23,20 @@ def _matches(patterns, text):
 
 
 def ending_problems(plan, ending):
-    """Return a list of problem codes for the final shot. Empty means the ending is covered.
+    """Return problem codes for the final shot; empty means none found.
 
-    ending = {'after': [[regex, ...], ...], 'visible': [[regex, ...], ...]}
-      after   - every group must match the final sceneState.after (one regex per required idea)
-      visible - every group must match at least one final mustShow line
+    ending = {'after': [[regex, ...], ...]} - every group must match the final sceneState.after.
     """
     shots = plan.get('shots') or []
     if not shots:
         return ['no-shots']
     last = shots[-1]
-    state = last.get('sceneState') or {}
+    after = str((last.get('sceneState') or {}).get('after', ''))
     checks = last.get('visualChecks') or {}
-    after = str(state.get('after', ''))
-    must_show = _texts(checks.get('mustShow'))
-    must_not = _texts(checks.get('mustNotShow'))
     problems = []
-    for group in ending['after']:
-        if not _matches(group, after):
-            problems.append('ending-not-reached')
-            break
-    for group in ending['visible']:
-        if not any(_matches(group, line) for line in must_show):
-            problems.append('final-frame-check-omits-ending')
-            break
-    # A rejection rule that matches the requested end state would fail the correct clip.
-    # Only the state-change groups count; merely naming an object is not a contradiction.
-    if any(_matches(group, line) for line in must_not for group in ending['after']):
-        problems.append('rejects-the-ending')
-    if any(QUESTION.search(line) for line in must_show + must_not):
+    if not all(_matches(group, after) for group in ending['after']):
+        problems.append('ending-not-reached')
+    lines = [str(x) for x in (checks.get('mustShow') or []) + (checks.get('mustNotShow') or [])]
+    if any(QUESTION.search(line) for line in lines):
         problems.append('check-written-as-question')
     return problems
