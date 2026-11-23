@@ -1,0 +1,57 @@
+{
+  "source": "frozen from bench-nonfood run 20261122-213927 (gemma-local); not regenerated",
+  "case": "animal",
+  "plan": {
+    "payoff": "The fox drops the pinecone beside a lantern",
+    "shots": [
+      {
+        "narration": "A red fox with a sleek begins the journey.",
+        "sceneState": {
+          "before": "A red fox, mid-stride, carries a pinecone firmly in its mouth, paws on weathered wooden bridge over a stream, overcast day.",
+          "action": "The fox, carrying a pinecone in its mouth, steps forward along the wooden bridge, its body angled slightly left, the pinecone shifting slightly in its mouth as it moves.",
+          "after": "The fox continues its journey across the bridge, slightly further along, the pinecone still firmly held in its mouth."
+        },
+        "visualChecks": {
+          "mustShow": [
+            "Red fox",
+            "Pinecone",
+            "Wooden bridge",
+            "Stream visible in background"
+          ],
+          "mustNotShow": [
+            "Lantern",
+            "Fox's face clearly visible",
+            "Close-up of pinecone"
+          ],
+          "questions": [
+            "Is the fox moving forward?",
+            "Is the bridge weathered?"
+          ]
+        }
+      },
+      {
+        "narration": "The fox pauses, then gently releases the pinecone beside the lantern's glow.",
+        "sceneState": {
+          "before": "The fox continues its journey across the bridge, slightly further along, the pinecone still firmly held in its mouth.",
+          "action": "The fox lowers its head, releases the pinecone, and looks up at the lantern.",
+          "after": "The pinecone rests beside the lantern, the fox looking up at the lantern."
+        },
+        "visualChecks": {
+          "mustShow": [
+            "Fox is a red fox",
+            "Pinecone is visible",
+            "Lantern is glowing"
+          ],
+          "mustNotShow": [
+            "Fox eating the pinecone",
+            "Lantern being moved"
+          ],
+          "questions": [
+            "Is the fox's fur red?",
+            "Is the bridge wooden?"
+          ]
+        }
+      }
+    ]
+  }
+}

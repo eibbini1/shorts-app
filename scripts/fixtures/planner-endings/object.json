@@ -1,0 +1,53 @@
+{
+  "source": "frozen from bench-nonfood run 20261122-213927 (gemma-local); not regenerated",
+  "case": "object",
+  "plan": {
+    "payoff": "A polished brass compass catches a band of light as it turns",
+    "shots": [
+      {
+        "narration": "A weathered brass compass, coated in tarnish, waits for restoration.",
+        "sceneState": {
+          "before": "A tarnished brass compass sits on a worn wooden workbench.",
+          "action": "Hand rotates the compass clockwise, revealing a small polished patch.",
+          "after": "A tarnished brass compass sits on a worn workbench, with a small patch of polished brass visible on its face."
+        },
+        "visualChecks": {
+          "mustShow": [
+            "Tarnished brass compass",
+            "Wooden workbench",
+            "Compass face visible"
+          ],
+          "mustNotShow": [
+            "Polished compass face",
+            "Hand holding the compass"
+          ],
+          "questions": [
+            "Is the compass brass?",
+            "Is the workbench wooden?"
+          ]
+        }
+      },
+      {
+        "narration": "The brass gleams, reflecting a warm, golden light.",
+        "sceneState": {
+          "before": "A tarnished brass compass sits on a worn workbench, with a small patch of polished brass visible on its face.",
+          "action": "Hand gently turns the polished brass compass clockwise, revealing the full, intricately detailed compass rose.",
+          "after": "The fully polished brass compass face reflects light, revealing the intricate details of the compass rose."
+        },
+        "visualChecks": {
+          "mustShow": [
+            "The compass is brass",
+            "The compass has a needle",
+            "The compass has a compass rose"
+          ],
+          "mustNotShow": [
+            "Any cleaning supplies"
+          ],
+          "questions": [
+            "Is the compass on a workbench?"
+          ]
+        }
+      }
+    ]
+  }
+}

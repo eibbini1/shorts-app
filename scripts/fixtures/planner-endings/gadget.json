@@ -1,0 +1,54 @@
+{
+  "source": "frozen from bench-nonfood run 20261122-213927 (gemma-local); not regenerated",
+  "case": "gadget",
+  "plan": {
+    "payoff": "The gadget opens one large panel and the lamp inside lights up",
+    "shots": [
+      {
+        "narration": "This season's best gadget, a compact design with a surprising reveal.",
+        "sceneState": {
+          "before": "A small, cylindrical brushed stainless steel gadget sits on a light grey quartz countertop amidst scattered baking supplies. A single, recessed button is visible on its top surface.",
+          "action": "A hand presses the recessed button, initiating a smooth clockwise rotation of the gadget.",
+          "after": "The gadget has rotated 90 degrees clockwise, revealing a portion of its side."
+        },
+        "visualChecks": {
+          "mustShow": [
+            "Brushed stainless steel gadget",
+            "Light grey quartz countertop",
+            "Recessed button"
+          ],
+          "mustNotShow": [
+            "Open panel",
+            "Illuminated lamp"
+          ],
+          "questions": [
+            "Is the countertop clean?",
+            "Is the gadget cylindrical?"
+          ]
+        }
+      },
+      {
+        "narration": "This compact gadget reveals a surprisingly bright, warm light source within.",
+        "sceneState": {
+          "before": "The gadget has rotated 90 degrees clockwise, revealing a portion of its side.",
+          "action": "The gadget completes its rotation, and a large panel seamlessly slides open, revealing a warm, golden glow from a small cylindrical lamp within.",
+          "after": "The gadget has completed its rotation, and a large panel is fully open, revealing a warm, golden glow from a small cylindrical lamp."
+        },
+        "visualChecks": {
+          "mustShow": [
+            "The gadget is cylindrical and brushed stainless steel.",
+            "The countertop is light grey quartz.",
+            "A warm, golden glow emanates from within the gadget."
+          ],
+          "mustNotShow": [
+            "The gadget is damaged or broken.",
+            "The countertop is cluttered or messy."
+          ],
+          "questions": [
+            "Is the lamp cylindrical?"
+          ]
+        }
+      }
+    ]
+  }
+}

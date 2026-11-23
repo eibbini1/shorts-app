@@ -10,6 +10,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class Progress:
+    def __init__(self):
+        self.observed = []
+
     def mark_complete(self, _index, _part):
         pass
 
@@ -62,21 +65,29 @@ def main():
         started = time.monotonic()
         try:
             shot = {'imagePrompt': case['image'], 'motionPrompt': case['motion']}
+            row.update(imageSeed=1200 + index, motionSeed=2200 + index * 10, **shot)
             image = renderer.still(work, index, shot, 1200 + index, None, width, height)
             row['firstFrame'] = str(image.relative_to(ROOT))
+            row['firstFrameSha256'] = renderer.file_hash(image)
             still_problem = check_still(image)
             if still_problem:
                 row.update(status='first-frame-review', technicalFlag=still_problem)
             else:
-                clip = renderer.clip(work, index, 0, shot, 2200 + index * 10, image,
-                                     width, height, model, gemma, Progress())
-                row.update(status='editorial-review', clip=str(clip.relative_to(ROOT)),
-                           clipSha256=renderer.file_hash(clip), technicalFlag=check_clip(clip))
+                progress = Progress()
+                clip = renderer.clip(work, index, 0, shot, row['motionSeed'], image,
+                                     width, height, model, gemma, progress)
+                flag = check_clip(clip)
+                row.update(status='technical-review' if flag else 'editorial-review',
+                           clip=str(clip.relative_to(ROOT)), clipSha256=renderer.file_hash(clip),
+                           technicalFlag=flag, motionCacheHit=not progress.observed,
+                           motionRenderSeconds=round(progress.observed[0], 1) if progress.observed else None)
         except Exception as error:
             row.update(status='failed', error=str(error))
         prior = existing.get(case_id, {})
         if row.get('clipSha256') and row.get('clipSha256') == prior.get('clipSha256'):
             row['humanRating'] = prior.get('humanRating')
+            if row.get('motionCacheHit'):
+                row['motionRenderSeconds'] = prior.get('motionRenderSeconds')
         row['seconds'] = round(time.monotonic() - started, 1)
         existing[case_id] = row
         temporary = report_path.with_suffix('.tmp')

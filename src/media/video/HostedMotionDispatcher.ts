@@ -65,7 +65,7 @@ export class HostedMotionDispatcher {
     }
   }
 
-  enqueue(input: EnqueueHostedMotionInput): HostedJob {
+  enqueue(input: EnqueueHostedMotionInput, options: { singleUse?: boolean } = {}): HostedJob {
     const adapter = this.adapterFor(input.provider);
     if ((input.maxSubmitAttempts ?? 1) > 1 && !adapter.supportsIdempotency) {
       throw new ConfigError(`Provider "${input.provider}" does not support idempotent submission retries.`);
@@ -77,7 +77,7 @@ export class HostedMotionDispatcher {
       maximumChargeUsd: input.maximumChargeUsd,
       capUsd: input.capUsd,
     };
-    this.spend.reserve(reservation);
+    this.spend.reserve(reservation, options);
     try {
       return this.jobs.enqueue(input);
     } catch (error) {

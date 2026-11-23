@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Measure visual change between the first and last frames of a local motion clip."""
+"""Measure subject-crop changes at the middle and end of a local motion clip."""
 import argparse
 from collections import Counter
 import hashlib
@@ -44,30 +44,39 @@ def histogram(image):
     return Counter((r >> 5, g >> 5, b >> 5) for r, g, b in zip(pixels[::3], pixels[1::3], pixels[2::3]))
 
 
+def compare_to_start(start, first_histogram, frame):
+    other = histogram(frame)
+    overlap = sum((first_histogram & other).values()) / max(first_histogram.total(), other.total())
+    log = run('ffmpeg', '-hide_banner', '-i', str(start), '-i', str(frame),
+              '-lavfi', 'ssim', '-f', 'null', '-').stderr.decode()
+    score = re.search(r'All:([-0-9.]+)', log)
+    if score is None:
+        raise ValueError('Could not measure structural similarity.')
+    return {'histogramOverlap': round(overlap, 4), 'ssim': float(score[1])}
+
+
 def compare(clip, crop=DEFAULT_CROP):
     with clip.open('rb') as source:
         clip_sha256 = hashlib.file_digest(source, 'sha256').hexdigest()
     duration = float(run('ffprobe', '-v', 'error', '-show_entries', 'format=duration',
                          '-of', 'csv=p=0', str(clip)).stdout)
     with TemporaryDirectory() as directory:
-        start, end = (Path(directory) / f'{name}.png' for name in ('start', 'end'))
+        start, middle, end = (Path(directory) / f'{name}.png' for name in ('start', 'middle', 'end'))
         last = max(0, duration - 0.15)
+        midpoint = min(last, duration / 2)
         extract(clip, 0, start, crop)
+        extract(clip, midpoint, middle, crop)
         extract(clip, last, end, crop)
-        left, right = histogram(start), histogram(end)
-        overlap = sum((left & right).values()) / max(left.total(), right.total())
-        log = run('ffmpeg', '-hide_banner', '-i', str(start), '-i', str(end),
-                  '-lavfi', 'ssim', '-f', 'null', '-').stderr.decode()
-        score = re.search(r'All:([-0-9.]+)', log)
-        if score is None:
-            raise ValueError('Could not measure structural similarity.')
+        left = histogram(start)
+        midpoint_change = compare_to_start(start, left, middle)
+        endpoint_change = compare_to_start(start, left, end)
     return {
-        'measurementVersion': 'frame-comparison-v1', 'clip': str(clip), 'clipSha256': clip_sha256,
+        'measurementVersion': 'frame-comparison-v2', 'clip': str(clip), 'clipSha256': clip_sha256,
         'firstSeconds': 0, 'lastSeconds': round(last, 3),
+        'midpointSeconds': round(midpoint, 3), 'midpointVsFirst': midpoint_change,
         'crop': 'center 60% of width and height' if crop == DEFAULT_CROP else 'specified subject region',
         'cropBounds': dict(zip(('x', 'y', 'width', 'height'), crop)),
-        'histogramOverlap': round(overlap, 4),
-        'ssim': float(score[1]),
+        **endpoint_change,
         'interpretation': 'Advisory pixel measurements. Pose, camera, light, and framing can change these values.',
     }
 

@@ -13,6 +13,7 @@ import { buildLearningContext } from './studio-learning-memory.mjs';
 import { createSessionId, draftIdleTimeoutMs, draftTimeoutMs, normalizeSessionPrompt, sessionTitle } from './studio-session-utils.mjs';
 import { MAX_AUTO_RETRIES, WATCHED_KINDS, checkStall, classifyExit, isLocalCommand, isOrphanScenarioMember, keepAwakeCommand, mayReapOrphan, parsePsProcessIdentities, parsePsProcessIdentity, retryDecision, stallMessage, watchdogLimits } from './studio-watchdog.mjs';
 import { availableTakes, commitTakes, motionState, reserveTake, sha256, summarizeTakeScreens, technicalObservations, verifiedTake } from './studio-motion-state.mjs';
+import { FeedbackError, LIMITS as FEEDBACK_LIMITS, SCREENSHOT as FEEDBACK_SCREENSHOT, boundedJson, createFeedbackStore, parseScreenshot, validateSubmission } from './studio-feedback.mjs';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -1256,6 +1257,12 @@ function today(user, kind) {
   return readLedger().filter((r) => r.type === 'run' && r.user === user.name && r.kind === kind && new Date(r.ts).toDateString() === day).length;
 }
 
+let hostedDryRun;
+
+// Product feedback lives in its own files, apart from the learning ledger, so it can never steer future plans.
+const productFeedback = createFeedbackStore({ dir: process.env.STUDIO_FEEDBACK_DIR || path.join(ROOT, 'storage', 'studio-feedback') });
+const FEEDBACK_DAILY_LIMIT = Number(process.env.STUDIO_FEEDBACK_DAILY_LIMIT) || 10;
+
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   // Block cross-site requests: only same-origin pages on this host may call the API.
@@ -1283,7 +1290,7 @@ http.createServer(async (req, res) => {
     const owner = me.role === 'owner';
     return json(res, 200, { name: me.name, role: me.role, maxSeconds: owner ? 60 : CREATOR_MAX_SECONDS,
       rendersLeft: owner ? null : Math.max(0, me.dailyRenders - today(me, 'render')), draftsLeft: owner ? null : Math.max(0, CREATOR_DAILY_DRAFTS - today(me, 'draft')),
-      canCompare: owner, canSeeLog: owner, canRunUnattended: owner });
+      canSimulateHostedShot: Boolean(TOKEN) && owner, canManageFeedback: owner, canCompare: owner, canSeeLog: owner, canRunUnattended: owner });
   }
   if (url.pathname === '/api/readiness') {
     if (req.method !== 'GET') return json(res, 405, { error: 'Use GET to run the local readiness check.' });
@@ -1435,6 +1442,38 @@ http.createServer(async (req, res) => {
       ...(retrySession ? { session: retrySession, archiveAttempt: true } : {}),
     });
     return json(res, 202, snap(x));
+  }
+  if (url.pathname === '/api/hosted/dry-run') {
+    if (req.method !== 'POST') return json(res, 405, { error: 'Use POST for a hosted simulation.' });
+    if (!TOKEN || !isOwner) return json(res, 403, { error: 'Sign in with the Studio owner link to simulate a hosted shot.' });
+    try {
+      const b = await body(req);
+      if (!b || !['quote', 'confirm'].includes(b.action) || !['ltx-2.5', 'wan-2.2'].includes(b.model) ||
+          !Number.isInteger(b.shot) || b.shot < 1 || !Number.isFinite(b.capUsd) ||
+          Object.keys(b).some((k) => !['sessionId', 'shot', 'capUsd', 'model', 'action', 'approval'].includes(k))) {
+        return json(res, 400, { error: 'Choose a shot, simulation model and budget cap.' });
+      }
+      const session = sessions.get(String(b.sessionId));
+      const frame = session?.sequence?.approvedFrames?.find((f) => f.shot === b.shot);
+      if (!frame) return json(res, 409, { error: 'Approve the first frame for this shot first.' });
+      const { expected } = takeContext(session, b.shot);
+      if (expected.scenarioSha256 !== frame.scenarioSha256) return json(res, 409, { error: 'The plan changed after frame approval.' });
+      const story = JSON.parse(fs.readFileSync(path.join(ROOT, session.scenario), 'utf8').replace(/^\uFEFF/, ''));
+      const prompt = story.plan.shots[b.shot - 1]?.motionPrompt;
+      if (!prompt?.trim()) return json(res, 409, { error: 'This shot needs a motion prompt.' });
+      const { width, height, fps, frames } = expected.renderSettings;
+      const request = { prompt, mode: 'i2v_first_frame', width, height, fps, frameCount: frames,
+        audio: 'silent', conditioning: [{ kind: 'image', role: 'first-frame', sha256: frame.sha256, uri: 'asset:' + frame.sha256 }] };
+      const bound = { sessionId: session.id, shot: b.shot, model: b.model, capUsd: b.capUsd,
+        scenarioSha256: expected.scenarioSha256, request };
+      if (!hostedDryRun) {
+        const { tsImport } = await import('tsx/esm/api');
+        const { openStudioHostedDryRun } = await tsImport('../src/media/video/StudioHostedDryRun.ts', import.meta.url);
+        hostedDryRun ??= openStudioHostedDryRun(path.join(ROOT, 'storage', 'studio-hosted-dry-run.sqlite'));
+      }
+      const result = b.action === 'quote' ? hostedDryRun.quote(bound) : await hostedDryRun.confirm(bound, b.approval);
+      return json(res, 200, result);
+    } catch (error) { return json(res, 409, { error: error.message || 'Simulation failed.' }); }
   }
   if (url.pathname === '/api/character-references' && ['GET', 'POST'].includes(req.method)) {
     if (!isOwner) return json(res, 403, { error: 'The character library belongs to the owner.' });
@@ -2024,6 +2063,65 @@ http.createServer(async (req, res) => {
     const videoSha256 = await fileHash(videoFile);
     if (!ledger({ type: 'feedback', user: me.name, session: sess.id, rating: b.rating, note: String(b.note || '').slice(0, 400), look: sess.options?.look, prompt: sess.prompt, scenario: sess.scenario, video: sess.video, videoSha256, evidenceType: 'creator-feedback' })) return json(res, 500, { error: 'Could not save feedback.' });
     return json(res, 200, { ok: true });
+  }
+  if (url.pathname.startsWith('/api/product-feedback')) {
+    try {
+      const query = url.searchParams;
+      if (url.pathname === '/api/product-feedback' && req.method === 'GET') {
+        return json(res, 200, productFeedback.list({ viewer: me, scope: query.get('scope') === 'all' ? 'all' : 'mine',
+          status: query.get('status') || undefined, category: query.get('category') || undefined, q: query.get('q') || '',
+          cursor: query.get('cursor') || undefined, limit: query.get('limit') || undefined }));
+      }
+      if (url.pathname === '/api/product-feedback/item' && req.method === 'GET') {
+        const item = productFeedback.get(query.get('id'), me);
+        return item ? json(res, 200, item) : json(res, 404, { error: 'That feedback was not found.' });
+      }
+      if (url.pathname === '/api/product-feedback' && req.method === 'POST') {
+        const read = await boundedJson(req, FEEDBACK_SCREENSHOT.submitBody);
+        if (read.error) return json(res, read.status, { error: read.error });
+        const parsed = validateSubmission(read.value);
+        if (parsed.error) return json(res, 400, { error: parsed.error });
+        const shot = parsed.value.screenshot ? parseScreenshot(parsed.value.screenshot) : null;
+        // Only identifiers the Studio already holds for this video are stored. Prompt text is never copied.
+        const context = {};
+        if (parsed.value.sessionId) {
+          const sess = sessions.get(parsed.value.sessionId);
+          if (!sess || !canSee(me, sess)) return json(res, 404, { error: 'That video is not available to attach.' });
+          context.sessionId = sess.id;
+          if (sess.scenario) context.scenarioKey = keyOf(sess.scenario);
+          if (sess.options?.look) context.look = String(sess.options.look).slice(0, 40);
+          const exported = sess.video ? path.resolve(ROOT, sess.video) : null;
+          if (exported && exported.startsWith(path.resolve(ROOT, 'outputs') + path.sep) && fs.existsSync(exported)) context.videoSha256 = await fileHash(exported);
+        }
+        const attachment = shot ? productFeedback.saveScreenshot(shot) : null;
+        let result;
+        try {
+          result = productFeedback.submit({ user: me, value: parsed.value, context, attachment,
+            dailyLimit: isOwner ? FEEDBACK_DAILY_LIMIT * 10 : FEEDBACK_DAILY_LIMIT });
+        } catch (error) { productFeedback.discardScreenshot(attachment); throw error; }
+        if (result.duplicate) productFeedback.discardScreenshot(attachment);
+        return json(res, result.duplicate ? 200 : 201, result);
+      }
+      if (url.pathname === '/api/product-feedback/screenshot' && req.method === 'GET') {
+        const attachment = productFeedback.attachmentOf(query.get('id'), me);
+        const file = productFeedback.screenshotPath(attachment);
+        if (!file || !fs.existsSync(file)) return json(res, 404, { error: 'That feedback was not found.' });
+        res.writeHead(200, { 'Content-Type': attachment.mime, 'Content-Length': fs.statSync(file).size, 'X-Content-Type-Options': 'nosniff',
+          'Content-Security-Policy': "default-src 'none'; sandbox", 'Cache-Control': 'private, no-store', 'Content-Disposition': 'inline' });
+        return fs.createReadStream(file).pipe(res);
+      }
+      if (url.pathname === '/api/product-feedback/update' && req.method === 'POST') {
+        const read = await boundedJson(req, FEEDBACK_LIMITS.textBody);
+        if (read.error) return json(res, read.status, { error: read.error });
+        const item = productFeedback.update({ id: read.value.id, viewer: me, status: read.value.status, note: read.value.note, reply: read.value.reply });
+        return json(res, 200, item);
+      }
+      return json(res, 404, { error: 'Unknown feedback request.' });
+    } catch (error) {
+      if (error instanceof FeedbackError) return json(res, error.status, { error: error.message });
+      console.error('product feedback failed:', error);
+      return json(res, 500, { error: 'Feedback could not be saved. Try again.' });
+    }
   }
   if (url.pathname === '/api/checkpoint-review') {
     if (req.method === 'GET') {
