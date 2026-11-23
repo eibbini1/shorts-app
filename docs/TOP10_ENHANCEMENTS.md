@@ -8,7 +8,10 @@ Before starting: read `docs/AI_HANDOFF.md`; do not disturb a running Studio job;
 ## 1. Best-of-N motion seeds per shot (PLANNED)
 - Why: motion is where the "AI look" appears (identity drift by ~4 s in the hero test; burger shot 1 ignored the flip). One bad clip costs ~15 min; a choice of takes is the cheapest quality lever.
 - Build: opt-in per shot, up to 3 seeds from the same approved first frame, reusing `scripts/motion_takes.py` (take seeds and cache already exist). Add a cheap pre-filter (item 3) to rank takes; the owner picks.
-- Done when: a 2-shot film can be rendered with 3 takes on one shot, ranked, switched without re-render, and assembled from the chosen take. Measured wall time recorded.
+- Take state rule (review R1): a requested take is *pending* until every segment finishes. `motion_takes.py` must record pending separately from completed takes; `highest` advances only on success; on failure or cancel the previous selection is restored and the take count is not consumed. Same rule for the final-render retake route. Batch mode must never treat `highest` as proof that a clip exists.
+- Preview rule (review R2): the Studio shows the *selected* take, resolved from the take manifest (shot, take, segment) returned by the API, never the newest file by modification time.
+- Ranking rule (review R3): ranking combines technical flags and the item-3 identity measurement, reported separately; until item 3 is calibrated, the ranking is labelled advisory.
+- Done when: a 2-shot film can be rendered with 3 takes on one shot, ranked by technical + identity evidence, switched without re-render, and assembled from the chosen take; the preview always matches the selected take; a failed or cancelled take leaves the previous selection intact and does not use up a take. Measured wall time recorded.
 
 ## 2. Reference-image identity lock for recurring characters (PLANNED)
 - Why: characters and costumes drift between shots (hero test: emblem and costume changed).
@@ -33,7 +36,8 @@ Before starting: read `docs/AI_HANDOFF.md`; do not disturb a running Studio job;
 ## 6. Owner rating loop and golden set (IMPLEMENTED IN PART)
 - Why: no local vision model judges realism (qwen3-vl rated everything 5); the owner's ratings are the only real judge. The golden set has 12 rows.
 - Build: a one-tap per-clip rating in the Studio (identity held / action happened / looks real, 1–5) saved to the ledger and the golden set; a report of which gates agree with the owner.
-- Done when: ratings save from the UI, the golden set reaches 50+ rows, and a script reports gate-versus-owner agreement.
+- Golden-set rule (review R4): ratings saved in `storage/studio-learning/runs.jsonl` must be exported or synced, reproducibly and bound to the clip's sha256, into `outputs/golden/golden-set-v0.jsonl`, and joined with the gate results recorded for the same clip.
+- Done when: ratings save from the UI, appear in the golden set with the clip hash, the golden set reaches 50+ rows, and a script reports per-gate agreement with the owner, clips missing gate evidence, and the thresholds used.
 
 ## 7. Topic-pack benchmarks (PLANNED, blocked on render time)
 - Why: pack colours are hypotheses.
@@ -54,6 +58,20 @@ Before starting: read `docs/AI_HANDOFF.md`; do not disturb a running Studio job;
 - Why: realistic crowds, fast fights and hand-heavy work stay red on the local model; the high-view AI films in the teardown were made with hosted models.
 - Build: per-shot routing switch that exports the approved first frame + motion prompt to a hosted provider, shows the cost estimate first, and requires explicit owner approval per run; the result returns into the same assembly and review flow.
 - Done when: one approved red-category shot renders through the hosted route with the cost recorded, and the owner compares it with the local take.
+
+## Current status (2026-11-23 review round 1)
+Another Codex session has uncommitted, partial implementations of items 1, 3 and 6 in the working tree (`scripts/motion_takes.py`, `scripts/render-studio-shot.py`, `scripts/studio-server.mjs`, `scripts/compare-motion-frames.py`, `scripts/report-motion-ratings.py`, `studio/src/App.jsx` and others). Review round 1 found the defects now written into items 1 and 6 (R1-R4). Fix those before calling any item done.
+
+## Verification (proof commands)
+Run from the repo root on the Mac after each item:
+- `npm test` (runs watchdog tests then Vitest; expect all pass).
+- `node --test scripts/hook-bank.test.mjs scripts/shot-normalize.test.mjs scripts/story-draft-utils.test.mjs scripts/story-action-gate.test.mjs` (expect all pass).
+- `PYTHONPATH=scripts python3 -m unittest test_motion_takes test_look_drift test_hook_bank test_preflight_motion_risk test_select_still_local` and `python3 scripts/test_studio_workflow.py` (expect OK).
+- Item 1 regression tests to add: failed/cancelled take restores selection and does not consume a take; preview endpoint returns the selected take path; batch never cache-reads a take that has no clip.
+- Item 3: run the identity check on the hero-test clips and on the red-dress shot 1 clip; record values next to owner labels.
+- Item 6: export script run twice gives identical golden-set rows (reproducible); agreement report lists every gate.
+- Real-output proof: each item ends with one real Studio render on the Mac, technical QA from `finish-local-video.py`, and an owner rating. Old and new code run on the same scenario where behaviour is replaced (e.g. take selection), and results compared.
+- `git diff --check` clean.
 
 ## Order of work
 1, 3, 2 first (motion and identity), then 4 and 5 (planner), then 6 (judging), then 7 (evidence), then 8, 9, 10.
