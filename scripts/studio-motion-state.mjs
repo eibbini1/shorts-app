@@ -63,6 +63,18 @@ export function technicalObservations(row) {
     (entry.reason === null || typeof entry.reason === 'string'));
 }
 
+export function summarizeTakeScreens(completed) {
+  return Object.values(completed).map((row) => {
+    const observations = new Map(technicalObservations(row).map(({ part, reason }) => [part, reason]));
+    return {
+      take: row.take, parts: row.parts, checkedParts: observations.size,
+      complete: observations.size === row.parts,
+      flags: [...observations.values()].filter(Boolean), elapsedSeconds: row.elapsedSeconds,
+    };
+  }).sort((a, b) => Number(b.complete) - Number(a.complete) ||
+    (a.complete && b.complete ? a.flags.length - b.flags.length : 0) || a.take - b.take);
+}
+
 export function commitTakes(work, rows, selection = null, finalExport = null) {
   const state = motionState(work);
   for (const row of rows) {

@@ -1104,3 +1104,10 @@ Next: implement audio fixes first (cheap, no GPU), then ending check.
 - Observation, untested: a take with an unscreened part gets no `technicalFlags`, so it is omitted from `takeScreen` instead of shown as unknown.
 - dfb7953 bundles 47 files (items 1a, 2, 6, 8-adjacent, planner edits); it cannot be reverted per item.
 - Not done: real Studio render and owner review for item 1a; full `npm test` re-run at fccf529 (added tests only; watchdog suite 13/13 pass).
+
+## 2026-11-23 — Codex — reconciliation and incomplete motion screening
+
+- HEAD `b2f7d93` on `fix/nonfood-shot-normalize`. Claude's `fccf529` adds the live-worker and cached-switch regressions. It does not change the earlier real-render evidence. The isolated two-shot red-dress run completed before `dfb7953`; both baseline and alternate ArtCraft files still match their recorded SHA-256 values and passed technical QA. Owner playback, sound judgment, and ratings are pending.
+- Studio now shows verified takes that have no per-segment screening evidence and gives the checked-segment count for partial coverage. Only a fully screened take can show “No technical flags” or enter the flag-count ranking. Stale takes remain excluded. Added a unit regression for missing, duplicate, and mismatched observations and extended the isolated Studio workflow test.
+- Verified 13 watchdog tests, 183 Vitest tests, both motion-state unit tests, the isolated Studio workflow, and a production UI build to a temporary directory.
+- This follow-up is local. No new render, deployment, commit, or push was made for the screening display change.

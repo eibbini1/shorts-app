@@ -385,7 +385,7 @@ def row(shot, ref):
                         'frames':97,'fps':24,'editor':'ffmpeg','model':None,'gemma':None},
       'segments':[dict(clip=str(clip.relative_to(work)),sha256=sha(clip),seed=2200+(shot-1)*10+take*7919)],
       'endFrame':str(end.relative_to(work)),'endFrameSha256':sha(end),'technicalFlags':[],
-      'technicalScreen':[dict(part=1,clipSha256=sha(clip),reason=None)]}
+      'technicalScreen':[dict(part=1,clipSha256=sha(clip),reason=None)] if take!=2 else []}
 if len(sys.argv)>2:
     rows=[row(int(sys.argv[2]),Path(sys.argv[3]))]
 else:
@@ -526,7 +526,8 @@ subprocess.run([sys.executable,'scripts/take-report-fixture.py',a.scenario,str(a
         available=req('/api/live-files?scenario='+scenario+'&sessionId='+session,'creator-a')[1]['takes']['0']
         assert available['completed']==[0,2],available
         screens=req(review_url+'?sessionId='+session,'creator-a')[1]['takeScreen']
-        assert {item['take'] for item in screens}=={0,2},screens
+        assert [(item['take'],item['checkedParts'],item['complete']) for item in screens]==[
+            (0,1,True),(2,0,False)],screens
         alternate_file.write_bytes(original_alt)
         model=(root/'storage/setup/ltx-model-dir.txt')
         model.parent.mkdir(exist_ok=True)

@@ -28,11 +28,13 @@ export default function MotionTakeReview({ sessionId }) {
     {review?.parts > 1 && review.segments.length === 1 && <p>Only the final segment was recorded for this take.</p>}
     {review?.takeScreen?.length > 0 && <details>
       <summary>Technical checks by take</summary>
-      <ol>{review.takeScreen.map(({ take, flags, elapsedSeconds }) => <li key={take}>
-        Take {take + 1} · {flags.length ? flags.join('; ') : 'No technical flags'}
+      <ol>{review.takeScreen.map(({ take, flags, checkedParts, parts, complete, elapsedSeconds }) => <li key={take}>
+        Take {take + 1} · {!complete && (checkedParts ? `Screening incomplete (${checkedParts}/${parts} segments checked)` : 'Screening status unknown')}
+        {!complete && flags.length > 0 && ' · '}
+        {flags.length ? flags.join(' · ') : complete && 'No technical flags'}
         {Number.isFinite(elapsedSeconds) && ` · ${elapsedSeconds}s to prepare and check`}
       </li>)}</ol>
-      <p className="muted small">Check order reflects decode, dark frames, and freezing. Watch each take to judge the action and realism.</p>
+      <p className="muted small">Fully screened takes are listed first. Watch each take to judge the action and realism.</p>
     </details>}
     {problem && <p role="status">{problem}</p>}
     {source && <SegmentReview key={source.part + ':' + source.sha256} source={source} sessionId={sessionId} />}

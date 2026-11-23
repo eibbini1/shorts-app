@@ -12,7 +12,7 @@ import { EVENT_PREFIX, parseEventLine as parseEvent } from './pipeline-events.mj
 import { buildLearningContext } from './studio-learning-memory.mjs';
 import { createSessionId, draftIdleTimeoutMs, draftTimeoutMs, normalizeSessionPrompt, sessionTitle } from './studio-session-utils.mjs';
 import { MAX_AUTO_RETRIES, WATCHED_KINDS, checkStall, classifyExit, isLocalCommand, isOrphanScenarioMember, keepAwakeCommand, mayReapOrphan, parsePsProcessIdentities, parsePsProcessIdentity, retryDecision, stallMessage, watchdogLimits } from './studio-watchdog.mjs';
-import { availableTakes, commitTakes, motionState, reserveTake, sha256, technicalObservations, verifiedTake } from './studio-motion-state.mjs';
+import { availableTakes, commitTakes, motionState, reserveTake, sha256, summarizeTakeScreens, technicalObservations, verifiedTake } from './studio-motion-state.mjs';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -1744,10 +1744,7 @@ http.createServer(async (req, res) => {
       if (req.method === 'GET') {
         const context = takeContext(owner, shot);
         const state = availableTakes(context.work, shot, context.expected);
-        const takeScreen = Object.values(state.completed)
-          .filter((take) => Array.isArray(take.technicalFlags))
-          .sort((a, b) => a.technicalFlags.length - b.technicalFlags.length || a.take - b.take)
-          .map((take) => ({ take: take.take, flags: take.technicalFlags, elapsedSeconds: take.elapsedSeconds }));
+        const takeScreen = summarizeTakeScreens(state.completed);
         return json(res, 200, { take: result.take, parts: result.parts, segments, takeScreen });
       }
       const reviewed = segments.find((segment) => segment.part === input.part && segment.sha256 === input.sha256);
