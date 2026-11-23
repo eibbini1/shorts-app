@@ -89,6 +89,12 @@ def ass_stamp(seconds):
     return f'{cs // 360000}:{cs // 6000 % 60:02d}:{cs // 100 % 60:02d}.{cs % 100:02d}'
 
 
+def ass_literal(text):
+    # A zero-width word joiner keeps a literal backslash from starting a libass
+    # newline or spacing escape. Escaped braces display without opening overrides.
+    return text.replace('\\', '\\\u2060').replace('{', r'\{').replace('}', r'\}')
+
+
 def brand_ass(cues, hook=None, *, wide=False):
     """Burger-style captions: Lora bold, white with black outline, the spoken word in gold."""
     head = ('[Script Info]\nScriptType: v4.00+\nPlayResX: 720\nPlayResY: 1280\nWrapStyle: 0\n\n[V4+ Styles]\n'
@@ -103,11 +109,11 @@ def brand_ass(cues, hook=None, *, wide=False):
     if hook:
         start, end, text = hook
         # Keep scenario text literal in libass. User content cannot supply ASS override tags.
-        text = text.replace('\\', '＼').replace('{', '｛').replace('}', '｝')
-        rows.append(f'Dialogue: 1,{ass_stamp(start)},{ass_stamp(end)},OpeningHook,,0,0,0,,{text}')
+        rows.append(f'Dialogue: 1,{ass_stamp(start)},{ass_stamp(end)},OpeningHook,,0,0,0,,{ass_literal(text)}')
     for start, end, text in cues:
         words = text.split()
         weights = [len(w) for w in words]
+        words = [ass_literal(word) for word in words]
         at = start
         for number, weight in enumerate(weights):
             stop = end if number == len(words) - 1 else at + (end - start) * weight / sum(weights)
@@ -123,7 +129,7 @@ def opening_hook(data):
     text = ' '.join(str(overlay.get('text', '')).split())
     if not text:
         return None
-    start, end = float(overlay.get('startSeconds', 0)), float(overlay.get('endSeconds', 2))
+    start, end = float(overlay.get('startSeconds', 0)), float(overlay.get('endSeconds', 1.5))
     if not (0 <= start < end <= data['settings']['seconds'] and len(text) <= 80):
         raise ValueError('hookOverlay needs text up to 80 characters and a valid time range')
     return start, end, text
