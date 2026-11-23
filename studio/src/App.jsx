@@ -11,6 +11,7 @@ import HostedShotSimulation from './HostedShotSimulation.jsx';
 import CharacterReferences from './CharacterReferences.jsx';
 import { takeControls } from './motion-takes.js';
 import { NotificationBell, useNotifications } from './NotificationBell.jsx';
+import { FeedbackPanel } from './FeedbackPanel.jsx';
 import { COALESCE_MS, flushNow } from './notifications.js';
 import { estFor } from './render-estimate.js';
 
@@ -781,6 +782,7 @@ export default function App() {
         <button className="projects-toggle" aria-controls="projects" aria-expanded={projectsOpen} onClick={() => setProjectsOpen(!projectsOpen)}>Projects</button>
         <span className="logo"><img src="/logo.svg" alt="" className="logo-mark"/><span className="logo-word">i<b>Shorts</b></span></span>
         {me && <span className="muted account">{me.name === me.role ? me.role : `${me.name} · ${me.role}`}</span>}
+        <FeedbackPanel job={job} canManage={Boolean(me?.canManageFeedback)} />
         <NotificationBell notifier={notifier} selectedId={selectedId} onOpen={select} />
         <details className="appearance">
           <summary>Appearance</summary>

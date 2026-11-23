@@ -324,3 +324,32 @@ button.ghost.composer-secondary { align-self:flex-end; }
 .bellfoot { display:flex; flex-direction:column; gap:6px; padding:10px 12px; border-top:1px solid var(--line); font-size:13px; color:var(--muted); }
 .bellfoot .ghost { align-self:flex-start; margin:0; }
 @media (prefers-reduced-motion: reduce) { .bell, .bellitem { transition:none; } }
+
+/* Feedback panel (reuses the bell's popover frame) */
+.fbpanel { width:min(440px, calc(100vw - 24px)); }
+.fbtabs { display:flex; gap:4px; padding:8px 10px 0; border-bottom:1px solid var(--line); }
+.fbtabs button { border:0; border-bottom:2px solid transparent; border-radius:0; padding:6px 10px; color:var(--muted); font-size:13px; }
+.fbtabs button.on { color:var(--text); border-bottom-color:var(--acc); }
+.fbscroll { overflow:auto; padding:12px; }
+.fbform, .fbmanage { display:flex; flex-direction:column; gap:10px; font-size:13px; }
+.fbform label, .fbmanage label { display:flex; flex-direction:column; gap:4px; color:var(--muted); }
+.fbform input:not([type=checkbox]), .fbform textarea, .fbmanage textarea, .fbfilters input, .fbfilters select { background:var(--card); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:7px 9px; font:inherit; }
+.fbform textarea, .fbmanage textarea { resize:vertical; }
+.fbrow { display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--muted); }
+.fbstars { display:flex; gap:2px; }
+.fbstars button { border:0; padding:2px 4px; font-size:20px; line-height:1; color:var(--line); }
+.fbstars button.on { color:var(--acc); }
+.fbcheck { flex-direction:row !important; align-items:center; gap:8px !important; }
+.fberr { font-size:12px; margin:0; }
+.fblist ul, .fbreplies, .fbnotes { list-style:none; margin:0; padding:0; }
+.fbitem { border:1px solid var(--line); border-radius:10px; padding:10px; margin-bottom:8px; background:var(--card); display:flex; flex-direction:column; gap:4px; }
+.fbhead { all:unset; cursor:pointer; display:flex; flex-direction:column; gap:2px; }
+.fbhead:focus-visible { outline:2px solid var(--acc); outline-offset:2px; }
+.fbtop { display:flex; justify-content:space-between; gap:8px; align-items:baseline; }
+.fbstatus { font-size:11px; padding:1px 8px; border-radius:99px; border:1px solid var(--line); color:var(--muted); white-space:nowrap; }
+.fbstatus.s-resolved { color:var(--ok); border-color:var(--ok); } .fbstatus.s-reviewing, .fbstatus.s-planned { color:var(--acc); border-color:var(--acc); }
+.fbbody, .fbreplies p, .fbnotes p { margin:4px 0; white-space:pre-wrap; overflow-wrap:anywhere; }
+.fbreplies li { border-inline-start:2px solid var(--acc); padding-inline-start:8px; margin-top:6px; }
+.fbnotes li { border-inline-start:2px solid var(--line); padding-inline-start:8px; }
+.fbfilters { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; } .fbfilters input { flex:1 1 140px; min-width:0; }
+.fbmanage { border-top:1px solid var(--line); padding-top:8px; margin-top:4px; }
