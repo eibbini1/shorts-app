@@ -8,6 +8,7 @@ import {scenarioSettings, verifyScenario} from './scenario-schema.mjs';
 import {normalizeShot} from './shot-normalize.mjs';
 import {hookGuidance, openingHookOverlay, pickPatterns} from './hook-bank.mjs';
 import {motionPackFor,motionPackGuidance} from './topic-pack-motion.mjs';
+import {applyTypedShots, createShotTypeContext} from './shot-type-planner.mjs';
 import {applyVisualIdentityLock, collectPromptChanges, firstClause, fitOutlineIdeas, hasSupportedAsmrCue, lockRequestedEnding, narrationWordBand, reconcileSceneStateBefore, repairSceneState, shortenNarration} from './story-draft-utils.mjs';
 import {hasVisiblePhysicalAction, preserveOpeningHook, preserveRequestedActions, requestedActionClauses} from './story-action-gate.mjs';
 
@@ -400,6 +401,16 @@ if(visualEnding){
   if(!hasVisiblePhysicalAction(finalShot.motionPrompt)) throw new Error('The requested ending could not be made physically visible. No scenario was saved or rendered.');
   endingLocked=true;
 }
+// Opt-in (SHORTS_SHOT_TYPES=1): rewrite each shot's prompts from the shot-type library. Timing, narration,
+// sound and the sceneState chain are unchanged, so every gate below still checks the same story.
+let shotRecipes=null;
+const shotTypeContext=createShotTypeContext({projectId:id,peopleStory:process.env.SHORTS_PEOPLE_STORY||null});
+if(shotTypeContext){
+  const typed=applyTypedShots(shotTypeContext,{shots,beats,outline,ending:endingLocked?visualEnding:''});
+  shots.splice(0,shots.length,...typed.shots);
+  shotRecipes={recipes:typed.recipes,peopleStory:shotTypeContext.peopleStory?{...shotTypeContext.peopleStory,backgroundRecipe:undefined}:null};
+  console.log(`Shot types: ${typed.recipes.map(r=>r.typeId).join(', ')}`);
+}
 for(const field of ['imagePrompt','motionPrompt']){
   const seen=new Set();
   for(let i=0;i<shots.length;i++){
@@ -437,7 +448,7 @@ const creativeSignature={
   set:outline.setting,
   hookPattern:hookOverlay?.patternId||creativeBrief.hookImage||outline.hook,
 };
-const saved={...(hookOverlay?{hookOverlay}:{}),status:'review-required',settings,model,promptPackVersion:masterPrompts.version,creativeBrief,...(motionPack?{motionPackId:motionPack.id}:{}),creativeSignature,topic,style:args.values.style,requestedEnding:visualEnding||null,requestedEndingOriginal:args.values.ending||null,totalSeconds:settings.seconds,storyArc:{protagonist:outline.protagonist,setting:outline.setting,goal:outline.goal,obstacle:outline.obstacle,turn:outline.turn,visualBible:outline.visualBible,beats},qualityChecks:{exactTiming:true,uniquePromptText:true,narrationFits:true,endingLockedFromUser:endingLocked,hookActionCoverage:hookActionCoverage.status,requiredActionCoverage:requestedActionCoverage.status,requiredActionInsertions:requestedActionCoverage.inserted.length,preflightPromptFixes,rewrites:rewriteCount,fieldsNeedingRepair:fallbackCount,reviewedShotExamplesUsed:reviewedShotExamples.length},plan};
+const saved={...(hookOverlay?{hookOverlay}:{}),...(shotRecipes?{shotRecipes}:{}),status:'review-required',settings,model,promptPackVersion:masterPrompts.version,creativeBrief,...(motionPack?{motionPackId:motionPack.id}:{}),creativeSignature,topic,style:args.values.style,requestedEnding:visualEnding||null,requestedEndingOriginal:args.values.ending||null,totalSeconds:settings.seconds,storyArc:{protagonist:outline.protagonist,setting:outline.setting,goal:outline.goal,obstacle:outline.obstacle,turn:outline.turn,visualBible:outline.visualBible,beats},qualityChecks:{exactTiming:true,uniquePromptText:true,narrationFits:true,endingLockedFromUser:endingLocked,hookActionCoverage:hookActionCoverage.status,requiredActionCoverage:requestedActionCoverage.status,requiredActionInsertions:requestedActionCoverage.inserted.length,preflightPromptFixes,rewrites:rewriteCount,fieldsNeedingRepair:fallbackCount,reviewedShotExamplesUsed:reviewedShotExamples.length},plan};
 await mkdir('drafts/generated',{recursive:true});
 const file=`drafts/generated/${id}.local-scenario.json`;
 await writeFile(file,JSON.stringify(saved,null,2)+'\n',{flag:'wx'});
