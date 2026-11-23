@@ -63,6 +63,13 @@
 - PLANNED: reference-image identity lock for recurring original characters; first-vs-last-frame identity check; look_drift thresholds untuned (one case). BLOCKED: topic packs need vidIQ credits (0, reset 2026-12-09) or a go-ahead to build ASMR/Ambient/Cooking packs without trend data.
 - Owner-only: watch hero + burger exports, score v5, merge PRs #35/#36, FLUX 3 Klein HF login, hosted-GPU decision.
 - Next: draft one real topic with the hook bank on and compare against the previous draft; fix refiner static-ending failures.
+## 2026-11-22 20:15 +03 — Claude: post-merge status and updated plan (branch docs/post-merge-plan, from main 317d447, NOT pushed)
+- VERIFIED (GitHub): PR #34 merged 17:02:44Z (head f740854) and PR #33 merged 17:02:59Z. Local `main` fast-forwarded to origin/main 317d447. Old local branch `warn-not-block` is merged; not deleted.
+- Plan: see "Plan after PRs #33 and #34" at the end of docs/ROADMAP.md (recommendations in order).
+- Corrects the 18:10 entry below: its fixes and the "NOT pushed" status are superseded: the assembly fix 9484d0d shipped inside PR #34. The Stage 0 judge test has now run: qwen3-vl:4b and qwen3-vl:8b (8B downloaded, 6.2 GB) gave 5/5 to every Test A clip; absolute VLM scoring is not usable. Pairwise A/B test is the next cheap check (no download).
+- VERIFIED: Studio server PID 62189 started 14:55, so it still runs pre-merge backend code. Restart it with its launch/auth environment preserved. Python-side changes (e.g. studio_frames.py) apply per job without a restart.
+- Not done: owner picture/audio review of the burger export; v5 scoring; HF token `runpod-bench` deletion; no full render on merged code.
+- 20:30 update: `qwen3-vl:8b` removed; Studio server restarted on main (new backend loaded, project reloads); local branch `warn-not-block` deleted; #35 and #36 ready for review but NOT merged (merge call blocked by a permission check). VLM realism judging dropped (see ROADMAP "Decisions and actions taken"). Remaining for owner: review burger export, score v5, delete HF token `runpod-bench`, merge #36 then #35.
 
 ## 2026-11-22 17:37 +03 — Codex: reliability hardening, second review, validation
 - Branch: `warn-not-block`; four commits ahead of `origin/main` (three earlier branch commits plus this reliability commit). At the time of this check, the remote branch did not exist and no PR was open. The verified source changes are committed locally; pre-existing untracked drafts, rendered files and research assets remain untouched and unstaged.
