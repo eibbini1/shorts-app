@@ -894,10 +894,12 @@ export default function App() {
             placeholder="A baker cracks a chocolate shell to reveal pistachio cream." />
           {anyRunning
             ? <button className="primary" disabled={!prompt.trim()} title="Your Mac is busy with another video. This adds your idea to Up next." onClick={() => { writeQueue([...readQueue(), prompt.trim()].slice(0, 10)); setAutoNext(true); setPrompt(''); }}>Add to Up next</button>
-            : <button className={planAwaiting ? 'ghost composer-secondary' : 'primary'} onClick={draft} disabled={!prompt.trim() || sending || refining || planDisabled} title={planAwaiting ? 'Starts a new story from this idea. Your current plan is kept.' : undefined}>{refining ? 'Refining your story…' : unattended && me?.canRunUnattended ? 'Prepare video plan' : 'Review story'}</button>}
+            : <button className={planAwaiting ? 'ghost composer-secondary' : 'primary'} onClick={draft} disabled={!prompt.trim() || sending || refining || planDisabled} title={planAwaiting ? 'Starts a new story from this idea. Your current plan is kept.' : undefined}>{refining ? 'Refining your story…' : refinement ? 'Refine story again' : 'Review story'}</button>}
         </div>
         <p className="muted small">Your idea and settings are saved locally in this browser.</p>
-        <p className="stage-help" id="stage-help">{simple || auto
+        <p className="stage-help" id="stage-help">{unattended && me?.canRunUnattended
+          ? <><b>Unattended:</b> after brief approval, Studio runs the plan, first frames, motion and final checks automatically, stopping if a check needs your input.</>
+          : simple || auto
           ? <><b>Guided:</b> Studio plans the story and makes first frames, then waits for your OK before the long motion render.</>
           : <><b>Manual:</b> you start each stage yourself: plan, first frames, render.</>}</p>
         {duplicateSession && <div className="hint duplicate-project" role="status">
