@@ -13,6 +13,7 @@ import { buildLearningContext } from './studio-learning-memory.mjs';
 import { createSessionId, draftIdleTimeoutMs, draftTimeoutMs, normalizeSessionPrompt, sessionTitle } from './studio-session-utils.mjs';
 import { MAX_AUTO_RETRIES, WATCHED_KINDS, checkStall, classifyExit, isLocalCommand, isOrphanScenarioMember, keepAwakeCommand, mayReapOrphan, parsePsProcessIdentities, parsePsProcessIdentity, retryDecision, stallMessage, watchdogLimits } from './studio-watchdog.mjs';
 import { availableTakes, commitTakes, motionState, reserveTake, sha256, summarizeTakeScreens, technicalObservations, verifiedTake } from './studio-motion-state.mjs';
+import { FeedbackError, LIMITS as FEEDBACK_LIMITS, boundedJson, createFeedbackStore, validateSubmission } from './studio-feedback.mjs';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -1258,6 +1259,10 @@ function today(user, kind) {
 
 let hostedDryRun;
 
+// Product feedback lives in its own files, apart from the learning ledger, so it can never steer future plans.
+const productFeedback = createFeedbackStore({ dir: process.env.STUDIO_FEEDBACK_DIR || path.join(ROOT, 'storage', 'studio-feedback') });
+const FEEDBACK_DAILY_LIMIT = Number(process.env.STUDIO_FEEDBACK_DAILY_LIMIT) || 10;
+
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   // Block cross-site requests: only same-origin pages on this host may call the API.
@@ -1285,7 +1290,7 @@ http.createServer(async (req, res) => {
     const owner = me.role === 'owner';
     return json(res, 200, { name: me.name, role: me.role, maxSeconds: owner ? 60 : CREATOR_MAX_SECONDS,
       rendersLeft: owner ? null : Math.max(0, me.dailyRenders - today(me, 'render')), draftsLeft: owner ? null : Math.max(0, CREATOR_DAILY_DRAFTS - today(me, 'draft')),
-      canSimulateHostedShot: Boolean(TOKEN) && owner, canCompare: owner, canSeeLog: owner, canRunUnattended: owner });
+      canSimulateHostedShot: Boolean(TOKEN) && owner, canManageFeedback: owner, canCompare: owner, canSeeLog: owner, canRunUnattended: owner });
   }
   if (url.pathname === '/api/readiness') {
     if (req.method !== 'GET') return json(res, 405, { error: 'Use GET to run the local readiness check.' });
@@ -2058,6 +2063,51 @@ http.createServer(async (req, res) => {
     const videoSha256 = await fileHash(videoFile);
     if (!ledger({ type: 'feedback', user: me.name, session: sess.id, rating: b.rating, note: String(b.note || '').slice(0, 400), look: sess.options?.look, prompt: sess.prompt, scenario: sess.scenario, video: sess.video, videoSha256, evidenceType: 'creator-feedback' })) return json(res, 500, { error: 'Could not save feedback.' });
     return json(res, 200, { ok: true });
+  }
+  if (url.pathname.startsWith('/api/product-feedback')) {
+    try {
+      const query = url.searchParams;
+      if (url.pathname === '/api/product-feedback' && req.method === 'GET') {
+        return json(res, 200, productFeedback.list({ viewer: me, scope: query.get('scope') === 'all' ? 'all' : 'mine',
+          status: query.get('status') || undefined, category: query.get('category') || undefined, q: query.get('q') || '',
+          cursor: query.get('cursor') || undefined, limit: query.get('limit') || undefined }));
+      }
+      if (url.pathname === '/api/product-feedback/item' && req.method === 'GET') {
+        const item = productFeedback.get(query.get('id'), me);
+        return item ? json(res, 200, item) : json(res, 404, { error: 'That feedback was not found.' });
+      }
+      if (url.pathname === '/api/product-feedback' && req.method === 'POST') {
+        const read = await boundedJson(req, FEEDBACK_LIMITS.textBody);
+        if (read.error) return json(res, read.status, { error: read.error });
+        const parsed = validateSubmission(read.value);
+        if (parsed.error) return json(res, 400, { error: parsed.error });
+        // Only identifiers the Studio already holds for this video are stored. Prompt text is never copied.
+        const context = {};
+        if (parsed.value.sessionId) {
+          const sess = sessions.get(parsed.value.sessionId);
+          if (!sess || !canSee(me, sess)) return json(res, 404, { error: 'That video is not available to attach.' });
+          context.sessionId = sess.id;
+          if (sess.scenario) context.scenarioKey = keyOf(sess.scenario);
+          if (sess.options?.look) context.look = String(sess.options.look).slice(0, 40);
+          const exported = sess.video ? path.resolve(ROOT, sess.video) : null;
+          if (exported && exported.startsWith(path.resolve(ROOT, 'outputs') + path.sep) && fs.existsSync(exported)) context.videoSha256 = await fileHash(exported);
+        }
+        const result = productFeedback.submit({ user: me, value: parsed.value, context,
+          dailyLimit: isOwner ? FEEDBACK_DAILY_LIMIT * 10 : FEEDBACK_DAILY_LIMIT });
+        return json(res, result.duplicate ? 200 : 201, result);
+      }
+      if (url.pathname === '/api/product-feedback/update' && req.method === 'POST') {
+        const read = await boundedJson(req, FEEDBACK_LIMITS.textBody);
+        if (read.error) return json(res, read.status, { error: read.error });
+        const item = productFeedback.update({ id: read.value.id, viewer: me, status: read.value.status, note: read.value.note, reply: read.value.reply });
+        return json(res, 200, item);
+      }
+      return json(res, 404, { error: 'Unknown feedback request.' });
+    } catch (error) {
+      if (error instanceof FeedbackError) return json(res, error.status, { error: error.message });
+      console.error('product feedback failed:', error);
+      return json(res, 500, { error: 'Feedback could not be saved. Try again.' });
+    }
   }
   if (url.pathname === '/api/checkpoint-review') {
     if (req.method === 'GET') {
