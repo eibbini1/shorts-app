@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "historyWindow": 2,
+  "people": [
+    {
+      "id": "silver-curls",
+      "description": "Fictional adult woman, about 60, deep brown skin, short silver curls, blue linen shirt, deliberate movements."
+    },
+    {
+      "id": "dark-bob",
+      "description": "Fictional adult man, about 35, light olive skin, straight dark chin-length hair, charcoal cardigan, reserved manner."
+    },
+    {
+      "id": "auburn-braid",
+      "description": "Fictional adult woman, about 45, pale freckled skin, auburn braid, moss-green jacket, attentive manner."
+    },
+    {
+      "id": "close-crop",
+      "description": "Fictional adult man, about 50, medium brown skin, closely cropped salt-and-pepper hair, rust cotton shirt, patient manner."
+    }
+  ],
+  "settings": [
+    {
+      "id": "window-table",
+      "description": "Small sunlit apartment, wooden table beside one window, muted cream walls."
+    },
+    {
+      "id": "cafe-counter",
+      "description": "Quiet evening cafe counter, warm side light, plain ceramic cups, no signage."
+    },
+    {
+      "id": "rooftop",
+      "description": "Sheltered rooftop at dusk, simple bench, warm practical lamp, no visible signs."
+    },
+    {
+      "id": "courtyard",
+      "description": "Shaded courtyard, stone table, potted greenery, soft afternoon light."
+    }
+  ],
+  "shapes": [
+    {
+      "id": "adjustment",
+      "want": "Finish a small task carefully.",
+      "obstacle": "One small detail needs adjustment.",
+      "turn": "Make one deliberate correction.",
+      "feeling": "Quiet satisfaction."
+    },
+    {
+      "id": "choice",
+      "want": "Choose how to finish something personal.",
+      "obstacle": "Hesitation between two simple choices.",
+      "turn": "Commit to one choice.",
+      "feeling": "Relief."
+    },
+    {
+      "id": "message",
+      "want": "Understand a short personal message.",
+      "obstacle": "Pause to consider its meaning.",
+      "turn": "Look up after reading.",
+      "feeling": "A restrained smile."
+    },
+    {
+      "id": "welcome",
+      "want": "Prepare a place for a visitor.",
+      "obstacle": "One place is still empty.",
+      "turn": "Make room with one small adjustment.",
+      "feeling": "Anticipation."
+    }
+  ],
+  "constraints": [
+    "Fictional adults only.",
+    "No real or famous likenesses.",
+    "No logos.",
+    "One person and one simple physical action per clip."
+  ],
+  "pilot": {
+    "clipsPerVariety": 3,
+    "lowHandClip": "On a rooftop, the adult holds a short note already in place, reads, pauses and smiles. Keep printed words out of view.",
+    "retryLimit": 1,
+    "persistentFailureDestination": "needs-stronger-model"
+  }
+}

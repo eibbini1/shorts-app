@@ -1,0 +1,253 @@
+{
+  "version": 1,
+  "types": [
+    {
+      "id": "macro-detail",
+      "enabled": true,
+      "framing": "85mm macro, fixed close framing with the full subject boundary visible",
+      "stillPhase": "action-underway",
+      "stillStart": "A crack is already open and a small bead of filling has begun emerging.",
+      "motionTemplate": "The existing bead of filling flows a little farther through the open crack in one clear, steady movement, then stops. The camera stays locked.",
+      "background": {
+        "light": "soft side light",
+        "depth": "shallow depth",
+        "props": [
+          "plain plate"
+        ]
+      },
+      "camera": {
+        "default": "locked",
+        "allowedMoves": []
+      },
+      "forbiddenMotions": [
+        "zoom",
+        "camera push-in",
+        "camera orbit",
+        "cut",
+        "extra hands",
+        "new objects",
+        "changing glove or clothing"
+      ],
+      "seconds": 4,
+      "expectedRisk": "yellow",
+      "riskStatus": "untested"
+    },
+    {
+      "id": "hands-in-action",
+      "enabled": true,
+      "framing": "50mm close view, one adult hand and one utensil fully visible",
+      "stillPhase": "action-underway",
+      "stillStart": "One consistently gloved hand holds a spoon already touching the shell beside a visible starter crack.",
+      "motionTemplate": "The spoon presses the existing crack slightly farther open in one clear, steady movement, then stops. The camera stays locked.",
+      "background": {
+        "light": "diffused side light",
+        "depth": "quiet background",
+        "props": [
+          "plain plate",
+          "spoon"
+        ]
+      },
+      "camera": {
+        "default": "locked",
+        "allowedMoves": []
+      },
+      "forbiddenMotions": [
+        "zoom",
+        "camera push-in",
+        "camera orbit",
+        "cut",
+        "extra hands",
+        "new objects",
+        "changing glove or clothing"
+      ],
+      "seconds": 4,
+      "expectedRisk": "red",
+      "riskStatus": "untested"
+    },
+    {
+      "id": "face-led-portrait",
+      "enabled": true,
+      "framing": "85mm chest-up portrait, full head and shoulders, hands outside frame",
+      "stillPhase": "action-underway",
+      "stillStart": "A fictional adult is already looking up from a note held below frame, a small smile beginning.",
+      "motionTemplate": "The person lifts their gaze a little farther and settles into a small smile in one clear, steady movement, then stops. The camera stays locked.",
+      "background": {
+        "light": "soft window light",
+        "depth": "softly separated background",
+        "props": [
+          "plain chair"
+        ]
+      },
+      "camera": {
+        "default": "locked",
+        "allowedMoves": []
+      },
+      "forbiddenMotions": [
+        "zoom",
+        "camera push-in",
+        "camera orbit",
+        "cut",
+        "extra hands",
+        "new objects",
+        "changing glove or clothing"
+      ],
+      "seconds": 4,
+      "expectedRisk": "yellow",
+      "riskStatus": "untested"
+    },
+    {
+      "id": "wide-establishing",
+      "enabled": true,
+      "framing": "35mm wide view, one adult entirely visible with clear space around them",
+      "stillPhase": "action-underway",
+      "stillStart": "One fictional adult is already settling onto a bench with feet planted and hands resting.",
+      "motionTemplate": "The person settles a little farther onto the bench in one clear, steady movement, then stops. The camera stays locked.",
+      "background": {
+        "light": "gentle afternoon side light",
+        "depth": "foreground and background separated",
+        "props": [
+          "bench",
+          "potted plant"
+        ]
+      },
+      "camera": {
+        "default": "locked",
+        "allowedMoves": []
+      },
+      "forbiddenMotions": [
+        "zoom",
+        "camera push-in",
+        "camera orbit",
+        "cut",
+        "extra hands",
+        "new objects",
+        "changing glove or clothing"
+      ],
+      "seconds": 4,
+      "expectedRisk": "yellow",
+      "riskStatus": "untested"
+    },
+    {
+      "id": "over-shoulder",
+      "enabled": false,
+      "framing": "50mm over-shoulder view, face concealed",
+      "stillPhase": "action-underway",
+      "stillStart": "A note is already partly turned in one adult hand.",
+      "motionTemplate": "The hand completes the small turn of the note in one clear, steady movement, then stops. The camera stays locked.",
+      "background": {
+        "light": "warm practical light",
+        "depth": "soft background",
+        "props": [
+          "note"
+        ]
+      },
+      "camera": {
+        "default": "locked",
+        "allowedMoves": []
+      },
+      "forbiddenMotions": [
+        "zoom",
+        "camera push-in",
+        "camera orbit",
+        "cut",
+        "extra hands",
+        "new objects",
+        "changing glove or clothing"
+      ],
+      "seconds": 4,
+      "expectedRisk": "yellow",
+      "riskStatus": "untested"
+    },
+    {
+      "id": "product-reveal",
+      "enabled": false,
+      "framing": "70mm fixed product view, full silhouette visible",
+      "stillPhase": "action-underway",
+      "stillStart": "One unbranded hinged lid is already partly open.",
+      "motionTemplate": "The existing lid opens a little farther on its hinge in one clear, steady movement, then stops. The camera stays locked.",
+      "background": {
+        "light": "warm rim light",
+        "depth": "plain background",
+        "props": [
+          "plain plinth"
+        ]
+      },
+      "camera": {
+        "default": "locked",
+        "allowedMoves": []
+      },
+      "forbiddenMotions": [
+        "zoom",
+        "camera push-in",
+        "camera orbit",
+        "cut",
+        "extra hands",
+        "new objects",
+        "changing glove or clothing"
+      ],
+      "seconds": 4,
+      "expectedRisk": "yellow",
+      "riskStatus": "untested"
+    },
+    {
+      "id": "walking-environment",
+      "enabled": false,
+      "framing": "35mm medium-wide, full adult body visible",
+      "stillPhase": "action-underway",
+      "stillStart": "One fictional adult is already mid-step on an empty path.",
+      "motionTemplate": "The person completes the existing slow step in one clear, steady movement, then stops. The camera stays locked.",
+      "background": {
+        "light": "even outdoor light",
+        "depth": "clear path depth",
+        "props": [
+          "bench"
+        ]
+      },
+      "camera": {
+        "default": "locked",
+        "allowedMoves": []
+      },
+      "forbiddenMotions": [
+        "zoom",
+        "camera push-in",
+        "camera orbit",
+        "cut",
+        "extra hands",
+        "new objects",
+        "changing glove or clothing"
+      ],
+      "seconds": 4,
+      "expectedRisk": "red",
+      "riskStatus": "untested"
+    }
+  ],
+  "constraints": [
+    "Preserve the chosen person, setting, requested action and ending.",
+    "Use the existing identity and setting locks.",
+    "If an action-underway start conflicts with the user request, ask for a choice instead of silently changing the story.",
+    "No text or logos in generated scene elements."
+  ],
+  "pilot": {
+    "totalClips": 8,
+    "pairs": 4,
+    "seed": 2200,
+    "sameApprovedStillWithinPair": true,
+    "baseline": "Current motion wording",
+    "candidate": "Typed completion wording with locked camera",
+    "scores": [
+      "actionHappened",
+      "looksGood"
+    ],
+    "checks": [
+      "continuity",
+      "contact",
+      "noZoomOvershoot",
+      "noExtraHands",
+      "faceStable",
+      "cleanEndingFrame"
+    ],
+    "retryLimit": 1,
+    "persistentFailureDestination": "needs-stronger-model",
+    "status": "awaiting-review"
+  }
+}
