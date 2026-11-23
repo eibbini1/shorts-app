@@ -32,5 +32,5 @@ test('opt in leaves food defaults alone and versioned selection is deterministic
  assert.equal(selectPeopleStory({...request,enabled:false}),null);
  assert.equal(selectPeopleStory({...request,mode:'food'}),null);
  assert.deepEqual(selectPeopleStory(request),selectPeopleStory(request));
- assert.equal(selectPeopleStory(request).version,1);
+ assert.equal(selectPeopleStory(request).version,2);
 });

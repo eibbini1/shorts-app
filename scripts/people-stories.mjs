@@ -1,12 +1,13 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
+import { loadStudioPreset } from './studio-presets.mjs';
 
 const catalogue = JSON.parse(fs.readFileSync(new URL('../data/people-stories.json', import.meta.url)));
 const dimensions = [['personId', 'people'], ['settingId', 'settings'], ['shapeId', 'shapes']];
 
 // Pure selector. Callers supply session snapshots; no learning or media files are read.
 export function selectPeopleStory({ enabled = process.env.SHORTS_VARIETY === '1',
-  mode, user, projectId, sessions = [], saved = null, ending = '', ...explicit } = {}) {
+  mode, user, projectId, sessions = [], saved = null, ending = '', lightingVariantId = null, ...explicit } = {}) {
   if (!enabled || mode !== 'people-stories') return null;
   if (saved) return structuredClone(saved);
   const history = sessions.filter(row => row.user === user && row.status === 'done' &&
@@ -27,5 +28,10 @@ export function selectPeopleStory({ enabled = process.env.SHORTS_VARIETY === '1'
     result[group] = structuredClone(choice);
     if (pinned && recent.has(pinned)) result.warnings.push('Explicit repeat: ' + key);
   }
+  result.studioId = result.settings.studioId;
+  const studio = loadStudioPreset(result.studioId);
+  const lighting = lightingVariantId ?? studio.lightingVariants[
+    crypto.createHash('sha256').update(String(projectId) + ':lighting').digest().readUInt32BE() % studio.lightingVariants.length].id;
+  result.backgroundRecipe = loadStudioPreset(result.studioId, lighting);
   return result;
 }

@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "historyWindow": 2,
   "people": [
     {
@@ -22,19 +22,83 @@
   "settings": [
     {
       "id": "window-table",
-      "description": "Small sunlit apartment, wooden table beside one window, muted cream walls."
+      "description": "Small sunlit apartment, wooden table beside one window, muted cream walls.",
+      "studioId": "cozy-living-room"
     },
     {
       "id": "cafe-counter",
-      "description": "Quiet evening cafe counter, warm side light, plain ceramic cups, no signage."
+      "description": "Quiet evening cafe counter, warm side light, plain ceramic cups, no signage.",
+      "studioId": "quiet-cafe"
     },
     {
       "id": "rooftop",
-      "description": "Sheltered rooftop at dusk, simple bench, warm practical lamp, no visible signs."
+      "description": "Sheltered rooftop at dusk, simple bench, warm practical lamp, no visible signs.",
+      "studioId": "rooftop-evening"
     },
     {
       "id": "courtyard",
-      "description": "Shaded courtyard, stone table, potted greenery, soft afternoon light."
+      "description": "Shaded courtyard, stone table, potted greenery, soft afternoon light.",
+      "studioId": "shaded-courtyard"
+    },
+    {
+      "id": "artist-loft",
+      "description": "One uncluttered artist loft: pale timber floor, brick wall, plain stool, blank canvas and closed sketchbook; the same window and brickwork throughout.",
+      "studioId": "artist-loft"
+    },
+    {
+      "id": "building-lobby",
+      "description": "One modern building lobby: beige stone floor, walnut wall panels, plain bench left, tall plant right; the same doorway and wall geometry throughout.",
+      "studioId": "building-lobby"
+    },
+    {
+      "id": "covered-market",
+      "description": "One empty covered market aisle: stone paving, timber stall, plain basket and folded cloth; the same canopy and stall throughout.",
+      "studioId": "covered-market"
+    },
+    {
+      "id": "daylight-office",
+      "description": "One quiet office: pale oak desk, cream walls, window left, plain chair, closed notebook and unbranded desk lamp; the same desk layout throughout.",
+      "studioId": "daylight-office"
+    },
+    {
+      "id": "garden-path",
+      "description": "One enclosed garden: stone path, low green hedge left, timber bench right, terracotta pot; the same plants, path and bench throughout.",
+      "studioId": "garden-path"
+    },
+    {
+      "id": "house-porch",
+      "description": "One sheltered house porch: pale timber floor, cream exterior wall, simple chair left, small side table and plant right; the same doorway throughout.",
+      "studioId": "house-porch"
+    },
+    {
+      "id": "lakeside-deck",
+      "description": "One sheltered lakeside deck: timber boards, low railing, plain chair and side table; the same distant shoreline throughout.",
+      "studioId": "lakeside-deck"
+    },
+    {
+      "id": "quiet-street",
+      "description": "A quiet residential street: pale stone paving, brick wall left, plain bench right, one potted tree; the same facades and pavement throughout.",
+      "studioId": "quiet-street"
+    },
+    {
+      "id": "reading-room",
+      "description": "One quiet reading room: walnut shelves, cream walls, simple chair, closed book and side table; the same shelf arrangement throughout.",
+      "studioId": "reading-room"
+    },
+    {
+      "id": "sheltered-bus-stop",
+      "description": "One quiet pedestrian bus shelter: clear glass panels, plain bench and small unmarked bag; the same paving and glass frame throughout.",
+      "studioId": "sheltered-bus-stop"
+    },
+    {
+      "id": "small-balcony",
+      "description": "One enclosed home balcony: tiled floor, solid parapet, plain chair and potted fern; the same doorway and tile pattern throughout.",
+      "studioId": "small-balcony"
+    },
+    {
+      "id": "workshop-table",
+      "description": "One small craft workshop: worn oak table, pale plaster wall, plain stool, closed wooden box and folded cloth; the same table and wall throughout.",
+      "studioId": "workshop-table"
     }
   ],
   "shapes": [

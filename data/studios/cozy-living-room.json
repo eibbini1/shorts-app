@@ -15,5 +15,23 @@
     "cream sofa",
     "oak side table",
     "small plant"
+  ],
+  "population": "At most one chosen fictional adult; no background crowds.",
+  "lightingVariants": [
+    {
+      "id": "base",
+      "lighting": "Soft warm window light from the right",
+      "mood": "warm, grounded, quiet everyday life"
+    },
+    {
+      "id": "soft-evening",
+      "lighting": "Soft low evening light from the left, gentle warm highlights, stable exposure.",
+      "mood": "quiet, warm, reflective"
+    },
+    {
+      "id": "diffuse-daylight",
+      "lighting": "Soft diffuse daylight from the left, gentle neutral shadows, stable exposure.",
+      "mood": "natural, calm, attentive"
+    }
   ]
 }
