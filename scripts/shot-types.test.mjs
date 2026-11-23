@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { selectShotTypes } from './shot-types.mjs';
+import { selectShotTypes, materializeShotRecipe } from './shot-types.mjs';
 
 const catalogue = JSON.parse(fs.readFileSync(new URL('../data/shot-types.json', import.meta.url)));
 test('default off and explicit rollback return no recipes', () => {
@@ -18,7 +18,7 @@ test('exactly four types enabled; every still starts mid-action and camera is lo
     assert.equal(type.camera.default, 'locked');
     assert.ok(type.background.props.length <= 3);
     assert.equal(type.stillPhase, 'action-underway');
-    assert.ok(type.stillStart.length > 20);
+    assert.ok(type.examples.still.length > 20);
   }
 });
 test('planner mixes two or three types without adjacent repetition', () => {
@@ -52,4 +52,32 @@ test('pilot is eight matched clips and records action and preference separately'
   assert.equal(catalogue.pilot.seed,2200);
   assert.equal(catalogue.pilot.totalClips,8);
   assert.deepEqual(catalogue.pilot.scores,['actionHappened','looksGood']);
+});
+
+test('beat meaning selects place, feeling and action types independently of catalogue order', () => {
+  const rows=selectShotTypes({enabled:true,shotCount:4,beats:[
+    {kind:'feeling'},{kind:'place'},{kind:'action',scale:'detail'},{kind:'action',scale:'contact'}]});
+  assert.deepEqual(rows.map(row=>row.typeId),['face-led-portrait','wide-establishing','macro-detail','hands-in-action']);
+  assert.throws(()=>selectShotTypes({enabled:true,shotCount:2,beats:[{kind:'place'}]}),/beat count/);
+  assert.throws(()=>selectShotTypes({enabled:true,shotCount:1,beats:[{kind:'unknown'}]}),/Unknown beat/);
+});
+test('action templates stay generic while retaining the original concrete examples', () => {
+  for(const type of catalogue.types) {
+    assert.ok(type.motionTemplate.includes('{action}'));
+    assert.ok(type.stillTemplate.includes('{action}'));
+    assert.ok(type.examples.motion.length>20);
+    assert.ok(type.examples.still.length>20);
+  }
+  const recipe=selectShotTypes({enabled:true,shotCount:1,typeIds:['macro-detail']})[0];
+  const original=structuredClone(recipe);
+  const rendered=materializeShotRecipe(recipe,{
+    action:'A bead of rain slides down the glass',
+    startState:'The bead is already sliding on the same window.'});
+  assert.ok(rendered.motionPrompt.startsWith('A bead of rain slides down the glass'));
+  assert.ok(rendered.imagePrompt.includes('already sliding'));
+  assert.doesNotMatch(rendered.motionPrompt,/filling|cream|shell/);
+  assert.doesNotMatch(rendered.motionPrompt,/\{action\}/);
+  assert.deepEqual(recipe,original);
+  assert.throws(()=>materializeShotRecipe(recipe,{action:'',startState:'x'}),/action/);
+  assert.throws(()=>materializeShotRecipe(recipe,{action:'Moves',startState:''}),/start state/);
 });

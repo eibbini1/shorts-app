@@ -1,13 +1,12 @@
 {
-  "version": 1,
+  "version": 2,
   "types": [
     {
       "id": "macro-detail",
       "enabled": true,
       "framing": "85mm macro, fixed close framing with the full subject boundary visible",
       "stillPhase": "action-underway",
-      "stillStart": "A crack is already open and a small bead of filling has begun emerging.",
-      "motionTemplate": "The existing bead of filling flows a little farther through the open crack in one clear, steady movement, then stops. The camera stays locked.",
+      "motionTemplate": "{action} in one clear, steady movement, then stop. The camera stays locked. Preserve the subject and all existing contact points.",
       "background": {
         "light": "soft side light",
         "depth": "shallow depth",
@@ -30,15 +29,19 @@
       ],
       "seconds": 4,
       "expectedRisk": "yellow",
-      "riskStatus": "untested"
+      "riskStatus": "untested",
+      "examples": {
+        "still": "A crack is already open and a small bead of filling has begun emerging.",
+        "motion": "The existing bead of filling flows a little farther through the open crack in one clear, steady movement, then stops. The camera stays locked."
+      },
+      "stillTemplate": "The action has already begun. {action}. {startState}. Preserve the existing subject, setting and hand coverings."
     },
     {
       "id": "hands-in-action",
       "enabled": true,
       "framing": "50mm close view, one adult hand and one utensil fully visible",
       "stillPhase": "action-underway",
-      "stillStart": "One consistently gloved hand holds a spoon already touching the shell beside a visible starter crack.",
-      "motionTemplate": "The spoon presses the existing crack slightly farther open in one clear, steady movement, then stops. The camera stays locked.",
+      "motionTemplate": "{action} in one clear, steady movement, then stop. The camera stays locked. Preserve the subject and all existing contact points.",
       "background": {
         "light": "diffused side light",
         "depth": "quiet background",
@@ -62,15 +65,19 @@
       ],
       "seconds": 4,
       "expectedRisk": "red",
-      "riskStatus": "untested"
+      "riskStatus": "untested",
+      "examples": {
+        "still": "One consistently gloved hand holds a spoon already touching the shell beside a visible starter crack.",
+        "motion": "The spoon presses the existing crack slightly farther open in one clear, steady movement, then stops. The camera stays locked."
+      },
+      "stillTemplate": "The action has already begun. {action}. {startState}. Preserve the existing subject, setting and hand coverings."
     },
     {
       "id": "face-led-portrait",
       "enabled": true,
       "framing": "85mm chest-up portrait, full head and shoulders, hands outside frame",
       "stillPhase": "action-underway",
-      "stillStart": "A fictional adult is already looking up from a note held below frame, a small smile beginning.",
-      "motionTemplate": "The person lifts their gaze a little farther and settles into a small smile in one clear, steady movement, then stops. The camera stays locked.",
+      "motionTemplate": "{action} in one clear, steady movement, then stop. The camera stays locked. Preserve the subject and all existing contact points.",
       "background": {
         "light": "soft window light",
         "depth": "softly separated background",
@@ -93,15 +100,19 @@
       ],
       "seconds": 4,
       "expectedRisk": "yellow",
-      "riskStatus": "untested"
+      "riskStatus": "untested",
+      "examples": {
+        "still": "A fictional adult is already looking up from a note held below frame, a small smile beginning.",
+        "motion": "The person lifts their gaze a little farther and settles into a small smile in one clear, steady movement, then stops. The camera stays locked."
+      },
+      "stillTemplate": "The action has already begun. {action}. {startState}. Preserve the existing subject, setting and hand coverings."
     },
     {
       "id": "wide-establishing",
       "enabled": true,
       "framing": "35mm wide view, one adult entirely visible with clear space around them",
       "stillPhase": "action-underway",
-      "stillStart": "One fictional adult is already settling onto a bench with feet planted and hands resting.",
-      "motionTemplate": "The person settles a little farther onto the bench in one clear, steady movement, then stops. The camera stays locked.",
+      "motionTemplate": "{action} in one clear, steady movement, then stop. The camera stays locked. Preserve the subject and all existing contact points.",
       "background": {
         "light": "gentle afternoon side light",
         "depth": "foreground and background separated",
@@ -125,15 +136,19 @@
       ],
       "seconds": 4,
       "expectedRisk": "yellow",
-      "riskStatus": "untested"
+      "riskStatus": "untested",
+      "examples": {
+        "still": "One fictional adult is already settling onto a bench with feet planted and hands resting.",
+        "motion": "The person settles a little farther onto the bench in one clear, steady movement, then stops. The camera stays locked."
+      },
+      "stillTemplate": "The action has already begun. {action}. {startState}. Preserve the existing subject, setting and hand coverings."
     },
     {
       "id": "over-shoulder",
       "enabled": false,
       "framing": "50mm over-shoulder view, face concealed",
       "stillPhase": "action-underway",
-      "stillStart": "A note is already partly turned in one adult hand.",
-      "motionTemplate": "The hand completes the small turn of the note in one clear, steady movement, then stops. The camera stays locked.",
+      "motionTemplate": "{action} in one clear, steady movement, then stop. The camera stays locked. Preserve the subject and all existing contact points.",
       "background": {
         "light": "warm practical light",
         "depth": "soft background",
@@ -156,15 +171,19 @@
       ],
       "seconds": 4,
       "expectedRisk": "yellow",
-      "riskStatus": "untested"
+      "riskStatus": "untested",
+      "examples": {
+        "still": "A note is already partly turned in one adult hand.",
+        "motion": "The hand completes the small turn of the note in one clear, steady movement, then stops. The camera stays locked."
+      },
+      "stillTemplate": "The action has already begun. {action}. {startState}. Preserve the existing subject, setting and hand coverings."
     },
     {
       "id": "product-reveal",
       "enabled": false,
       "framing": "70mm fixed product view, full silhouette visible",
       "stillPhase": "action-underway",
-      "stillStart": "One unbranded hinged lid is already partly open.",
-      "motionTemplate": "The existing lid opens a little farther on its hinge in one clear, steady movement, then stops. The camera stays locked.",
+      "motionTemplate": "{action} in one clear, steady movement, then stop. The camera stays locked. Preserve the subject and all existing contact points.",
       "background": {
         "light": "warm rim light",
         "depth": "plain background",
@@ -187,15 +206,19 @@
       ],
       "seconds": 4,
       "expectedRisk": "yellow",
-      "riskStatus": "untested"
+      "riskStatus": "untested",
+      "examples": {
+        "still": "One unbranded hinged lid is already partly open.",
+        "motion": "The existing lid opens a little farther on its hinge in one clear, steady movement, then stops. The camera stays locked."
+      },
+      "stillTemplate": "The action has already begun. {action}. {startState}. Preserve the existing subject, setting and hand coverings."
     },
     {
       "id": "walking-environment",
       "enabled": false,
       "framing": "35mm medium-wide, full adult body visible",
       "stillPhase": "action-underway",
-      "stillStart": "One fictional adult is already mid-step on an empty path.",
-      "motionTemplate": "The person completes the existing slow step in one clear, steady movement, then stops. The camera stays locked.",
+      "motionTemplate": "{action} in one clear, steady movement, then stop. The camera stays locked. Preserve the subject and all existing contact points.",
       "background": {
         "light": "even outdoor light",
         "depth": "clear path depth",
@@ -218,7 +241,12 @@
       ],
       "seconds": 4,
       "expectedRisk": "red",
-      "riskStatus": "untested"
+      "riskStatus": "untested",
+      "examples": {
+        "still": "One fictional adult is already mid-step on an empty path.",
+        "motion": "The person completes the existing slow step in one clear, steady movement, then stops. The camera stays locked."
+      },
+      "stillTemplate": "The action has already begun. {action}. {startState}. Preserve the existing subject, setting and hand coverings."
     }
   ],
   "constraints": [

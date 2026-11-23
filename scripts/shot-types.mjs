@@ -5,7 +5,7 @@ const enabledTypes = catalogue.types.filter(type => type.enabled);
 
 // CPU-only recipe selection. No session, model, renderer, or learning-ledger access.
 export function selectShotTypes({ enabled = process.env.SHORTS_SHOT_TYPES === '1',
-  shotCount, typeIds = [], cameraMoves = [], saved = null } = {}) {
+  shotCount, beats = [], typeIds = [], cameraMoves = [], saved = null } = {}) {
   if (!enabled) return null;
   if (!Number.isInteger(shotCount) || shotCount < 1 || shotCount > 60) {
     throw new Error('shotCount must be an integer from 1 to 60.');
@@ -23,9 +23,21 @@ export function selectShotTypes({ enabled = process.env.SHORTS_SHOT_TYPES === '1
     }
     return structuredClone(saved);
   }
-  const mix = enabledTypes.slice(0, Math.min(shotCount, 3));
+  if (!Array.isArray(beats) || (beats.length && beats.length !== shotCount)) {
+    throw new Error('The beat count must match shotCount.');
+  }
+  const defaultKinds = shotCount === 1 ? ['action'] : shotCount === 2
+    ? ['action', 'feeling'] : ['place', 'action', 'feeling'];
+  const typeForBeat = (beat) => {
+    const kind = typeof beat === 'string' ? beat : beat?.kind;
+    if (kind === 'place') return 'wide-establishing';
+    if (kind === 'feeling') return 'face-led-portrait';
+    if (kind === 'detail' || (kind === 'action' && beat?.scale === 'detail')) return 'macro-detail';
+    if (kind === 'action') return 'hands-in-action';
+    throw new Error('Unknown beat kind: ' + kind);
+  };
   return Array.from({ length: shotCount }, (_, index) => {
-    const id = typeIds[index] ?? mix[index % mix.length].id;
+    const id = typeIds[index] ?? typeForBeat(beats[index] ?? defaultKinds[index % defaultKinds.length]);
     const type = catalogue.types.find(type => type.id === id);
     if (!type) throw new Error('Unknown shot type: ' + id);
     if (!type.enabled) throw new Error('Shot type is disabled: ' + id);
@@ -34,9 +46,27 @@ export function selectShotTypes({ enabled = process.env.SHORTS_SHOT_TYPES === '1
       throw new Error('Camera movement has not been opted in for ' + id);
     }
     return { shotIndex: index, typeId: id, libraryVersion: catalogue.version, camera,
-      framing: type.framing, stillPhase: type.stillPhase, stillStart: type.stillStart,
+      framing: type.framing, stillPhase: type.stillPhase,
+      stillTemplate: type.stillTemplate, examples: structuredClone(type.examples),
       background: structuredClone(type.background), motionTemplate: type.motionTemplate,
       forbiddenMotions: [...type.forbiddenMotions], seconds: type.seconds,
       expectedRisk: type.expectedRisk, riskStatus: type.riskStatus };
   });
+}
+
+
+// This materializes caller-reviewed text; it does not invent or verify an action.
+export function materializeShotRecipe(recipe, { action, startState } = {}) {
+  if (typeof action !== 'string' || !action.trim()) throw new Error('A concrete action is required.');
+  if (typeof startState !== 'string' || !startState.trim()) throw new Error('An already-underway start state is required.');
+  if (typeof recipe?.stillTemplate !== 'string' || typeof recipe?.motionTemplate !== 'string') {
+    throw new Error('A current shot recipe is required.');
+  }
+  const clean = text => text.trim().replace(/[.!?]+$/, '');
+  const fill = template => template.replaceAll('{action}', clean(action))
+    .replaceAll('{startState}', clean(startState));
+  return {
+    imagePrompt: recipe.framing + '. ' + fill(recipe.stillTemplate),
+    motionPrompt: fill(recipe.motionTemplate),
+  };
 }
