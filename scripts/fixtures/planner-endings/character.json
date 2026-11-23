@@ -1,0 +1,57 @@
+{
+  "source": "frozen from bench-nonfood run 20261122-213927 (gemma-local); not regenerated",
+  "case": "character",
+  "plan": {
+    "payoff": "The robot opens the greenhouse door and steps inside",
+    "shots": [
+      {
+        "narration": "Rusty the robot spots a brass key, gleaming in the cluttered workshop.",
+        "sceneState": {
+          "before": "A boxy, teal-colored cartoon robot stands in a cluttered workshop, sunlight streaming through a window. A brass key rests on a wooden workbench.",
+          "action": "Rusty extends his hand, grasps the brass key, and lifts it slightly, rotating it slowly.",
+          "after": "Rusty's hand holds the brass key, lifted slightly, rotating slowly to observe its details."
+        },
+        "visualChecks": {
+          "mustShow": [
+            "Robot is teal colored",
+            "Key is brass",
+            "Workshop is cluttered",
+            "Sunlight is visible"
+          ],
+          "mustNotShow": [
+            "Robot is damaged",
+            "Key is broken",
+            "Workshop is clean"
+          ],
+          "questions": [
+            "Is the robot's eye circular?",
+            "Is the workbench made of wood?"
+          ]
+        }
+      },
+      {
+        "narration": "Rusty carefully inserts the brass key into the rusty greenhouse latch.",
+        "sceneState": {
+          "before": "Rusty's hand holds the brass key, lifted slightly, rotating slowly to observe its details.",
+          "action": "Rusty inserts the brass key into the rusty greenhouse latch and turns it clockwise.",
+          "after": "The rusty greenhouse latch is now unlocked, the brass key still held in Rusty’s hand."
+        },
+        "visualChecks": {
+          "mustShow": [
+            "Robot is teal-colored",
+            "Brass key is visible",
+            "Greenhouse door is present"
+          ],
+          "mustNotShow": [
+            "Greenhouse door is open",
+            "Robot is walking"
+          ],
+          "questions": [
+            "Is the latch rusty?",
+            "Is the robot's hand metallic?"
+          ]
+        }
+      }
+    ]
+  }
+}
