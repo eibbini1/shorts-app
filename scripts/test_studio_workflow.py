@@ -547,7 +547,14 @@ subprocess.run([sys.executable,'scripts/take-report-fixture.py',a.scenario,str(a
         assert any(item.get('type')=='motion-clip-gate' and item.get('gate')=='technical-screen'
                    and item.get('clipSha256')==last_rating['clipSha256'] and item.get('flagged') is False
                    and item.get('gateVersion')=='first-checks-v1' for item in evidence),evidence
-        assert req(review_url,'fixture-owner',review_submission)[0]==200
+        lookup=review_url+'?sessionId='+session
+        assert req(lookup,'fixture-owner')[1]['segments'][0]['myReview'] is None
+        owner_submission={**review_submission,'notes':'Owner playback fixture'}
+        assert req(review_url,'fixture-owner',owner_submission)[0]==200
+        persisted=req(lookup,'fixture-owner')[1]['segments'][0]['myReview']
+        assert persisted=={key:owner_submission[key] for key in ('outcome','seconds','notes','ratings')},persisted
+        assert req(lookup,'creator-a')[1]['segments'][0]['myReview']['notes']!=persisted['notes']
+        assert req(lookup,'creator-b')[0] in (403,404)
         owner_rating=json.loads((root/'storage/studio-learning/runs.jsonl').read_text().splitlines()[-1])
         assert owner_rating['reviewerRole']=='owner' and owner_rating['clipSha256']==last_rating['clipSha256']
         end_frame=work.parent/motion_data['endFrame']

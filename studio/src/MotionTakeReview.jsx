@@ -44,7 +44,7 @@ export default function MotionTakeReview({ sessionId }) {
 function SegmentReview({ source, sessionId }) {
   const [frames, setFrames] = useState([]);
   const [problem, setProblem] = useState('');
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(source.myReview ? 'Your saved finding for this clip.' : '');
   const [saving, setSaving] = useState(false);
 
   const url = source && '/media?p=' + encodeURIComponent(source.clip) + '&v=' + source.sha256;
@@ -135,7 +135,7 @@ function SegmentReview({ source, sessionId }) {
     {frames.length === 3 && frames.every(({ image }) => image === frames[0].image) &&
       <p role="status">All three sampled frames match. Check for a frozen clip during playback.</p>}
     {source && <form onSubmit={save}>
-      <label>Finding <select name="outcome" required defaultValue="">
+      <label>Finding <select name="outcome" required defaultValue={source.myReview?.outcome ?? ''}>
         <option value="" disabled>Choose a finding</option>
         <option value="holds-up">Holds up</option>
         <option value="identity-drift">Identity drift</option>
@@ -145,13 +145,13 @@ function SegmentReview({ source, sessionId }) {
       <fieldset>
         <legend>Rate from 1 (poor) to 5 (excellent)</legend>
         {Object.entries({ identity: 'Identity held', action: 'Action happened', realism: 'Motion looks real' }).map(([key, label]) =>
-          <label key={key}>{label} <select name={key} required defaultValue="">
+          <label key={key}>{label} <select name={key} required defaultValue={source.myReview?.ratings?.[key] ?? ''}>
             <option value="" disabled>Choose rating</option>
             {[1, 2, 3, 4, 5].map((value) => <option key={value} value={value}>{value}</option>)}
           </select></label>)}
       </fieldset>
-      <label>Seconds into this clip <input name="seconds" type="number" min="0" max="60" step="any" defaultValue="0" required /></label>
-      <label>Notes <textarea name="notes" maxLength="1000" /></label>
+      <label>Seconds into this clip <input name="seconds" type="number" min="0" max="60" step="any" defaultValue={source.myReview?.seconds ?? 0} required /></label>
+      <label>Notes <textarea name="notes" maxLength="1000" defaultValue={source.myReview?.notes ?? ''} /></label>
       <button type="submit" disabled={saving}>Save finding</button>
       {message && <p role="status">{message}</p>}
     </form>}

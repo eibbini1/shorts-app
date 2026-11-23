@@ -1745,7 +1745,22 @@ http.createServer(async (req, res) => {
         const context = takeContext(owner, shot);
         const state = availableTakes(context.work, shot, context.expected);
         const takeScreen = summarizeTakeScreens(state.completed);
-        return json(res, 200, { take: result.take, parts: result.parts, segments, takeScreen });
+        const role = authOn() ? me.role : null;
+        const myReviews = new Map();
+        for (const row of readLedger()) {
+          if (row.type === 'motion-take-review' && row.session === owner.id && row.shot === shot &&
+              row.take === result.take && row.user === me.name && row.reviewerRole === role) {
+            myReviews.set(row.part, row);
+          }
+        }
+        const reviewedSegments = segments.map((segment) => {
+          const row = myReviews.get(segment.part);
+          const myReview = row?.clipSha256 === segment.sha256
+            ? { outcome: row.outcome, seconds: row.seconds, notes: row.notes, ratings: row.ratings }
+            : null;
+          return { ...segment, myReview };
+        });
+        return json(res, 200, { take: result.take, parts: result.parts, segments: reviewedSegments, takeScreen });
       }
       const reviewed = segments.find((segment) => segment.part === input.part && segment.sha256 === input.sha256);
       if (!reviewed) return json(res, 409, { error: 'The take changed. Reload it before saving.' });
