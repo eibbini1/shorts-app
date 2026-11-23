@@ -1,0 +1,38 @@
+{
+  "id": "cel-2d",
+  "name": "Cel-shaded 2D",
+  "route": "diffusion-reference",
+  "status": "experimental",
+  "promptStyle": "original hand-drawn 2D cel animation look, clean ink outlines, two-tone cel shading, painted soft backgrounds",
+  "palette": "soft painted backgrounds, brighter character colors",
+  "lineWeight": "clean consistent ink outline",
+  "surface": "cel shading, no photographic texture",
+  "identityCheck": {
+    "method": "image-embedding",
+    "threshold": null,
+    "status": "planned",
+    "note": "Calibrate on approved sheets; for exact identity draw a Remotion puppet instead."
+  },
+  "suitableFor": [
+    "people-stories",
+    "mascots"
+  ],
+  "forbiddenReferences": [
+    "Pixar",
+    "Disney",
+    "DreamWorks",
+    "Ghibli",
+    "Illumination",
+    "Aardman",
+    "Laika",
+    "Marvel",
+    "Nintendo",
+    "Studio Trigger",
+    "in the style of"
+  ],
+  "rules": [
+    "Original designs only: never imitate a named studio, franchise or existing character.",
+    "Adults only for people characters (25+).",
+    "No readable text in frame; add text in editing."
+  ]
+}

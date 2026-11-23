@@ -1,0 +1,38 @@
+{
+  "id": "flat-2d",
+  "name": "Flat 2D",
+  "route": "puppet-2d",
+  "status": "active",
+  "promptStyle": "original flat 2D vector illustration, solid color shapes, no gradients, simple geometric features, clean silhouettes",
+  "palette": "limited 5-color palette per film",
+  "lineWeight": "none or 2 px uniform",
+  "surface": "flat fills",
+  "identityCheck": {
+    "method": "deterministic",
+    "threshold": null,
+    "status": "active",
+    "note": "The same SVG parts are drawn every frame (Remotion puppet), so identity cannot drift."
+  },
+  "suitableFor": [
+    "mascots",
+    "explainers"
+  ],
+  "forbiddenReferences": [
+    "Pixar",
+    "Disney",
+    "DreamWorks",
+    "Ghibli",
+    "Illumination",
+    "Aardman",
+    "Laika",
+    "Marvel",
+    "Nintendo",
+    "Studio Trigger",
+    "in the style of"
+  ],
+  "rules": [
+    "Original designs only: never imitate a named studio, franchise or existing character.",
+    "Adults only for people characters (25+).",
+    "No readable text in frame; add text in editing."
+  ]
+}

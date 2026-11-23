@@ -1,0 +1,39 @@
+{
+  "id": "stylized-3d",
+  "name": "Stylised 3D",
+  "route": "diffusion-reference",
+  "status": "experimental",
+  "promptStyle": "original stylised 3D animated film look, soft subsurface skin, simplified rounded forms, slightly enlarged eyes, clean soft bounce lighting, gentle rim light",
+  "palette": "warm saturated but not neon",
+  "lineWeight": null,
+  "surface": "smooth stylised materials, no photographic grain",
+  "identityCheck": {
+    "method": "image-embedding",
+    "threshold": null,
+    "status": "planned",
+    "note": "Calibrate a DINOv2/CLIP image similarity threshold on approved sheets before gating."
+  },
+  "suitableFor": [
+    "people-stories",
+    "mascots"
+  ],
+  "riggedAlternative": "rig-3d (three.js / Remotion) gives exact consistency; see Crumb3D.tsx",
+  "forbiddenReferences": [
+    "Pixar",
+    "Disney",
+    "DreamWorks",
+    "Ghibli",
+    "Illumination",
+    "Aardman",
+    "Laika",
+    "Marvel",
+    "Nintendo",
+    "Studio Trigger",
+    "in the style of"
+  ],
+  "rules": [
+    "Original designs only: never imitate a named studio, franchise or existing character.",
+    "Adults only for people characters (25+).",
+    "No readable text in frame; add text in editing."
+  ]
+}

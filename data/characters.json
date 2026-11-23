@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "note": "Fictional adults only. Identity text describes visible traits; the city is setting, never identity. MST (Monk Skin Tone 1-10) is audit metadata, not prompt text. Drafts need owner review and a local likeness check before use. Source: docs/research/diverse-characters-and-studios.md",
+  "version": 2,
+  "note": "Fictional adults only. Identity text describes visible traits; the city is setting, never identity. MST (Monk Skin Tone 1-10) is audit metadata, not prompt text. Drafts need owner review and a local likeness check before use. Source: docs/research/diverse-characters-and-studios.md Each person needs an approved reference sheet (8 views, stored by the Studio with SHA-256) before shots count as referenced. Mascots are rendered by their rigs, never by diffusion.",
   "characters": [
     {
       "id": "chr-lagos-adaeze-34",
@@ -17,7 +17,23 @@
         "std-lagos-veranda"
       ],
       "wardrobeSource": "S (Guardian Nigeria office wear)",
-      "sourceStatus": "sourced"
+      "sourceStatus": "sourced",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
     },
     {
       "id": "chr-nairobi-otieno-52",
@@ -34,7 +50,23 @@
         "std-nairobi-matatu-stage"
       ],
       "wardrobeSource": "S (kitenge informal wear) + I (styling)",
-      "sourceStatus": "sourced"
+      "sourceStatus": "sourced",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
     },
     {
       "id": "chr-fez-latifa-61",
@@ -51,7 +83,23 @@
         "std-fez-riad"
       ],
       "wardrobeSource": "I (hijab is a choice, not a default)",
-      "sourceStatus": "inferred"
+      "sourceStatus": "inferred",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
     },
     {
       "id": "chr-mumbai-farzana-45",
@@ -68,7 +116,23 @@
         "std-mumbai-chai-tapri"
       ],
       "wardrobeSource": "S (salwar kameez everyday, Quartz) + I (styling)",
-      "sourceStatus": "sourced"
+      "sourceStatus": "sourced",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
     },
     {
       "id": "chr-hanoi-linh-29",
@@ -85,7 +149,23 @@
         "std-hanoi-tube-cafe"
       ],
       "wardrobeSource": "I",
-      "sourceStatus": "inferred"
+      "sourceStatus": "inferred",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
     },
     {
       "id": "chr-tokyo-hiroshi-68",
@@ -102,7 +182,23 @@
         "std-tokyo-local-platform"
       ],
       "wardrobeSource": "I",
-      "sourceStatus": "inferred"
+      "sourceStatus": "inferred",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
     },
     {
       "id": "chr-istanbul-emre-39",
@@ -119,7 +215,23 @@
         "std-istanbul-balcony"
       ],
       "wardrobeSource": "I (Western dress dominant)",
-      "sourceStatus": "inferred"
+      "sourceStatus": "inferred",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
     },
     {
       "id": "chr-dalarna-ingrid-73",
@@ -137,7 +249,23 @@
       ],
       "wardrobeSource": "I",
       "sourceStatus": "inferred",
-      "inclusionNote": "visible hearing aids as ordinary detail"
+      "inclusionNote": "visible hearing aids as ordinary detail",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
     },
     {
       "id": "chr-manchester-daniel-44",
@@ -154,7 +282,23 @@
         "std-uk-terraced-kitchen"
       ],
       "wardrobeSource": "I",
-      "sourceStatus": "inferred"
+      "sourceStatus": "inferred",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
     },
     {
       "id": "chr-puebla-rosario-50",
@@ -171,7 +315,23 @@
         "std-puebla-kitchen"
       ],
       "wardrobeSource": "I (no sombrero/serape — documented cliché)",
-      "sourceStatus": "inferred"
+      "sourceStatus": "inferred",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
     },
     {
       "id": "chr-saopaulo-thiago-31",
@@ -189,7 +349,23 @@
       ],
       "wardrobeSource": "I",
       "sourceStatus": "inferred",
-      "inclusionNote": "disability shown with agency, not as the story"
+      "inclusionNote": "disability shown with agency, not as the story",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
     },
     {
       "id": "chr-lapaz-justina-44",
@@ -207,7 +383,23 @@
       ],
       "wardrobeSource": "S (pollera as everyday identity)",
       "sourceStatus": "sourced",
-      "note": "pair with a La Paz shop studio once drafted; Cusco set is a placeholder"
+      "note": "pair with a La Paz shop studio once drafted; Cusco set is a placeholder",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
     },
     {
       "id": "chr-ontario-marie-58",
@@ -224,7 +416,23 @@
         "std-ontario-dock"
       ],
       "wardrobeSource": "I (beadwork earrings everyday; no headdress — sacred)",
-      "sourceStatus": "inferred"
+      "sourceStatus": "inferred",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
     },
     {
       "id": "chr-brisbane-jarrah-47",
@@ -241,7 +449,23 @@
         "std-queenslander-veranda"
       ],
       "wardrobeSource": "S (urban, contemporary — Creative Spirits) + I (workwear)",
-      "sourceStatus": "sourced"
+      "sourceStatus": "sourced",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
     },
     {
       "id": "chr-antarctic-camila-41",
@@ -258,7 +482,46 @@
         "std-antarctic-galley"
       ],
       "wardrobeSource": "I",
-      "sourceStatus": "inferred"
+      "sourceStatus": "inferred",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
+    }
+  ],
+  "mascots": [
+    {
+      "id": "crumb",
+      "name": "Crumb",
+      "status": "approved",
+      "fictional": true,
+      "identityBlock": "Crumb, an original tiny chef mascot: round golden-crust head and body with darker freckle dots, big white eyes, small smile, white apron with two gold buttons, white chef's toque.",
+      "defaultStyle": "flat-2d",
+      "styles": [
+        "flat-2d",
+        "stylized-3d"
+      ],
+      "rigs": {
+        "flat-2d": "puppet-2d",
+        "stylized-3d": "rig-3d"
+      },
+      "rigSources": {
+        "puppet-2d": "mini-chef-studio/src/Crumb.tsx",
+        "rig-3d": "mini-chef-studio/src/Crumb3D.tsx"
+      },
+      "note": "Drawn by code in every frame, so Crumb never drifts. Channel mascot for Billionaire Bites."
     }
   ]
 }
