@@ -74,3 +74,23 @@ Never expose ComfyUI publicly; no ComfyUI-Manager in the image; pin custom nodes
 2. Meaning of ">128" (VRAM per GPU vs GPU count).
 3. Whether to evaluate MiniMax H3 (read full licence, GPU region, branding clause).
 4. Validate the 16 drafted cases against real adapter capabilities and conditioning parity, then freeze the benchmark and rubric before generation.
+
+### Local Studio shot simulation (2026-11-23)
+
+At the guided motion review checkpoint, an authenticated owner can open **Simulate hosted motion**,
+preview the approved shot and explicitly confirm the simulation. This uses the installed TypeScript
+dispatcher and SQLite spend ledger with a local mock adapter. The $0.25 figure is a test price. The
+ledger records $0.00 actual cost, and this path produces no clip or external traffic. LTX-2.5 and Wan
+2.2 are simulation labels; this exercise does not benchmark or verify either provider model.
+
+The two-step `POST /api/hosted/dry-run` requires a real Studio owner token even in local mode. Requests
+use exactly `sessionId`, `shot`, `model`, `capUsd` and `action` (`quote` or `confirm`).
+Confirmation includes the quote's `approval`. Studio rereads the approved frame and scenario from
+disk on both calls. The signature binds the shot, prompt, scenario, frame, model, dimensions, timing,
+audio setting, provider and cap to a single nonce for ten minutes. Server restart expires outstanding
+quotes. Consuming the nonce and reserving budget share one SQLite transaction. A failed budget check
+leaves the nonce unused; a successful confirmation cannot be replayed. The session cap is fixed at
+the first successful reservation. Simulation data lives in `storage/studio-hosted-dry-run.sqlite`.
+
+Run the two `StudioHosted*.test.ts` Vitest suites for the local HTTP and spend regressions. A real
+hosted adapter, live pricing and owner approval of the actual provider and maximum cost are separate work.

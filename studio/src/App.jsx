@@ -7,6 +7,7 @@ import { planPromptChanges, repairPreviewChanges } from './review-recommendation
 import { notesOf, isBlocked, choiceOf, nowLine, displayPipelineLine, progressOf as progressOfLines } from './pipeline-lines.js';
 import { watchdogLabel } from './watchdog-status.js';
 import MotionTakeReview from './MotionTakeReview.jsx';
+import HostedShotSimulation from './HostedShotSimulation.jsx';
 import CharacterReferences from './CharacterReferences.jsx';
 import { takeControls } from './motion-takes.js';
 import { NotificationBell, useNotifications } from './NotificationBell.jsx';
@@ -379,7 +380,7 @@ const TIPS = [
   'Tip: the Setting box overrides the scene, e.g. "a rainy rooftop garden".',
 ];
 
-function RenderLive({ job, plan, sessions, onRetakeMotion, onSequenceTake, onContinue, busy }) {
+function RenderLive({ job, plan, sessions, canSimulateHostedShot, onRetakeMotion, onSequenceTake, onContinue, busy }) {
   const [files, setFiles] = useState({ stills: [], clips: [] });
   const [tip, setTip] = useState(0);
   const sc = job.scenario;
@@ -400,6 +401,7 @@ function RenderLive({ job, plan, sessions, onRetakeMotion, onSequenceTake, onCon
     const estimate = estFor(job.options?.quality);
     return <>
       <MotionTakeReview key={job.id + ':' + job.startedAt} sessionId={job.id} />
+      {canSimulateHostedShot && <HostedShotSimulation key={job.id + ":" + job.sequence.currentShot} sessionId={job.id} shot={job.sequence.currentShot} />}
       <button type="button" disabled={busy || !takes.canMakeNew} onClick={() => onSequenceTake()}>Another take</button>
       {takes.canMakeNew && <button type="button" className="ghost" disabled={busy} onClick={() => onSequenceTake(undefined, true)}
         title={`Render remaining seeds one at a time. Allow ${fmt(estimate.cycleLow)}–${fmt(estimate.cycleHigh)} per new clip.`}>Fill all three takes</button>}
@@ -836,7 +838,7 @@ export default function App() {
                   {attempt.lines?.length > 0 && <pre className="log">{attempt.lines.join('\n')}</pre>}
                 </section>;
               })}</details>}
-              {job.plan && <RenderLive job={job} plan={job.plan?.plan || job.plan} sessions={sessions} onRetakeMotion={retakeMotion} onSequenceTake={sequenceTake} onContinue={continueSequence} busy={busy || me?.rendersLeft === 0} />}
+              {job.plan && <RenderLive canSimulateHostedShot={me?.canSimulateHostedShot} job={job} plan={job.plan?.plan || job.plan} sessions={sessions} onRetakeMotion={retakeMotion} onSequenceTake={sequenceTake} onContinue={continueSequence} busy={busy || me?.rendersLeft === 0} />}
               {job.status === 'done' && job.kind === 'draft' && !job.plan && <p className="muted">Plan saved: {job.scenario}</p>}
               {job.previousVideo && job.previousVideo !== job.video && <details className="card"><summary>Previous export</summary><Player src={'/media?p=' + encodeURIComponent(job.previousVideo)} /></details>}
               {job.video && <ExportReview key={job.video} job={job} review={review.video === job.video ? review : { status: 'pending' }} weak={weak} notes={notes} busy={busy || refining} renderDisabled={me?.rendersLeft === 0} onRetake={retakeShot} onRepair={prepareRepair} onCompare={me?.canCompare && sessions.filter((p) => p.hasVideo).length > 1 ? () => setCompare(true) : undefined} />}

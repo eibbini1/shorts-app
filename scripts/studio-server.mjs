@@ -1256,6 +1256,8 @@ function today(user, kind) {
   return readLedger().filter((r) => r.type === 'run' && r.user === user.name && r.kind === kind && new Date(r.ts).toDateString() === day).length;
 }
 
+let hostedDryRun;
+
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   // Block cross-site requests: only same-origin pages on this host may call the API.
@@ -1283,7 +1285,7 @@ http.createServer(async (req, res) => {
     const owner = me.role === 'owner';
     return json(res, 200, { name: me.name, role: me.role, maxSeconds: owner ? 60 : CREATOR_MAX_SECONDS,
       rendersLeft: owner ? null : Math.max(0, me.dailyRenders - today(me, 'render')), draftsLeft: owner ? null : Math.max(0, CREATOR_DAILY_DRAFTS - today(me, 'draft')),
-      canCompare: owner, canSeeLog: owner, canRunUnattended: owner });
+      canSimulateHostedShot: Boolean(TOKEN) && owner, canCompare: owner, canSeeLog: owner, canRunUnattended: owner });
   }
   if (url.pathname === '/api/readiness') {
     if (req.method !== 'GET') return json(res, 405, { error: 'Use GET to run the local readiness check.' });
@@ -1435,6 +1437,38 @@ http.createServer(async (req, res) => {
       ...(retrySession ? { session: retrySession, archiveAttempt: true } : {}),
     });
     return json(res, 202, snap(x));
+  }
+  if (url.pathname === '/api/hosted/dry-run') {
+    if (req.method !== 'POST') return json(res, 405, { error: 'Use POST for a hosted simulation.' });
+    if (!TOKEN || !isOwner) return json(res, 403, { error: 'Sign in with the Studio owner link to simulate a hosted shot.' });
+    try {
+      const b = await body(req);
+      if (!b || !['quote', 'confirm'].includes(b.action) || !['ltx-2.5', 'wan-2.2'].includes(b.model) ||
+          !Number.isInteger(b.shot) || b.shot < 1 || !Number.isFinite(b.capUsd) ||
+          Object.keys(b).some((k) => !['sessionId', 'shot', 'capUsd', 'model', 'action', 'approval'].includes(k))) {
+        return json(res, 400, { error: 'Choose a shot, simulation model and budget cap.' });
+      }
+      const session = sessions.get(String(b.sessionId));
+      const frame = session?.sequence?.approvedFrames?.find((f) => f.shot === b.shot);
+      if (!frame) return json(res, 409, { error: 'Approve the first frame for this shot first.' });
+      const { expected } = takeContext(session, b.shot);
+      if (expected.scenarioSha256 !== frame.scenarioSha256) return json(res, 409, { error: 'The plan changed after frame approval.' });
+      const story = JSON.parse(fs.readFileSync(path.join(ROOT, session.scenario), 'utf8').replace(/^\uFEFF/, ''));
+      const prompt = story.plan.shots[b.shot - 1]?.motionPrompt;
+      if (!prompt?.trim()) return json(res, 409, { error: 'This shot needs a motion prompt.' });
+      const { width, height, fps, frames } = expected.renderSettings;
+      const request = { prompt, mode: 'i2v_first_frame', width, height, fps, frameCount: frames,
+        audio: 'silent', conditioning: [{ kind: 'image', role: 'first-frame', sha256: frame.sha256, uri: 'asset:' + frame.sha256 }] };
+      const bound = { sessionId: session.id, shot: b.shot, model: b.model, capUsd: b.capUsd,
+        scenarioSha256: expected.scenarioSha256, request };
+      if (!hostedDryRun) {
+        const { tsImport } = await import('tsx/esm/api');
+        const { openStudioHostedDryRun } = await tsImport('../src/media/video/StudioHostedDryRun.ts', import.meta.url);
+        hostedDryRun ??= openStudioHostedDryRun(path.join(ROOT, 'storage', 'studio-hosted-dry-run.sqlite'));
+      }
+      const result = b.action === 'quote' ? hostedDryRun.quote(bound) : await hostedDryRun.confirm(bound, b.approval);
+      return json(res, 200, result);
+    } catch (error) { return json(res, 409, { error: error.message || 'Simulation failed.' }); }
   }
   if (url.pathname === '/api/character-references' && ['GET', 'POST'].includes(req.method)) {
     if (!isOwner) return json(res, 403, { error: 'The character library belongs to the owner.' });
