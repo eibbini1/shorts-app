@@ -15,6 +15,7 @@ def run_fixture():
     shutil.copy('scripts/studio-ideas.mjs',root/'scripts')
     shutil.copy('scripts/studio-refine-idea.mjs',root/'scripts')
     shutil.copy('scripts/story-draft-utils.mjs',root/'scripts')
+    shutil.copy('scripts/shot-normalize.mjs',root/'scripts')
     shutil.copy('scripts/studio-learning-signals.mjs',root/'scripts')
     shutil.copy('scripts/studio-learning-memory.mjs',root/'scripts')
     shutil.copy('scripts/studio-feedback.mjs',root/'scripts')
