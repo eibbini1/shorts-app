@@ -1,0 +1,38 @@
+{
+  "id": "std-antarctic-galley",
+  "name": "Antarctic research station galley",
+  "status": "prompt-only",
+  "sourceStatus": "inferred",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One modular station galley, white insulated wall panels, stainless steel counter, small triple-glazed window onto snow; the same architecture and prop positions throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent. window camera-right.",
+  "referenceFrames": {},
+  "lighting": "cool snow light from the window as dominant source",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot. Suggested framing: medium close-up.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "warm refuge in the cold",
+  "depth": "pot foreground, subject midground, window background",
+  "props": [
+    "soup pot",
+    "ladle",
+    "thermos"
+  ],
+  "population": "At most one chosen fictional adult; no background crowds; no readable signage (add any text in editing); matte surfaces, no mirrors facing the camera.",
+  "lightingVariants": [
+    {
+      "id": "base",
+      "lighting": "cool snow light from the window as dominant source",
+      "mood": "warm refuge in the cold"
+    },
+    {
+      "id": "polar-day",
+      "lighting": "Polar day, one dominant light source, stable exposure.",
+      "mood": "warm refuge in the cold"
+    },
+    {
+      "id": "polar-night-with-warm-counter-lights",
+      "lighting": "Polar night with warm counter lights, one dominant light source, stable exposure.",
+      "mood": "warm refuge in the cold"
+    }
+  ]
+}

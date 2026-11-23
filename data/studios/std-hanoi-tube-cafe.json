@@ -1,0 +1,38 @@
+{
+  "id": "std-hanoi-tube-cafe",
+  "name": "Hanoi tube-house café",
+  "status": "prompt-only",
+  "sourceStatus": "inferred",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One narrow tube-house café, pale-yellow stucco wall, low plastic stools, ceiling fan, open front onto a quiet lane; the same architecture and prop positions throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent. fan always in upper frame.",
+  "referenceFrames": {},
+  "lighting": "warm late-afternoon side light from the open front, camera-right",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot. Suggested framing: medium close-up, slightly low angle.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "relaxed, creative",
+  "depth": "phin glass foreground, subject midground, lane background soft",
+  "props": [
+    "phin filter on glass",
+    "condensed-milk tin",
+    "low plastic stool"
+  ],
+  "population": "At most one chosen fictional adult; no background crowds; no readable signage (add any text in editing); matte surfaces, no mirrors facing the camera.",
+  "lightingVariants": [
+    {
+      "id": "base",
+      "lighting": "warm late-afternoon side light from the open front, camera-right",
+      "mood": "relaxed, creative"
+    },
+    {
+      "id": "late-afternoon",
+      "lighting": "Late afternoon, one dominant light source, stable exposure.",
+      "mood": "relaxed, creative"
+    },
+    {
+      "id": "overcast-morning",
+      "lighting": "Overcast morning, one dominant light source, stable exposure.",
+      "mood": "relaxed, creative"
+    }
+  ]
+}

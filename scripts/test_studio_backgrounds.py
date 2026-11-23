@@ -18,8 +18,8 @@ RENDER = load('render-any-local')
 PRESETS = sorted(p for p in (ROOT / 'data/studios').glob('*.json') if p.stem != 'luxury-kitchen')
 
 class BackgroundTests(unittest.TestCase):
-    def test_all_sixteen_load_validate_and_reach_director_command(self):
-        self.assertEqual(len(PRESETS), 16)
+    def test_all_everyday_studios_load_validate_and_reach_director_command(self):
+        self.assertEqual(len(PRESETS), 31)  # 16 everyday + 15 worldwide
         for path in PRESETS:
             with self.subTest(studio=path.stem):
                 studio = json.loads(path.read_text())

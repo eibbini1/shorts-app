@@ -1,0 +1,38 @@
+{
+  "id": "std-ontario-dock",
+  "name": "Ontario lakeside cabin dock",
+  "status": "prompt-only",
+  "sourceStatus": "inferred",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One cedar dock over still lake, canoe tied alongside, spruce forest shore; the same architecture and prop positions throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent. water reflections kept soft.",
+  "referenceFrames": {},
+  "lighting": "pre-dawn blue hour with low mist, then first warm light",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot. Suggested framing: medium shot.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "stillness",
+  "depth": "dock planks foreground, subject midground, forest background",
+  "props": [
+    "canoe paddle",
+    "enamel mug",
+    "thermos"
+  ],
+  "population": "At most one chosen fictional adult; no background crowds; no readable signage (add any text in editing); matte surfaces, no mirrors facing the camera.",
+  "lightingVariants": [
+    {
+      "id": "base",
+      "lighting": "pre-dawn blue hour with low mist, then first warm light",
+      "mood": "stillness"
+    },
+    {
+      "id": "blue-hour",
+      "lighting": "Blue hour, one dominant light source, stable exposure.",
+      "mood": "stillness"
+    },
+    {
+      "id": "early-autumn-afternoon",
+      "lighting": "Early autumn afternoon, one dominant light source, stable exposure.",
+      "mood": "stillness"
+    }
+  ]
+}

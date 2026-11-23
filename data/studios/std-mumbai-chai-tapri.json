@@ -1,0 +1,38 @@
+{
+  "id": "std-mumbai-chai-tapri",
+  "name": "Mumbai chai tapri, morning",
+  "status": "prompt-only",
+  "sourceStatus": "inferred",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One small chai tapri stall with steel counter, gas burner and aluminium pan, corrugated awning, monsoon-stained concrete wall, any signage faded and illegible; the same architecture and prop positions throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent. one chaiwala background, defocused.",
+  "referenceFrames": {},
+  "lighting": "soft overcast morning light, steam backlit",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot. Suggested framing: medium close-up, eye level.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "everyday bustle, gentle",
+  "depth": "glasses foreground, subject midground, wall background",
+  "props": [
+    "kettle",
+    "small cutting-chai glasses",
+    "biscuit jar"
+  ],
+  "population": "At most one chosen fictional adult; no background crowds; no readable signage (add any text in editing); matte surfaces, no mirrors facing the camera.",
+  "lightingVariants": [
+    {
+      "id": "base",
+      "lighting": "soft overcast morning light, steam backlit",
+      "mood": "everyday bustle, gentle"
+    },
+    {
+      "id": "overcast-morning",
+      "lighting": "Overcast morning, one dominant light source, stable exposure.",
+      "mood": "everyday bustle, gentle"
+    },
+    {
+      "id": "monsoon-rain-diffused",
+      "lighting": "Monsoon rain-diffused, one dominant light source, stable exposure.",
+      "mood": "everyday bustle, gentle"
+    }
+  ]
+}

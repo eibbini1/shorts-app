@@ -1,0 +1,38 @@
+{
+  "id": "std-swedish-pine-kitchen",
+  "name": "Swedish countryside pine kitchen",
+  "status": "prompt-only",
+  "sourceStatus": "inferred",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One farmhouse kitchen, scrubbed pine table, painted cabinets with Falun-red accents, cast-iron wood-burning stove, lace curtain; the same architecture and prop positions throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent. stove camera-left.",
+  "referenceFrames": {},
+  "lighting": "low winter sun through a south window, camera-right",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot. Suggested framing: medium shot.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "cosy",
+  "depth": "table foreground, subject midground, stove background",
+  "props": [
+    "coffee pot",
+    "tray of cinnamon buns",
+    "oven mitt"
+  ],
+  "population": "At most one chosen fictional adult; no background crowds; no readable signage (add any text in editing); matte surfaces, no mirrors facing the camera.",
+  "lightingVariants": [
+    {
+      "id": "base",
+      "lighting": "low winter sun through a south window, camera-right",
+      "mood": "cosy"
+    },
+    {
+      "id": "winter-midday",
+      "lighting": "Winter midday, one dominant light source, stable exposure.",
+      "mood": "cosy"
+    },
+    {
+      "id": "candle-warm-evening",
+      "lighting": "Candle-warm evening, one dominant light source, stable exposure.",
+      "mood": "cosy"
+    }
+  ]
+}

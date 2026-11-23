@@ -1,0 +1,38 @@
+{
+  "id": "std-saopaulo-varanda",
+  "name": "São Paulo apartment varanda",
+  "status": "prompt-only",
+  "sourceStatus": "inferred",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One modernist concrete balcony, large cobogó breeze-block screen kept soft, potted monstera, ceramic tile floor, step-free threshold; the same architecture and prop positions throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent. cobogó camera-left.",
+  "referenceFrames": {},
+  "lighting": "late-afternoon golden light raking through the cobogó",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot. Suggested framing: medium close-up.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "quiet focus",
+  "depth": "monstera leaf foreground, subject midground, city haze background",
+  "props": [
+    "cafezinho cup",
+    "tablet",
+    "potted monstera"
+  ],
+  "population": "At most one chosen fictional adult; no background crowds; no readable signage (add any text in editing); matte surfaces, no mirrors facing the camera.",
+  "lightingVariants": [
+    {
+      "id": "base",
+      "lighting": "late-afternoon golden light raking through the cobogó",
+      "mood": "quiet focus"
+    },
+    {
+      "id": "golden-hour",
+      "lighting": "Golden hour, one dominant light source, stable exposure.",
+      "mood": "quiet focus"
+    },
+    {
+      "id": "overcast",
+      "lighting": "Overcast, one dominant light source, stable exposure.",
+      "mood": "quiet focus"
+    }
+  ]
+}

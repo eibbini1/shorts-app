@@ -1,0 +1,38 @@
+{
+  "id": "std-fez-riad",
+  "name": "Fez riad courtyard",
+  "status": "prompt-only",
+  "sourceStatus": "inferred",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One small riad (رياض) courtyard, central fountain basin, dado band of palm-sized green-and-white zellige tiles kept soft, warm ochre tadelakt plaster above, carved cedar door; the same architecture and prop positions throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent. zellige always defocused.",
+  "referenceFrames": {},
+  "lighting": "soft top light from the open sky, late morning",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot. Suggested framing: medium close-up, eye level.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "serene",
+  "depth": "brass tray foreground, subject midground, cedar door background",
+  "props": [
+    "brass teapot on low tray",
+    "potted orange tree",
+    "tea glasses"
+  ],
+  "population": "At most one chosen fictional adult; no background crowds; no readable signage (add any text in editing); matte surfaces, no mirrors facing the camera.",
+  "lightingVariants": [
+    {
+      "id": "base",
+      "lighting": "soft top light from the open sky, late morning",
+      "mood": "serene"
+    },
+    {
+      "id": "late-morning",
+      "lighting": "Late morning, one dominant light source, stable exposure.",
+      "mood": "serene"
+    },
+    {
+      "id": "dusk-ambient",
+      "lighting": "Dusk ambient, one dominant light source, stable exposure.",
+      "mood": "serene"
+    }
+  ]
+}
