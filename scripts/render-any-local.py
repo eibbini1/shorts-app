@@ -18,6 +18,7 @@ from first_checks import check_still, check_clip
 from presentation_mode import choose as choose_presentation
 import render_quality
 import motion_takes
+import still_lessons
 from select_still_local import select as select_still_local
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -629,6 +630,7 @@ def main():
             return candidate
 
         def save_repair(prompt, attempt, reason):
+            still_lessons.record_rejection(shot['imagePrompt'], prompt, reason, scenario.name)
             shot['imagePrompt'] = prompt
             save_repaired_scenario(scenario, source_data, work)
             print(f'Automatically correcting shot {index + 1} from local vision feedback '
@@ -647,6 +649,7 @@ def main():
                          f'Inspect the still and vision report in {work / "refs"}.')
         shot['imagePrompt'] = accepted_prompt
         if candidate_reviews.get(reference, {}).get('status') == 'passed':
+            still_lessons.record_recipe(accepted_prompt, scenario.name)
             candidate_reviews[reference] = {'status': 'passed', 'reason': 'Selected by vision gate'}
         frame_review_statuses.append(candidate_reviews.get(reference, {}).get('status', 'unverified'))
         persist_pending(reference)

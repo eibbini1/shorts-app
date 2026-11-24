@@ -14,3 +14,9 @@ Known gaps: no cross-shot identity/prop locking; captions split mid-phrase; reso
 - UI: Vite + React in `studio/` (`studio/src/App.jsx`, `studio/src/extras.jsx`). Features: chat history by day, Look cards (Food, Cartoon, Night cartoon, Custom) with example ideas, idea helper, themes (Studio, Night navy+cream, White navy+white), First frames review with Regenerate, Behind-the-scenes panel, render timer, player with loop/speed/frame step, side-by-side and blind compare, rating box.
 - Pipeline changes: `render-any-local.py --stills-only` (stills + vision check, no motion) and `seed-bumps.json`; `make-local-video.sh --stills-only`; non-food looks skip the food prompt score via `SHORTS_MIN_PROMPT_SCORE=0` (set by the server); `audit-local-story.py` ACTION verb list widened for non-food actions.
 - Known food-only gates still applying to other looks: the ASMR sound-cue list in `add-sfx.py` (paw pats, chime, room tone only) and the prompt score. Time model: clips = sum(ceil(seconds/5)); estimate = 10 s + clips x 274 s + 70 s (range 240-315 s per clip).
+
+## Sound, end stills and still lessons (added 2026-11-24)
+- `scripts/add-sfx.py`: per-shot Foley, plus optional `audioPlan.accents` (impact, riser-impact, stinger, swell, breath, recorded), shot `hit` offsets and a licensed `music` bed with a drop aligned to a film time; mix is ducked under narration and loudness-normalised.
+- `scripts/render-any-local.py`: a shot may set `endStill` or `endImagePrompt`; the final LTX part is anchored to it (`--image PATH 96 1.0`).
+- `scripts/still_lessons.py`: vision-gate rejections and passing prompts append to `storage/learning/*.jsonl`; `prompt-lint.py` prints them per shot type.
+

@@ -11,8 +11,12 @@ chime/shimmer, bounce, pat, bubble/pop, squeak, fizz and room tone. These are or
 Optional sound accents (audioPlan.accents, off unless listed; at most 6; `at` is film time in seconds of the key visual event):
   {"type": "impact", "at": 2.0}                              sub-bass hit whose onset lands exactly on `at`
   {"type": "riser-impact", "at": 3.0, "riserSeconds": 1.2}   rising noise build that ends on an impact at `at`
+  {"type": "recorded", "sample": "crunch", "at": 6.4, "seconds": 0.8}   a declared real recording; its first transient lands on `at`
   {"type": "stinger", "at": 8.2, "tailSeconds": 1.6}         impact plus a ringing shimmer tail for the final reveal
 A shot may instead carry "hit": {"type": "impact", "atSeconds": 1.2} (seconds into that shot); it becomes an accent at the shot start plus that offset.
+Optional licensed music bed (audioPlan.music, a track YOU supply; never trending or unlicensed audio):
+  {"path": "~/Music/track.mp3", "gainDb": -16, "fadeOut": 1.0, "dropAt": 4.0, "dropInTrack": 2.0}
+  It loops to film length, ducks under narration, and with dropAt (film s) + dropInTrack (track s) the track's drop lands on the film's hit.
   {"type": "swell", "at": 4.8, "seconds": 1.2}               sub-bass swell centred on `at`, for a movement phase
   {"type": "breath", "at": 11.36, "seconds": 0.3, "depth": 0.2}  dips the existing soundtrack just BEFORE the hero cut at `at`
 Optional per accent: "gain" (multiplier). A breath ducks the whole existing soundtrack, so it is refused over narration.
@@ -211,8 +215,8 @@ def rustle(seconds, rng):
     return lowpass(highpass(noise(seconds, rng), 0.88), 0.4) * swell * np.minimum(1, t * 4) * 1.2
 
 
-ACCENT_TYPES = ('impact', 'riser-impact', 'stinger', 'swell', 'breath')
-ACCENT_GAIN = {'impact': 0.34, 'riser': 0.16, 'tail': 0.14, 'swell': 0.22}
+ACCENT_TYPES = ('impact', 'riser-impact', 'stinger', 'swell', 'breath', 'recorded')
+ACCENT_GAIN = {'impact': 0.34, 'riser': 0.16, 'tail': 0.14, 'swell': 0.22, 'recorded': 0.5}
 MAX_ACCENTS = 6
 RISER_SECONDS, TAIL_SECONDS, SWELL_SECONDS, BREATH_SECONDS, BREATH_DEPTH = 1.2, 1.6, 1.2, 0.3, 0.2
 BREATH_RAMP = 0.05
@@ -260,6 +264,55 @@ def swell(length=SWELL_SECONDS):
     return ((np.sin(2 * np.pi * 55 * t) + 0.4 * np.sin(2 * np.pi * 110 * t)) * env).astype(np.float32)
 
 
+def audit_music(music, total):
+    """Problems with audioPlan.music; empty when the bed can be mixed as written."""
+    if not music:
+        return []
+    if not isinstance(music, dict) or not music.get('path'):
+        return ['music needs a "path" to a licensed track you supplied']
+    problems = []
+    if not Path(music['path']).expanduser().is_file():
+        problems.append(f'music file not found: {music["path"]}')
+    for key, low, high in (('gainDb', -40, 0), ('fadeOut', 0, 4), ('dropAt', 0, total), ('dropInTrack', 0, 600), ('startAt', 0, total)):
+        value = music.get(key)
+        if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float)) or not low <= value <= high):
+            problems.append(f'music {key} must be a number from {low:g} to {high:g}')
+    if (music.get('dropAt') is None) != (music.get('dropInTrack') is None):
+        problems.append('music dropAt (film seconds) and dropInTrack (track seconds) go together')
+    return problems
+
+
+def music_offset(music):
+    """Film-time start of the track: the track's drop lines up with the film's hit when both are given."""
+    if music.get('dropAt') is not None and music.get('dropInTrack') is not None:
+        return music['dropAt'] - music['dropInTrack']
+    return music.get('startAt', 0)
+
+
+def music_filter(music, total, source='[3:a]', out='[mus]'):
+    """Filter text taking the stock track (input 3) to a film-length bed ending in `out`.
+    A negative offset trims the front of the track; a positive one delays it."""
+    offset = music_offset(music)
+    shift = f'atrim=start={-offset:.3f},asetpts=PTS-STARTPTS' if offset < 0 else (f'adelay={int(offset * 1000)}:all=1' if offset > 0 else 'anull')
+    fade = music.get('fadeOut', 1.0)
+    return (f'{source}aresample=48000,aformat=channel_layouts=stereo,{shift},volume={music.get("gainDb", -16)}dB,'
+            f'afade=t=in:st={max(offset, 0):.3f}:d=0.3,atrim=0:{total:g},afade=t=out:st={max(total - fade, 0):g}:d={fade:g}{out}')
+
+
+def mix_graph(base_chain, breath_total, music=None):
+    """The ffmpeg filter graph: film audio + foley/accents ducked under narration (+ optional music bed)."""
+    narration = '[2:a]aresample=48000,asplit=2[key][key2];' if music else '[2:a]aresample=48000[key];'
+    bed = ''
+    inputs = 2
+    if music:
+        bed = (music_filter(music, breath_total) + ';[mus][key2]sidechaincompress=threshold=0.003:ratio=8:attack=20:release=400[musd];')
+        inputs = 3
+    mixed = '[base][duck]' + ('[musd]' if music else '')
+    return ('[1:a]aresample=48000[fx];' + narration + bed +
+            '[fx][key]sidechaincompress=threshold=0.003:ratio=20:attack=8:release=350[duck];' + base_chain +
+            f';{mixed}amix=inputs={inputs}:normalize=0:duration=first,loudnorm=I=-14:TP=-1.5:LRA=11[a]')
+
+
 def resolve_accents(data):
     """audioPlan.accents plus accents declared on a shot as `hit` {type, atSeconds} (seconds into that shot).
     Returns (accents, problems). A hit offset is turned into film time so sound follows the visual event."""
@@ -281,7 +334,7 @@ def resolve_accents(data):
     return accents, problems
 
 
-def audit_accents(accents, total):
+def audit_accents(accents, total, samples=None):
     """Problems with an audioPlan.accents list; empty when the plan can be mixed as written."""
     if not accents:
         return []
@@ -304,6 +357,13 @@ def audit_accents(accents, total):
             problems.append(f'accent plan item {number}: the riser is longer than the time before it ends at {at:g} s')
         if kind == 'stinger' and at + accent.get('tailSeconds', TAIL_SECONDS) > total + 0.05:
             problems.append(f'accent plan item {number}: the stinger tail does not fit before the end of the film')
+        if kind == 'recorded':
+            if not accent.get('sample'):
+                problems.append(f'accent plan item {number}: a recorded accent needs "sample", the name of a declared Foley recording')
+            elif samples is not None and accent['sample'] not in samples:
+                problems.append(f'accent plan item {number}: sample {accent["sample"]!r} is not in audioPlan.foleySamples')
+            if not 0.2 <= accent.get('seconds', 0.8) <= 2 or at + accent.get('seconds', 0.8) > total + 0.05:
+                problems.append(f'accent plan item {number}: a recorded accent lasts 0.2 to 2 s and must fit before the end of the film')
         if kind == 'swell' and not 0.3 <= accent.get('seconds', SWELL_SECONDS) <= 3:
             problems.append(f'accent plan item {number}: a swell lasts 0.3 to 3 s')
         if kind == 'breath':
@@ -433,9 +493,10 @@ def audit_cues(data):
             problems.append(f'required sound cue {name}: matching field recording is missing')
         elif not any(name in planned_cues(shot) for shot in data['plan']['shots']):
             problems.append(f'required sound cue {name}: no shot schedules the cue')
+    problems.extend(audit_music(audio_plan.get('music'), sum(shot['seconds'] for shot in data['plan']['shots'])))
     resolved, hit_problems = resolve_accents(data)
     problems.extend(hit_problems)
-    problems.extend(audit_accents(resolved, sum(shot['seconds'] for shot in data['plan']['shots'])))
+    problems.extend(audit_accents(resolved, sum(shot['seconds'] for shot in data['plan']['shots']), samples))
     for name, source in samples.items():
         file = ROOT / str(source.get('file', ''))
         if name not in GAIN or not file.is_file() or file.suffix.lower() not in ('.ogg', '.wav', '.mp3'):
@@ -575,6 +636,12 @@ def build(shots, total, seed=311, foley_samples=None, continuous_room=False, rec
             tail = min(float(accent.get('tailSeconds', TAIL_SECONDS)), total - when - 0.04)
             if tail > 0.1:
                 put_hit(ring_out(tail), when + 0.04, ACCENT_GAIN['tail'] * gain, fade_out=0.05)
+        if kind == 'recorded':  # a real recording whose first transient lands exactly on `at`
+            heard = recording_slice(foley_samples[accent['sample']], float(accent.get('seconds', 0.8)))
+            loud = np.abs(heard) > 0.1 * float(np.max(np.abs(heard)))
+            onset = max(int(np.argmax(loud)) - round(0.003 * RATE), 0)
+            heard = heard[onset:] / float(np.max(np.abs(heard)))
+            put_hit(heard, when, ACCENT_GAIN['recorded'] * gain, fade_out=0.05)
         if kind == 'swell':
             length = float(accent.get('seconds', SWELL_SECONDS))
             put_hit(swell(length), when - length / 2, ACCENT_GAIN['swell'] * gain, fade_out=0.05)
@@ -637,10 +704,12 @@ def main():
     out = video.with_suffix('.sfx.mp4')
     breath = breath_chain(accents)
     base_chain = "[0:a]highpass=f=70,afftdn=nr=6:nf=-45" + (f',{breath}' if breath else '') + '[base]'
-    graph = ('[1:a]aresample=48000[fx];[2:a]aresample=48000[key];'
-             '[fx][key]sidechaincompress=threshold=0.003:ratio=20:attack=8:release=350[duck];'
-             + base_chain + ';[base][duck]amix=inputs=2:normalize=0:duration=first,loudnorm=I=-14:TP=-1.5:LRA=11[a]')
-    subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(video), '-i', str(sfx), '-i', str(voice), '-filter_complex', graph,
+    music = (data.get('audioPlan') or {}).get('music') or None
+    graph = mix_graph(base_chain, total, music)
+    inputs = ['-i', str(video), '-i', str(sfx), '-i', str(voice)]
+    if music:
+        inputs += ['-stream_loop', '-1', '-i', str(Path(music['path']).expanduser())]
+    subprocess.run(['ffmpeg', '-y', '-v', 'error', *inputs, '-filter_complex', graph,
                     '-map', '0:v', '-map', '[a]', '-t', str(total), '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', str(out)], check=True)
     print(f'Wrote {out.name}. Effects placed: ' + ', '.join(f'shot {n} {name}' if n else f'accent {name}' for n, name in plan))
 

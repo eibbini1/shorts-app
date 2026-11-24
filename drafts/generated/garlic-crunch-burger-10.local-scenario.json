@@ -1,0 +1,94 @@
+{
+ "status": "review-required",
+ "settings": {
+  "brand": "iShorts",
+  "format": "short",
+  "seconds": 10,
+  "voice": "af_heart",
+  "presentationMode": "asmr"
+ },
+ "model": "reference-inspired-local",
+ "topic": "Smoky Garlic Crunch Burger: 10 s iShorts food ad with sound that follows the action",
+ "style": "Photorealistic luxury burger commercial, 85mm macro lens, shallow depth of field, dark charcoal background with a thin curl of smoke, warm amber key light from the left with a thin cool rim light, real food textures, vertical 9:16 composition.",
+ "requestedEnding": "The finished burger holds on screen with its crust and cheese visible.",
+ "totalSeconds": 10,
+ "plan": {
+  "title": "Smoky Garlic Crunch Burger",
+  "hook": "Ingredients hang in the air, then drop into a burger.",
+  "payoff": "The crispy crust cracks open on the finished burger.",
+  "ideas": [
+   {
+    "title": "Smoky Garlic Crunch",
+    "angle": "Suspended layers drop into a burger, then the crust cracks."
+   },
+   {
+    "title": "Hear That Crunch",
+    "angle": "Let the crust split carry the payoff."
+   },
+   {
+    "title": "Layer By Layer",
+    "angle": "Each ingredient lands on the beat."
+   },
+   {
+    "title": "Crack Open",
+    "angle": "One knife press reveals the melted cheese."
+   },
+   {
+    "title": "The Crunch Burger",
+    "angle": "Hero reveal with a clean title hold."
+   }
+  ],
+  "claimsToCheck": [],
+  "shots": [
+   {
+    "seconds": 2,
+    "narration": "Layers hang in the air.",
+    "imagePrompt": "Ingredients of a smoky garlic crunch burger hang in mid-air one above another with small gaps between them: a toasted sesame bottom bun, a seared beef patty with a dark crust, a melted cheddar slice, golden fried garlic crumbs, crisp green lettuce, and a top bun with a crackly golden garlic-crumb crust. A chef's hand in a black glove has just let go of the top bun at the top of the frame. Centered vertical stack, a thin curl of smoke between the layers, warm amber light from the left with a thin rim light, dark charcoal background, 85mm macro lens, shallow depth of field, photorealistic, vertical 9:16 composition.",
+    "motionPrompt": "Close macro view: the burger layers hang in the air with small gaps and drift slowly downward together while thin smoke curls around them. Slow push in on the food. Stable shapes, one continuous take.",
+    "sound": "subtle griddle sizzle with a soft whoosh"
+   },
+   {
+    "seconds": 4,
+    "narration": "Each layer lands in turn.",
+    "imagePrompt": "Overhead top-down view of a toasted bottom bun with a lettuce leaf on a dark slate surface. A gloved hand at the top of the frame holds a seared beef patty with a dark crust on a spatula above the bun. Warm amber light from the left with a thin rim light, thin smoke, dark charcoal background, 85mm macro lens, shallow depth of field, photorealistic, vertical 9:16 composition.",
+    "motionPrompt": "Close overhead macro view, slow push in on the food. The gloved hand lowers the patty onto the bun and it settles with a small bounce, then a second gloved hand lays a cheddar slice over the patty, then a spoon tips golden garlic crumbs onto the cheese until they scatter a little. Each layer lands one after another. One continuous take.",
+    "sound": "soft pat and bounce as each layer lands, sizzle underneath"
+   },
+   {
+    "seconds": 2,
+    "narration": "The crust cracks open.",
+    "imagePrompt": "Macro close-up of a crackly golden garlic-crumb crust on top of a toasted burger bun, a serrated knife blade resting on the centre of the crust. Warm amber light from the left with a thin rim light, thin smoke, dark charcoal background, 85mm macro lens, shallow depth of field, photorealistic, vertical 9:16 composition.",
+    "endImagePrompt": "The same macro close-up, same camera and framing: the burger is now cut cleanly in half, the golden garlic-crumb crust fractured with crumbs falling, melted cheddar and beef patty visible in the cut, and a little steam rising.",
+    "motionPrompt": "Close macro view, locked camera with a slow push in on the food. The serrated knife presses straight down into the crust until the crust cracks open along the blade, crumbs falling and steam rising, then the burger parts into two halves. One continuous take.",
+    "sound": "crispy crack as the crust splits"
+   },
+   {
+    "seconds": 2,
+    "narration": "Smoky Garlic Crunch Burger.",
+    "imagePrompt": "Hero shot, a gloved hand at the edge of the slate, of the finished smoky garlic crunch burger with a golden garlic-crumb crust, glossy melted cheddar and a fresh crumb scatter, on a dark slate surface with a thin curl of smoke; empty dark space above the burger for a title. Warm amber light from the left with a thin rim light, dark charcoal background, 85mm macro lens, shallow depth of field, photorealistic, vertical 9:16 composition.",
+    "motionPrompt": "Close macro view, slow push in on the food. A gloved hand slides the finished burger on its slate toward the camera as a thin curl of smoke drifts past and the cheese gleams, then it comes to rest. One continuous take.",
+    "sound": "sizzle fades, soft shimmer"
+   }
+  ]
+ },
+ "audioPlan": {
+  "voice": "none",
+  "subtitles": "none",
+  "foleySamples": {
+   "sizzle": {
+    "file": "assets/foley/public-domain/minced-beef-frying.ogg",
+    "offsetSeconds": 0,
+    "recordedAction": "minced beef frying",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Kj%C3%B8ttdeig.ogv",
+    "license": "public domain"
+   },
+   "crunch": {
+    "file": "assets/foley/public-domain/crunching.ogg",
+    "offsetSeconds": 0,
+    "recordedAction": "crushed pistachio husks (stand-in for a crust; judge by ear)",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Crunching_munching_grinding.ogg",
+    "license": "public domain"
+   }
+  }
+ }
+}

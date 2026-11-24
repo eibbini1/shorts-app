@@ -114,6 +114,103 @@ class HitPointTests(unittest.TestCase):
             self.assertTrue(any('unknown type' in p for p in sfx.audit_cues(data)))
 
 
+def write_test_wav(path, samples, rate=48000):
+    with wave.open(str(path), 'wb') as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(rate)
+        w.writeframes((np.clip(samples, -1, 1) * 32767).astype(np.int16).tobytes())
+
+
+def run_filter(graph, inputs, seconds):
+    out = Path(inputs[0]).with_name('mixed.wav')
+    cmd = ['ffmpeg', '-y', '-v', 'error']
+    for item in inputs:
+        cmd += ['-i', str(item)]
+    subprocess.run(cmd + ['-filter_complex', graph, '-map', '[a]', '-t', str(seconds), '-ac', '1', '-ar', '48000', str(out)], check=True)
+    with wave.open(str(out)) as w:
+        return np.frombuffer(w.readframes(w.getnframes()), np.int16).astype(np.float32) / 32768
+
+
+class MusicBedTests(unittest.TestCase):
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        t = np.arange(int(6 * R)) / R
+        track = np.zeros_like(t)
+        burst = (t >= 2.0) & (t < 2.05)
+        track[burst] = 0.8 * np.sin(2 * np.pi * 1000 * t[burst])  # the track's "drop" at 2.0 s
+        self.track = self.dir / 'track.wav'
+        write_test_wav(self.track, track)
+
+    def bed(self, music, total=8):
+        music = {**music, 'path': str(self.track), 'gainDb': 0, 'fadeOut': 0}
+        graph = sfx.music_filter(music, total, source='[0:a]', out='[a]')
+        return run_filter(graph, [self.track], total)
+
+    def onset(self, audio):
+        return int(np.argmax(np.abs(audio) > 0.2)) / R
+
+    def test_offset_rule(self):
+        self.assertEqual(sfx.music_offset({'dropAt': 5.0, 'dropInTrack': 2.0}), 3.0)
+        self.assertEqual(sfx.music_offset({'dropAt': 1.0, 'dropInTrack': 2.0}), -1.0)
+        self.assertEqual(sfx.music_offset({'startAt': 1.5}), 1.5)
+        self.assertEqual(sfx.music_offset({}), 0)
+
+    def test_drop_lands_on_the_film_hit_when_the_track_is_delayed(self):
+        self.assertAlmostEqual(self.onset(self.bed({'dropAt': 5.0, 'dropInTrack': 2.0})), 5.0, delta=0.03)
+
+    def test_drop_lands_on_the_film_hit_when_the_track_front_is_trimmed(self):
+        self.assertAlmostEqual(self.onset(self.bed({'dropAt': 1.0, 'dropInTrack': 2.0})), 1.0, delta=0.03)
+
+    def test_bed_ducks_under_narration(self):
+        t = np.arange(int(4 * R)) / R
+        voice = np.where((t >= 1.5) & (t < 2.5), 0.5 * np.sin(2 * np.pi * 220 * t), 0.0)
+        voice_path, film, fx = self.dir / 'voice.wav', self.dir / 'film.wav', self.dir / 'fx.wav'
+        write_test_wav(voice_path, voice)
+        write_test_wav(film, np.zeros_like(t))
+        write_test_wav(fx, np.zeros_like(t))
+        bed_path = self.dir / 'bed.wav'
+        write_test_wav(bed_path, 0.3 * np.sin(2 * np.pi * 440 * t))
+        music = {'path': str(bed_path), 'gainDb': 0, 'fadeOut': 0}
+        graph = sfx.mix_graph('[0:a]anull[base]', 4, music).replace(',loudnorm=I=-14:TP=-1.5:LRA=11', '')
+        mixed = run_filter(graph, [film, fx, voice_path, bed_path], 4)
+        level = lambda a, b: rms(mixed[int(a * R):int(b * R)])
+        self.assertLess(level(1.8, 2.3), 0.5 * level(0.2, 1.0))
+
+    def test_plan_problems_are_named(self):
+        self.assertEqual(sfx.audit_music(None, 8), [])
+        self.assertTrue(any('path' in p for p in sfx.audit_music({'gainDb': -10}, 8)))
+        self.assertTrue(any('not found' in p for p in sfx.audit_music({'path': '/nope.mp3'}, 8)))
+        bad = sfx.audit_music({'path': str(self.track), 'dropAt': 3}, 8)
+        self.assertTrue(any('go together' in p for p in bad))
+        self.assertTrue(any('gainDb' in p for p in sfx.audit_music({'path': str(self.track), 'gainDb': 5}, 8)))
+        self.assertEqual(sfx.audit_music({'path': str(self.track), 'dropAt': 3, 'dropInTrack': 2}, 8), [])
+
+
+class RecordedAccentTests(unittest.TestCase):
+    SAMPLES = {'crunch': {'file': 'assets/foley/public-domain/crunching.ogg', 'offsetSeconds': 0.0}}
+
+    def render(self, at, offset, total=5):
+        samples = {'crunch': {**self.SAMPLES['crunch'], 'offsetSeconds': offset}}
+        accents = [{'type': 'recorded', 'sample': 'crunch', 'at': at, 'seconds': 0.8}]
+        return sfx.build([{'seconds': total}], total, foley_samples=samples, accents=accents)[0]
+
+    def onset(self, mix):
+        return int(np.argmax(np.abs(mix) > 0.05 * np.max(np.abs(mix)))) / R
+
+    def test_first_transient_lands_on_the_marked_frame_whatever_the_recording_start(self):
+        for offset in (0.0, 0.6, 1.3):
+            mix = self.render(3.0, offset)
+            self.assertEqual(float(np.max(np.abs(seg(mix, 0, 2.98)))), 0.0)
+            self.assertAlmostEqual(self.onset(mix), 3.0, delta=0.012)
+
+    def test_recorded_plan_problems_are_named(self):
+        self.assertTrue(any('needs "sample"' in p for p in sfx.audit_accents([{'type': 'recorded', 'at': 2}], 5)))
+        self.assertTrue(any('not in audioPlan.foleySamples' in p for p in sfx.audit_accents([{'type': 'recorded', 'sample': 'x', 'at': 2}], 5, self.SAMPLES)))
+        self.assertTrue(any('must fit' in p for p in sfx.audit_accents([{'type': 'recorded', 'sample': 'crunch', 'at': 4.9}], 5, self.SAMPLES)))
+        self.assertEqual(sfx.audit_accents([{'type': 'recorded', 'sample': 'crunch', 'at': 2}], 5, self.SAMPLES), [])
+
+
 class AccentPlanTests(unittest.TestCase):
     def problems(self, accents, total=10):
         return sfx.audit_accents(accents, total)
