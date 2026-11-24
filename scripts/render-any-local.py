@@ -120,6 +120,17 @@ def still(work, index, shot, seed, source, width, height, cache_only=False):
     return target
 
 
+def end_still_for(work, index, shot, seed, source, width, height, cache_only=False):
+    """The shot's end frame: an explicit endStill path, or one edited from the first still with endImagePrompt.
+    Editing from the first still keeps its camera framing, so the clip does not jump near its end."""
+    if shot.get('endStill'):
+        return shot['endStill']
+    prompt = (shot.get('endImagePrompt') or '').strip()
+    if not prompt:
+        return None
+    return still(work, index, {'imagePrompt': prompt}, seed + 31, source, width, height, cache_only)
+
+
 def repair_still_prompt(prompt, subject, required, reason, attempt):
     detail = ' '.join(str(reason).split())[:400]
     return (f"{prompt.rstrip()}\n\nAutomatic frame correction {attempt}: the subject is {subject}. "
@@ -249,10 +260,35 @@ def own_still(folder, work, index, width, height):
     return None
 
 
+LAST_FRAME = 96  # the clip is 97 frames, so the final frame index is 96
+
+
+def end_anchor(shot, work, width, height):
+    """Optional shot['endStill']: a still the clip must finish on. Returns the cropped file, or None when unset.
+    The end still must share the first still's camera framing, or the clip jumps near its end."""
+    source = shot.get('endStill')
+    if not source:
+        return None
+    source = Path(source).expanduser()
+    source = source if source.is_absolute() else ROOT / source
+    if not source.is_file():
+        raise RuntimeError(f'endStill not found: {source}')
+    target = work / 'refs' / f'end-{file_hash(source)[:12]}-{width}x{height}.png'
+    if not target.is_file():
+        target.parent.mkdir(parents=True, exist_ok=True)
+        run('ffmpeg', '-y', '-v', 'error', '-i', source, '-vf',
+            f'scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height}', target)
+    return target
+
+
 def clip(work, index, part, shot, seed, reference, width, height, model, gemma, progress, cache_only=False):
     prompt = shot['motionPrompt'].strip() + ' One continuous camera take with coherent physical movement, stable subject identity and lighting.'
-    key = digest({'prompt': prompt, 'seed': seed, 'referenceHash': file_hash(reference),
-                  'model': model, 'gemma': gemma, 'frames': 97, 'width': width, 'height': height})
+    end = end_anchor(shot, work, width, height)
+    identity = {'prompt': prompt, 'seed': seed, 'referenceHash': file_hash(reference),
+                'model': model, 'gemma': gemma, 'frames': 97, 'width': width, 'height': height}
+    if end is not None:  # added only when set, so clips cached before this option keep their names
+        identity['endHash'] = file_hash(end)
+    key = digest(identity)
     target = work / 'motion' / f'shot-{index:02d}-part-{part:02d}-{key}.mp4'
     if valid_video(target):
         print(f'Reusing motion {index + 1}.{part + 1}: {target.name}', flush=True)
@@ -265,7 +301,7 @@ def clip(work, index, part, shot, seed, reference, width, height, model, gemma, 
     print(f'Generating local LTX motion {index + 1}.{part + 1}: {target.name}', flush=True)
     command = [ROOT / 'storage/tools/ltx-2-mlx/.venv/bin/ltx-2-mlx', 'generate',
         '--model', model, '--gemma', gemma, '--distilled', '--low-ram', '--no-audio',
-        '--seed', seed, '--image', reference, 0, 1.0, '--prompt', prompt,
+        '--seed', seed, '--image', reference, 0, 1.0, *(['--image', end, LAST_FRAME, 1.0] if end is not None else []), '--prompt', prompt,
         '-H', height, '-W', width, '-f', 97, '--frame-rate', FPS, '-o', target]
     started = time.monotonic()
     process = subprocess.Popen([str(item) for item in command], cwd=ROOT)
@@ -617,6 +653,9 @@ def main():
         references.append(reference)
         if story_anchor is None:
             story_anchor = reference
+        end_still = end_still_for(work, index, shot, 1200 + index, reference, width, height, args.cache_only)
+        if end_still is not None and 'endStill' not in shot:
+            print(f'End frame ready for shot {index + 1}: {Path(end_still).name}', flush=True)
         if args.stills_only:
             print(f'First frame ready for shot {index + 1}: {reference.name}', flush=True)
             continue
@@ -652,8 +691,11 @@ def main():
                     '-frames:v', 1, anchor)
                 reference = anchor
             seed = motion_takes.seed(work, index, part, take=take)
+            clip_shot = {k: v for k, v in shot.items() if k != 'endStill'}
+            if end_still is not None and part == parts - 1:  # only the final part of a shot ends on its end frame
+                clip_shot['endStill'] = str(end_still)
             previous_clip, segment = select_motion_segment(
-                work, index, part, shot, seed, reference, width, height, model, gemma, progress,
+                work, index, part, clip_shot, seed, reference, width, height, model, gemma, progress,
                 cache_only=args.cache_only or bool(take_shot and take_shot != index + 1),
                 expected=selected_segments[part] if selected_segments is not None else None)
             shot_segments.append(segment)
