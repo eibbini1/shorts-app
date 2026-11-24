@@ -1,5 +1,5 @@
 // "Another take" controls for one finished shot. Takes are motion seeds on the same approved first frame
-// (scripts/motion_takes.py owns the real state; the server sends it as files.takes keyed by 0-based shot).
+// (the server sends verified completed takes keyed by zero-based shot).
 export const MAX_TAKES = 3;
 
 export function takeState(takes, shotNumber) {
@@ -11,8 +11,12 @@ export function takeState(takes, shotNumber) {
 
 // What to show under a shot: whether a new take is allowed, and the switch buttons for takes already made.
 export function takeControls(takes, shotNumber) {
-  const { current, highest } = takeState(takes, shotNumber);
-  const canMakeNew = highest + 1 < MAX_TAKES;
-  const switches = highest > 0 ? Array.from({ length: highest + 1 }, (_, take) => ({ take, label: `Take ${take + 1}`, active: take === current })) : [];
-  return { current, highest, canMakeNew, switches, label: `Take ${current + 1} of ${MAX_TAKES}` };
+  const { current } = takeState(takes, shotNumber);
+  const completed = (takes?.[shotNumber - 1]?.completed || [])
+    .filter((take) => Number.isInteger(take) && take >= 0 && take < MAX_TAKES);
+  const canMakeNew = new Set(completed).size < MAX_TAKES;
+  const switches = completed.length > 1 ? completed.map((take) => ({
+    take, label: `Take ${take + 1}`, active: take === current,
+  })) : [];
+  return { current, canMakeNew, switches, label: `Take ${current + 1} of ${MAX_TAKES}` };
 }

@@ -22,8 +22,20 @@ def select(images, image_prompt, model='qwen3-vl:4b', checks=None):
     global VISION_UNAVAILABLE
     if len(images) != 3:
         raise ValueError('exactly three stills are required')
-    if any(check_still(path) for path in images):
-        raise ValueError('at least one candidate is blank or too dark; regenerate it')
+    rejected = {}
+    for index, path in enumerate(images, 1):
+        problem = check_still(path)
+        if problem:
+            rejected[index] = problem
+    if len(rejected) == len(images):
+        raise ValueError('All three still candidates failed the picture check. Regenerate shot candidates.')
+    if rejected:
+        chosen = next(index for index in range(1, len(images) + 1) if index not in rejected)
+        return chosen, {
+            'status': 'unverified',
+            'reason': 'Some candidates failed the picture check. Review the remaining frames manually.',
+            'rejectedCandidates': rejected,
+        }
     if VISION_UNAVAILABLE:
         return provisional_selection('Vision model was unavailable earlier in this render')
     checks = checks or {}

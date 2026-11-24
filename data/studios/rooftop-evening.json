@@ -1,0 +1,36 @@
+{
+  "id": "rooftop-evening",
+  "name": "Evening Rooftop",
+  "status": "prompt-only",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One sheltered rooftop: matte stone floor, low cream parapet, plain bench left, warm lamp right; the same distant skyline throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent.",
+  "referenceFrames": {},
+  "lighting": "Soft blue-hour ambient light with a warm lamp on the right",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "warm, grounded, quiet everyday life",
+  "depth": "Subject separated from a quiet distant skyline",
+  "props": [
+    "plain bench",
+    "warm lamp"
+  ],
+  "population": "At most one chosen fictional adult; no background crowds.",
+  "lightingVariants": [
+    {
+      "id": "base",
+      "lighting": "Soft blue-hour ambient light with a warm lamp on the right",
+      "mood": "warm, grounded, quiet everyday life"
+    },
+    {
+      "id": "soft-evening",
+      "lighting": "Soft low evening light from the left, gentle warm highlights, stable exposure.",
+      "mood": "quiet, warm, reflective"
+    },
+    {
+      "id": "diffuse-daylight",
+      "lighting": "Soft diffuse daylight from the left, gentle neutral shadows, stable exposure.",
+      "mood": "natural, calm, attentive"
+    }
+  ]
+}

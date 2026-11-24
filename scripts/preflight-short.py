@@ -15,6 +15,7 @@ import subprocess
 import sys
 from pathlib import Path
 from presentation_mode import choose as choose_presentation
+import hook_bank
 
 ROOT = Path(__file__).resolve().parents[1]
 NON_USD = re.compile(r'\b(yen|dirhams?|rupees?|pounds?|euros?|£|€)\b|[£€¥]', re.I)
@@ -32,6 +33,23 @@ HARD_CONTACT = re.compile(r'\b(flip|flips|flipping|flipped|toss|tosses|tossing|c
 def hard_motion(prompt):
     """Sorted, de-duplicated hand-tool contact verbs found in a motion prompt."""
     return sorted({m.group(0).lower() for m in HARD_CONTACT.finditer(prompt or '')})
+
+
+def motion_pack(pack_id):
+    if not isinstance(pack_id, str):
+        return None
+    data = json.loads((ROOT / 'data/topic-packs.json').read_text(encoding='utf-8'))
+    return next((pack for pack in data['packs'] if pack['id'] == pack_id), None)
+
+
+def pack_motion_warning(pack, prompt):
+    if not pack or not (pattern := pack.get('motionRiskPattern')):
+        return None
+    matches = sorted({match.group().lower() for match in re.finditer(pattern, prompt, re.I)})
+    if not matches:
+        return None
+    alternatives = f' Try {", ".join(pack["safe"])} if it still serves the story.' if pack['safe'] else ''
+    return f'{pack["id"]}: local motion risk ({", ".join(matches)}). Review the action before rendering.{alternatives}'
 
 
 def hook_score(line, topic=''):
@@ -71,6 +89,7 @@ def main():
     data = json.loads(Path(args[0]).read_text(encoding='utf-8-sig'))
     plan, settings = data['plan'], data['settings']
     presentation = choose_presentation(data)
+    pack = motion_pack(data.get('motionPackId'))
     problems, warnings = [], []
     topic = subprocess.run([sys.executable, str(ROOT / 'scripts/topic-check.py'), plan['title'] + ' ' + data.get('topic', ''), '--allow'],
                            capture_output=True, text=True)
@@ -81,6 +100,11 @@ def main():
     score, notes = hook_score(first, data.get('topic', '') or plan.get('title', ''))
     if presentation['voice']:
         print(f'Hook: "{first}" -> {score}/100 ({"; ".join(notes)})')
+        mechanisms = hook_bank.detect_mechanisms(first)
+        print(f'Hook mechanism: {", ".join(mechanisms) if mechanisms else "none detected"}')
+        template = hook_bank.anti_pattern_hit(first)
+        if template:
+            warnings.append(f'hook uses a banned template phrase: "{template}"')
     else:
         print('Visual hook: ASMR mode; inspect the first moving shot before release.')
     if presentation['voice'] and score < 60:
@@ -107,6 +131,9 @@ def main():
                 warnings.append(f'shot {i}: line needs about {speech:.1f} s but the shot is {shot["seconds"]} s; trim words or lengthen the shot')
         if not VISIBLE_ACTION.search(shot['motionPrompt']) and not PLATE_ACTION.search(shot['motionPrompt']):
             warnings.append(f'shot {i}: motion prompt has no recognizable physical action; review it for camera-only movement before rendering')
+        pack_warning = pack_motion_warning(pack, shot['motionPrompt'])
+        if pack_warning:
+            warnings.append(f'shot {i}: {pack_warning}')
         risky = hard_motion(shot['motionPrompt'])
         if risky:
             warnings.append(f'shot {i}: hand-tool contact action ({", ".join(risky)}) often looks fake in local motion; prefer the moment before or after (melt, steam, drop, slow push-in) or keep hands still')

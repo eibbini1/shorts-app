@@ -1,0 +1,38 @@
+{
+  "id": "std-lagos-veranda",
+  "name": "Lagos family-compound veranda",
+  "status": "prompt-only",
+  "sourceStatus": "inferred",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One shaded veranda of a cream-painted two-storey concrete house, glass louvre (jalousie) windows behind a white wrought-iron grille, speckled terrazzo floor; the same architecture and prop positions throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent. master plate wide shot; reuse as background reference.",
+  "referenceFrames": {},
+  "lighting": "late-afternoon sun from camera-left through the louvres, striped soft shadows",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot. Suggested framing: medium close-up, eye level.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "unhurried, warm",
+  "depth": "foreground grille edge soft, subject midground, garden wall background",
+  "props": [
+    "white plastic garden chair",
+    "standing fan",
+    "small side table"
+  ],
+  "population": "At most one chosen fictional adult; no background crowds; no readable signage (add any text in editing); matte surfaces, no mirrors facing the camera.",
+  "lightingVariants": [
+    {
+      "id": "base",
+      "lighting": "late-afternoon sun from camera-left through the louvres, striped soft shadows",
+      "mood": "unhurried, warm"
+    },
+    {
+      "id": "early-morning-cool",
+      "lighting": "Early morning cool, one dominant light source, stable exposure.",
+      "mood": "unhurried, warm"
+    },
+    {
+      "id": "late-afternoon-warm",
+      "lighting": "Late afternoon warm, one dominant light source, stable exposure.",
+      "mood": "unhurried, warm"
+    }
+  ]
+}

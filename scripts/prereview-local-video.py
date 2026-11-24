@@ -19,6 +19,8 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
+import look_drift
+
 ROOT = Path(__file__).resolve().parents[1]
 CATEGORIES = ('continuity', 'realism', 'story', 'audio', 'payoff')
 TARGET_LUFS, LUFS_TOLERANCE, MAX_TRUE_PEAK = -15.0, 2.0, -1.0
@@ -251,6 +253,15 @@ def main():
     flags, unchecked = categorize(shot_results, payoff, continuity, audio)
     if not expected_ending:
         unchecked.append('final frame: no explicit ending outcome in the plan')
+    if len(starts) > 1:
+        try:
+            first = look_drift.frame_stats(starts[0])
+            for number, frame in enumerate(starts[1:], 2):
+                issue = look_drift.drift_issue('shot 1 start', first, f'shot {number} start', look_drift.frame_stats(frame))
+                if issue:
+                    flags['continuity'].append(issue)
+        except (OSError, ValueError, subprocess.CalledProcessError) as error:
+            unchecked.append(f'lighting drift between shots: {error}')
     for number, value in enumerate(motion, 1):
         if value is not None and value < MIN_MOTION:
             flags['realism'].append(f'shot {number} barely moves (motion {value}, real shots here measure 3.7-18.9): regenerate it for a new take')

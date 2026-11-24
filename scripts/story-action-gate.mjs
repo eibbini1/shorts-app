@@ -1,7 +1,7 @@
 const ACTIONS = new Set(`add arrange assemble bake baste bite bloom boil break brown build carry catch chase chew chop close coat cook come curl cut dance dice dip drizzle drop eat enter exit emerge flip float fly fold fry garnish grab grate grow knead leap lift load look melt mince mix move open peel pedal place pour prepare press pull push put race react reach remove retrieve reveal roll run scoop sear serve shake slide slice smash smile sniff spin splash sprinkle spread stack steer steam stir stumble take taste tap toast transfer turn unfurl walk wave whisk`.split(' '));
 // Verbs beyond the original food-centred list, so novel ideas (craft, sport, nature, sci-fi, product, travel) are not refused as "no visible action".
 // Deliberately excludes states and framing words (set, stand, make, show, look at) so abstract or static ideas are still refused.
-const MORE_ACTIONS = new Set(`accelerate bang bash blow bolt bounce brake buckle burst cast clap claw click climb collide crack crash crush dart dive drag drain drift drill drip drive empty fasten fill flick fold fry gallop glide grip hammer haul heave hit hoist hop hover hug hurl ignite inflate jump kick knock launch lay lean loosen lower nod paddle paint pick pinch plant plunge polish pop puff pluck quench raise rattle reel ride rise rotate saw scatter scoop scrub season shake shatter shoot sip sail sketch sneeze snap soar solder spill split spray sprint squeeze stitch stop stretch strike surf swap sway sweep swim swing tear tether throw tie tighten toss torch tow trickle twirl twist unfold unlock unscrew unwrap unzip wave weave weld wipe wrap write zip`.split(' '));
+const MORE_ACTIONS = new Set(`accelerate bang bash blow bolt bounce brake buckle burst cast clap claw click climb collide crack crash crush dart dive drag drain drift drill drip drive empty fasten fill flick fold fry gallop glide grip hammer haul heave hit hoist hop hover hug hurl ignite inflate jump kick knock launch lay lean loosen lower nod paddle paint pick pinch plant plunge polish pop puff pluck quench raise rattle reel ride rise rotate saw scatter scoop scrub season shake shatter shoot sip sail sketch sneeze snap soar solder spill split spray sprint squeeze stitch stop stretch strike surf swap sway sweep swim swing tear tether throw tie tighten toss torch tow trickle twirl twist unfold unlock unscrew unwrap unzip wave weave weld wipe wrap write zip land flutter billow ripple descend step touch crouch straighten kneel lunge swirl whip flap glance gaze pivot stride tumble flicker wander tiptoe hurry skip`.split(' '));
 const ARABIC_ACTION = /(?:يكسر|تكسر|يسكب|تسكب|يقطع|تقطع|يقلب|تقلب|يركض|تركض|يصب|تصب|يرفع|ترفع|يقفز|تقفز|يرسم|ترسم|يطبخ|تطبخ|يخبز|تخبز|يقلي|يخلط|تخلط|يعجن|تعجن|يفتح|تفتح|يغلق|يضع|تضع|يسحب|تسحب|يدفع|تدفع|يرش|ترش|يقطّع|يمسك|تمسك|يلقي|تلقي|يطير|تطير|يجري|تجري|يسبح|تسبح|يرقص|ترقص|يطرق|يلمع|يحمل|تحمل|يسقط|تسقط)/;
 const PLATE_OBJECTS = new Set(['a', 'an', 'beside', 'each', 'her', 'his', 'it', 'one', 'the', 'their']);
 const PRODUCTION_NOTES = /\b(?:film|video|vertical|horizontal|cinematic|captions?|narration|macro details|sync(?:ed|hronized)?|cooking sounds)\b/i;
@@ -119,7 +119,7 @@ export function preserveRequestedActions(shots, requestedText, subject = '') {
     if (!positions.length) {
       const target = Math.min(shots.length - 1, Math.floor(clauseIndex * shots.length / clauses.length));
       const action = subjectAction(clause, subject);
-      shots[target].motionPrompt = `${action}. ${sceneActionDetail(shots[target])}${sceneTransition(shots[target])}Keep ${subject || 'the subject'} and the relevant tool visible; show the change caused by the action in one continuous take.`;
+      shots[target].motionPrompt = `${action}. ${sceneActionDetail(shots[target])}${sceneTransition(shots[target])}Keep ${subject || 'the subject'} and any prop it uses visible; show the change caused by the action in one continuous take.`;
       shots[target].imagePrompt = firstFramePrompt(shots[target], subject, clause);
       inserted.push({ clause, shot: target + 1 });
       const refreshed = actionTokens(shots[target].motionPrompt);
@@ -141,7 +141,7 @@ export function preserveOpeningHook(shots, hookText, subject = '') {
   const missing = [...new Set(actionTokens(hook))].filter((action) => !actionCovered(action, hook, shots[0].motionPrompt));
   if (!missing.length && !GENERIC_SUBJECT.test(shots[0].motionPrompt)) return { status: 'verified' };
   const action = subjectAction(hook, subject);
-  shots[0].motionPrompt = `${action}. ${sceneActionDetail(shots[0])}${sceneTransition(shots[0])}Keep ${subject || 'the subject'} and the relevant tool visible through the action in one continuous take.`;
+  shots[0].motionPrompt = `${action}. ${sceneActionDetail(shots[0])}${sceneTransition(shots[0])}Keep ${subject || 'the subject'} and any prop it uses visible through the action in one continuous take.`;
   shots[0].imagePrompt = firstFramePrompt(shots[0], subject, hook);
   if (!missing.every((action) => actionTokens(shots[0].motionPrompt).includes(action))) {
     throw new Error(`Could not preserve the opening hook in shot 1: ${hook}`);

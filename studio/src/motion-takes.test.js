@@ -20,12 +20,12 @@ describe('takeControls', () => {
     expect(takeControls({}, 2)).toMatchObject({ canMakeNew: true, switches: [], label: 'Take 1 of 3' });
   });
   it('lists every made take and marks the current one', () => {
-    const c = takeControls({ 1: { current: 0, highest: 1 } }, 2);
+    const c = takeControls({ 1: { current: 0, completed: [0, 1] } }, 2);
     expect(c.switches).toEqual([{ take: 0, label: 'Take 1', active: true }, { take: 1, label: 'Take 2', active: false }]);
     expect(c.canMakeNew).toBe(true);
   });
   it('stops offering new takes once all are used', () => {
-    const c = takeControls({ 0: { current: 2, highest: MAX_TAKES - 1 } }, 1);
+    const c = takeControls({ 0: { current: 2, completed: [0, 1, 2] } }, 1);
     expect(c.canMakeNew).toBe(false);
     expect(c.switches).toHaveLength(MAX_TAKES);
     expect(c.label).toBe('Take 3 of 3');

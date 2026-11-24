@@ -63,3 +63,15 @@ test('local idea refiner receives evidence while keeping the exact user sentence
   assert.equal(result.mustShow, 'A chef chops a tomato, then simmers it.');
 });
 
+
+test('uses a scoped editorial motion note only when it is tied to a reviewed clip', () => {
+  const rows = [
+    { type: 'motion-take-review', user: 'alice', look: 'custom', clipSha256: 'one', outcome: 'identity-drift', notes: 'Keep the dress neckline stable.' },
+    { type: 'motion-take-review', user: 'bob', look: 'custom', clipSha256: 'two', notes: 'Other project.' },
+    { type: 'motion-take-review', user: 'alice', look: 'custom', notes: 'Unbound finding.' },
+    { type: 'motion-take-review', user: 'alice', look: 'night', clipSha256: 'three', notes: 'Other look.' },
+  ];
+  const context = buildLearningContext(rows, { user: { name: 'alice', role: 'creator' }, look: 'custom' });
+  assert.deepEqual(context.humanNotes, [{ source: 'motion-review', rating: 'identity-drift', note: 'Keep the dress neckline stable.' }]);
+  assert.deepEqual(context.ratings, { good: 0, needsWork: 0 });
+});

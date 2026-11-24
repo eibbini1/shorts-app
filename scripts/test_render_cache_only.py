@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).parent))
 spec = importlib.util.spec_from_file_location('render_any_local', Path(__file__).with_name('render-any-local.py'))
@@ -14,6 +15,20 @@ spec.loader.exec_module(render)
 
 
 class CacheOnlyTests(unittest.TestCase):
+    def test_studio_jobs_started_in_same_second_use_distinct_output_paths(self):
+        script = Path(__file__).with_name('local-video-output.sh')
+        shell = 'source "$1"; date() { printf "%s" 20261123-123456; }; local_video_output film "$2"'
+
+        def name(report):
+            return subprocess.check_output(['bash', '-c', shell, '_', str(script), report], text=True).strip()
+
+        first = 'take-256d649a-cb1b-4021-9992-454ea951b4ec'
+        second = 'take-decacbcd-6e11-4fe4-ab19-284a881cc44b'
+        self.assertEqual(name(f'/tmp/{first}.report'), f'outputs/film-20261123-123456-{first}.mp4')
+        self.assertNotEqual(name(f'/tmp/{first}.report'), name(f'/tmp/{second}.report'))
+        self.assertEqual(name('/tmp/not-a-studio-report'), 'outputs/film-20261123-123456.mp4')
+        self.assertEqual(name(''), 'outputs/film-20261123-123456.mp4')
+
     def test_continuous_shot_uses_previous_motion_end_frame(self):
         studio_plate = Path('oven-plate.png')
         motion_end = Path('shot-one-end.png')
@@ -79,6 +94,45 @@ class CacheOnlyTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'missing valid motion'):
                 render.clip(Path(folder), 0, 0, {'motionPrompt': 'A spoon rises'}, 2200,
                             reference, 384, 640, 'model', 'gemma', lambda: '', cache_only=True)
+
+    def test_selected_take_requires_a_cache_hit_and_the_original_clip_bytes(self):
+        with tempfile.TemporaryDirectory() as folder:
+            work = Path(folder)
+            (work / 'motion').mkdir()
+            reference = work / 'still.png'
+            reference.write_bytes(b'approved frame')
+            shot = {'motionPrompt': 'A spoon rises'}
+            progress = Mock(return_value='')
+            args = (work, 0, 0, shot, 2200, reference, 384, 640, 'model', 'gemma', progress)
+            command = ['ffmpeg', '-v', 'error', '-f', 'lavfi', '-i',
+                       'color=c=red:s=64x64:r=24:d=1', '-c:v', 'libx264', '-pix_fmt', 'yuv420p']
+            original_popen = subprocess.Popen
+
+            def generate(command_args, **kwargs):
+                return original_popen([*command, command_args[-1]], **kwargs)
+
+            with patch.object(render.subprocess, 'Popen', side_effect=generate) as generate_motion, \
+                    patch.object(render, 'valid_video', side_effect=lambda file: file.is_file()):
+                path, expected = render.select_motion_segment(*args)
+                self.assertEqual(render.select_motion_segment(*args, expected=expected), (path, expected))
+                with path.open('ab') as output:
+                    output.write(b'changed')
+                with self.assertRaisesRegex(RuntimeError, 'no longer matches'):
+                    render.select_motion_segment(*args, expected=expected)
+                path.rename(path.with_suffix('.moved'))
+                with self.assertRaisesRegex(RuntimeError, 'missing valid motion'):
+                    render.select_motion_segment(*args, expected=expected)
+                generate_motion.assert_called_once()
+
+    def test_reviewed_take_matches_only_the_original_story_frame_and_render_settings(self):
+        settings = {'editor': 'artcraft', 'model': 'ltx', 'gemma': 'gemma', 'quality': 'high'}
+        take = {'scenarioSha256': 'story', 'approvedReferenceSha256': 'still', 'renderSettings': settings}
+        self.assertTrue(render.matches_approved_take(take, 'story', 'still', settings))
+        self.assertFalse(render.matches_approved_take(take, 'updated story', 'still', settings))
+        self.assertFalse(render.matches_approved_take(take, 'story', 'updated still', settings))
+        for key in settings:
+            with self.subTest(key=key):
+                self.assertFalse(render.matches_approved_take(take, 'story', 'still', {**settings, key: 'changed'}))
 
 
 class StillReviewRetryTests(unittest.TestCase):

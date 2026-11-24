@@ -1,0 +1,39 @@
+{
+  "id": "realistic",
+  "name": "Realistic film",
+  "route": "diffusion-reference",
+  "status": "active",
+  "promptStyle": "photoreal cinematic photography, natural skin texture, believable proportions, soft natural light, restrained gestures",
+  "palette": "natural, true-to-life color",
+  "lineWeight": null,
+  "surface": "real materials, matte where possible",
+  "identityCheck": {
+    "method": "face-embedding",
+    "threshold": 0.6,
+    "status": "planned",
+    "note": "ArcFace-style similarity against the approved front reference; needs a model download (owner approval)."
+  },
+  "suitableFor": [
+    "people-stories",
+    "food",
+    "everyday studios"
+  ],
+  "forbiddenReferences": [
+    "Pixar",
+    "Disney",
+    "DreamWorks",
+    "Ghibli",
+    "Illumination",
+    "Aardman",
+    "Laika",
+    "Marvel",
+    "Nintendo",
+    "Studio Trigger",
+    "in the style of"
+  ],
+  "rules": [
+    "Original designs only: never imitate a named studio, franchise or existing character.",
+    "Adults only for people characters (25+).",
+    "No readable text in frame; add text in editing."
+  ]
+}

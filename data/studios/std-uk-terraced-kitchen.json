@@ -1,0 +1,38 @@
+{
+  "id": "std-uk-terraced-kitchen",
+  "name": "British terraced-house kitchen-diner",
+  "status": "prompt-only",
+  "sourceStatus": "inferred",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One terraced-house kitchen, exposed brick chimney breast, white sash window, butler sink, red quarry-tile floor; the same architecture and prop positions throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent. window camera-right.",
+  "referenceFrames": {},
+  "lighting": "grey overcast diffuse window light",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot. Suggested framing: medium close-up.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "tired but tender",
+  "depth": "mug foreground, subject midground, chimney breast background",
+  "props": [
+    "kettle",
+    "mug",
+    "loaf of bread"
+  ],
+  "population": "At most one chosen fictional adult; no background crowds; no readable signage (add any text in editing); matte surfaces, no mirrors facing the camera.",
+  "lightingVariants": [
+    {
+      "id": "base",
+      "lighting": "grey overcast diffuse window light",
+      "mood": "tired but tender"
+    },
+    {
+      "id": "overcast-morning",
+      "lighting": "Overcast morning, one dominant light source, stable exposure.",
+      "mood": "tired but tender"
+    },
+    {
+      "id": "early-dark-evening-with-one-pendant-lamp",
+      "lighting": "Early dark evening with one pendant lamp, one dominant light source, stable exposure.",
+      "mood": "tired but tender"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "id": "std-queenslander-veranda",
+  "name": "Queenslander veranda",
+  "status": "prompt-only",
+  "sourceStatus": "inferred",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One timber stilt house veranda, corrugated-iron roof, timber lattice and fretwork balustrade; the same architecture and prop positions throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent. balustrade camera-left.",
+  "referenceFrames": {},
+  "lighting": "hot clear late-afternoon light, deep shade under the roof",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot. Suggested framing: medium close-up.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "end-of-day ease",
+  "depth": "glass foreground, subject midground, garden background",
+  "props": [
+    "cane chair",
+    "glass of iced tea",
+    "work boots"
+  ],
+  "population": "At most one chosen fictional adult; no background crowds; no readable signage (add any text in editing); matte surfaces, no mirrors facing the camera.",
+  "lightingVariants": [
+    {
+      "id": "base",
+      "lighting": "hot clear late-afternoon light, deep shade under the roof",
+      "mood": "end-of-day ease"
+    },
+    {
+      "id": "late-afternoon",
+      "lighting": "Late afternoon, one dominant light source, stable exposure.",
+      "mood": "end-of-day ease"
+    },
+    {
+      "id": "storm-light-overcast",
+      "lighting": "Storm-light overcast, one dominant light source, stable exposure.",
+      "mood": "end-of-day ease"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "id": "std-cusco-adobe-home",
+  "name": "Andean adobe home, Cusco highlands",
+  "status": "prompt-only",
+  "sourceStatus": "inferred",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One sun-dried adobe walls, clay-tile roof edge, blue-painted wooden door, mountains soft behind; the same architecture and prop positions throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent. door camera-right.",
+  "referenceFrames": {},
+  "lighting": "thin high-altitude morning light, crisp shadows",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot. Suggested framing: medium shot.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "clear, steady",
+  "depth": "bench foreground, subject midground, mountains background",
+  "props": [
+    "woven textile on bench",
+    "clay pot",
+    "smartphone"
+  ],
+  "population": "At most one chosen fictional adult; no background crowds; no readable signage (add any text in editing); matte surfaces, no mirrors facing the camera.",
+  "lightingVariants": [
+    {
+      "id": "base",
+      "lighting": "thin high-altitude morning light, crisp shadows",
+      "mood": "clear, steady"
+    },
+    {
+      "id": "morning",
+      "lighting": "Morning, one dominant light source, stable exposure.",
+      "mood": "clear, steady"
+    },
+    {
+      "id": "late-afternoon",
+      "lighting": "Late afternoon, one dominant light source, stable exposure.",
+      "mood": "clear, steady"
+    }
+  ]
+}

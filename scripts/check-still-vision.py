@@ -15,8 +15,16 @@ from pathlib import Path
 
 
 MODEL = 'qwen3-vl:4b'
-PROMPT_VERSION = 13
+PROMPT_VERSION = 14
 URL = 'http://127.0.0.1:11434/api/chat'
+# A still frame cannot show temperature, taste or smell. Such criteria (often copied from words like "warm cream")
+# would fail every honest image, so they are skipped and listed in the report. Lighting and colour words
+# ("warm window light", "warm tones") stay checkable and are not matched.
+NON_VISUAL = re.compile(
+    r'\b(?:warm|warmth|hot|cold|chilled|taste\w*|delicious|smell\w*|aroma\w*|fragran\w*)\b'
+    r'(?!\s+(?:window\s+|golden\s+|ambient\s+)?(?:light|lighting|tone|tones|color|colour|colors|colours|glow|palette|hue|hues|white|orange|amber|pink|red))',
+    re.I)
+
 UNCERTAIN_REASON = re.compile(
     r'\b(?:appears?\s+to\s+be|seems?\s+to\s+be|possibly|maybe|perhaps|could\s+be|might\s+be|'
     r'uncertain|unsure|cannot\s+(?:tell|identify)|hard\s+to\s+tell|not\s+clear)\b', re.I)
@@ -64,6 +72,13 @@ def review(image, prompt, must_show=(), must_not_show=(), model=MODEL, cache_dir
     checks = ([('direct', item) for item in questions] if questions else
               ([('required', item) for item in must_show] or [('required', first_clause)]) +
               [('forbidden', item) for item in must_not_show])
+    # Skip criteria a still cannot answer, but never skip them all: keep the original list if nothing else remains.
+    skipped = [item for _, item in checks if NON_VISUAL.search(item)]
+    kept = [(kind, item) for kind, item in checks if not NON_VISUAL.search(item)]
+    if kept:
+        checks = kept
+    else:
+        skipped = []
     image_b64 = base64.b64encode(raw_image).decode()
     outcomes = []
     diagnostics = []
@@ -117,7 +132,7 @@ def review(image, prompt, must_show=(), must_not_show=(), model=MODEL, cache_dir
         status = 'pass'
     report = {'checkedAt': datetime.now(timezone.utc).isoformat(), 'model': model,
               'image': str(image), 'imageSha256': hashlib.sha256(raw_image).hexdigest(),
-              'status': status, 'verdict': verdict, 'checks': outcomes, 'diagnostics': diagnostics,
+              'status': status, 'verdict': verdict, 'checks': outcomes, 'skippedNotVisibleInAStill': skipped, 'diagnostics': diagnostics,
               'note': 'Local vision is a pre-motion screen; inspect the still and rendered motion yourself.'}
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(json.dumps(report, indent=2) + '\n')

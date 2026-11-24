@@ -12,6 +12,8 @@ import { EVENT_PREFIX, parseEventLine as parseEvent } from './pipeline-events.mj
 import { buildLearningContext } from './studio-learning-memory.mjs';
 import { createSessionId, draftIdleTimeoutMs, draftTimeoutMs, normalizeSessionPrompt, sessionTitle } from './studio-session-utils.mjs';
 import { MAX_AUTO_RETRIES, WATCHED_KINDS, checkStall, classifyExit, isLocalCommand, isOrphanScenarioMember, keepAwakeCommand, mayReapOrphan, parsePsProcessIdentities, parsePsProcessIdentity, retryDecision, stallMessage, watchdogLimits } from './studio-watchdog.mjs';
+import { availableTakes, commitTakes, motionState, reserveTake, sha256, summarizeTakeScreens, technicalObservations, verifiedTake } from './studio-motion-state.mjs';
+import { FeedbackError, LIMITS as FEEDBACK_LIMITS, SCREENSHOT as FEEDBACK_SCREENSHOT, boundedJson, createFeedbackStore, parseScreenshot, validateSubmission } from './studio-feedback.mjs';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -42,6 +44,8 @@ for (const f of fs.readdirSync(SESS_DIR)) {
     if (['running', 'stopping'].includes(x.status)) {
       x.status = 'interrupted'; x.error = 'The studio was restarted while this was running. Check the log, then run it again.';
       pendingOrphanRecovery.push(x);
+    } else if (x.status === 'interrupted' && x.takeJob && x.procInfo) {
+      pendingOrphanRecovery.push(x);
     }
     sessions.set(x.id, x);
   } catch { /* skip unreadable file */ }
@@ -64,7 +68,17 @@ const STEP_RULES = [
 ];
 
 const snap = (x = job) => x && { id: x.id, user: x.user, name: x.name, prompt: x.prompt, options: x.options, createdAt: x.createdAt, updatedAt: x.updatedAt, kind: x.kind, status: x.status, startedAt: x.startedAt, unattendedRun: x.unattendedRun, steps: x.steps, lines: x.lines.slice(-200), events: (x.events || []).slice(-100), scenario: x.scenario, plan: x.plan, sequence: x.sequence || null, referenceFrames: x.referenceFrames || [], video: x.video, previousVideo: x.previousVideo, technicalQa: x.technicalQa, error: x.error, attempts: x.attempts || [], watchdog: x.watchdog || null };
-const persist = (x, touch = true) => { if (touch) x.updatedAt = Date.now(); x.lastSave = Date.now(); try { fs.writeFileSync(path.join(SESS_DIR, x.id + '.json'), JSON.stringify({ ...snap(x), requestIds: x.requestIds || [], procInfo: x.procInfo || null })); } catch { /* disk issue: keep running */ } };
+const persist = (x, touch = true) => {
+  if (touch) x.updatedAt = Date.now();
+  x.lastSave = Date.now();
+  const target = path.join(SESS_DIR, x.id + '.json');
+  const temporary = target + '.tmp';
+  try {
+    fs.writeFileSync(temporary, JSON.stringify({ ...snap(x), requestIds: x.requestIds || [],
+      procInfo: x.procInfo || null, takeJob: x.takeJob || null }));
+    fs.renameSync(temporary, target);
+  } catch { /* disk issue: keep running */ }
+};
 const ORPHAN_TERM_GRACE_MS = Math.max(100, Math.min(10_000, Number(process.env.STUDIO_ORPHAN_TERM_GRACE_MS) || 2_500));
 function processGroupMembers(pgid) {
   try {
@@ -113,6 +127,57 @@ function signalOrphanGroup(recorded, signal) {
   return inspection;
 }
 function clearRecoveredProcess(x) {
+  if (x.takeJob && x.procInfo?.pid) {
+    const recorded = x.procInfo;
+    const inspection = inspectOrphanGroup(recorded);
+    const current = liveProcessIdentity(recorded.pid);
+    const unrelatedOccupant = current && current.command !== recorded.command &&
+      !processGroupMembers(recorded.pid).some((member) => isOrphanScenarioMember({ recorded, live: member }));
+    if (!unrelatedOccupant) {
+      if (inspection.state !== 'gone') return;
+      try { process.kill(-recorded.pid, 0); return; }
+      catch (error) { if (error.code !== 'ESRCH') return; }
+    }
+  }
+  if (x.takeJob && x.kind === 'render' && x.scenario) {
+    try {
+      const output = motionState(takeWork(x.scenario)).verifiedExport;
+      if (output?.jobId === x.takeJob.id && output.session === x.id && /^outputs\/[^/\\]+\.mp4$/.test(output.path) &&
+          sha256(path.join(ROOT, output.path)) === output.sha256) {
+        x.video = output.path;
+        x.technicalQa = { status: 'passed' };
+        x.status = 'done';
+        x.error = null;
+        if (x.sequence?.stage === 'ready') {
+          const state = motionState(takeWork(x.scenario));
+          x.sequence.endFrames = x.sequence.endFrames.map((old) => {
+            const entry = state[old.shot - 1];
+            const row = entry?.completed?.[entry.current];
+            return row?.completedJobId === x.takeJob.id && row.endFrame ? row : old;
+          });
+        }
+      } else if (x.previousVideo) {
+        x.video = x.previousVideo;
+        x.technicalQa = { status: 'passed' };
+      }
+    } catch { /* preserve interrupted status if the export cannot be verified */ }
+  }
+  if (x.takeJob && x.kind === 'sequence-motion' && x.sequence?.currentShot) {
+    try {
+      const shot = x.sequence.currentShot;
+      const context = takeContext(x, shot);
+      const state = availableTakes(context.work, shot, context.expected);
+      if (Object.values(state.completed).some((row) => row.completedJobId === x.takeJob.id)) {
+        x.status = 'done';
+        x.error = null;
+      }
+    } catch { /* a report without verified artifacts cannot restore a job */ }
+  }
+  restoreSequenceTake(x, x.takeJob?.optional, 'The optional take was interrupted.');
+  if (/^take-[0-9a-f-]{36}\.report$/.test(x.takeJob?.id || '')) {
+    try { fs.unlinkSync(path.join(SESS_DIR, x.takeJob.id)); } catch { /* no completed report */ }
+  }
+  x.takeJob = null;
   x.procInfo = null;
   persist(x, false);
 }
@@ -123,6 +188,8 @@ function recoverOrphan(x) {
   if (term.state === 'gone') { clearRecoveredProcess(x); return; }
   x.lines ||= [];
   if (term.state === 'unverified' || term.state === 'signal-error') {
+    clearRecoveredProcess(x);
+    if (!x.procInfo) return;
     x.lines.push('Watchdog: a leftover process could not be safely identified; its process record is retained for another recovery check.');
     persist(x, false);
     return;
@@ -174,9 +241,15 @@ const view = (user, x = job) => !x ? { status: 'idle' } : canSee(user, x) ? snap
 const emit = () => { for (const c of clients) c.write(`data: ${JSON.stringify(view(c.user))}\n\n`); };
 
 function busyReason() {
+  for (const item of pendingOrphanRecovery) {
+    if (!item.takeJob || !item.procInfo) continue;
+    clearRecoveredProcess(item);
+    if (item.procInfo) return 'A previous motion worker still needs to be cleared before the next job.';
+  }
+  if (localIdeaBusy || ideaRefiner.active) return 'The local idea model is still working. Wait for it to finish.';
   if (job && ['running', 'stopping'].includes(job.status)) return 'A studio job is already running.';
   try {
-    const out = execFileSync('pgrep', ['-fl', 'run-food-motion-baseline|ltx-2-mlx|create-flux-image|make-local-video'], { encoding: 'utf8' });
+    const out = execFileSync('pgrep', ['-fl', 'run-food-motion-baseline|bench-nonfood-planning|bench-topic-packs|ltx-2-mlx|create-flux-image|make-local-video'], { encoding: 'utf8' });
     if (out.trim()) return 'Another local render is using the GPU (for example the food benchmark). Wait for it to finish.';
   } catch { /* pgrep exits 1 when nothing matches */ }
   return null;
@@ -309,10 +382,103 @@ function studioMotionEditor() {
   }) ? 'artcraft' : 'ffmpeg';
 }
 
-function sequenceMotionResult(scenario, sequence, shot) {
+function takeWork(scenario) {
+  return path.resolve(ROOT, 'storage', 'any-local', path.basename(scenario, '.json'));
+}
+function takeContext(session, shot) {
+  const story = path.resolve(ROOT, session.scenario);
+  const work = takeWork(session.scenario);
+  const scenario = JSON.parse(fs.readFileSync(story, 'utf8').replace(/^\uFEFF/, ''));
+  const pick = String(scenario.settings?.quality || session.options?.quality || '').toLowerCase().trim();
+  const quality = pick === 'high' ? 'high' : 'standard';
+  const [shortWidth, shortHeight] = quality === 'high' ? [704, 1280] : [384, 640];
+  const [width, height] = (scenario.settings?.format || 'short') !== 'short' ? [shortHeight, shortWidth] : [shortWidth, shortHeight];
+  const pointer = (name) => {
+    try { return fs.readFileSync(path.join(ROOT, 'storage', 'setup', name + '-dir.txt'), 'utf8').trim(); }
+    catch (error) { if (error.code === 'ENOENT') return null; throw error; }
+  };
+  const expected = {
+    scenarioSha256: sha256(story),
+    renderSettings: { quality, width, height, frames: 97, fps: 24, editor: studioMotionEditor(),
+      model: pointer('ltx-model'), gemma: pointer('gemma-model') },
+    referenceSha256: session.sequence?.approvedFrames?.find((frame) => frame.shot === shot)?.sha256,
+  };
+  if (expected.referenceSha256) {
+    const approved = session.sequence.approvedFrames.find((frame) => frame.shot === shot);
+    const reference = fs.realpathSync(path.resolve(work, approved.file));
+    if (!reference.startsWith(fs.realpathSync(work) + path.sep) || sha256(reference) !== expected.referenceSha256) {
+      throw new Error('The approved take reference changed.');
+    }
+  } else if (shot) {
+    const frame = frameManifest(session.scenario).stills[shot - 1];
+    if (frame) expected.referenceSha256 = sha256(path.join(ROOT, frame.p));
+  }
+  return { work, expected, shotCount: scenario.plan.shots.length };
+}
+function restoreSequenceTake(session, optional, message) {
+  if (!optional || session.kind !== 'sequence-motion' || session.status === 'done') return;
+  const shot = session.sequence?.currentShot;
+  if (!shot) return;
+  try {
+    const { work, expected } = takeContext(session, shot);
+    const state = availableTakes(work, shot, expected);
+    if (!state.completed[state.current]) return;
+    session.sequence.takeError = message;
+    session.status = 'done';
+    session.error = null;
+  } catch { /* a missing or stale selection cannot be restored */ }
+}
+function commitTakeJob(session, reportFile, request) {
+  const { work, shotCount } = takeContext(session);
+  const rows = JSON.parse(fs.readFileSync(reportFile, 'utf8'));
+  const shots = session.kind === 'sequence-motion' ? [session.sequence.currentShot] : Array.from({ length: shotCount }, (_, i) => i + 1);
+  if (!Array.isArray(rows) || rows.length !== shots.length) throw new Error('Incomplete take report.');
+  const state = motionState(work);
+  for (const [index, shot] of shots.entries()) {
+    const take = request?.shot === shot ? request.take : state[shot - 1]?.current ?? 0;
+    const row = rows[index];
+    verifiedTake(work, row, { ...takeContext(session, shot).expected, shot, take });
+    if (session.kind === 'sequence-motion' && !row.endFrame) throw new Error('Missing continuity frame.');
+    const cached = state[shot - 1]?.completed?.[take];
+    const sameApprovedInput = cached?.scenarioSha256 === row.scenarioSha256 &&
+      cached.approvedReferenceSha256 === row.approvedReferenceSha256 &&
+      Object.entries(row.renderSettings).every(([key, value]) => cached.renderSettings?.[key] === value);
+    const switching = request?.cacheOnly && request.shot === shot;
+    const preserving = sameApprovedInput && (!request || request.shot !== shot);
+    if ((switching || (session.kind === 'render' && preserving)) &&
+        (!sameApprovedInput || cached.segments.length !== row.segments.length ||
+          row.segments.some(({ clip, sha256, seed }, part) => {
+            const prior = cached.segments[part];
+            return prior.clip !== clip || prior.sha256 !== sha256 || prior.seed !== seed;
+          }))) {
+      throw new Error('Assembly did not reuse the selected take.');
+    }
+  }
+  const finalExport = session.kind === 'render' ? { jobId: session.takeJob.id, session: session.id,
+    path: session.video, sha256: sha256(path.join(ROOT, session.video)) } : null;
+  commitTakes(work, rows.map((row) => ({ ...row, completedJobId: session.takeJob.id })), request, finalExport);
+  for (const row of rows) {
+    const prior = technicalObservations(state[row.shot - 1]?.completed?.[row.take]);
+    for (const { part, clipSha256, reason } of technicalObservations(row)) {
+      if (prior.some((entry) => entry.part === part && entry.clipSha256 === clipSha256 && entry.reason === reason)) continue;
+      ledger({ type: 'motion-clip-gate', schemaVersion: 1, gate: 'technical-screen',
+        gateVersion: 'first-checks-v1', session: session.id, shot: row.shot, take: row.take,
+        part, clipSha256, flagged: Boolean(reason), reason });
+    }
+  }
+  if (request && session.sequence?.stage === 'ready' && session.kind === 'render') {
+    const row = rows.find((item) => item.shot === request.shot);
+    if (row?.endFrame) session.sequence.endFrames = session.sequence.endFrames.map((item) => item.shot === row.shot ? row : item);
+  }
+}
+
+function sequenceMotionResult(scenario, sequence, shot, includeSegments = false, options = {}) {
   const workRoot = path.resolve(ROOT, 'storage', 'any-local', path.basename(scenario, '.json'));
   const manifestPath = path.join(workRoot, 'sequence', `shot-${String(shot).padStart(2, '0')}.json`);
-  const result = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  const state = motionState(workRoot)[shot - 1];
+  const result = state?.completed
+    ? verifiedTake(workRoot, state.completed[state.current], { ...takeContext({ scenario, sequence, options }, shot).expected, shot, take: state.current })
+    : JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
   const story = path.join(ROOT, scenario);
   const hash = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
   const approved = sequence.approvedFrames.find((frame) => frame.shot === shot);
@@ -337,7 +503,15 @@ function sequenceMotionResult(scenario, sequence, shot) {
   }
   const clip = checkedFile(result.clip, result.clipSha256);
   const endFrame = checkedFile(result.endFrame, result.endFrameSha256);
-  return { shot, clip, clipSha256: result.clipSha256, endFrame, endFrameSha256: result.endFrameSha256 };
+  return { shot, clip, clipSha256: result.clipSha256, endFrame, endFrameSha256: result.endFrameSha256,
+    take: result.take ?? null, parts: result.parts ?? null,
+    ...(includeSegments && Array.isArray(result.segments) ? {
+      segments: result.segments.map((segment, index) => ({
+        part: index + 1,
+        clip: checkedFile(segment.clip, segment.sha256),
+        sha256: segment.sha256,
+      })),
+    } : {}) };
 }
 
 function sequenceIdentityReference(scenario, sequence) {
@@ -480,15 +654,22 @@ function start(kind, args, extra = {}) {
       x.technicalQa = { status: 'pending' };
     } x.scenario = extra.scenario || x.scenario; } else { x.plan = null; x.scenario = null; }
   if (kind === 'draft') {
-    if (x.video) x.previousVideo = x.video;
+    if (x.video && x.technicalQa?.status === 'passed') x.previousVideo = x.video;
     x.video = null;
     x.technicalQa = null;
     x.plan = null;
     x.scenario = null;
   }
   job = x;
+  const reportFile = kind === 'sequence-motion' || (kind === 'render' && extra.pinFrames)
+    ? path.join(SESS_DIR, `take-${crypto.randomUUID()}.report`) : null;
+  x.takeJob = reportFile ? { id: path.basename(reportFile), shot: extra.takeRequest?.shot ?? x.sequence?.currentShot ?? null,
+    take: extra.takeRequest?.take ?? null, optional: Boolean(extra.takeRequest) } : null;
   const proc = spawn(extra.cmd ? extra.cmd[0] : 'bash', extra.cmd ? [...extra.cmd.slice(1), ...args] : ['scripts/make-local-video.sh', ...args], { cwd: ROOT, detached: true, env: { ...process.env, PYTHONUNBUFFERED: '1', // the prompt gate scores food close-ups and a luxury-kitchen look; it does not apply to cartoon/custom looks
     ...(kind === 'render' && extra.pinFrames ? { SHORTS_STUDIO_PIN_FRAMES: '1' } : {}),
+    ...(reportFile ? { SHORTS_STUDIO_TAKE_REPORT: reportFile } : {}),
+    ...(extra.takeRequest ? { SHORTS_STUDIO_TAKE_SHOT: String(extra.takeRequest.shot),
+      SHORTS_STUDIO_TAKE_INDEX: String(extra.takeRequest.take) } : {}),
     ...(extra.learningEvidence ? { SHORTS_STUDIO_LEARNING_EVIDENCE: JSON.stringify(extra.learningEvidence) } : {}),
     ...(kind === 'draft' ? { SHORTS_STUDIO_UNATTENDED: x.options?.unattended === true ? '1' : '0' } : {}),
     SHORTS_RENDER_QUALITY: x.options?.quality === 'high' ? 'high' : 'standard', // opt-in 704x1280 (scripts/render_quality.py); standard stays the fast default
@@ -540,6 +721,15 @@ function start(kind, args, extra = {}) {
   let failedQa = false;
   const onData = (chunk) => {
     lastActivityAt = Date.now();
+    if (x.takeJob && !x.takeJob.observedOwner && x.proc === proc && x.procInfo) {
+      const identity = liveProcessIdentity(proc.pid);
+      if (identity?.pid === proc.pid && identity.pgid === proc.pid &&
+          isOrphanScenarioMember({ recorded: x.procInfo, live: identity })) {
+        x.procInfo.command = identity.command;
+        x.takeJob.observedOwner = true;
+        persist(x);
+      }
+    }
     buf += chunk.toString();
     const parts = buf.split(/\r|\n/); buf = parts.pop();
     for (const raw of parts) {
@@ -592,9 +782,45 @@ function start(kind, args, extra = {}) {
         }
       }
     }
-    await recordFinalReviewEvidence(x).catch(() => {});
+    if (reportFile) {
+      if (x.status === 'done') {
+        try { commitTakeJob(x, reportFile, extra.takeRequest); }
+        catch (error) {
+          x.status = 'failed';
+          x.error = 'Motion take was not committed: ' + error.message;
+        }
+      }
+      if (kind === 'render' && x.status !== 'done' && (extra.takeRequest || x.video || x.previousVideo)) {
+        x.video = x.previousVideo || null;
+        x.technicalQa = { status: x.video ? 'passed' : 'unverified' };
+      }
+      restoreSequenceTake(x, extra.takeRequest, x.error || 'The optional take was cancelled. The previous take is selected.');
+      try { fs.unlinkSync(reportFile); } catch { /* an incomplete worker may not have produced a report */ }
+      x.takeJob = null;
+    }
+    if (x.status === 'done' && !x.sequence?.takeError && extra.batchArgs && extra.takeRequest) {
+      try {
+        const { work, expected } = takeContext(x, extra.takeRequest.shot);
+        const state = availableTakes(work, extra.takeRequest.shot, expected);
+        if (Object.keys(state.completed).length < 3) {
+          const reason = busyReason();
+          if (reason) {
+            x.sequence.takeError = 'Remaining takes paused. ' + reason;
+          } else {
+            const next = reserveTake(state);
+            start(kind, extra.batchArgs, { ...extra, session: x, takeRequest: { ...next, shot: extra.takeRequest.shot, select: false } });
+            return;
+          }
+        }
+      } catch (error) {
+        x.status = 'failed';
+        x.error = error.message;
+      }
+    }
     x.procInfo = null;
     persist(x);
+    await recordFinalReviewEvidence(x).catch(() => {});
+    if (x.proc !== proc) return;
     logRun(x, code);
     recordSessionFailure(x);
     if (watched && x.status === 'failed') {
@@ -926,6 +1152,47 @@ function uploadedImage(dataUrl) {
   return { buffer, mime: match[1], ext: match[1] === 'image/png' ? 'png' : 'jpg' };
 }
 
+const CHARACTER_DIR = path.join(ROOT, 'storage', 'studio-characters');
+const CHARACTER_ID = /^[0-9a-f]{32}$/;
+
+function characterCatalog() {
+  if (!fs.existsSync(CHARACTER_DIR)) return [];
+  return fs.readdirSync(CHARACTER_DIR)
+    .filter((name) => CHARACTER_ID.test(path.basename(name, '.json')) && name.endsWith('.json'))
+    .map((name) => JSON.parse(fs.readFileSync(path.join(CHARACTER_DIR, name), 'utf8')))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function characterImage(id) {
+  if (!CHARACTER_ID.test(id)) throw new Error('Choose a saved character.');
+  const record = characterCatalog().find((item) => item.id === id);
+  if (!record || !['png', 'jpg'].includes(record.ext)) throw new Error('Saved character is unavailable.');
+  const file = fs.realpathSync(path.join(CHARACTER_DIR, id + '.' + record.ext));
+  if (path.dirname(file) !== fs.realpathSync(CHARACTER_DIR)) throw new Error('Saved character file is invalid.');
+  const buffer = fs.readFileSync(file);
+  if (crypto.createHash('sha256').update(buffer).digest('hex') !== record.sha256) {
+    throw new Error('Saved character image changed.');
+  }
+  return { buffer, ext: record.ext, mime: record.ext === 'png' ? 'image/png' : 'image/jpeg' };
+}
+
+function writeReferenceImage(workRoot, shot, image) {
+  const digest = crypto.createHash('sha256').update(image.buffer).digest('hex');
+  const relative = `references/shot-${String(shot).padStart(2, '0')}-${digest.slice(0, 16)}.${image.ext}`;
+  const target = path.join(workRoot, relative);
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  if (fs.existsSync(target)) {
+    if (crypto.createHash('sha256').update(fs.readFileSync(target)).digest('hex') !== digest) {
+      throw new Error('A stored reference image does not match its filename.');
+    }
+  } else {
+    const temporary = `${target}.${crypto.randomUUID()}.tmp`;
+    fs.writeFileSync(temporary, image.buffer, { flag: 'wx' });
+    fs.renameSync(temporary, target);
+  }
+  return { shot, file: relative, sha256: digest, mime: image.mime };
+}
+
 function serveFile(req, res, file, roots) {
   const real = path.resolve(file);
   if (roots && !roots.some((r) => real.startsWith(r + path.sep))) return json(res, 403, { error: 'Not allowed' });
@@ -964,7 +1231,12 @@ function readUsers() { try { return (JSON.parse(fs.readFileSync(USERS_FILE, 'utf
 const authOn = () => Boolean(TOKEN) || readUsers().length > 0;
 function userFor(candidate) {
   if (TOKEN && sameToken(candidate, TOKEN)) return { name: 'owner', role: 'owner' };
-  for (const u of readUsers()) if (sameToken(candidate, u.token)) return { name: String(u.name).slice(0, 40), role: 'creator', dailyRenders: Number(u.dailyRenders) || 3 };
+  for (const u of readUsers()) {
+    const name = String(u.name).slice(0, 40);
+    if (name.trim().toLowerCase() !== 'owner' && sameToken(candidate, u.token)) {
+      return { name, role: 'creator', dailyRenders: Number(u.dailyRenders) || 3 };
+    }
+  }
   return null;
 }
 // A relative can use only files that belong to their own sessions. Every file of a video shares the plan's id.
@@ -984,6 +1256,12 @@ function today(user, kind) {
   const day = new Date().toDateString();
   return readLedger().filter((r) => r.type === 'run' && r.user === user.name && r.kind === kind && new Date(r.ts).toDateString() === day).length;
 }
+
+let hostedDryRun;
+
+// Product feedback lives in its own files, apart from the learning ledger, so it can never steer future plans.
+const productFeedback = createFeedbackStore({ dir: process.env.STUDIO_FEEDBACK_DIR || path.join(ROOT, 'storage', 'studio-feedback') });
+const FEEDBACK_DAILY_LIMIT = Number(process.env.STUDIO_FEEDBACK_DAILY_LIMIT) || 10;
 
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
@@ -1012,7 +1290,7 @@ http.createServer(async (req, res) => {
     const owner = me.role === 'owner';
     return json(res, 200, { name: me.name, role: me.role, maxSeconds: owner ? 60 : CREATOR_MAX_SECONDS,
       rendersLeft: owner ? null : Math.max(0, me.dailyRenders - today(me, 'render')), draftsLeft: owner ? null : Math.max(0, CREATOR_DAILY_DRAFTS - today(me, 'draft')),
-      canCompare: owner, canSeeLog: owner, canRunUnattended: owner });
+      canSimulateHostedShot: Boolean(TOKEN) && owner, canManageFeedback: owner, canCompare: owner, canSeeLog: owner, canRunUnattended: owner });
   }
   if (url.pathname === '/api/readiness') {
     if (req.method !== 'GET') return json(res, 405, { error: 'Use GET to run the local readiness check.' });
@@ -1156,13 +1434,80 @@ http.createServer(async (req, res) => {
     }
     const f = path.join(ROOT, 'storage', `studio-answers-${Date.now()}-${crypto.randomUUID()}.json`);
     fs.writeFileSync(f, JSON.stringify(answers, null, 1));
-    const options = { ...(retrySession?.options || {}), look, setting, quality: b.quality === 'high' || (b.quality === undefined && retrySession?.options?.quality === 'high') ? 'high' : 'standard', seconds: answers.seconds, orientation: answers.orientation, audio: answers.audio, ending: answers.ending, originalPrompt, storyPrompt: repairing ? prompt : retrySession?.options?.storyPrompt || prompt, brief: answers, ...(repairing ? { repairGuidance: b.repairGuidance.trim() } : {}), ideaModel: retrySession?.options?.ideaModel || refined?.model || null, learningGuidanceCount: learningEvidence.guidanceCount, allowRepeat: retrySession ? Boolean(retrySession.options?.allowRepeat) : Boolean(b.allowRepeat), chain: retrySession ? Boolean(retrySession.options?.chain) : look !== 'food', unattended: !repairing && isOwner && b.unattended === true };
+    const options = { ...(retrySession?.options || {}), look, setting, quality: b.quality === 'high' || (b.quality === undefined && retrySession?.options?.quality === 'high') ? 'high' : 'standard', seconds: answers.seconds, orientation: answers.orientation, audio: answers.audio, ending: answers.ending,
+      continuityAnchor: retrySession?.options?.continuityAnchor || (b.continuityAnchor === 'previous-end' ? 'previous-end' : 'identity'), originalPrompt, storyPrompt: repairing ? prompt : retrySession?.options?.storyPrompt || prompt, brief: answers, ...(repairing ? { repairGuidance: b.repairGuidance.trim() } : {}), ideaModel: retrySession?.options?.ideaModel || refined?.model || null, learningGuidanceCount: learningEvidence.guidanceCount, allowRepeat: retrySession ? Boolean(retrySession.options?.allowRepeat) : Boolean(b.allowRepeat), chain: retrySession ? Boolean(retrySession.options?.chain) : look !== 'food', unattended: !repairing && isOwner && b.unattended === true };
     const x = start('draft', ['--answers', path.relative(ROOT, f), ...(options.allowRepeat ? ['--allow-repeat'] : [])], {
       cmd: ['python3', 'scripts/studio-draft.py'], user: me.name, prompt: originalPrompt, learningEvidence,
       unattended: !repairing && isOwner && b.unattended === true, options, requestId,
       ...(retrySession ? { session: retrySession, archiveAttempt: true } : {}),
     });
     return json(res, 202, snap(x));
+  }
+  if (url.pathname === '/api/hosted/dry-run') {
+    if (req.method !== 'POST') return json(res, 405, { error: 'Use POST for a hosted simulation.' });
+    if (!TOKEN || !isOwner) return json(res, 403, { error: 'Sign in with the Studio owner link to simulate a hosted shot.' });
+    try {
+      const b = await body(req);
+      if (!b || !['quote', 'confirm'].includes(b.action) || !['ltx-2.5', 'wan-2.2'].includes(b.model) ||
+          !Number.isInteger(b.shot) || b.shot < 1 || !Number.isFinite(b.capUsd) ||
+          Object.keys(b).some((k) => !['sessionId', 'shot', 'capUsd', 'model', 'action', 'approval'].includes(k))) {
+        return json(res, 400, { error: 'Choose a shot, simulation model and budget cap.' });
+      }
+      const session = sessions.get(String(b.sessionId));
+      const frame = session?.sequence?.approvedFrames?.find((f) => f.shot === b.shot);
+      if (!frame) return json(res, 409, { error: 'Approve the first frame for this shot first.' });
+      const { expected } = takeContext(session, b.shot);
+      if (expected.scenarioSha256 !== frame.scenarioSha256) return json(res, 409, { error: 'The plan changed after frame approval.' });
+      const story = JSON.parse(fs.readFileSync(path.join(ROOT, session.scenario), 'utf8').replace(/^\uFEFF/, ''));
+      const prompt = story.plan.shots[b.shot - 1]?.motionPrompt;
+      if (!prompt?.trim()) return json(res, 409, { error: 'This shot needs a motion prompt.' });
+      const { width, height, fps, frames } = expected.renderSettings;
+      const request = { prompt, mode: 'i2v_first_frame', width, height, fps, frameCount: frames,
+        audio: 'silent', conditioning: [{ kind: 'image', role: 'first-frame', sha256: frame.sha256, uri: 'asset:' + frame.sha256 }] };
+      const bound = { sessionId: session.id, shot: b.shot, model: b.model, capUsd: b.capUsd,
+        scenarioSha256: expected.scenarioSha256, request };
+      if (!hostedDryRun) {
+        const { tsImport } = await import('tsx/esm/api');
+        const { openStudioHostedDryRun } = await tsImport('../src/media/video/StudioHostedDryRun.ts', import.meta.url);
+        hostedDryRun ??= openStudioHostedDryRun(path.join(ROOT, 'storage', 'studio-hosted-dry-run.sqlite'));
+      }
+      const result = b.action === 'quote' ? hostedDryRun.quote(bound) : await hostedDryRun.confirm(bound, b.approval);
+      return json(res, 200, result);
+    } catch (error) { return json(res, 409, { error: error.message || 'Simulation failed.' }); }
+  }
+  if (url.pathname === '/api/character-references' && ['GET', 'POST'].includes(req.method)) {
+    if (!isOwner) return json(res, 403, { error: 'The character library belongs to the owner.' });
+    try {
+      if (req.method === 'GET') {
+        return json(res, 200, { characters: characterCatalog().map(({ id, name, sha256 }) => ({ id, name, sha256 })) });
+      }
+      const input = await body(req);
+      const owner = sessions.get(String(input.sessionId));
+      const name = typeof input.name === 'string' ? input.name.trim() : '';
+      if (!owner || !canSee(me, owner) || !name || name.length > 60) {
+        return json(res, 400, { error: 'Choose an approved frame and a character name up to 60 characters.' });
+      }
+      if (characterCatalog().some((item) => item.name.toLowerCase() === name.toLowerCase())) {
+        return json(res, 409, { error: 'That character name already exists.' });
+      }
+      const frame = owner.sequence?.approvedFrames?.find((item) => item.shot === input.shot);
+      if (!frame) return json(res, 409, { error: 'Approve this first frame before saving it as a character.' });
+      const work = path.resolve(ROOT, 'storage', 'any-local', path.basename(owner.scenario, '.json'));
+      const source = fs.realpathSync(path.resolve(work, frame.file));
+      if (!source.startsWith(work + path.sep)) throw new Error('The approved image is outside the session.');
+      const buffer = fs.readFileSync(source);
+      const sha256 = crypto.createHash('sha256').update(buffer).digest('hex');
+      if (sha256 !== frame.sha256) throw new Error('The approved image changed.');
+      const mime = path.extname(source).toLowerCase() === '.png' ? 'image/png' : 'image/jpeg';
+      const image = uploadedImage(`data:${mime};base64,${buffer.toString('base64')}`);
+      const id = crypto.randomUUID().replaceAll('-', '');
+      fs.mkdirSync(CHARACTER_DIR, { recursive: true });
+      fs.writeFileSync(path.join(CHARACTER_DIR, id + '.' + image.ext), buffer, { flag: 'wx' });
+      fs.writeFileSync(path.join(CHARACTER_DIR, id + '.json'), JSON.stringify({ id, name, sha256, ext: image.ext }), { flag: 'wx' });
+      return json(res, 201, { character: { id, name, sha256 } });
+    } catch (error) {
+      return json(res, 409, { error: error.message || 'Could not read or save the character reference.' });
+    }
   }
   if (url.pathname === '/api/reference-frame' && req.method === 'POST') {
     const parsed = await boundedJsonBody(req, 12 * 1024 * 1024);
@@ -1187,31 +1532,35 @@ http.createServer(async (req, res) => {
     try { shotCount = JSON.parse(fs.readFileSync(story, 'utf8')).plan.shots.length; }
     catch { return json(res, 400, { error: 'The story plan is invalid.' }); }
     const shot = Number(b.shot);
-    if (!Number.isInteger(shot) || shot < 1 || shot > shotCount) return json(res, 400, { error: 'Choose a shot in this plan.' });
+    const characterId = typeof b.characterId === 'string' ? b.characterId : '';
+    if (characterId && !isOwner) return json(res, 403, { error: 'The character library belongs to the owner.' });
+    if (!characterId && (!Number.isInteger(shot) || shot < 1 || shot > shotCount)) {
+      return json(res, 400, { error: 'Choose a shot in this plan.' });
+    }
     let image;
-    try { image = uploadedImage(b.dataUrl); }
+    try { image = characterId ? characterImage(characterId) : uploadedImage(b.dataUrl); }
     catch (error) { return json(res, 400, { error: error.message }); }
 
     let previous;
     try { previous = readReferenceManifest(sc); }
     catch (error) { return json(res, 409, { error: error.message || 'The reference-image manifest is invalid.' }); }
     const workRoot = path.join(ROOT, 'storage', 'any-local', path.basename(sc, '.json'));
-    const directory = path.join(workRoot, 'references');
-    fs.mkdirSync(directory, { recursive: true });
-    const digest = crypto.createHash('sha256').update(image.buffer).digest('hex');
-    const fileName = `references/shot-${String(shot).padStart(2, '0')}-${digest.slice(0, 16)}.${image.ext}`;
-    const target = path.join(workRoot, fileName);
-    if (fs.existsSync(target)) {
-      if (crypto.createHash('sha256').update(fs.readFileSync(target)).digest('hex') !== digest) {
-        return json(res, 409, { error: 'A stored reference image does not match its filename.' });
+    let rows;
+    try {
+      if (characterId) {
+        const custom = previous.rows.filter((row) => !row.characterId);
+        const customizedShots = new Set(custom.map((row) => row.shot));
+        const remaining = Array.from({ length: shotCount }, (_, index) => index + 1)
+          .filter((number) => !customizedShots.has(number));
+        if (!remaining.length) return json(res, 409, { error: 'Every shot already has a custom reference.' });
+        rows = [...custom, ...remaining.map((number) => ({ ...writeReferenceImage(workRoot, number, image), characterId }))];
+      } else {
+        rows = [...previous.rows.filter((row) => row.shot !== shot), writeReferenceImage(workRoot, shot, image)];
       }
-    } else {
-      const temporary = `${target}.${crypto.randomUUID()}.tmp`;
-      fs.writeFileSync(temporary, image.buffer, { flag: 'wx' });
-      fs.renameSync(temporary, target);
+      rows.sort((a, b) => a.shot - b.shot);
+    } catch (error) {
+      return json(res, 409, { error: error.message });
     }
-    const rows = [...previous.rows.filter((row) => row.shot !== shot),
-      { shot, file: fileName, sha256: digest, mime: image.mime }].sort((a, b) => a.shot - b.shot);
     const referenceManifest = {
       schemaVersion: 1,
       scenarioSha256: crypto.createHash('sha256').update(fs.readFileSync(story)).digest('hex'),
@@ -1224,7 +1573,8 @@ http.createServer(async (req, res) => {
     owner.referenceFrames = readReferenceManifest(sc).references;
     persist(owner);
     emit();
-    return json(res, 201, { ok: true, reference: owner.referenceFrames.find((item) => item.shot === shot) });
+    return json(res, 201, { ok: true, references: owner.referenceFrames,
+      ...(!characterId ? { reference: owner.referenceFrames.find((item) => item.shot === shot) } : {}) });
   }
   if ((url.pathname === '/api/stills' || url.pathname === '/api/regen') && req.method === 'POST') {
     // first-frame step: make only the stills (about 25 s each) so a bad frame is caught before 4.5 min of motion
@@ -1297,7 +1647,8 @@ http.createServer(async (req, res) => {
           }
           stillArgs.push('--chain-source', path.relative(ROOT, endFrame),
             '--chain-source-sha256', previousEnd.endFrameSha256);
-          stillArgs.push('--anchor-image', sequenceIdentityReference(sc, sequence));
+          stillArgs.push(...(owner.options?.continuityAnchor === 'previous-end'
+            ? ['--chain-images'] : ['--anchor-image', sequenceIdentityReference(sc, sequence)]));
         }
         const firstFrames = path.join(ROOT, 'storage', 'any-local', path.basename(sc, '.json'), 'first-frames.json');
         try { fs.unlinkSync(firstFrames); } catch (error) { if (error.code !== 'ENOENT') throw error; }
@@ -1334,6 +1685,10 @@ http.createServer(async (req, res) => {
         }
         if (sequence.referenceFramesSha256 !== referenceIdentity(sc)) {
           return json(res, 409, { error: 'Reference images changed during sequential review. Restart frame review.' });
+        }
+        const predecessor = sequence.endFrames.find((frame) => frame.shot === shot - 1);
+        if (sequence.chainSourceHashes?.[shot] && sequence.chainSourceHashes[shot] !== predecessor?.endFrameSha256) {
+          return json(res, 409, { error: 'The preceding take changed. Regenerate this frame before approval.' });
         }
         const entry = data.frames.find((item) => item.shot === shot);
         const candidate = entry?.candidates.find((item) =>
@@ -1380,6 +1735,10 @@ http.createServer(async (req, res) => {
       }
       const frames = [];
       for (let shot = 1; shot <= count; shot += 1) {
+        const predecessor = sequence.endFrames.find((frame) => frame.shot === shot - 1);
+        if (sequence.chainSourceHashes?.[shot] && sequence.chainSourceHashes[shot] !== predecessor?.endFrameSha256) {
+          return json(res, 409, { error: 'The preceding take changed. Regenerate this frame before approval.' });
+        }
         const entry = data.frames.find((item) => item.shot === shot);
         const candidate = entry?.candidates.find((item) => item.candidate === selections.get(shot));
         if (!candidate) return json(res, 409, { error: `No selected candidate is available for shot ${shot}.` });
@@ -1407,6 +1766,62 @@ http.createServer(async (req, res) => {
       return json(res, 409, { error: error.message || 'Could not approve these frames.' });
     }
   }
+  if (url.pathname === '/api/sequence/motion-review' && ['GET', 'POST'].includes(req.method)) {
+    const input = req.method === 'POST' ? await body(req) : Object.fromEntries(url.searchParams);
+    const owner = sessions.get(String(input.sessionId));
+    if (!owner || !canSee(me, owner)) return json(res, 404, { error: 'Unknown session.' });
+    if (owner.kind !== 'sequence-motion' || owner.status !== 'done' || owner.sequence?.stage !== 'motion') {
+      return json(res, 409, { error: 'There is no current motion take to review.' });
+    }
+    const shot = owner.sequence.currentShot;
+    try {
+      const result = sequenceMotionResult(owner.scenario, owner.sequence, shot, true, owner.options);
+      const work = path.join('storage', 'any-local', path.basename(owner.scenario, '.json'));
+      const segments = (result.segments?.length ? result.segments :
+        [{ part: result.parts ?? null, clip: result.clip, sha256: result.clipSha256 }])
+        .map((segment) => ({ ...segment, clip: path.join(work, segment.clip) }));
+      if (req.method === 'GET') {
+        const context = takeContext(owner, shot);
+        const state = availableTakes(context.work, shot, context.expected);
+        const takeScreen = summarizeTakeScreens(state.completed);
+        const role = authOn() ? me.role : null;
+        const myReviews = new Map();
+        for (const row of readLedger()) {
+          if (row.type === 'motion-take-review' && row.session === owner.id && row.shot === shot &&
+              row.take === result.take && row.user === me.name && row.reviewerRole === role) {
+            myReviews.set(row.part, row);
+          }
+        }
+        const reviewedSegments = segments.map((segment) => {
+          const row = myReviews.get(segment.part);
+          const myReview = row?.clipSha256 === segment.sha256
+            ? { outcome: row.outcome, seconds: row.seconds, notes: row.notes, ratings: row.ratings }
+            : null;
+          return { ...segment, myReview };
+        });
+        return json(res, 200, { take: result.take, parts: result.parts, segments: reviewedSegments, takeScreen });
+      }
+      const reviewed = segments.find((segment) => segment.part === input.part && segment.sha256 === input.sha256);
+      if (!reviewed) return json(res, 409, { error: 'The take changed. Reload it before saving.' });
+      const notes = typeof input.notes === 'string' ? input.notes.trim() : '';
+      const seconds = input.seconds;
+      const ratings = input.ratings;
+      const dimensions = ['identity', 'action', 'realism'];
+      if (!ratings || !dimensions.every((key) => Number.isInteger(ratings[key]) &&
+          ratings[key] >= 1 && ratings[key] <= 5) ||
+          !['identity-drift', 'missed-action', 'unnatural-motion', 'holds-up'].includes(input.outcome) ||
+          !Number.isFinite(seconds) || seconds < 0 || seconds > 60 || notes.length > 1000) {
+        return json(res, 400, { error: 'Choose a finding and rate identity, action, and realism from 1 to 5.' });
+      }
+      if (!ledger({ type: 'motion-take-review', user: me.name, reviewerRole: authOn() ? me.role : null,
+        session: owner.id, scenario: owner.scenario, look: owner.options?.look,
+        shot, take: result.take, part: reviewed.part, clip: reviewed.clip, clipSha256: reviewed.sha256,
+        seconds, outcome: input.outcome, notes, ratings: Object.fromEntries(dimensions.map((key) => [key, ratings[key]])) })) {
+        return json(res, 500, { error: 'Could not save the motion review.' });
+      }
+      return json(res, 200, { ok: true });
+    } catch (error) { return json(res, 409, { error: error.message }); }
+  }
   if ((url.pathname === '/api/sequence/next' || url.pathname === '/api/sequence/retry') && req.method === 'POST') {
     const b = await body(req);
     const owner = ID_RE.test(String(b.sessionId)) ? sessions.get(String(b.sessionId)) : null;
@@ -1422,8 +1837,9 @@ http.createServer(async (req, res) => {
     const why = busyReason();
     if (why) return json(res, 409, { error: why });
     if (url.pathname === '/api/sequence/retry') {
-      if (!['failed', 'cancelled'].includes(owner.status) &&
-          !(owner.status === 'done' && sequence.continuationError)) {
+      const selectingTake = owner.status === 'done' && b.motionTake === true && !owner.options?.unattended;
+      if (!['failed', 'cancelled', 'interrupted'].includes(owner.status) &&
+          !(owner.status === 'done' && sequence.continuationError) && !selectingTake) {
         return json(res, 409, { error: 'Only a failed or stopped shot motion can be retried.' });
       }
       const shot = sequence.currentShot;
@@ -1435,13 +1851,28 @@ http.createServer(async (req, res) => {
           crypto.createHash('sha256').update(fs.readFileSync(reference)).digest('hex') !== approved.sha256) {
         return json(res, 409, { error: `The approved first frame for shot ${shot} changed.` });
       }
+      const batchTakes = selectingTake && b.batchTakes === true && b.take === undefined;
+      let request;
+      try {
+        if (selectingTake) {
+          const { work, expected } = takeContext(owner, shot);
+          const state = availableTakes(work, shot, expected);
+          request = { ...reserveTake(state, b.take), shot, select: !batchTakes || !state.completed[state.current] };
+        }
+      } catch (error) { return json(res, 409, { error: error.message }); }
       delete sequence.continuationError;
-      const retried = start('sequence-motion', [
+      delete sequence.takeError;
+      const args = [
         '--scenario', sc, '--scenario-sha256', approved.scenarioSha256,
         '--shot', String(shot), '--reference', path.relative(ROOT, reference),
         '--reference-sha256', approved.sha256,
         '--editor', studioMotionEditor(),
-      ], { session: owner, scenario: sc, cmd: ['python3', 'scripts/render-studio-shot.py'] });
+        ...(request?.cacheOnly ? ['--cache-only'] : []),
+        ...(batchTakes ? ['--technical-screen'] : []),
+      ];
+      const retried = start('sequence-motion', args, { session: owner, scenario: sc,
+        takeRequest: request, ...(batchTakes ? { batchArgs: args } : {}),
+        cmd: ['python3', 'scripts/render-studio-shot.py'] });
       return json(res, 202, snap(retried));
     }
     if (owner.status !== 'done') return json(res, 409, { error: 'Wait for the current shot motion to finish.' });
@@ -1450,7 +1881,7 @@ http.createServer(async (req, res) => {
         return json(res, 409, { error: 'Reference images changed during sequential review. Restart frame review.' });
       }
       const shot = sequence.currentShot;
-      const result = sequenceMotionResult(sc, sequence, shot);
+      const result = sequenceMotionResult(sc, sequence, shot, false, owner.options);
       delete sequence.continuationError;
       sequence.endFrames = sequence.endFrames.filter((frame) => frame.shot !== shot);
       sequence.endFrames.push(result);
@@ -1463,13 +1894,15 @@ http.createServer(async (req, res) => {
         return json(res, 200, { ok: true, ready: true, job: snap(owner) });
       }
       const nextShot = shot + 1;
+      sequence.chainSourceHashes = { ...sequence.chainSourceHashes, [nextShot]: result.endFrameSha256 };
       const workRoot = path.resolve(ROOT, 'storage', 'any-local', path.basename(sc, '.json'));
       const endFrame = path.resolve(workRoot, result.endFrame);
       const args = ['--scenario', sc, '--stills-only', '--best-of-3-stills',
         '--allow-pending-visual-review', '--shot-only', String(nextShot),
         '--chain-source', path.relative(ROOT, endFrame),
         '--chain-source-sha256', result.endFrameSha256];
-      args.push('--anchor-image', sequenceIdentityReference(sc, sequence));
+      args.push(...(owner.options?.continuityAnchor === 'previous-end'
+        ? ['--chain-images'] : ['--anchor-image', sequenceIdentityReference(sc, sequence)]));
       if (owner.options?.allowRepeat) args.push('--allow-repeat');
       sequence.currentShot = nextShot;
       sequence.stage = 'review';
@@ -1503,21 +1936,17 @@ http.createServer(async (req, res) => {
       if ((owner.options?.chain || owner.sequence?.stage === 'ready') && shot < shotCount) {
         return json(res, 409, { error: `This video builds each shot from the end of the one before it, so a new take of shot ${shot} would redo every later shot. Retake the last shot, or re-render the video.` });
       }
-      let picked;
+      if (owner.scenario !== sc) return json(res, 409, { error: 'That take belongs to a different scenario.' });
       try {
-        picked = JSON.parse(execFileSync('python3', ['scripts/motion_takes.py', 'select', '--work', path.join(ROOT, 'storage', 'any-local', path.basename(sc, '.json')), '--shot', String(shot),
-          ...(b.take !== undefined ? ['--take', String(Number(b.take))] : [])], { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }));
-      } catch (error) {
-        let message = 'Could not change the take.';
-        try { message = JSON.parse(String(error.stdout || '')).error || message; } catch { /* keep default */ }
-        return json(res, 409, { error: message });
-      }
-      motionTake = { shot, ...picked };
-      ledger({ type: 'retake-motion', user: me.name, session: owner.id, shot, take: picked.current, scenario: sc });
+        const { work, expected } = takeContext(owner, shot);
+        motionTake = { ...reserveTake(availableTakes(work, shot, expected), b.take), shot, select: true };
+      } catch (error) { return json(res, 409, { error: error.message }); }
+
     }
     const x = start('render', ['--scenario', sc, ...(owner?.options?.allowRepeat ? ['--allow-repeat'] : []),
-      ...(owner?.options?.chain || owner?.sequence?.stage === 'ready' ? ['--chain-images'] : [])],
-    owner ? { session: owner, scenario: sc, pinFrames: true } : { scenario: sc, pinFrames: true, user: me.name, prompt: 'Render ' + sc.split('/').pop() });
+      ...(owner?.options?.chain || owner?.sequence?.stage === 'ready' ? ['--chain-images'] : []),
+      ...(motionTake?.cacheOnly ? ['--cache-only'] : [])],
+    owner ? { session: owner, scenario: sc, pinFrames: true, takeRequest: motionTake } : { scenario: sc, pinFrames: true, user: me.name, prompt: 'Render ' + sc.split('/').pop() });
     return json(res, 202, motionTake ? { ...snap(x), motionTake } : snap(x));
   }
   if (url.pathname === '/api/cancel' && req.method === 'POST') {
@@ -1590,13 +2019,38 @@ http.createServer(async (req, res) => {
     } catch (error) {
       if (error.code !== 'ENOENT') pendingFramesError = error.message;
     }
+    const projectId = url.searchParams.get('sessionId');
+    const project = projectId ? sessions.get(projectId) :
+      [...sessions.values()].filter((item) => item.scenario === sc && canSee(me, item))
+        .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))[0];
+    if (projectId && (!project || project.scenario !== sc || !canSee(me, project))) {
+      return json(res, 404, { error: 'Unknown project for this motion preview.' });
+    }
+    const takes = {}, selectedClips = [];
+    if (project) {
+      try {
+        const context = takeContext(project);
+        const stored = motionState(context.work);
+        for (let shot = 1; shot <= context.shotCount; shot += 1) {
+          let state;
+          try { state = availableTakes(context.work, shot, takeContext(project, shot).expected, stored); }
+          catch { continue; }
+          takes[shot - 1] = { current: state.current, completed: Object.keys(state.completed).map(Number).sort((a, b) => a - b) };
+          const selected = state.completed[state.current];
+          if (!selected) continue;
+          for (const [index, segment] of selected.segments.entries()) {
+            selectedClips.push({ shot, take: state.current, part: index + 1, p: path.join(work, segment.clip), sha256: segment.sha256 });
+          }
+        }
+      } catch { /* legacy or incomplete project has no verified previews yet */ }
+    }
     return json(res, 200, {
       stills: approved?.stills || previewFrames(sc, latestPreviewRun?.startedAt || 0),
       referenceFrames,
       pendingFrames, pendingFramesError,
       needsHumanReview: !approved && pendingFrames.length > 0,
-      clips: list('motion', /^shot-(\d+)-part-\d+-[0-9a-f]+\.mp4$/),
-      takes: (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, work, 'motion', 'takes.json'), 'utf8')); } catch { return {}; } })(), // per-shot motion takes (scripts/motion_takes.py)
+      progressClips: list('motion', /^shot-(\d+)-part-\d+-[0-9a-f]+\.mp4$/).map(({ n, shot, t }) => ({ n, shot, t })),
+      takes, selectedClips,
     });
   }
   if (url.pathname === '/api/learning') { const l = learning(me); if (!isOwner) l.recentNotes = []; return json(res, 200, l); }
@@ -1609,6 +2063,65 @@ http.createServer(async (req, res) => {
     const videoSha256 = await fileHash(videoFile);
     if (!ledger({ type: 'feedback', user: me.name, session: sess.id, rating: b.rating, note: String(b.note || '').slice(0, 400), look: sess.options?.look, prompt: sess.prompt, scenario: sess.scenario, video: sess.video, videoSha256, evidenceType: 'creator-feedback' })) return json(res, 500, { error: 'Could not save feedback.' });
     return json(res, 200, { ok: true });
+  }
+  if (url.pathname.startsWith('/api/product-feedback')) {
+    try {
+      const query = url.searchParams;
+      if (url.pathname === '/api/product-feedback' && req.method === 'GET') {
+        return json(res, 200, productFeedback.list({ viewer: me, scope: query.get('scope') === 'all' ? 'all' : 'mine',
+          status: query.get('status') || undefined, category: query.get('category') || undefined, q: query.get('q') || '',
+          cursor: query.get('cursor') || undefined, limit: query.get('limit') || undefined }));
+      }
+      if (url.pathname === '/api/product-feedback/item' && req.method === 'GET') {
+        const item = productFeedback.get(query.get('id'), me);
+        return item ? json(res, 200, item) : json(res, 404, { error: 'That feedback was not found.' });
+      }
+      if (url.pathname === '/api/product-feedback' && req.method === 'POST') {
+        const read = await boundedJson(req, FEEDBACK_SCREENSHOT.submitBody);
+        if (read.error) return json(res, read.status, { error: read.error });
+        const parsed = validateSubmission(read.value);
+        if (parsed.error) return json(res, 400, { error: parsed.error });
+        const shot = parsed.value.screenshot ? parseScreenshot(parsed.value.screenshot) : null;
+        // Only identifiers the Studio already holds for this video are stored. Prompt text is never copied.
+        const context = {};
+        if (parsed.value.sessionId) {
+          const sess = sessions.get(parsed.value.sessionId);
+          if (!sess || !canSee(me, sess)) return json(res, 404, { error: 'That video is not available to attach.' });
+          context.sessionId = sess.id;
+          if (sess.scenario) context.scenarioKey = keyOf(sess.scenario);
+          if (sess.options?.look) context.look = String(sess.options.look).slice(0, 40);
+          const exported = sess.video ? path.resolve(ROOT, sess.video) : null;
+          if (exported && exported.startsWith(path.resolve(ROOT, 'outputs') + path.sep) && fs.existsSync(exported)) context.videoSha256 = await fileHash(exported);
+        }
+        const attachment = shot ? productFeedback.saveScreenshot(shot) : null;
+        let result;
+        try {
+          result = productFeedback.submit({ user: me, value: parsed.value, context, attachment,
+            dailyLimit: isOwner ? FEEDBACK_DAILY_LIMIT * 10 : FEEDBACK_DAILY_LIMIT });
+        } catch (error) { productFeedback.discardScreenshot(attachment); throw error; }
+        if (result.duplicate) productFeedback.discardScreenshot(attachment);
+        return json(res, result.duplicate ? 200 : 201, result);
+      }
+      if (url.pathname === '/api/product-feedback/screenshot' && req.method === 'GET') {
+        const attachment = productFeedback.attachmentOf(query.get('id'), me);
+        const file = productFeedback.screenshotPath(attachment);
+        if (!file || !fs.existsSync(file)) return json(res, 404, { error: 'That feedback was not found.' });
+        res.writeHead(200, { 'Content-Type': attachment.mime, 'Content-Length': fs.statSync(file).size, 'X-Content-Type-Options': 'nosniff',
+          'Content-Security-Policy': "default-src 'none'; sandbox", 'Cache-Control': 'private, no-store', 'Content-Disposition': 'inline' });
+        return fs.createReadStream(file).pipe(res);
+      }
+      if (url.pathname === '/api/product-feedback/update' && req.method === 'POST') {
+        const read = await boundedJson(req, FEEDBACK_LIMITS.textBody);
+        if (read.error) return json(res, read.status, { error: read.error });
+        const item = productFeedback.update({ id: read.value.id, viewer: me, status: read.value.status, note: read.value.note, reply: read.value.reply });
+        return json(res, 200, item);
+      }
+      return json(res, 404, { error: 'Unknown feedback request.' });
+    } catch (error) {
+      if (error instanceof FeedbackError) return json(res, error.status, { error: error.message });
+      console.error('product feedback failed:', error);
+      return json(res, 500, { error: 'Feedback could not be saved. Try again.' });
+    }
   }
   if (url.pathname === '/api/checkpoint-review') {
     if (req.method === 'GET') {

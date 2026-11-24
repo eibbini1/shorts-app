@@ -11,7 +11,6 @@ import json
 import re
 import subprocess
 import shutil
-import tempfile
 from pathlib import Path
 from presentation_mode import choose as choose_presentation
 from evidence_gate import check as check_evidence
@@ -90,24 +89,56 @@ def ass_stamp(seconds):
     return f'{cs // 360000}:{cs // 6000 % 60:02d}:{cs // 100 % 60:02d}.{cs % 100:02d}'
 
 
-def brand_ass(cues):
+def ass_literal(text):
+    # A zero-width word joiner keeps a literal backslash from starting a libass
+    # newline or spacing escape. Escaped braces display without opening overrides.
+    return text.replace('\\', '\\\u2060').replace('{', r'\{').replace('}', r'\}')
+
+
+def brand_ass(cues, hook=None, *, wide=False):
     """Burger-style captions: Lora bold, white with black outline, the spoken word in gold."""
     head = ('[Script Info]\nScriptType: v4.00+\nPlayResX: 720\nPlayResY: 1280\nWrapStyle: 0\n\n[V4+ Styles]\n'
             'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, '
             'ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n'
             'Style: Caption,Lora,74,&H00FFFFFF,&H00FFFFFF,&H00101010,&H99000000,-1,0,0,0,100,100,1,0,1,6,3,8,50,50,190,1\n\n'
+            'Style: OpeningHook,Poppins,54,&H0070C4EC,&H0070C4EC,&H00101010,&H99000000,-1,0,0,0,100,100,0,0,1,4,2,8,72,72,120,1\n\n'
             '[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n')
+    if wide and hook:
+        head = head.replace('PlayResX: 720\nPlayResY: 1280', 'PlayResX: 1280\nPlayResY: 720')
     rows = []
+    if hook:
+        start, end, text = hook
+        # Keep scenario text literal in libass. User content cannot supply ASS override tags.
+        rows.append(f'Dialogue: 1,{ass_stamp(start)},{ass_stamp(end)},OpeningHook,,0,0,0,,{ass_literal(text)}')
     for start, end, text in cues:
         words = text.split()
         weights = [len(w) for w in words]
+        words = [ass_literal(word) for word in words]
         at = start
         for number, weight in enumerate(weights):
             stop = end if number == len(words) - 1 else at + (end - start) * weight / sum(weights)
             shown = ' '.join(f'{{\\c{GOLD_BGR}&\\fscx114\\fscy114}}{w}{{\\c&HFFFFFF&\\fscx100\\fscy100}}' if i == number else w for i, w in enumerate(words))
-            rows.append(f'Dialogue: 0,{ass_stamp(at)},{ass_stamp(stop)},Caption,,0,0,0,,{shown}')
+            margin = '1000' if hook and at < hook[1] and stop > hook[0] and not wide else ('470' if hook and at < hook[1] and stop > hook[0] else '0')
+            rows.append(f'Dialogue: 0,{ass_stamp(at)},{ass_stamp(stop)},Caption,,0,0,{margin},,{shown}')
             at = stop
     return head + '\n'.join(rows) + '\n'
+
+
+def opening_hook(data):
+    overlay = data.get('hookOverlay') or {}
+    text = ' '.join(str(overlay.get('text', '')).split())
+    if not text:
+        return None
+    start, end = float(overlay.get('startSeconds', 0)), float(overlay.get('endSeconds', 1.5))
+    if not (0 <= start < end <= data['settings']['seconds'] and len(text) <= 80):
+        raise ValueError('hookOverlay needs text up to 80 characters and a valid time range')
+    return start, end, text
+
+
+def subtitle_filter(path):
+    def escape(value):
+        return str(value).replace('\\', '\\\\').replace(':', '\\:').replace("'", "\\'")
+    return f"subtitles='{escape(path)}':fontsdir='{escape(ROOT / 'assets/fonts')}'"
 
 
 def main():
@@ -116,6 +147,8 @@ def main():
     parser.add_argument('--video', required=True, type=Path)
     parser.add_argument('--style', choices=['brand', 'plain'], default='brand', help='brand = Lora with gold spoken word (like the burger); plain = white Arial')
     parser.add_argument('--work-dir', type=Path, help='Render work folder (default: storage/any-local/<scenario name>)')
+    parser.add_argument('--prepare-only', action='store_true',
+                        help='Write captions and pack for an external editor without re-encoding video')
     args = parser.parse_args()
     scenario, video = args.scenario.resolve(), args.video.resolve()
     work = (args.work_dir or ROOT / 'storage/any-local' / scenario.stem).resolve()
@@ -126,44 +159,32 @@ def main():
         data, json.loads((ROOT / 'data/prices.json').read_text()),
         json.loads((ROOT / 'data/published-signatures.json').read_text()))
     out = video.with_name(video.stem + '.captioned.mp4')
+    hook = opening_hook(data)
+    cues = []
+    filters = []
+    caption_name = None
     if presentation['captions']:
         timeline = json.loads((work / 'voice-provenance.json').read_text())['lines']
         cues = captions(timeline, settings['seconds'], work)
         srt = video.with_suffix('.srt')
         srt.write_text(''.join(f'{i}\n{stamp(a)} --> {stamp(b)}\n{t}\n\n' for i, (a, b, t) in enumerate(cues, 1)))
-        if args.style == 'brand':
-            ass = video.with_suffix('.ass')
-            ass.write_text(brand_ass(cues), encoding='utf-8')
-            esc = lambda path: str(path).replace('\\', '\\\\').replace(':', '\\:').replace("'", "\\'")
-            vf = f"subtitles='{esc(ass)}':fontsdir='{esc(ROOT / 'assets/fonts')}'"
-        else:
-            style = 'FontName=Arial,FontSize=18,Bold=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=3,Shadow=0,Alignment=2,MarginV=55'
-            escaped = str(srt).replace('\\', '\\\\').replace(':', '\\:').replace("'", "\\'")
-            vf = f"subtitles='{escaped}':force_style='{style}'"
-        subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(video), '-vf', vf,
-                        '-c:v', 'libx264', '-crf', '18', '-preset', 'veryfast', '-c:a', 'copy', str(out)], check=True)
         caption_name = srt.name
+        if args.style == 'plain':
+            style = 'FontName=Arial,FontSize=18,Bold=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=1,Outline=3,Shadow=0,Alignment=2,MarginV=55'
+            filters.append(f"{subtitle_filter(srt)}:force_style='{style}'")
+    if (presentation['captions'] and args.style == 'brand') or hook:
+        ass = video.with_suffix('.ass')
+        # ArtCraft also reads this file so the opening hook survives its finishing pass.
+        ass.write_text(brand_ass(cues if args.style == 'brand' else [], hook, wide=settings.get('format') == 'long'),
+                       encoding='utf-8')
+        filters.append(subtitle_filter(ass))
+    if args.prepare_only:
+        out = video
+    elif filters:
+        subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(video), '-vf', ','.join(filters),
+                        '-c:v', 'libx264', '-crf', '18', '-preset', 'veryfast', '-c:a', 'copy', str(out)], check=True)
     else:
-        hook_overlay = data.get('hookOverlay') or {}
-        hook_text = str(hook_overlay.get('text', '')).strip()
-        if hook_text:
-            start = float(hook_overlay.get('startSeconds', 0))
-            end = float(hook_overlay.get('endSeconds', 2))
-            if not (0 <= start < end <= settings['seconds'] and len(hook_text) <= 80):
-                raise ValueError('hookOverlay needs text up to 80 characters and a valid time range')
-            with tempfile.TemporaryDirectory() as temp_dir:
-                textfile = Path(temp_dir) / 'hook.txt'
-                textfile.write_text(hook_text, encoding='utf-8')
-                font = ROOT / 'assets/fonts/Poppins-Bold.ttf'
-                vf = (f"drawtext=fontfile='{font}':textfile='{textfile}':fontsize=54:"
-                      f"fontcolor=0xECC470:borderw=4:bordercolor=0x101010:"
-                      f"x=(w-text_w)/2:y=h*0.16:enable='between(t,{start},{end})'")
-                subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(video), '-vf', vf,
-                                '-c:v', 'libx264', '-crf', '18', '-preset', 'veryfast',
-                                '-c:a', 'copy', str(out)], check=True)
-        else:
-            shutil.copy2(video, out)  # Keep the stable pipeline filename; no text is burned in.
-        caption_name = None
+        shutil.copy2(video, out)
     topic_words = [w for w in re.findall(r'[a-z]{4,}', (data.get('topic', '') + ' ' + plan['title']).lower())]
     tags = list(dict.fromkeys(topic_words))[:10] + ['shorts']
     price_note = ''
@@ -211,7 +232,8 @@ def main():
                 'releaseProblems': release_problems
             }}
     video.with_name(video.stem + '.pack.json').write_text(json.dumps(pack, indent=2) + '\n')
-    print(f"Wrote {out.name} ({presentation['mode']}), {video.stem}.pack.json" + (f' and {caption_name}' if caption_name else ''))
+    verb = 'Prepared editor sidecars for' if args.prepare_only else 'Wrote'
+    print(f"{verb} {out.name} ({presentation['mode']}), {video.stem}.pack.json" + (f' and {caption_name}' if caption_name else ''))
 
 
 if __name__ == '__main__':

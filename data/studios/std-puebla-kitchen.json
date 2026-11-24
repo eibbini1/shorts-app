@@ -1,0 +1,38 @@
+{
+  "id": "std-puebla-kitchen",
+  "name": "Puebla home kitchen",
+  "status": "prompt-only",
+  "sourceStatus": "inferred",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One home kitchen with large talavera tile backsplash kept soft, clay olla on a gas stove, wooden wall shelf; the same architecture and prop positions throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent. talavera always defocused.",
+  "referenceFrames": {},
+  "lighting": "warm morning sun from a side window, camera-left",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot. Suggested framing: medium close-up.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "warm, domestic",
+  "depth": "molcajete foreground, subject midground, tiles background",
+  "props": [
+    "molcajete",
+    "basket of tortillas",
+    "clay olla"
+  ],
+  "population": "At most one chosen fictional adult; no background crowds; no readable signage (add any text in editing); matte surfaces, no mirrors facing the camera.",
+  "lightingVariants": [
+    {
+      "id": "base",
+      "lighting": "warm morning sun from a side window, camera-left",
+      "mood": "warm, domestic"
+    },
+    {
+      "id": "morning",
+      "lighting": "Morning, one dominant light source, stable exposure.",
+      "mood": "warm, domestic"
+    },
+    {
+      "id": "afternoon",
+      "lighting": "Afternoon, one dominant light source, stable exposure.",
+      "mood": "warm, domestic"
+    }
+  ]
+}

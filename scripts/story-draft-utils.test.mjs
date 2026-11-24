@@ -1,6 +1,26 @@
+import fs from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {applyVisualIdentityLock, collectPromptChanges, fitOutlineIdeas, hasSupportedAsmrCue, narrationWordBand, reconcileSceneStateBefore} from './story-draft-utils.mjs';
+import {applyVisualIdentityLock, collectPromptChanges, fitOutlineIdeas, hasSupportedAsmrCue, lockRequestedEnding, narrationWordBand, reconcileSceneStateBefore, shortenNarration, firstClause, repairSceneState} from './story-draft-utils.mjs';
+
+test('the requested ending survives a matching subject and an incomplete generated payoff', () => {
+  const unlock = 'The robot turns the brass key in the greenhouse latch.';
+  const ending = 'The robot opens the greenhouse door and steps inside.';
+  const shot = {
+    motionPrompt: `${unlock} Visible end state: The latch is now unlocked. Keep the robot visible.`,
+    sceneState: { before: 'The robot holds the brass key.', action: unlock, after: 'The latch is now unlocked.' },
+  };
+  lockRequestedEnding(shot, ending);
+  assert.ok(shot.motionPrompt.startsWith(`Final physical moment: ${ending}`));
+  assert.ok(shot.motionPrompt.includes(unlock));
+  assert.doesNotMatch(shot.motionPrompt, /Visible end state: The latch is now unlocked/);
+  assert.equal(shot.sceneState.before, 'The robot holds the brass key.');
+  assert.equal(shot.sceneState.after, ending);
+  assert.equal(shot.sceneState.action, `${unlock} ${ending}`);
+  const once = structuredClone(shot);
+  lockRequestedEnding(shot, ending);
+  assert.deepEqual(shot, once);
+});
 
 test('extra Gemma outline ideas are capped without another model call', () => {
   const original={ideas:Array.from({length:7},(_,i)=>({title:`Idea ${i+1}`,angle:'filmable'})),title:'Chicken'};
@@ -65,4 +85,62 @@ test('preflight prompt changes retain exact before and after text for the select
       after: 'The baker slides it in, showing the requested handoff.',
     }],
   }]);
+});
+
+test('shortened narration never ends on a dangling word and stays in the band', () => {
+  const out = shortenNarration('One journey leads toward The cape flutters in the wind as the superhero stands tall on the rooftop', 5);
+  const words = out.replace(/[.]$/, '').split(/\s+/);
+  const { min, max } = narrationWordBand(5);
+  assert.ok(words.length >= min && words.length <= max, out);
+  assert.doesNotMatch(out, /\b(?:the|a|an|to|and|of|with|for|as|in|on|at|toward)\.?$/i);
+});
+
+test('firstClause cuts a long character description to a clean short subject', () => {
+  assert.equal(firstClause('A cartoon superhero guardian, tall, muscular build, bright blue eyes', 6), 'A cartoon superhero guardian');
+  assert.equal(firstClause('The brave little fox runs to the', 5), 'The brave little fox runs');
+});
+
+test('repairSceneState reuses the motion prompt when the action is static and fixes identical before/after', () => {
+  const hasAction = text => /\b(?:lands|turns|lifts|swings)\b/i.test(text);
+  const state = { before: 'Hero stands on the roof', action: 'Hero stands tall', after: 'Hero stands on the roof' };
+  assert.equal(repairSceneState(state, 'The hero lands softly and turns toward the city. The cape swings.', hasAction), true);
+  assert.match(state.action, /lands softly/);
+  assert.notEqual(state.before, state.after);
+});
+
+test('repairSceneState leaves a valid state alone', () => {
+  const hasAction = text => /\blifts\b/i.test(text);
+  const state = { before: 'a', action: 'He lifts the lid', after: 'b' };
+  assert.equal(repairSceneState(state, 'x', hasAction), false);
+});
+
+test('repeated identity from the failed boat plan preserves the action and ending within the prompt limit', () => {
+  const fixture = JSON.parse(fs.readFileSync(new URL('./fixtures/planner-endings/repeated-identity.json', import.meta.url)));
+  const shot = structuredClone(fixture.shot);
+  const image = applyVisualIdentityLock(shot.imagePrompt, fixture.protagonist,
+    fixture.visualBible, shot.sceneState.before);
+  assert.ok(image.startsWith(shot.sceneState.before));
+  assert.ok(image.length <= 1000);
+  assert.equal((image.match(/Shared visual identity reference/g) || []).length, 1);
+  shot.motionPrompt = applyVisualIdentityLock(shot.motionPrompt, fixture.protagonist,
+    fixture.visualBible, shot.sceneState.action);
+  lockRequestedEnding(shot, fixture.requestedEnding);
+  assert.ok(shot.motionPrompt.includes('The small wooden toy boat settles against the smooth stone'));
+  assert.ok(shot.motionPrompt.startsWith('Final physical moment: ' + fixture.requestedEnding));
+  assert.ok(shot.motionPrompt.length <= 1000);
+  assert.equal((shot.motionPrompt.match(/Shared visual identity reference/g) || []).length, 1);
+  assert.ok(shot.motionPrompt.indexOf('settles against') < shot.motionPrompt.indexOf('Shared visual identity'));
+});
+
+test('identity wrapping is idempotent even when a model echoes it or truncates its tail', () => {
+  const action = 'The fox drops the pinecone beside a lantern.';
+  const once = applyVisualIdentityLock(action, 'A red fox', 'Orange coat and black paws.');
+  assert.equal(applyVisualIdentityLock(once, 'A red fox', 'Orange coat and black paws.'), once);
+  const echoed = once + ' ' + once;
+  const fixed = applyVisualIdentityLock(echoed, 'A red fox', 'Orange coat and black paws.', action);
+  assert.equal((fixed.match(/Shared visual identity reference/g) || []).length, 1);
+  assert.ok(fixed.startsWith(action));
+  const truncated = 'Shared visual identity reference for every scene: A red fox. Orange coat';
+  assert.ok(applyVisualIdentityLock(truncated, 'A red fox', 'Orange coat and black paws.', action).startsWith(action));
+  assert.throws(() => applyVisualIdentityLock(truncated, 'A red fox', 'Orange coat'), /no visual content/);
 });

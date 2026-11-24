@@ -1,0 +1,38 @@
+{
+  "id": "std-istanbul-balcony",
+  "name": "Istanbul apartment balcony",
+  "status": "prompt-only",
+  "sourceStatus": "inferred",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One narrow apartment balcony with black wrought-iron rail, view across terracotta rooftops softly hazed; the same architecture and prop positions throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent. rooftops always defocused.",
+  "referenceFrames": {},
+  "lighting": "soft early-morning haze, sun low camera-right",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot. Suggested framing: medium close-up.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "calm start of day",
+  "depth": "rail foreground, subject midground, rooftops background",
+  "props": [
+    "tulip çay glass on saucer",
+    "potted basil",
+    "simit on a plate"
+  ],
+  "population": "At most one chosen fictional adult; no background crowds; no readable signage (add any text in editing); matte surfaces, no mirrors facing the camera.",
+  "lightingVariants": [
+    {
+      "id": "base",
+      "lighting": "soft early-morning haze, sun low camera-right",
+      "mood": "calm start of day"
+    },
+    {
+      "id": "early-morning",
+      "lighting": "Early morning, one dominant light source, stable exposure.",
+      "mood": "calm start of day"
+    },
+    {
+      "id": "blue-hour",
+      "lighting": "Blue hour, one dominant light source, stable exposure.",
+      "mood": "calm start of day"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "building-lobby",
+  "name": "Warm Building Lobby",
+  "status": "prompt-only",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One modern building lobby: beige stone floor, walnut wall panels, plain bench left, tall plant right; the same doorway and wall geometry throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent.",
+  "referenceFrames": {},
+  "lighting": "Warm indirect ceiling light with soft daylight from the entrance",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "warm, grounded, quiet everyday life",
+  "depth": "Clear doorway and corridor depth",
+  "props": [
+    "plain bench",
+    "tall plant"
+  ],
+  "population": "At most one chosen fictional adult; no background crowds.",
+  "lightingVariants": [
+    {
+      "id": "base",
+      "lighting": "Warm indirect ceiling light with soft daylight from the entrance",
+      "mood": "warm, grounded, quiet everyday life"
+    },
+    {
+      "id": "soft-evening",
+      "lighting": "Soft low evening light from the left, gentle warm highlights, stable exposure.",
+      "mood": "quiet, warm, reflective"
+    },
+    {
+      "id": "diffuse-daylight",
+      "lighting": "Soft diffuse daylight from the left, gentle neutral shadows, stable exposure.",
+      "mood": "natural, calm, attentive"
+    }
+  ]
+}

@@ -5,7 +5,11 @@ import {promisify} from 'node:util';
 import {parseArgs} from 'node:util';
 import {z} from 'zod';
 import {scenarioSettings, verifyScenario} from './scenario-schema.mjs';
-import {applyVisualIdentityLock, collectPromptChanges, fitOutlineIdeas, hasSupportedAsmrCue, narrationWordBand, reconcileSceneStateBefore} from './story-draft-utils.mjs';
+import {normalizeShot} from './shot-normalize.mjs';
+import {hookGuidance, openingHookOverlay, pickPatterns} from './hook-bank.mjs';
+import {motionPackFor,motionPackGuidance} from './topic-pack-motion.mjs';
+import {applyTypedShots, createShotTypeContext} from './shot-type-planner.mjs';
+import {applyVisualIdentityLock, collectPromptChanges, firstClause, fitOutlineIdeas, hasSupportedAsmrCue, lockRequestedEnding, narrationWordBand, reconcileSceneStateBefore, repairSceneState, shortenNarration} from './story-draft-utils.mjs';
 import {hasVisiblePhysicalAction, preserveOpeningHook, preserveRequestedActions, requestedActionClauses} from './story-action-gate.mjs';
 
 const args=parseArgs({allowPositionals:true,options:{style:{type:'string',default:'cinematic'},ending:{type:'string',default:''},title:{type:'string',default:''},set:{type:'string',default:''},hook:{type:'string',default:''},'must-show':{type:'string',default:''},obstacle:{type:'string',default:''},turn:{type:'string',default:''},audio:{type:'string',default:'auto'},format:{type:'string',default:'short'},seconds:{type:'string',default:'30'},model:{type:'string',default:'qwen3:1.7b'}}});
@@ -78,7 +82,7 @@ const visualChecksSchema=z.object({
   questions:z.array(line).max(5),
 });
 const fragmentEnd=/(?:\b(?:the|a|an|to|and|of|with|for)|\b(?:get|balance) that)\W*$/i;
-const outlineSchema=z.object({ideas:z.array(z.object({title:line,angle:line})).length(5),title:line,hook:line,payoff:line,protagonist:line,setting:line,goal:line,obstacle:line,turn:line,visualBible:line});
+const outlineSchema=z.object({ideas:z.array(z.object({title:line,angle:line})).length(5),title:line,hook:line,payoff:line,protagonist:line,setting:line,goal:line,obstacle:line,turn:line,visualBible:line,hookPatternId:z.string().optional(),hookText:z.string().optional()});
 const shotSchema=z.object({narration:line,imagePrompt:line,motionPrompt:line,sound:line,sceneState:sceneStateSchema,visualChecks:visualChecksSchema});
 function schemaRetryHint(error){
   if(!(error instanceof z.ZodError)) return 'invalid JSON response';
@@ -98,7 +102,7 @@ async function ask(schema,system,payload){
     try{
       if(model==='gemma-local'){
         const shape=schema===outlineSchema?
-          'Return one JSON object with exactly these keys: ideas (array of five objects, each with title and angle strings), title, hook, payoff, protagonist, setting, goal, obstacle, turn, visualBible (all strings). Keep each string under 250 characters.':
+          'Return one JSON object with exactly these keys: ideas (array of five objects, each with title and angle strings), title, hook, payoff, protagonist, setting, goal, obstacle, turn, visualBible (all strings). Keep each string under 250 characters. You may also include hookPatternId and hookText when a listed pattern fits.':
           'Return one JSON object with exactly these keys: narration, imagePrompt, motionPrompt, sound (strings); sceneState (object with before, action, after strings); visualChecks (object with mustShow, mustNotShow, questions string arrays, each with at most five concise items and preferably one to three).';
         const instruction=`${system}${evidenceRule}${retryRule} ${shape} Output only the answer JSON object, not a JSON schema, example, Markdown fence or explanation.`;
         const {stdout}=await execFileAsync('storage/tools/ltx-2-mlx/.venv/bin/mlx_lm.generate',[
@@ -114,7 +118,7 @@ async function ask(schema,system,payload){
       if(typeof raw!=='string') throw new Error('Local model returned no text');
       const body=raw.slice(raw.indexOf('{'),raw.lastIndexOf('}')+1);
       const parsed=JSON.parse(body);
-      return schema.parse(schema===outlineSchema?fitOutlineIdeas(parsed):parsed);
+      return schema.parse(schema===outlineSchema?fitOutlineIdeas(parsed):schema===shotSchema?normalizeShot(parsed):parsed);
     }catch(error){
       last=error;
       if(model==='gemma-local' && error.code!==undefined){
@@ -135,8 +139,12 @@ const selected=count===2?['Hook and goal','Payoff and closing image']:
   count===6?(foodProcess?['Hook','Preparation','Heat','Build','Finish','Payoff']:['Hook','Goal','Obstacle','New plan','Action','Payoff']):
   Array.from({length:count},(_,i)=>core[Math.round(i*(core.length-1)/(count-1))]);
 const beats=selected.map((label,i)=>({number:i+1,label,seconds:durations[i]}));
-const outlineInstruction=`You are a visual story editor. ${masterPrompts.story} ${foodProcess?masterPrompts.foodStory:''} ${masterPrompts.montage} ${subjectRules} ${briefRules} Develop one concrete, filmable story from the user's subject. The title must describe the subject or visible payoff, and the hook must start the same story. Pick a specific protagonist or focal object, one setting, a visible goal, a physical obstacle that temporarily prevents the goal, a change of approach, and a satisfying visible outcome. ${foodProcess?'For a cooking transformation, make the obstacle a real texture or heat constraint and resolve it through visible cooking technique; never invent a disaster or unrelated mission. Filming, lighting, camera, narration, sound, and caption requirements are never story obstacles, plot turns, props, or goals. The six beats are hook, preparation, heat, build, finish, and payoff.':''} If the user gives an ending, the goal and payoff MUST directly be that ending. Do not invent another mission, destination or unrelated stakes. The requested ending is success, never the obstacle. The turn must visibly solve the obstacle, and the payoff must answer the opening. Avoid vague metaphors, repeated beauty shots, fabricated facts, and unsupported claims. Keep one consistent subject, lighting progression, props and location. Write compact JSON fields only.`;
-const visualIdentityRule='The visualBible is the locked identity reference for the whole story: describe each recurring person or creature by stable face, hair, clothing, accessories and proportions, and each recurring object by exact shape, color, material, size and distinctive markings; also specify the fixed art style, palette and set. Keep these details unchanged across shots.';
+const motionPack=motionPackFor(topic,{foodProcess});
+const motionGuidance=motionPackGuidance(motionPack);
+const openingPatterns=pickPatterns(topic,{kind:foodProcess?'food':'any'});
+const overlayInstruction=`Optional muted opening overlay: select a listed pattern ID and write original hookText that describes the visible first shot in at most 48 characters. Keep it specific to the subject. No prices, numbers, rankings, or promises. Omit both fields if the opening works better without text. Patterns: ${openingPatterns.map(({id,onScreen})=>`${id}: ${onScreen}`).join('; ')}.`;
+const outlineInstruction=`You are a visual story editor. ${masterPrompts.story} ${foodProcess?masterPrompts.foodStory:''} ${masterPrompts.montage} ${subjectRules} ${briefRules} Develop one concrete, filmable story from the user's subject. The title must describe the subject or visible payoff, and the hook must start the same story. Pick a specific protagonist or focal object, one setting, a visible goal, a physical obstacle that temporarily prevents the goal, a change of approach, and a satisfying visible outcome. ${foodProcess?'For a cooking transformation, make the obstacle a real texture or heat constraint and resolve it through visible cooking technique; never invent a disaster or unrelated mission. Filming, lighting, camera, narration, sound, and caption requirements are never story obstacles, plot turns, props, or goals. The six beats are hook, preparation, heat, build, finish, and payoff.':''} If the user gives an ending, the goal and payoff MUST directly be that ending. Do not invent another mission, destination or unrelated stakes. The requested ending is success, never the obstacle. The turn must visibly solve the obstacle, and the payoff must answer the opening. Avoid vague metaphors, repeated beauty shots, fabricated facts, and unsupported claims. Keep one consistent subject, lighting progression, props and location. ${hookGuidance(topic,{foodProcess})} ${motionGuidance} ${overlayInstruction} Write compact JSON fields only.`;
+const visualIdentityRule='The visualBible is the locked identity reference for the whole story: describe each recurring person or creature by stable face, hair, clothing, accessories and proportions, and each recurring object by exact shape, color, material, size and distinctive markings; also specify the fixed art style, palette and set. Keep these details unchanged across shots. Also lock the time of day, weather and lighting for the whole story (a rainy night stays a rainy night in every shot). Any costume emblem must be a plain original geometric shape such as a circle, crescent, key or star; never a shield, letter or logo copied from an existing character.';
 const anchorWords=new Set((visualEnding.toLowerCase().match(/[a-z]{5,}/g)||[]).filter(word=>!['after','around','before','driver','takes','taking','reaches','reach','along','while','through','there','their','where','which','empty','small','safe','sunrise','sunset','morning','night'].includes(word)));
 function endingMatches(goal){
   if(!anchorWords.size) return true;
@@ -172,9 +180,13 @@ if(visualEnding && !endingMatches(outline.payoff)){
   console.log('Locked the final payoff to the exact ending you requested');
 }
 if(args.values.title) outline.title=args.values.title;
-if(creativeBrief.set){
+const genericLookSet=/\bthat fits the (?:story|idea)\b/i.test(creativeBrief.set||'');
+if(creativeBrief.set&&!genericLookSet){
   outline.setting=creativeBrief.set;
   outline.visualBible=`Locked setting: ${creativeBrief.set}. ${outline.visualBible}`.slice(0,1000);
+}else if(genericLookSet&&outline.setting){
+  // The look chip's placeholder setting must not replace the setting the idea itself names.
+  outline.visualBible=`Locked setting: ${outline.setting}. ${outline.visualBible}`.slice(0,1000);
 }
 if(foodProcess&&!creativeBrief.obstacle&&!creativeBrief.turn&&/\b(?:camera|filming|lighting|ring light|captions?|narration|voiceover|synced)\b/i.test(`${outline.obstacle} ${outline.turn}`)){
   outline.obstacle='The dish is still unfinished; the requested result cannot be served until its preparation and cooking actions are complete.';
@@ -266,15 +278,8 @@ function fallbackNarration(beat){
   if(label.includes('setback')||label.includes('complication')||label.includes('obstacle')) return `The obstacle blocks the next step.`;
   if(label.includes('new plan')) return `A safer new plan takes shape.`;
   if(label.includes('action')||label.includes('attempt')) return `${protagonist} puts the plan into motion.`;
+  if(label.includes('hook')||label.includes('goal')) return `${firstClause(protagonist,6)} begins the journey.`;
   return `One journey leads toward ${goal}.`;
-}
-function shortenNarration(text,seconds){
-  const {min:minimum,max:limit}=narrationWordBand(seconds);
-  const words=text.trim().split(/\s+/);
-  if(words.length<=limit) return text;
-  const sentences=text.match(/[^.!?]+[.!?]?/g)?.map(item=>item.trim())??[];
-  const fit=sentences.find(sentence=>sentence.split(/\s+/).length>=minimum && sentence.split(/\s+/).length<=limit);
-  return fit || words.slice(0,limit).join(' ').replace(/[,;:]+$/,'')+'.';
 }
 for(let i=0;i<count;i++){
   const beat=beats[i];
@@ -283,7 +288,7 @@ for(let i=0;i<count;i++){
   let issues=[];
   for(let attempt=1;attempt<=2;attempt++){
     shot=await ask(shotSchema,
-      `Write ONE shot for ONE specific story beat. ${masterPrompts.shot} ${masterPrompts.footage} ${masterPrompts.sound} ${subjectRules} ${briefRules} Follow the beat directive literally. Keep the same subject, location, props and lighting progression from the outline. Do not include any event assigned to a later beat. The imagePrompt depicts the START of one distinct physical event, not its finished result, and must visually match sceneState.before; never show the result of this shot's action in its first frame. The motionPrompt must name the subject and describe a physical start, visible action and changed end state; include one camera move tracking that action in a single continuous take. No camera-only pans or zooms over a static pose, no cut or montage. sceneState.before must exactly copy previousSceneState.after when one is supplied; for the first shot, sceneState.before must be a short concrete string describing the initial visible state, never null or omitted. sceneState.action must describe this shot's visible physical movement; sceneState.after describes the visible result. Keep these states concise and concrete so the next shot can continue from them. visualChecks are only for reviewing the first-frame image: mustShow and mustNotShow name facts visible in that image, and each questions item is a yes/no question answerable from one still. Use one to three concise items per visualChecks array and never exceed five items in mustShow, mustNotShow, or questions. Never ask whether motion is smooth, an action is completed, or sound is audible; those cannot be judged from a still. Do not ask a vision model to identify a specific cheese or ingredient by appearance when that cannot be distinguished visually. Narration should be one speakable specific sentence, ideally ${Math.min(maxWords,Math.max(minWords,Math.ceil(beat.seconds*1.8)))} to ${maxWords} words for this ${beat.seconds}-second shot; a shorter line is acceptable only if the scene has a sound-led pause. For the hook, name the exact subject and a visible action, then add a truthful quantity, contrast, or question if natural; do not invent a fact. No unsupported facts or generic mood-only phrases. ${soundRule} Output only JSON.`,
+      `Write ONE shot for ONE specific story beat. ${masterPrompts.shot} ${masterPrompts.footage} ${masterPrompts.sound} ${subjectRules} ${briefRules} ${motionGuidance} Follow the beat directive literally. Keep the same subject, location, props and lighting progression from the outline. Do not include any event assigned to a later beat. The imagePrompt depicts the START of one distinct physical event, not its finished result, and must visually match sceneState.before; never show the result of this shot's action in its first frame. The motionPrompt must name the subject and describe a physical start, visible action and changed end state; include one camera move tracking that action in a single continuous take. No camera-only pans or zooms over a static pose, no cut or montage. sceneState.before must exactly copy previousSceneState.after when one is supplied; for the first shot, sceneState.before must be a short concrete string describing the initial visible state, never null or omitted. sceneState.action must describe this shot's visible physical movement; sceneState.after describes the visible result. Keep these states concise and concrete so the next shot can continue from them. visualChecks are only for reviewing the first-frame image: mustShow and mustNotShow name facts visible in that image, and each questions item is a yes/no question answerable from one still. Use one to three concise items per visualChecks array and never exceed five items in mustShow, mustNotShow, or questions. Never ask whether motion is smooth, an action is completed, or sound is audible; those cannot be judged from a still. Do not ask a vision model to identify a specific cheese or ingredient by appearance when that cannot be distinguished visually. Narration should be one speakable specific sentence, ideally ${Math.min(maxWords,Math.max(minWords,Math.ceil(beat.seconds*1.8)))} to ${maxWords} words for this ${beat.seconds}-second shot; a shorter line is acceptable only if the scene has a sound-led pause. For the hook, name the exact subject and a visible action, then add a truthful quantity, contrast, or question if natural; do not invent a fact. No unsupported facts or generic mood-only phrases. ${soundRule} Output only JSON.`,
       {topic,style:args.values.style,creativeBrief,outline,beat,directive:beatDirective(beat),
         previousSceneState:shots.at(-1)?.sceneState||null,reviewedShotExamples,
         previousShots:shots.map((item,j)=>({beat:beats[j].label,imagePrompt:item.imagePrompt,motionPrompt:item.motionPrompt,sceneState:item.sceneState})),
@@ -312,8 +317,9 @@ for(let i=0;i<count;i++){
       }
       if(issues.includes('state')){
         const previous=shots.at(-1)?.sceneState;
+        repairSceneState(shot.sceneState,shot.motionPrompt,hasVisiblePhysicalAction);
         const hasValidAction=hasVisiblePhysicalAction(shot.sceneState.action)&&normalize(shot.sceneState.before)!==normalize(shot.sceneState.after);
-        if(!previous||!hasValidAction||!reconcileSceneStateBefore(shot.sceneState,previous.after))
+        if(!hasValidAction||(previous&&!reconcileSceneStateBefore(shot.sceneState,previous.after)))
           throw new Error(`Beat ${i+1} broke the before/action/after scene-state chain. No scenario was saved or rendered.`);
         issues=issues.filter(issue=>issue!=='state');
         fallbackCount++;
@@ -331,11 +337,11 @@ for(let i=0;i<count;i++){
   const narration=shot.narration;
   const identity=foodProcess?`${outline.title||storySubject}. `:'';
   let image=issues.includes('image')
-    ?`${identity}Start frame: show the named food and relevant tools poised immediately before this beat: ${action}. Same ${outline.protagonist} in ${outline.setting}. ${args.values.style}.`
+    ?`${identity}Start frame: show the named subject and any props it uses poised immediately before this beat: ${action}. Same ${outline.protagonist} in ${outline.setting}. ${args.values.style}.`
     :`${identity}${shot.imagePrompt}${/consistent subject/i.test(shot.imagePrompt)?'':` Consistent subject: ${outline.protagonist.replace(/[.!?]+$/,'')}.`} Visual style: ${args.values.style}.`;
   const actor=foodProcess?'The chef':outline.protagonist;
   const focus=foodProcess?'the food':'the subject';
-  let motion=issues.includes('motion')?`${action}. ${actor} performs this step with one deliberate visible movement, keeping ${focus} and the relevant tool clearly in view. As the action continues, the camera makes one slow close push-in and follows the movement. Warm side light reveals the visible change in ${focus} in real time. The motion ends when the described action is complete in the same continuous take.`:
+  let motion=issues.includes('motion')?`${action}. ${actor} performs this step with one deliberate visible movement, keeping ${focus} clearly in view${foodProcess?' with the relevant tool':''}. As the action continues, the camera makes one slow close push-in and follows the movement. Warm side light reveals the visible change in ${focus} in real time. The motion ends when the described action is complete in the same continuous take.`:
     `${shot.motionPrompt}${/one continuous take|no cuts/i.test(shot.motionPrompt)?'':' One continuous take, no cuts.'}`;
   if(!hasVisiblePhysicalAction(motion)) throw new Error(`Beat ${i+1} has no clear physical action after repair. No scenario was saved or rendered; describe what the subject visibly does.`);
   if(i<count-2 && !['build','finish'].includes(beat.label.toLowerCase()) && /\b(pan|sear|bast|cook)\b/i.test(image) && /\b(plate|serv)\w*/i.test(outline.goal+' '+outline.payoff)){
@@ -352,8 +358,9 @@ for(let i=0;i<count;i++){
   if(!prehistoricCars && (hotDog || /\b(kitchen|chef|pan|sausage|dish|food|chocolate|steak|pizza|cheese|scallop)\b/i.test(`${topic} ${outline.setting}`))){
     image+=` Continuity: same ${creativeBrief.set||outline.setting}; retain the same named dish, tools, surface and lighting from the visual bible.`;
   }
-  const lockedImage=applyVisualIdentityLock(image,outline.protagonist,outline.visualBible);
-  const lockedMotion=applyVisualIdentityLock(motion,outline.protagonist,outline.visualBible);
+  if(!foodProcess) motion=`Begin exactly from the first frame: same pose, facing direction, costume and lighting. ${motion}`;
+  const lockedImage=applyVisualIdentityLock(image,outline.protagonist,outline.visualBible,shot.sceneState.before);
+  const lockedMotion=applyVisualIdentityLock(motion,outline.protagonist,outline.visualBible,shot.sceneState.action);
   shots.push({seconds:beat.seconds,narration:shortenNarration(narration,beat.seconds),
     imagePrompt:lockedImage,motionPrompt:lockedMotion,sound:shot.sound,
     sceneState:shot.sceneState,visualChecks:shot.visualChecks});
@@ -385,7 +392,7 @@ if(visualEnding){
   outline.payoff=visualEnding;
   const finalShot=shots.at(-1);
   const before=finalShot.motionPrompt;
-  if(!endingMatches(finalShot.motionPrompt)) finalShot.motionPrompt+=` Final physical moment: ${visualEnding}.`;
+  lockRequestedEnding(finalShot,visualEnding);
   if(finalShot.motionPrompt!==before) preflightPromptFixes.push({
     shot:shots.length,
     reason:'Preserved the requested ending',
@@ -393,6 +400,16 @@ if(visualEnding){
   });
   if(!hasVisiblePhysicalAction(finalShot.motionPrompt)) throw new Error('The requested ending could not be made physically visible. No scenario was saved or rendered.');
   endingLocked=true;
+}
+// Opt-in (SHORTS_SHOT_TYPES=1): rewrite each shot's prompts from the shot-type library. Timing, narration,
+// sound and the sceneState chain are unchanged, so every gate below still checks the same story.
+let shotRecipes=null;
+const shotTypeContext=createShotTypeContext({projectId:id,peopleStory:process.env.SHORTS_PEOPLE_STORY||null});
+if(shotTypeContext){
+  const typed=applyTypedShots(shotTypeContext,{shots,beats,outline,ending:endingLocked?visualEnding:''});
+  shots.splice(0,shots.length,...typed.shots);
+  shotRecipes={recipes:typed.recipes,peopleStory:shotTypeContext.peopleStory?{...shotTypeContext.peopleStory,backgroundRecipe:undefined}:null};
+  console.log(`Shot types: ${typed.recipes.map(r=>r.typeId).join(', ')}`);
 }
 for(const field of ['imagePrompt','motionPrompt']){
   const seen=new Set();
@@ -425,8 +442,13 @@ verifyScenario(plan,settings);
 const formatFamily=/\b(guess|price)\b/i.test(topic)?'guess-the-price':
   /\b(level|levels|upgrade)\b/i.test(topic)?'ingredient-basket-level-up':
   audioChoice==='asmr'?'tactile-recipe-reveal':'food-process-story';
-const creativeSignature=foodProcess?{format:formatFamily,set:outline.setting,hookPattern:creativeBrief.hookImage||outline.hook}:undefined;
-const saved={status:'review-required',settings,model,promptPackVersion:masterPrompts.version,creativeBrief,...(creativeSignature?{creativeSignature}:{}),topic,style:args.values.style,requestedEnding:visualEnding||null,requestedEndingOriginal:args.values.ending||null,totalSeconds:settings.seconds,storyArc:{protagonist:outline.protagonist,setting:outline.setting,goal:outline.goal,obstacle:outline.obstacle,turn:outline.turn,visualBible:outline.visualBible,beats},qualityChecks:{exactTiming:true,uniquePromptText:true,narrationFits:true,endingLockedFromUser:endingLocked,hookActionCoverage:hookActionCoverage.status,requiredActionCoverage:requestedActionCoverage.status,requiredActionInsertions:requestedActionCoverage.inserted.length,preflightPromptFixes,rewrites:rewriteCount,fieldsNeedingRepair:fallbackCount,reviewedShotExamplesUsed:reviewedShotExamples.length},plan};
+const hookOverlay=openingHookOverlay(outline,openingPatterns);
+const creativeSignature={
+  format:foodProcess?formatFamily:(motionPack?.id||'single-subject-story'),
+  set:outline.setting,
+  hookPattern:hookOverlay?.patternId||creativeBrief.hookImage||outline.hook,
+};
+const saved={...(hookOverlay?{hookOverlay}:{}),...(shotRecipes?{shotRecipes}:{}),status:'review-required',settings,model,promptPackVersion:masterPrompts.version,creativeBrief,...(motionPack?{motionPackId:motionPack.id}:{}),creativeSignature,topic,style:args.values.style,requestedEnding:visualEnding||null,requestedEndingOriginal:args.values.ending||null,totalSeconds:settings.seconds,storyArc:{protagonist:outline.protagonist,setting:outline.setting,goal:outline.goal,obstacle:outline.obstacle,turn:outline.turn,visualBible:outline.visualBible,beats},qualityChecks:{exactTiming:true,uniquePromptText:true,narrationFits:true,endingLockedFromUser:endingLocked,hookActionCoverage:hookActionCoverage.status,requiredActionCoverage:requestedActionCoverage.status,requiredActionInsertions:requestedActionCoverage.inserted.length,preflightPromptFixes,rewrites:rewriteCount,fieldsNeedingRepair:fallbackCount,reviewedShotExamplesUsed:reviewedShotExamples.length},plan};
 await mkdir('drafts/generated',{recursive:true});
 const file=`drafts/generated/${id}.local-scenario.json`;
 await writeFile(file,JSON.stringify(saved,null,2)+'\n',{flag:'wx'});

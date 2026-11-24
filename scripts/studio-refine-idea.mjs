@@ -1,5 +1,6 @@
 const LOOKS = ['food', 'cartoon', 'night', 'custom'];
-import { firstRequestedActionClause } from './story-action-gate.mjs';
+import { firstRequestedActionClause, hasVisiblePhysicalAction } from './story-action-gate.mjs';
+import { hasDanglingTail } from './story-draft-utils.mjs';
 import { hasLearningEvidence } from './studio-learning-memory.mjs';
 
 const schema = {
@@ -84,6 +85,21 @@ function refinementProblems(value, originalPrompt = '') {
   return problems;
 }
 
+function nonFoodBeatProblems(value, requestedEnding) {
+  const rows = value.decision === 'ready' ? [value] : value.choices;
+  return rows.flatMap((row, index) => {
+    const prefix = value.decision === 'ready' ? '' : `choice ${index + 1} `;
+    const problems = [];
+    if (hasDanglingTail(row.hook)) problems.push(prefix + 'hook ends mid-sentence');
+    if (!requestedEnding && hasDanglingTail(row.ending)) problems.push(prefix + 'ending ends mid-sentence');
+    if (!requestedEnding && /\b(?:stands? still|holds? (?:the |a )?pose|remains? (?:still|unchanged)|stays? still)\b/i.test(row.ending) &&
+        !hasVisiblePhysicalAction(row.ending)) {
+      problems.push(prefix + 'ending needs a visible action that brings about the payoff');
+    }
+    return problems;
+  });
+}
+
 export function validateRefinement(value) {
   return refinementProblems(value).length === 0;
 }
@@ -140,12 +156,16 @@ export function createIdeaRefiner({ fetchImpl = fetch, model = process.env.SHORT
             // Keep the user's exact sequence as a hard anchor even if the model paraphrases it away.
             if (result.decision === 'ready') {
               result.mustShow = prompt;
-              result.hook = firstRequestedActionClause(prompt) || result.hook;
+              const firstAction = firstRequestedActionClause(prompt);
+              if (firstAction && !hasDanglingTail(firstAction)) result.hook = firstAction;
             }
             if (result.decision === 'needs_choices' && Array.isArray(result.choices)) {
               result.choices = result.choices.map((choice) => ({ ...choice, mustShow: prompt }));
             }
             const problems = refinementProblems(result, prompt);
+            if (!problems.length && look !== 'food') {
+              problems.push(...nonFoodBeatProblems(result, String(input.ending || '').trim()));
+            }
             if (problems.length) {
               lastError = new Error(`The local model returned an incomplete refinement. Missing or invalid fields: ${problems.join(', ')}.`);
               previousIssues = problems;

@@ -1,0 +1,36 @@
+{
+  "id": "quiet-street",
+  "name": "Quiet Residential Street",
+  "status": "prompt-only",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "A quiet residential street: pale stone paving, brick wall left, plain bench right, one potted tree; the same facades and pavement throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent.",
+  "referenceFrames": {},
+  "lighting": "Soft late-afternoon light from the left",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "warm, grounded, quiet everyday life",
+  "depth": "Layered street depth; distant buildings softly separated",
+  "props": [
+    "plain bench",
+    "potted tree"
+  ],
+  "population": "At most one chosen fictional adult; no background crowds.",
+  "lightingVariants": [
+    {
+      "id": "base",
+      "lighting": "Soft late-afternoon light from the left",
+      "mood": "warm, grounded, quiet everyday life"
+    },
+    {
+      "id": "soft-evening",
+      "lighting": "Soft low evening light from the left, gentle warm highlights, stable exposure.",
+      "mood": "quiet, warm, reflective"
+    },
+    {
+      "id": "diffuse-daylight",
+      "lighting": "Soft diffuse daylight from the left, gentle neutral shadows, stable exposure.",
+      "mood": "natural, calm, attentive"
+    }
+  ]
+}

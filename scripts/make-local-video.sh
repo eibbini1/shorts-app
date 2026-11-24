@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
+source scripts/local-video-output.sh
 # Python with the media extras (numpy, audio libs). Override with SHORTS_MEDIA_PY; default is the Mac venv.
 MEDIA_PY="${SHORTS_MEDIA_PY:-storage/tools/ComfyUI/.venv/bin/python}"
 # Structured events for the Studio, printed next to the human text (see studio/src/pipeline-lines.js).
@@ -127,7 +128,7 @@ fi
 [[ -f "$scenario" ]] || { echo "Missing scenario: $scenario" >&2; exit 2; }
 base="$(basename "$scenario" .local-scenario.json)"
 base="${base%.json}"
-output="outputs/$base-$(date +%Y%m%d-%H%M%S).mp4"
+output="$(local_video_output "$base" "${SHORTS_STUDIO_TAKE_REPORT:-}")"
 t_start=$SECONDS
 echo "Step 1/4  Environment check"
 echo "Finishing editor: $editor"
@@ -160,7 +161,12 @@ echo "Base render complete: $output (not release approved)"
 echo "Step 4/4  Shot-synced ASMR, captions, upload pack and quality check"
 "$MEDIA_PY" scripts/add-sfx.py --scenario "$scenario" --video "$output"
 finished_video="${output%.mp4}.sfx.mp4"
-python3 scripts/finish-local-video.py --scenario "$scenario" --video "$finished_video" && echo "Captioned ASMR video and upload pack are next to $finished_video"
+finish_args=(--scenario "$scenario" --video "$finished_video")
+if [[ "$editor" == artcraft ]]; then
+  # FilmCraft will burn the ASS layer itself, so avoid an unused FFmpeg export.
+  finish_args+=(--prepare-only)
+fi
+python3 scripts/finish-local-video.py "${finish_args[@]}"
 pack="${finished_video%.mp4}.pack.json"
 final_video="${finished_video%.mp4}.captioned.mp4"
 if [[ "$editor" == artcraft ]]; then

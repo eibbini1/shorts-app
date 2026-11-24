@@ -1,0 +1,54 @@
+{
+  "source": "frozen from bench-nonfood run 20261122-213927 (gemma-local); not regenerated",
+  "case": "travel",
+  "plan": {
+    "payoff": "The paper plane lands on the wooden dock",
+    "shots": [
+      {
+        "narration": "A simple begins the journey.",
+        "sceneState": {
+          "before": "A single, cream-colored paper plane, slightly crumpled, glides horizontally over a wide expanse of choppy, gray water. Distant cranes are barely visible on the horizon under a gray, overcast sky. The plane is centered in the frame, slightly above the midpoint.",
+          "action": "The paper plane glides horizontally from left to right, maintaining a consistent altitude, with a slight, natural wobble in its flight path. The camera smoothly tracks the plane's movement, maintaining a steady distance and framing. The paper plane's nose gradually rotates slightly downwards.",
+          "after": "The paper plane continues its horizontal drift, its nose now angled slightly downwards, still maintaining a consistent altitude and wobble, over the gray expanse of water."
+        },
+        "visualChecks": {
+          "mustShow": [
+            "Paper plane is visible",
+            "Gray water is visible",
+            "Overcast sky is visible"
+          ],
+          "mustNotShow": [
+            "Any visible structures on the dock",
+            "A completed landing"
+          ],
+          "questions": [
+            "Is the paper plane made of paper?",
+            "Is the sky gray?"
+          ]
+        }
+      },
+      {
+        "narration": "The paper plane descends, gently settling onto the weathered wooden dock.",
+        "sceneState": {
+          "before": "The paper plane continues its horizontal drift, its nose now angled slightly downwards, still maintaining a consistent altitude and wobble, over the gray expanse of water.",
+          "action": "The paper plane continues its descent, angling downwards towards the weathered wooden dock. The camera smoothly tracks the plane's descent, maintaining a steady distance and framing. The paper plane's nose continues to angle downwards, gradually approaching the dock. The paper plane gently touches down on the weathered wooden dock.",
+          "after": "The paper plane rests on the weathered wooden dock, its nose angled slightly downwards. The dock is gray, weathered wood, covered in barnacles and showing signs of age and neglect."
+        },
+        "visualChecks": {
+          "mustShow": [
+            "Is the paper plane cream-colored?",
+            "Is the dock made of wood?",
+            "Is the sky overcast?"
+          ],
+          "mustNotShow": [
+            "Is the paper plane brand new?",
+            "Is the dock pristine?"
+          ],
+          "questions": [
+            "Is the paper plane slightly crumpled?"
+          ]
+        }
+      }
+    ]
+  }
+}

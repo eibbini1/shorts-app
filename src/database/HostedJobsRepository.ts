@@ -99,7 +99,7 @@ function rowNullableNumber(row: SqliteRow, field: string): number | null {
   return value;
 }
 
-function canonicalJson(value: unknown): string {
+export function canonicalJson(value: unknown): string {
   const normalize = (item: unknown): unknown => {
     if (Array.isArray(item)) return item.map(normalize);
     if (item !== null && typeof item === 'object') {

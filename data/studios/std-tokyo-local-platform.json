@@ -1,0 +1,38 @@
+{
+  "id": "std-tokyo-local-platform",
+  "name": "Tokyo local-line platform",
+  "status": "prompt-only",
+  "sourceStatus": "inferred",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One open-air local train platform, concrete edge with yellow tactile paving, steel-column canopy, blank vending machine with no text; the same architecture and prop positions throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent. tracks run left to right.",
+  "referenceFrames": {},
+  "lighting": "low evening sun along the tracks from camera-left",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot. Suggested framing: medium shot, eye level.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "reflective",
+  "depth": "bench foreground, subject midground, one distant commuter",
+  "props": [
+    "bench",
+    "blank vending machine",
+    "umbrella"
+  ],
+  "population": "At most one chosen fictional adult; no background crowds; no readable signage (add any text in editing); matte surfaces, no mirrors facing the camera.",
+  "lightingVariants": [
+    {
+      "id": "base",
+      "lighting": "low evening sun along the tracks from camera-left",
+      "mood": "reflective"
+    },
+    {
+      "id": "sunset",
+      "lighting": "Sunset, one dominant light source, stable exposure.",
+      "mood": "reflective"
+    },
+    {
+      "id": "overcast",
+      "lighting": "Overcast, one dominant light source, stable exposure.",
+      "mood": "reflective"
+    }
+  ]
+}

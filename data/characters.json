@@ -1,0 +1,602 @@
+{
+  "version": 2,
+  "note": "Fictional adults only. Identity text describes visible traits; the city is setting, never identity. MST (Monk Skin Tone 1-10) is audit metadata, not prompt text. Drafts need owner review and a local likeness check before use. Source: docs/research/diverse-characters-and-studios.md Each person needs an approved reference sheet (8 views, stored by the Studio with SHA-256) before shots count as referenced. Mascots are rendered by their rigs, never by diffusion.",
+  "characters": [
+    {
+      "id": "chr-lagos-adaeze-34",
+      "status": "approved",
+      "fictional": true,
+      "age": 34,
+      "gender": "woman",
+      "city": "Lagos, Nigeria",
+      "mst": 8,
+      "role": "software QA lead",
+      "identityBlock": "34-year-old woman, brown skin with deep warm undertones, oval face, small mole above left eyebrow, black box braids in a low ponytail, thin gold-rim glasses, fitted white cotton shirt with rolled sleeves, navy tailored trousers, tan loafers",
+      "activity": "opens her laptop on the veranda before work",
+      "studioIds": [
+        "std-lagos-veranda"
+      ],
+      "wardrobeSource": "S (Guardian Nigeria office wear)",
+      "sourceStatus": "sourced",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": {
+          "refId": "f814254cbd914bbfe14a2645369f53a4",
+          "sha256": "d65a4eaf77aca1453495a78ce55a70503199b3c73602fbacc65454f5ceee37ab"
+        },
+        "three-quarter": {
+          "refId": "7e6e099f885b7840cabe73b39cbd718c",
+          "sha256": "1a4a4d651fda667094fb6b5f97027fe629853238df37bf725e9fe0f2b3c9af8d"
+        },
+        "profile": {
+          "refId": "4677f686615c763fd7edc86cbbd50f17",
+          "sha256": "ddd162dfb3a1c4caf012f8e406e1be8f7cbf8046f942b870d0ceeac28c1d9ba1"
+        },
+        "full-body": {
+          "refId": "1a44bf60aa5d8c886ab515d4214ecd04",
+          "sha256": "6955e6f76fcfb5461c1e3e5be099d0fe2aa9c1729b35c21fad1f1b3fe6772a57"
+        },
+        "hands": {
+          "refId": "74fa23e4f9ee87a85214dbd4d76f62c4",
+          "sha256": "27304d09de0e1d3e9fc2e1a9d4b9a59492cb04f29c9c3fba40f1ab23d44fe0a1"
+        },
+        "expression-neutral": {
+          "refId": "faf1c2ab1eeb03428f1dd930237799b6",
+          "sha256": "210c222186507091ef489596b1b1860d808028acb9535bc955ac82822b2d0cb2"
+        },
+        "expression-smile": {
+          "refId": "0551970dcce8ae34c1fffe1afdfacf7f",
+          "sha256": "fb2f4c6d5bb6e3c2527eb96fc1cbeab5e063300601b05e4207eccbfb4a0397e6"
+        },
+        "expression-thinking": {
+          "refId": "00c3c8d0fcf95cdb305e51dc7d949445",
+          "sha256": "147de2a3229b4a3e1fd6d275baabaa75f4886f7ae49e0cacd44f516bf760b2e1"
+        }
+      },
+      "approvedAt": "2026-11-24"
+    },
+    {
+      "id": "chr-nairobi-otieno-52",
+      "status": "draft",
+      "fictional": true,
+      "age": 52,
+      "gender": "man",
+      "city": "Nairobi, Kenya",
+      "mst": 9,
+      "role": "secondary-school chemistry teacher",
+      "identityBlock": "52-year-old man, deep brown skin, round face, short greying hair and neat grey moustache, slim build, kitenge-print short-sleeve shirt in teal and ochre, khaki chinos, black leather shoes, canvas satchel",
+      "activity": "waits at the matatu stage at dawn, sipping from a thermos lid",
+      "studioIds": [
+        "std-nairobi-matatu-stage"
+      ],
+      "wardrobeSource": "S (kitenge informal wear) + I (styling)",
+      "sourceStatus": "sourced",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
+    },
+    {
+      "id": "chr-fez-latifa-61",
+      "status": "draft",
+      "fictional": true,
+      "age": 61,
+      "gender": "woman",
+      "city": "Fez, Morocco",
+      "mst": 4,
+      "role": "retired pharmacist",
+      "identityBlock": "61-year-old woman, light olive skin with fine laugh lines, silver chin-length bob uncovered, hazel eyes, soft build, oatmeal cardigan over a long grey jersey dress, beige flat sandals, reading glasses on a cord",
+      "activity": "pours mint tea from a brass teapot in the courtyard",
+      "studioIds": [
+        "std-fez-riad"
+      ],
+      "wardrobeSource": "I (hijab is a choice, not a default)",
+      "sourceStatus": "inferred",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
+    },
+    {
+      "id": "chr-mumbai-farzana-45",
+      "status": "draft",
+      "fictional": true,
+      "age": 45,
+      "gender": "woman",
+      "city": "Mumbai, India",
+      "mst": 6,
+      "role": "bank branch manager",
+      "identityBlock": "45-year-old woman, medium golden-brown skin, heart-shaped face, black hair with a grey streak in a low bun, small gold studs, plum cotton salwar kameez with a printed dupatta over one shoulder, office lanyard, black sandals",
+      "activity": "buys a cutting chai at the tapri on her way to the branch",
+      "studioIds": [
+        "std-mumbai-chai-tapri"
+      ],
+      "wardrobeSource": "S (salwar kameez everyday, Quartz) + I (styling)",
+      "sourceStatus": "sourced",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
+    },
+    {
+      "id": "chr-hanoi-linh-29",
+      "status": "approved",
+      "fictional": true,
+      "age": 29,
+      "gender": "woman",
+      "city": "Hanoi, Vietnam",
+      "mst": 4,
+      "role": "freelance graphic designer",
+      "identityBlock": "29-year-old woman, light golden skin, straight black hair in a blunt shoulder bob, thin silver hoop earrings, oversized sage-green linen shirt, wide-leg cream trousers, white canvas sneakers, tablet stylus in shirt pocket, no glasses",
+      "activity": "watches coffee drip through a phin filter while sketching",
+      "studioIds": [
+        "std-hanoi-tube-cafe"
+      ],
+      "wardrobeSource": "I",
+      "sourceStatus": "inferred",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": {
+          "refId": "7324545e9208047271ece3a723c0d0ae",
+          "sha256": "56bba833dd925612530dd028aa7ae28c15f1dbc3ffb19bd2d98f572e20375299"
+        },
+        "three-quarter": {
+          "refId": "e85d0cf955252d351f2d305bec64aa26",
+          "sha256": "5632a406248e383589689ccd769018f33c636ab75843db2267729bfd16dcb37e"
+        },
+        "profile": {
+          "refId": "fd95101a9ca23ab5d827c2d51d5a7a45",
+          "sha256": "b7a2831d28fc6998bca135a1ab4bf083015484553dd2b442f3e51f819d994204"
+        },
+        "full-body": {
+          "refId": "1a816e4d2ed73c320c95f4762f00aeec",
+          "sha256": "fd93333d96ee04aa40c4a8143e48841099e5c204ec02c5aa19b911d53a6fbd0c"
+        },
+        "hands": {
+          "refId": "5c330438c7206d04b309904fbadb256f",
+          "sha256": "49ea289b36d3b0d29b1ea78cd6e4d8fadced06a71a25237628166e51a493d218"
+        },
+        "expression-neutral": {
+          "refId": "e0ecc8eae1cda9655cbd5fd8871fbcdc",
+          "sha256": "cc551edcf9f86fab63f078a26724a2b3bb42dba601a684b8f026b3665cb074d7"
+        },
+        "expression-smile": {
+          "refId": "502ef23aa9c34ad353a704c4233cbcfe",
+          "sha256": "382ace1e8a135ae3b8358633e6bdb1d267cbdc541999edfe9338b3991f7a0a9a"
+        },
+        "expression-thinking": {
+          "refId": "cd87d80e079f1575fd8b7c9d1478d671",
+          "sha256": "cc82ca04a2b688f1b8e273cb05d5e44a5b099905c8ef6051c21c67b69e368c61"
+        }
+      },
+      "approvedAt": "2026-11-24"
+    },
+    {
+      "id": "chr-tokyo-hiroshi-68",
+      "status": "approved",
+      "fictional": true,
+      "age": 68,
+      "gender": "man",
+      "city": "Tokyo, Japan",
+      "mst": 3,
+      "role": "retired train conductor",
+      "identityBlock": "68-year-old man, light skin with warm undertones and age spots, short white hair neatly combed, clean-shaven, lean build, navy quilted vest over a grey button-down shirt, charcoal trousers, brown walking shoes, folded paperback in hand, no glasses",
+      "activity": "reads a paperback on a local-line platform bench at sunset",
+      "studioIds": [
+        "std-tokyo-local-platform"
+      ],
+      "wardrobeSource": "I",
+      "sourceStatus": "inferred",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": {
+          "refId": "df8bc95757ea9a06c443580aaac8fc93",
+          "sha256": "8e4974934f78c03c3f6f7b6fa8bd7a8eff5d1851ec7c7be28f00b2787055e773"
+        },
+        "three-quarter": {
+          "refId": "ea4c6127a0c9b9e127f0a94fa20bb627",
+          "sha256": "41c6d8176310896c8710a582ca866e3dff23f0a877108668d9615188ea56c8dc"
+        },
+        "profile": {
+          "refId": "6c8dd67b3e50d8b92e4e11f1a947d36f",
+          "sha256": "489f343784e1ec4495e5a62b2d7c448c0149674dc252f50973ea91d72179f89f"
+        },
+        "full-body": {
+          "refId": "0ee2148213dd2842bbe1b5f6730bb4b9",
+          "sha256": "873498ac9fd8a62cba7191267e05f983b405392e8d2af1a52887b96230f9403f"
+        },
+        "hands": {
+          "refId": "17832cdc5d5dff23efc16fed62260c4e",
+          "sha256": "51e479656026f4b1625acfd3fa2c6073897ba3254a8f743a611ec77fc0cc65fb"
+        },
+        "expression-neutral": {
+          "refId": "47af0cd74760681abf2b6224e13b1285",
+          "sha256": "3851d09959a5252805de666cd12f64e282f1f0a42d142173bbe6b85b8d772eac"
+        },
+        "expression-smile": {
+          "refId": "c20eccaa3f2f64d4fe893d6398aedfb9",
+          "sha256": "9241c11ad5e45c3e9dfbe1f6171997b3b18b67ff83f30169ee6d03f73f2f9b06"
+        },
+        "expression-thinking": {
+          "refId": "98b7c8839f0441e02a564673edf8ba6c",
+          "sha256": "5222c3869ec9966651977168de0420f7568034f8b830f0ed01a8a4f75edbf433"
+        }
+      },
+      "approvedAt": "2026-11-24"
+    },
+    {
+      "id": "chr-istanbul-emre-39",
+      "status": "draft",
+      "fictional": true,
+      "age": 39,
+      "gender": "man",
+      "city": "Istanbul, Türkiye",
+      "mst": 4,
+      "role": "pharmacist",
+      "identityBlock": "39-year-old man, light olive skin, square jaw, short dark wavy hair, trimmed dark beard with grey at the chin, medium build, charcoal crew-neck sweater, dark jeans, white sneakers",
+      "activity": "drinks çay from a tulip glass on his balcony before opening the pharmacy",
+      "studioIds": [
+        "std-istanbul-balcony"
+      ],
+      "wardrobeSource": "I (Western dress dominant)",
+      "sourceStatus": "inferred",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
+    },
+    {
+      "id": "chr-dalarna-ingrid-73",
+      "status": "draft",
+      "fictional": true,
+      "age": 73,
+      "gender": "woman",
+      "city": "Dalarna, Sweden",
+      "mst": 1,
+      "role": "retired schoolteacher",
+      "identityBlock": "73-year-old woman, very fair skin with pink undertones and freckles, white hair in a short pixie cut, behind-the-ear hearing aids, pale blue eyes, oatmeal wool sweater, dark grey trousers, felted wool slippers",
+      "activity": "lifts a tray of cinnamon buns from the stove",
+      "studioIds": [
+        "std-swedish-pine-kitchen"
+      ],
+      "wardrobeSource": "I",
+      "sourceStatus": "inferred",
+      "inclusionNote": "visible hearing aids as ordinary detail",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
+    },
+    {
+      "id": "chr-manchester-daniel-44",
+      "status": "draft",
+      "fictional": true,
+      "age": 44,
+      "gender": "man",
+      "city": "Manchester, UK",
+      "mst": 9,
+      "role": "ICU nurse",
+      "identityBlock": "44-year-old man, deep brown skin, broad face, close-cropped black hair with a low fade, short black beard, athletic build, navy hospital scrubs under a grey zip hoodie, NHS-style lanyard turned face-in so no text shows",
+      "activity": "makes tea in his kitchen after a night shift",
+      "studioIds": [
+        "std-uk-terraced-kitchen"
+      ],
+      "wardrobeSource": "I",
+      "sourceStatus": "inferred",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
+    },
+    {
+      "id": "chr-puebla-rosario-50",
+      "status": "draft",
+      "fictional": true,
+      "age": 50,
+      "gender": "woman",
+      "city": "Puebla, Mexico",
+      "mst": 6,
+      "role": "accountant who cooks for her family on weekends",
+      "identityBlock": "50-year-old woman, medium golden-brown skin, round face, dark wavy hair to the shoulders with a tortoiseshell clip, small gold cross necklace, coral cotton blouse, dark jeans, striped cotton apron",
+      "activity": "grinds salsa in a molcajete by the window",
+      "studioIds": [
+        "std-puebla-kitchen"
+      ],
+      "wardrobeSource": "I (no sombrero/serape — documented cliché)",
+      "sourceStatus": "inferred",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
+    },
+    {
+      "id": "chr-saopaulo-thiago-31",
+      "status": "draft",
+      "fictional": true,
+      "age": 31,
+      "gender": "man",
+      "city": "São Paulo, Brazil",
+      "mst": 7,
+      "role": "architect",
+      "identityBlock": "31-year-old man, medium-brown skin with warm undertones, oval face, short tight curls, light stubble, slim build, wheelchair user in a matte-black manual wheelchair, white linen shirt, olive chinos, white sneakers",
+      "activity": "sketches on a tablet on his varanda with a cafezinho",
+      "studioIds": [
+        "std-saopaulo-varanda"
+      ],
+      "wardrobeSource": "I",
+      "sourceStatus": "inferred",
+      "inclusionNote": "disability shown with agency, not as the story",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
+    },
+    {
+      "id": "chr-lapaz-justina-44",
+      "status": "draft",
+      "fictional": true,
+      "age": 44,
+      "gender": "woman",
+      "city": "La Paz, Bolivia",
+      "mst": 7,
+      "role": "owner of a stationery and print shop",
+      "identityBlock": "44-year-old woman, medium-brown skin with warm undertones, wide cheekbones, two long black braids, layered emerald pollera skirt, cream fringed shawl, small brown bowler hat, smartphone in hand",
+      "activity": "checks the day's print orders on her phone at the shop counter",
+      "studioIds": [
+        "std-cusco-adobe-home"
+      ],
+      "wardrobeSource": "S (pollera as everyday identity)",
+      "sourceStatus": "sourced",
+      "note": "pair with a La Paz shop studio once drafted; Cusco set is a placeholder",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
+    },
+    {
+      "id": "chr-ontario-marie-58",
+      "status": "draft",
+      "fictional": true,
+      "age": 58,
+      "gender": "woman",
+      "city": "Northern Ontario, Canada",
+      "mst": 5,
+      "role": "community health administrator",
+      "identityBlock": "58-year-old woman, medium warm-tan skin, round face, long dark hair with grey streaks in a single braid, beaded floral earrings, red plaid flannel shirt over a black tee, dark jeans, rubber-soled boots",
+      "activity": "pours coffee from a thermos on the dock at dawn",
+      "studioIds": [
+        "std-ontario-dock"
+      ],
+      "wardrobeSource": "I (beadwork earrings everyday; no headdress — sacred)",
+      "sourceStatus": "inferred",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
+    },
+    {
+      "id": "chr-brisbane-jarrah-47",
+      "status": "draft",
+      "fictional": true,
+      "age": 47,
+      "gender": "man",
+      "city": "Brisbane, Australia",
+      "mst": 8,
+      "role": "licensed electrician",
+      "identityBlock": "47-year-old man, brown skin with warm undertones, broad nose, short curly greying hair, short salt-and-pepper beard, sturdy build, hi-vis orange work shirt, navy work shorts, steel-cap boots",
+      "activity": "drinks iced tea on the Queenslander veranda after work",
+      "studioIds": [
+        "std-queenslander-veranda"
+      ],
+      "wardrobeSource": "S (urban, contemporary — Creative Spirits) + I (workwear)",
+      "sourceStatus": "sourced",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
+    },
+    {
+      "id": "chr-antarctic-camila-41",
+      "status": "draft",
+      "fictional": true,
+      "age": 41,
+      "gender": "woman",
+      "city": "Antarctic research station (Chilean team)",
+      "mst": 5,
+      "role": "station chef",
+      "identityBlock": "41-year-old woman, medium warm-tan skin, angular face, dark brown hair in a tight bun under a black beanie, faint burn scar on right forearm, red fleece jacket over a white chef's tee, dark technical trousers, insulated boots",
+      "activity": "stirs a pot of soup in the station galley while snow light fills the window",
+      "studioIds": [
+        "std-antarctic-galley"
+      ],
+      "wardrobeSource": "I",
+      "sourceStatus": "inferred",
+      "defaultStyle": "realistic",
+      "styles": [
+        "realistic",
+        "stylized-3d",
+        "cel-2d"
+      ],
+      "referenceSheet": {
+        "front": null,
+        "three-quarter": null,
+        "profile": null,
+        "full-body": null,
+        "hands": null,
+        "expression-neutral": null,
+        "expression-smile": null,
+        "expression-thinking": null
+      }
+    }
+  ],
+  "mascots": [
+    {
+      "id": "crumb",
+      "name": "Crumb",
+      "status": "approved",
+      "fictional": true,
+      "identityBlock": "Crumb, an original tiny chef mascot: round golden-crust head and body with darker freckle dots, big white eyes, small smile, white apron with two gold buttons, white chef's toque.",
+      "defaultStyle": "flat-2d",
+      "styles": [
+        "flat-2d",
+        "stylized-3d"
+      ],
+      "rigs": {
+        "flat-2d": "puppet-2d",
+        "stylized-3d": "rig-3d"
+      },
+      "rigSources": {
+        "puppet-2d": "mini-chef-studio/src/Crumb.tsx",
+        "rig-3d": "mini-chef-studio/src/Crumb3D.tsx"
+      },
+      "note": "Drawn by code in every frame, so Crumb never drifts. Channel mascot for Billionaire Bites."
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "version": "2026-11-22",
+  "source": "Original patterns written with the hook-writer method (mechanism-first, gap + truth). No third-party lines, no brand or character references.",
+  "rules": [
+    "A hook opens a gap the next shot closes; the film must pay it off.",
+    "Muted first: the first frame and any on-screen text must hook without sound.",
+    "Use only facts the film can show or the user supplied. Never invent a number, record, price or superlative.",
+    "One visible physical action in the first shot. Avoid hand-and-tool contact the local motion model renders badly (flip, toss, catch, knead, whisk)."
+  ],
+  "mechanisms": {
+    "curiosity-gap": {"detect": "\\b(what happens|nothing on the outside|wait for|until|before you|here is how|watch (?:this|what)|hidden|inside|secret|reveal)\\w*"},
+    "contrarian": {"detect": "\\b(not|never|stop|myth|wrong|instead of|no need|without|skip|works better|put the \\w+ down)\\b"},
+    "stakes": {"detect": "\\b(or|before it|last chance|one chance|one pass|ruin|risk|only one|deadline|before)\\b"},
+    "specificity": {"detect": "\\d|\\b(one|two|three|four|five|six|seven|eight|nine|ten|dozen|hundred)\\b"},
+    "identity": {"detect": "\\b(if you|if your|you(?:'re| are)|for anyone|every (?:home|cook|kid|maker))\\b"},
+    "story": {"detect": "\\b(this (?:morning|evening|time)|once|so (?:i|we|he|she|it)|began|started|changed the plan)\\b"},
+    "mistake": {"detect": "\\b(mistake|you(?:'re| are) doing|why (?:it|yours)|fails?|burns?|collapses?|goes wrong)\\b"},
+    "transformation": {"detect": "\\b(into|turns?|becomes?|become|plain|ordinary|raw)\\b"},
+    "question": {"detect": "\\?"},
+    "timeliness": {"detect": "\\b(tonight|today|this (?:season|week|winter|summer)|right now|in minutes)\\b"},
+    "authority": {"detect": "\\b(the (?:one )?(?:trick|method|technique|rule)|chefs?|pros?|always|the only way)\\b"}
+  },
+  "patterns": [
+    {"id": "cg-final-bite-first", "mechanism": "curiosity-gap", "fit": ["food"], "spoken": "{finished_result}. Here is how it started.", "onScreen": "Wait for the last second", "visual": "Open on the finished texture in close view, then cut to the raw start.", "motionSafe": "slow push-in, steam or melt only"},
+    {"id": "cg-hidden-center", "mechanism": "curiosity-gap", "fit": ["food", "object"], "spoken": "Nothing on the outside shows what is {hidden_part}.", "onScreen": "Look inside", "visual": "A closed, ordinary-looking shape in centre frame; something about it is slightly off.", "motionSafe": "static camera with one slow cut-open or crack"},
+    {"id": "cg-before-it-changes", "mechanism": "curiosity-gap", "fit": ["any"], "spoken": "Watch the {focal_object} until the very end.", "onScreen": "Watch {focal_object}", "visual": "Focal object centred, one clear state change promised by the framing.", "motionSafe": "slow dolly, one state change"},
+    {"id": "ct-skip-the-step", "mechanism": "contrarian", "fit": ["food", "any"], "spoken": "You can skip {common_step} and still get {result}.", "onScreen": "No {common_step}", "visual": "The skipped step's tool sits unused in frame while the action proceeds.", "motionSafe": "single pour, spread or fold"},
+    {"id": "ct-wrong-tool", "mechanism": "contrarian", "fit": ["food", "any"], "spoken": "Put the {usual_tool} down. This works better.", "onScreen": "Not the {usual_tool}", "visual": "The usual tool is set aside, the surprising one takes centre frame.", "motionSafe": "tool already in place, no hand contact change"},
+    {"id": "st-one-chance", "mechanism": "stakes", "fit": ["food", "any"], "spoken": "One pass. Get it wrong and {cost}.", "onScreen": "One chance", "visual": "Tense close view of the point of no return, e.g. liquid about to meet heat.", "motionSafe": "single pour into heat, side macro"},
+    {"id": "st-clock-is-running", "mechanism": "stakes", "fit": ["food", "any"], "spoken": "{duration} before {deadline_event}.", "onScreen": "{duration}", "visual": "A visible countdown cue in the set (timer, melting ice, rising steam).", "motionSafe": "locked camera, melt or rise"},
+    {"id": "sp-exact-number", "mechanism": "specificity", "fit": ["food", "any"], "spoken": "{number} {unit}, and the {focal_object} looks like this.", "onScreen": "{number} {unit}", "visual": "The counted items lined up in frame so the number is checkable by eye.", "motionSafe": "slow lateral slide along the row"},
+    {"id": "sp-three-ingredients", "mechanism": "specificity", "fit": ["food"], "spoken": "Three things on the counter. Watch what they become.", "onScreen": "3 ingredients", "visual": "Exactly three ingredients on a clean surface, top-down.", "motionSafe": "static top-down, one ingredient moves"},
+    {"id": "id-for-small-kitchens", "mechanism": "identity", "fit": ["food"], "spoken": "If your kitchen is small, this is for you.", "onScreen": "Small kitchen? Watch", "visual": "A compact counter, one pan, one board; relatable scale.", "motionSafe": "locked wide, one pan action"},
+    {"id": "id-for-slow-mornings", "mechanism": "identity", "fit": ["food", "any"], "spoken": "For anyone who wants {outcome} without the rush.", "onScreen": "No rush", "visual": "Calm, warm light, steady pace implied by the framing.", "motionSafe": "slow pan, gentle steam"},
+    {"id": "sy-the-moment", "mechanism": "story", "fit": ["any"], "spoken": "It started with just a {focal_object}.", "onScreen": "It started here", "visual": "The plain starting state of the subject in its setting.", "motionSafe": "slow push-in on the starting state"},
+    {"id": "sy-then-it-cracked", "mechanism": "story", "fit": ["food", "any"], "spoken": "Then {small_event} changed the plan.", "onScreen": "Then this happened", "visual": "The first frame is just before the small event, framed so the viewer can see it coming.", "motionSafe": "one small physical event, locked camera"},
+    {"id": "mk-why-it-collapses", "mechanism": "mistake", "fit": ["food", "any"], "spoken": "This is why yours {failure}.", "onScreen": "Why it fails", "visual": "Show the failure state first, clearly and without distress.", "motionSafe": "slow macro of the failure, then the fix"},
+    {"id": "mk-one-small-error", "mechanism": "mistake", "fit": ["food"], "spoken": "One small mistake ruins {result}. Here is the fix.", "onScreen": "Common mistake", "visual": "The mistaken setup in frame; the fix follows.", "motionSafe": "single corrective action, no hand-heavy work"},
+    {"id": "tr-plain-to-premium", "mechanism": "transformation", "fit": ["food", "object"], "spoken": "Plain {focal_object}. Now watch it become {premium_result}.", "onScreen": "Plain to premium", "visual": "A deliberately plain first frame in the same set that the last frame will upgrade.", "motionSafe": "locked camera, texture or colour change"},
+    {"id": "tr-raw-to-glossy", "mechanism": "transformation", "fit": ["food"], "spoken": "Raw and dull, until the heat hits.", "onScreen": "Heat changes everything", "visual": "Raw ingredient on a hot surface, side macro.", "motionSafe": "side macro, sizzle and colour shift"},
+    {"id": "qu-will-it-hold", "mechanism": "question", "fit": ["food", "any"], "spoken": "Will the {focal_object} hold?", "onScreen": "Will it hold?", "visual": "The focal object under visible load or heat, close view.", "motionSafe": "slow push-in, one load or melt"},
+    {"id": "qu-what-is-inside", "mechanism": "question", "fit": ["food", "object"], "spoken": "What is hiding in the middle?", "onScreen": "What is inside?", "visual": "Whole closed shape, centred.", "motionSafe": "static, then one clean cut or crack"},
+    {"id": "tm-tonight", "mechanism": "timeliness", "fit": ["food"], "spoken": "Tonight's dinner, in {duration}.", "onScreen": "Tonight", "visual": "Evening light in the set, finished dish waiting in the background.", "motionSafe": "slow dolly, steam"},
+    {"id": "tm-this-season", "mechanism": "timeliness", "fit": ["food", "any"], "spoken": "This season's best {focal_object}, shown start to finish.", "onScreen": "This season", "visual": "A seasonal prop in frame that the viewer can identify without text.", "motionSafe": "slow pan across the seasonal prop"},
+    {"id": "au-one-technique", "mechanism": "authority", "fit": ["food", "any"], "spoken": "The one technique that changes {result}.", "onScreen": "The technique", "visual": "The technique's key moment shown first, in close view, without hand rework.", "motionSafe": "single clear action, side macro", "needsTrueClaim": true},
+    {"id": "au-the-rule", "mechanism": "authority", "fit": ["food"], "spoken": "The rule: {rule}. Watch why.", "onScreen": "The rule", "visual": "Two small states side by side so the rule is checkable by eye.", "motionSafe": "locked camera, two simultaneous states", "needsTrueClaim": true}
+  ],
+  "antiPatterns": [
+    "The secret nobody tells you",
+    "You won't believe what happens",
+    "Number-one trick (unproven superlative)",
+    "Any claim the film does not show (records, prices, health claims, 'banned', 'illegal')",
+    "Hook that needs sound to make sense",
+    "Hook whose action is a hand-and-tool contact the local model cannot render"
+  ]
+}

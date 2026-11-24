@@ -144,3 +144,9 @@ test('moves the selected opening action into the first shot when the model delay
   assert.match(shots[0].motionPrompt, /^A chef pours warm caramel over a pear tart\./);
   assert.match(shots[0].imagePrompt, /First frame:/);
 });
+
+test('everyday movement verbs from non-food ideas count as visible action, static states still do not', () => {
+  assert.equal(hasVisiblePhysicalAction('The hero lands softly on the rooftop'), true);
+  assert.equal(hasVisiblePhysicalAction('The cape flutters and billows in the wind'), true);
+  assert.equal(hasVisiblePhysicalAction('The hero stands tall'), false);
+});

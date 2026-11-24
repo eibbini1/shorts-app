@@ -104,5 +104,37 @@ class VisionGateTests(unittest.TestCase):
             self.assertIn('uncertain visual match', report['verdict']['missingOrWrong'][0])
 
 
+    def test_temperature_questions_are_skipped_but_visual_ones_still_block(self):
+        yes = {'done_reason': 'stop', 'message': {'content': json.dumps({'answer': 'yes', 'reason': 'visible'})}}
+        with tempfile.TemporaryDirectory() as folder:
+            image = Path(folder) / 'shot.png'
+            image.write_bytes(b'fake image for mocked API')
+            with patch.object(vision.urllib.request, 'urlopen', side_effect=lambda *a, **k: io.BytesIO(json.dumps(yes).encode())) as call:
+                report, _ = vision.review(image, 'cream', questions=['Is the cream visibly warm?', 'Is the shell cracked?'])
+            self.assertEqual(report['status'], 'pass')
+            self.assertEqual(call.call_count, 1)  # only the visual question was asked
+            self.assertEqual(report['skippedNotVisibleInAStill'], ['Is the cream visibly warm?'])
+            no = {'done_reason': 'stop', 'message': {'content': json.dumps({'answer': 'no', 'reason': 'shell is intact'})}}
+            with patch.object(vision.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(no).encode())):
+                report, _ = vision.review(image, 'cream', questions=['Is the shell visibly cracked?', 'Is the cream visibly warm?'])
+            self.assertEqual(report['status'], 'review-required')  # a visual miss still blocks
+
+    def test_lighting_and_colour_wording_is_not_skipped(self):
+        for text in ('Is warm window light on the counter?', 'Are the warm tones visible?', 'Is the glove hot pink?'):
+            self.assertIsNone(vision.NON_VISUAL.search(text), text)
+        for text in ('Is the cream visibly warm?', 'Does it look hot?', 'Is the soup cold?', 'Does it look delicious?'):
+            self.assertTrue(vision.NON_VISUAL.search(text), text)
+
+    def test_when_every_criterion_is_non_visual_nothing_is_silently_dropped(self):
+        yes = {'done_reason': 'stop', 'message': {'content': json.dumps({'answer': 'yes', 'reason': 'visible'})}}
+        with tempfile.TemporaryDirectory() as folder:
+            image = Path(folder) / 'shot.png'
+            image.write_bytes(b'fake image for mocked API')
+            with patch.object(vision.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(yes).encode())) as call:
+                report, _ = vision.review(image, 'cream', questions=['Is the cream visibly warm?'])
+            self.assertEqual(call.call_count, 1)
+            self.assertEqual(report['skippedNotVisibleInAStill'], [])
+
+
 if __name__ == '__main__':
     unittest.main()

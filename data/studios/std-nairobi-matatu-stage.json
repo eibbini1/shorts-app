@@ -1,0 +1,38 @@
+{
+  "id": "std-nairobi-matatu-stage",
+  "name": "Nairobi matatu stage at dawn",
+  "status": "prompt-only",
+  "sourceStatus": "inferred",
+  "style": "photoreal cinematic photography, natural materials, believable proportions, restrained gestures, locked camera",
+  "set": "One covered steel bus shelter on a concrete kerb, jacaranda tree overhead, purple petals scattered on the pavement; the same architecture and prop positions throughout.",
+  "continuity": "Preserve the same architecture, furniture positions, light direction, time of day and chosen adult identity across shots. Keep only props required by the story; keep wardrobe and hand coverings consistent. parked minibus far background, no readable livery.",
+  "referenceFrames": {},
+  "lighting": "low golden sunrise sidelight from camera-right with thin mist",
+  "camera": "50mm natural-perspective framing with the full focal subject visible; retain any lens explicitly chosen for the shot. Suggested framing: medium shot, eye level.",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
+  "mood": "quiet anticipation",
+  "depth": "petals foreground, subject midground, two distant defocused figures",
+  "props": [
+    "thermos flask",
+    "parked minibus",
+    "steel bench"
+  ],
+  "population": "At most one chosen fictional adult; no background crowds; no readable signage (add any text in editing); matte surfaces, no mirrors facing the camera.",
+  "lightingVariants": [
+    {
+      "id": "base",
+      "lighting": "low golden sunrise sidelight from camera-right with thin mist",
+      "mood": "quiet anticipation"
+    },
+    {
+      "id": "dawn",
+      "lighting": "Dawn, one dominant light source, stable exposure.",
+      "mood": "quiet anticipation"
+    },
+    {
+      "id": "overcast-midday",
+      "lighting": "Overcast midday, one dominant light source, stable exposure.",
+      "mood": "quiet anticipation"
+    }
+  ]
+}

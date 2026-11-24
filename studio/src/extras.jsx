@@ -40,7 +40,7 @@ export function RenderTimer({ job, plan }) {
   }
   // one finished clip per shot (latest file per shot), only files written after this render started
   const done = new Map();
-  files.clips.filter((c) => c.t >= job.startedAt).forEach((c) => done.set(c.n, c));
+  (files.progressClips || []).filter((c) => c.t >= job.startedAt).forEach((c) => done.set(c.n, c));
   const k = done.size;
   const last = k ? Math.max(...[...done.values()].map((c) => c.t)) : 0;
   const E = estFor(job.options?.quality);
@@ -48,6 +48,7 @@ export function RenderTimer({ job, plan }) {
   const cycle = k ? Math.min(E.cycleHigh * 1.5, Math.max(E.cycleLow * 0.7, (last - job.startedAt - E.start * 1000) / 1000 / k)) : prior;
   const endAt = job.startedAt + (E.start + n * cycle + E.finish) * 1000;
   const remaining = (endAt - now) / 1000;
+  const stillRendering = remaining <= 5 && k < n;
   const elapsed = (now - job.startedAt) / 1000;
   const spread = k ? 0.06 : 0.12; // after a clip is measured the range tightens
   const lo = remaining * (1 - spread), hi = remaining * (1 + spread) + (k ? 0 : 30);
@@ -56,15 +57,17 @@ export function RenderTimer({ job, plan }) {
     <div className="timer" role="status">
       <div className="tnums">
         <span><b>{fmt(elapsed)}</b> elapsed</span>
-        <span>{remaining > 5 ? <>about <b>{fmt(remaining)}</b> left <span className="muted">({fmt(lo)} to {fmt(hi)})</span></> : <b>finishing up...</b>}</span>
-        <span className="muted">{k}/{n} clips · est. finish {new Date(endAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        <span>{remaining > 5 ? <>about <b>{fmt(remaining)}</b> left <span className="muted">({fmt(lo)} to {fmt(hi)})</span></> :
+          <b>{stillRendering ? 'Still rendering, past the estimate' : 'Finishing up'}</b>}</span>
+        <span className="muted">{k}/{n} clips{remaining > 5 && ` · est. finish ${new Date(endAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}</span>
       </div>
       <div className="bar"><div className="fill" style={{ width: pct + '%' }} /></div>
       {n > 1 && <ol className="clipstrip" aria-label="Clip progress">{clipProgress({ total: n, doneShots: [...done.values()].map((c) => c.shot), startedAt: job.startedAt, lastDoneAt: last, now, cycleSec: cycle, startSec: E.start }).map((c) => (
         <li key={c.shot} className={`${c.state}${c.slow ? ' slow' : ''}`} title={c.state === 'active' ? `Clip ${c.shot} rendering for ${fmt(c.elapsedSec)}${c.slow ? ', longer than usual' : ''}` : `Clip ${c.shot} ${c.state === 'done' ? 'finished' : 'waiting'}`}>
           <span>{c.shot}</span>{c.state === 'active' && <em>{fmt(c.elapsedSec)}</em>}
         </li>))}</ol>}
-      <div className="muted small">{k ? `Based on your first ${k} clip${k > 1 ? 's' : ''} (${fmt(cycle)} each).` : (learned ? `Estimate from your own past renders on this Mac (${fmt(learned)} per shot). It sharpens after the first clip.` : 'Estimate from past runs on this Mac (about 4.5 min per clip). It sharpens after the first clip.')} Retries add time.</div>
+      <div className="muted small">{k ? `Based on your first ${k} clip${k > 1 ? 's' : ''} (${fmt(cycle)} each).` :
+        `Estimate from past runs on this Mac (about ${fmt(prior)} per clip). It updates after the first clip.`} Retries add time.</div>
     </div>
   );
 }

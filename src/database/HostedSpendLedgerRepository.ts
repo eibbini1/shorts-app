@@ -85,7 +85,7 @@ function reservationFromRow(row: SqliteRow): SpendReservation {
 export class HostedSpendLedgerRepository {
   constructor(private readonly db: LocalDatabase) {}
 
-  reserve(input: ReserveSpendInput): SpendReservation {
+  reserve(input: ReserveSpendInput, options: { singleUse?: boolean } = {}): SpendReservation {
     this.validateIdentity(input.runId, 'runId');
     this.validateIdentity(input.idempotencyKey, 'idempotencyKey');
     this.validateIdentity(input.provider, 'provider');
@@ -95,6 +95,7 @@ export class HostedSpendLedgerRepository {
     return this.inTransaction(() => {
       const existing = this.getReservationRow(input.idempotencyKey);
       if (existing) {
+        if (options.singleUse) throw new ConfigError('This shot approval has already been used.');
         const reservation = reservationFromRow(existing);
         if (
           reservation.runId !== input.runId ||

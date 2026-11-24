@@ -52,7 +52,7 @@ function writeSession(root, id, procInfo) {
   fs.writeFileSync(path.join(root, 'storage', 'studio-sessions', id + '.json'), JSON.stringify({
     id, user: 'owner', name: 'orphan fixture', prompt: 'test-owned process group', options: {},
     createdAt: Date.now(), updatedAt: Date.now(), kind: 'render', status: 'running',
-    steps: [], lines: [], events: [], attempts: [], requestIds: [], procInfo,
+    steps: [], lines: [], events: [], attempts: [], requestIds: [], procInfo, takeJob: { id: 'fixture-take' },
   }));
 }
 

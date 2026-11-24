@@ -1,0 +1,28 @@
+{
+  "checkedAt": "2026-11-22",
+  "method": "viral-reverse-engineering skill. Public page metadata read in the built-in browser (views, length, channel, publish date, likes). Frames: 2 to 3 screenshots per video only; no full watch, no audio, no comment sampling. Sample is small and relevance-ranked, not a ranked top list.",
+  "ethics": "Patterns only. Do not copy footage, characters, scripts or channel branding. All app output stays original.",
+  "sample": [
+    {"id": "AaHceZLPgBM", "group": "street-fashion", "views": 2593322, "likes": 58991, "seconds": 39, "published": "2025-10-05", "note": "Real person in a bright red uniform dress, handheld follow shot from behind, bystanders turn to look.", "observed": ["opens on her back, centre frame, moving", "bystanders visibly react (head turns) which proves she stands out", "pop music bed", "title promises an effect on other people"], "driver": "Social proof: other people's reactions show she stands out, instead of telling the viewer she does.", "replicable": "partly (real-world reaction footage, creator's own audience, unknown account size)"},
+    {"id": "TgyZ99hSIes", "group": "mystery-walk", "views": 508051, "likes": 13154, "seconds": 28, "published": "2025-06-03", "note": "Lone woman walking on a road; title and caption pose a worry ('must be lost').", "observed": ["title is a question-in-image: why is she there", "single subject, empty setting"], "driver": "Curiosity gap from one oddly placed figure; the viewer wants the explanation.", "replicable": "yes as mechanism; unknown account size"},
+    {"id": "d6i-y5OKq60", "group": "ai-short-film", "views": 1346890, "likes": 9991, "seconds": 40, "published": "2026-09-24", "note": "AI short film made with a hosted tool; caption states a betrayal premise in one line.", "observed": ["premise sentence in caption", "one concrete physical beat (hand under table)"], "driver": "One clear stakes line plus one concrete action.", "replicable": "yes as structure; production quality is hosted-model quality, not local"},
+    {"id": "hbeLlO2tPNg", "group": "ai-spectacle", "views": 1375580, "likes": 8776, "seconds": 10, "published": "2025-10-01", "note": "10 s mythic spectacle made with a hosted model; promoted as an experiment.", "observed": ["10 s length", "scale and spectacle, no dialogue"], "driver": "Spectacle plus novelty of the tool.", "replicable": "no for the novelty part"},
+    {"id": "RtNbf77b6wU", "group": "food-asmr", "views": 47901644, "likes": null, "seconds": 9, "published": "2025-07-19", "note": "9 s food Short; title is a craving promise.", "observed": ["9 s total", "craving promise in title"], "driver": "Craving plus very short length (likely high completion).", "replicable": "unknown; large-account effect likely"},
+    {"id": "86NHFK1RAJ0", "group": "food-asmr", "views": 19522036, "likes": null, "seconds": 18, "published": "2025-08-24", "note": "Question title 'would you eat this?'.", "observed": ["question hook in title"], "driver": "Question plus visual oddity.", "replicable": "unknown; large-account effect likely"},
+    {"id": "Y_e2yBUlNMk", "group": "slow-motion-walk", "views": 70666, "likes": null, "seconds": 13, "published": "2026-06-02", "note": "Slow-motion barefoot walk, white outfit.", "observed": ["13 s", "slow motion"], "driver": "Aesthetic only; no share trigger visible.", "replicable": "low; views stay small"}
+  ],
+  "findings": [
+    "Realistic night-walk cinematic Shorts in this sample mostly stay at 1 to 70 thousand views; the red-dress video with 2.6 million views shows other people reacting to her.",
+    "Her back or profile leads the frame in the stand-out example, which matches the identity-safe angle the local model needs.",
+    "Short length (9 to 22 s) dominates the high-view food sample; the walking sample ranges 7 to 40 s.",
+    "AI films that did well state one premise sentence and show one concrete physical beat.",
+    "Large-account effect is unmeasured: channel size was not captured, so none of these is proven replicable."
+  ],
+  "appRules": [
+    "Show the stand-out effect through others' reactions (turning heads) when the model can render it; otherwise through one clear light cue, and flag it as weaker.",
+    "Open on a moving back or profile of the main subject, centre frame, within the first second.",
+    "State one premise sentence in the title or on-screen text; make one concrete physical beat visible.",
+    "Keep 10 to 20 s unless the story needs more.",
+    "Mark crowd reactions as yellow/red risk for the local motion model: render a test first."
+  ]
+}
