@@ -1215,3 +1215,6 @@ Next: implement audio fixes first (cheap, no GPU), then ending check.
 
 ## 2026-11-24 — Codex: Phase 1 regional drafts
 - VERIFIED: fix/nonfood-shot-normalize, base 59552c3. Ten fictional draft briefs (eight adults, two children) and four prompt-only studios. Inferred wardrobe and owner review marked. Child refusal covered by tests. No sheet generated. Next: Phase 2 face proposals.
+
+## 2026-11-24 — Codex: Phase 2 face proposals
+- VERIFIED: fix/nonfood-shot-normalize, Phase 1 commit aba0c11. All 15 proposals pass face brief checks and preserve age, wardrobe and activity; Linh and Hiroshi listed first. Node 12/12. Approved catalogue and pins unchanged. Next: candidate sheets for Linh and Hiroshi only.

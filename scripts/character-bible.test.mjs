@@ -150,3 +150,16 @@ test('regional draft characters meet the face brief and cannot enter shot compos
     }
   }
 });
+
+test('face upgrade proposals preserve the existing identities, clothing text and actions', () => {
+  const { characters } = loadCatalogue(new URL('../data/proposals/characters-face-upgrade-20261124.json', import.meta.url));
+  assert.deepEqual(characters.slice(0, 2).map(({ id }) => id), ['chr-hanoi-linh-29', 'chr-tokyo-hiroshi-68']);
+  assert.deepEqual(characters.map(({ id }) => id).sort(), catalogue.characters.map(({ id }) => id).sort());
+  for (const proposal of characters) {
+    checkNewFaceBrief(proposal);
+    const original = findCharacter(proposal.id, catalogue);
+    assert.equal(proposal.age, original.age);
+    assert.equal(proposal.activity, original.activity);
+    assert.ok(proposal.identityBlock.endsWith(original.identityBlock.split(', ').slice(1).join(', ')));
+  }
+});
