@@ -1,0 +1,21 @@
+{
+  "id": "std-amman-window-room",
+  "name": "Amman window room",
+  "status": "prompt-only",
+  "sourceStatus": "inferred",
+  "style": "Naturalistic photography",
+  "set": "Limestone window reveal and a plain plaster wall",
+  "lighting": "Soft indirect daylight from camera left",
+  "camera": "50mm medium close-up",
+  "cameraMove": "Locked tripod",
+  "mood": "quiet",
+  "depth": "Clear foreground and soft background",
+  "props": [
+    "linen chair",
+    "notebook",
+    "ceramic cup"
+  ],
+  "population": "One fictional subject. No crowds, readable text or logos.",
+  "continuity": "Keep the room layout, lighting and props consistent.",
+  "referenceFrames": {}
+}

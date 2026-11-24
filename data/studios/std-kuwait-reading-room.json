@@ -1,0 +1,21 @@
+{
+  "id": "std-kuwait-reading-room",
+  "name": "Kuwait reading room",
+  "status": "prompt-only",
+  "sourceStatus": "inferred",
+  "style": "Naturalistic photography",
+  "set": "Private reading room with soft daylight and a plain sand-colored wall",
+  "lighting": "Soft indirect daylight from camera left",
+  "camera": "50mm medium close-up",
+  "cameraMove": "Locked tripod",
+  "mood": "quiet",
+  "depth": "Clear foreground and soft background",
+  "props": [
+    "low chair",
+    "side table",
+    "water glass"
+  ],
+  "population": "One fictional subject. No crowds, readable text or logos.",
+  "continuity": "Keep the room layout, lighting and props consistent.",
+  "referenceFrames": {}
+}

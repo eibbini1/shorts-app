@@ -1,0 +1,164 @@
+{
+  "characters": [
+    {
+      "id": "chr-draft-rana-34",
+      "status": "draft",
+      "fictional": true,
+      "age": 34,
+      "city": "Amman, Jordan",
+      "identityBlock": "34-year-old woman, oval face, broad forehead, straight eyebrows, almond-shaped eyes, narrow nose, full lips, wearing navy cotton shirt and cream trousers",
+      "faceReviewNote": "Review oval face, broad forehead, straight eyebrows, almond-shaped eyes, narrow nose, full lips against Rana’s individual brief and family background before making a sheet.",
+      "wardrobe": "navy cotton shirt and cream trousers",
+      "wardrobeSource": "inferred",
+      "activity": "opens a notebook",
+      "studioIds": [
+        "std-amman-window-room"
+      ],
+      "requiresOwnerApproval": true
+    },
+    {
+      "id": "chr-draft-samer-53",
+      "status": "draft",
+      "fictional": true,
+      "age": 53,
+      "city": "Salt, Jordan",
+      "identityBlock": "53-year-old man, oblong face, high forehead, thick eyebrows, deep-set eyes, broad nose, rounded jaw, wearing olive linen shirt and charcoal trousers",
+      "faceReviewNote": "Review oblong face, high forehead, thick eyebrows, deep-set eyes, broad nose, rounded jaw against Samer’s individual brief and family background before making a sheet.",
+      "wardrobe": "olive linen shirt and charcoal trousers",
+      "wardrobeSource": "inferred",
+      "activity": "sets a cup on a bench",
+      "studioIds": [
+        "std-levant-courtyard"
+      ],
+      "requiresOwnerApproval": true
+    },
+    {
+      "id": "chr-draft-zaid-10",
+      "status": "draft",
+      "fictional": true,
+      "age": 10,
+      "city": "Amman, Jordan",
+      "identityBlock": "10-year-old boy, round face, rounded forehead, full eyebrows, round eyes, narrow nose, visible ears, wearing blue sweatshirt and grey jeans",
+      "faceReviewNote": "Review round face, rounded forehead, full eyebrows, round eyes, narrow nose, visible ears against Zaid’s individual brief and family background before making a sheet.",
+      "wardrobe": "blue sweatshirt and grey jeans",
+      "wardrobeSource": "inferred",
+      "activity": "folds a paper boat",
+      "studioIds": [
+        "std-amman-window-room"
+      ],
+      "requiresOwnerApproval": true
+    },
+    {
+      "id": "chr-draft-maya-8",
+      "status": "draft",
+      "fictional": true,
+      "age": 8,
+      "city": "Amman, Jordan",
+      "identityBlock": "8-year-old girl, oval face, broad forehead, straight eyebrows, wide-set eyes, narrow nose, rounded jaw, wearing yellow cardigan and dark jeans",
+      "faceReviewNote": "Review oval face, broad forehead, straight eyebrows, wide-set eyes, narrow nose, rounded jaw against Maya’s individual brief and family background before making a sheet.",
+      "wardrobe": "yellow cardigan and dark jeans",
+      "wardrobeSource": "inferred",
+      "activity": "draws a flower",
+      "studioIds": [
+        "std-amman-window-room"
+      ],
+      "requiresOwnerApproval": true
+    },
+    {
+      "id": "chr-draft-noor-26",
+      "status": "draft",
+      "fictional": true,
+      "age": 26,
+      "city": "Muscat, Oman",
+      "identityBlock": "26-year-old woman, heart-shaped face, narrow forehead, arched eyebrows, hooded eyes, straight nose bridge, full lips, wearing plain indigo tunic and grey trousers",
+      "faceReviewNote": "Review heart-shaped face, narrow forehead, arched eyebrows, hooded eyes, straight nose bridge, full lips against Noor’s individual brief and family background before making a sheet.",
+      "wardrobe": "plain indigo tunic and grey trousers",
+      "wardrobeSource": "inferred",
+      "activity": "turns a page",
+      "studioIds": [
+        "std-muscat-study"
+      ],
+      "requiresOwnerApproval": true
+    },
+    {
+      "id": "chr-draft-fahad-43",
+      "status": "draft",
+      "fictional": true,
+      "age": 43,
+      "city": "Kuwait City, Kuwait",
+      "identityBlock": "43-year-old man, broad face, low forehead, thick eyebrows, close-set eyes, prominent nose bridge, square jaw, wearing white cotton dishdasha",
+      "faceReviewNote": "Review broad face, low forehead, thick eyebrows, close-set eyes, prominent nose bridge, square jaw against Fahad’s individual brief and family background before making a sheet.",
+      "wardrobe": "white cotton dishdasha",
+      "wardrobeSource": "inferred",
+      "activity": "sets down a book",
+      "studioIds": [
+        "std-kuwait-reading-room"
+      ],
+      "requiresOwnerApproval": true
+    },
+    {
+      "id": "chr-draft-amal-70",
+      "status": "draft",
+      "fictional": true,
+      "age": 70,
+      "city": "Northern Jordan",
+      "identityBlock": "70-year-old woman, angular face, high forehead, sparse eyebrows, hooded eyes, prominent cheekbones, thin lips, wearing dark embroidered dress and cream scarf",
+      "faceReviewNote": "Review angular face, high forehead, sparse eyebrows, hooded eyes, prominent cheekbones, thin lips against Amal’s individual brief and family background before making a sheet.",
+      "wardrobe": "dark embroidered dress and cream scarf",
+      "wardrobeSource": "inferred",
+      "activity": "smooths a woven mat",
+      "studioIds": [
+        "std-levant-courtyard"
+      ],
+      "requiresOwnerApproval": true
+    },
+    {
+      "id": "chr-draft-salim-72",
+      "status": "draft",
+      "fictional": true,
+      "age": 72,
+      "city": "Muscat, Oman",
+      "identityBlock": "72-year-old man, square face, broad forehead, full eyebrows, deep-set eyes, broad nose, short grey beard, wearing cream dishdasha and muted woven cap",
+      "faceReviewNote": "Review square face, broad forehead, full eyebrows, deep-set eyes, broad nose, short grey beard against Salim’s individual brief and family background before making a sheet.",
+      "wardrobe": "cream dishdasha and muted woven cap",
+      "wardrobeSource": "inferred",
+      "activity": "adjusts a desk lamp",
+      "studioIds": [
+        "std-muscat-study"
+      ],
+      "requiresOwnerApproval": true
+    },
+    {
+      "id": "chr-draft-dima-38",
+      "status": "draft",
+      "fictional": true,
+      "age": 38,
+      "city": "Beirut, Lebanon",
+      "identityBlock": "38-year-old woman, oblong face, high forehead, arched eyebrows, upturned eyes, high cheekbones, soft jaw, wearing rust blouse and black trousers",
+      "faceReviewNote": "Review oblong face, high forehead, arched eyebrows, upturned eyes, high cheekbones, soft jaw against Dima’s individual brief and family background before making a sheet.",
+      "wardrobe": "rust blouse and black trousers",
+      "wardrobeSource": "inferred",
+      "activity": "opens a book",
+      "studioIds": [
+        "std-levant-courtyard"
+      ],
+      "requiresOwnerApproval": true
+    },
+    {
+      "id": "chr-draft-yousef-66",
+      "status": "draft",
+      "fictional": true,
+      "age": 66,
+      "city": "Kuwait City, Kuwait",
+      "identityBlock": "66-year-old man, oval face, broad forehead, straight eyebrows, hooded eyes, low nose bridge, tapered jaw, wearing light grey cotton dishdasha",
+      "faceReviewNote": "Review oval face, broad forehead, straight eyebrows, hooded eyes, low nose bridge, tapered jaw against Yousef’s individual brief and family background before making a sheet.",
+      "wardrobe": "light grey cotton dishdasha",
+      "wardrobeSource": "inferred",
+      "activity": "places a bookmark",
+      "studioIds": [
+        "std-kuwait-reading-room"
+      ],
+      "requiresOwnerApproval": true
+    }
+  ]
+}
