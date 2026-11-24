@@ -7,6 +7,15 @@ the scenario declares a local field recording, whose source and licence must be 
 (the voice track in the work folder is the ducking key), then the mix is loudness-normalised again.
 Cue words in a shot's `sound` or action prompts: sizzle, crunch/bite, chew, pour, slice, scrape/spread, plate clink,
 chime/shimmer, bounce, pat, bubble/pop, squeak, fizz and room tone. These are original synthesized Foley approximations.
+
+Optional sound accents (audioPlan.accents, off unless listed; at most 6; `at` is film time in seconds of the key visual event):
+  {"type": "impact", "at": 2.0}                              sub-bass hit whose onset lands exactly on `at`
+  {"type": "riser-impact", "at": 3.0, "riserSeconds": 1.2}   rising noise build that ends on an impact at `at`
+  {"type": "stinger", "at": 8.2, "tailSeconds": 1.6}         impact plus a ringing shimmer tail for the final reveal
+A shot may instead carry "hit": {"type": "impact", "atSeconds": 1.2} (seconds into that shot); it becomes an accent at the shot start plus that offset.
+  {"type": "swell", "at": 4.8, "seconds": 1.2}               sub-bass swell centred on `at`, for a movement phase
+  {"type": "breath", "at": 11.36, "seconds": 0.3, "depth": 0.2}  dips the existing soundtrack just BEFORE the hero cut at `at`
+Optional per accent: "gain" (multiplier). A breath ducks the whole existing soundtrack, so it is refused over narration.
 """
 import argparse
 import json
@@ -22,7 +31,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pipeline_events import gate as gate_event  # noqa: E402
 
-SOUND_CODES = (('has a gap', 'asmr-gap'), ('sound line is empty', 'cue-missing'), ('needs a matching field recording', 'recording-missing'),
+SOUND_CODES = (('accent plan', 'accent-plan'), ('has a gap', 'asmr-gap'), ('sound line is empty', 'cue-missing'), ('needs a matching field recording', 'recording-missing'),
                ('recordings-only mix needs', 'room-recording-missing'), ('required sound cue', 'required-cue'), ('foley sample', 'sample-invalid'))
 
 
@@ -202,6 +211,154 @@ def rustle(seconds, rng):
     return lowpass(highpass(noise(seconds, rng), 0.88), 0.4) * swell * np.minimum(1, t * 4) * 1.2
 
 
+ACCENT_TYPES = ('impact', 'riser-impact', 'stinger', 'swell', 'breath')
+ACCENT_GAIN = {'impact': 0.34, 'riser': 0.16, 'tail': 0.14, 'swell': 0.22}
+MAX_ACCENTS = 6
+RISER_SECONDS, TAIL_SECONDS, SWELL_SECONDS, BREATH_SECONDS, BREATH_DEPTH = 1.2, 1.6, 1.2, 0.3, 0.2
+BREATH_RAMP = 0.05
+BREATH_FRAME = 240  # ffmpeg evaluates volume once per audio frame; default frames are ~42 ms, which made the dip chunky and late. 240 samples = 5 ms
+
+
+def impact(length=0.9):
+    """Sub-bass drop (98 to 38 Hz) with a short weighted click; the attack is under 1 ms, so the onset is the marked time."""
+    t = t_axis(length)
+    phase = 2 * np.pi * np.cumsum(38 + 60 * np.exp(-9 * t)) / RATE
+    body = np.sin(phase) * np.exp(-4.2 * t)
+    click = lowpass(noise(length, np.random.default_rng(17)), 0.25) * np.exp(-60 * t) * 0.9
+    return ((body + click) * np.minimum(1, t * 1500)).astype(np.float32)
+
+
+def riser(length=RISER_SECONDS, rng=None):
+    """Noise whose low-pass opens from dull to bright while it gets louder, so the top end builds into the impact."""
+    rng = rng or np.random.default_rng(23)
+    t = t_axis(length)
+    x = noise(length, rng)
+    alpha = 0.015 * (0.9 / 0.015) ** (t / length)
+    out = np.zeros_like(x)
+    y = 0.0
+    for i, v in enumerate(x):
+        y += alpha[i] * (v - y)
+        out[i] = y
+    return (out * (t / length) ** 2 * 0.9).astype(np.float32)
+
+
+def ring_out(length=TAIL_SECONDS):
+    """Three staggered bell partials that decay: the shimmer that rings over a final hold."""
+    out = np.zeros(round(length * RATE), dtype=np.float32)
+    for freq, delay in ((2349.0, 0.0), (3136.0, 0.09), (3520.0, 0.19)):
+        if length - delay <= 0.05:
+            continue
+        piece = chime(freq, length - delay) * 0.5
+        start = round(delay * RATE)
+        out[start:start + len(piece)] += piece[:len(out) - start]
+    return out
+
+
+def swell(length=SWELL_SECONDS):
+    t = t_axis(length)
+    env = np.sin(np.pi * t / length) ** 2
+    return ((np.sin(2 * np.pi * 55 * t) + 0.4 * np.sin(2 * np.pi * 110 * t)) * env).astype(np.float32)
+
+
+def resolve_accents(data):
+    """audioPlan.accents plus accents declared on a shot as `hit` {type, atSeconds} (seconds into that shot).
+    Returns (accents, problems). A hit offset is turned into film time so sound follows the visual event."""
+    plan = data.get('audioPlan') or {}
+    explicit = plan.get('accents') or []
+    accents = list(explicit) if isinstance(explicit, list) else explicit
+    problems, start = [], 0.0
+    if not isinstance(accents, list):
+        return accents, []
+    for number, shot in enumerate(data['plan']['shots'], 1):
+        hit = shot.get('hit')
+        if hit is not None:
+            offset = hit.get('atSeconds') if isinstance(hit, dict) else None
+            if isinstance(offset, bool) or not isinstance(offset, (int, float)) or not 0 <= offset <= shot['seconds']:
+                problems.append(f'shot {number}: hit.atSeconds must be a number from 0 to {shot["seconds"]:g} (seconds into the shot)')
+            else:
+                accents.append({**{k: v for k, v in hit.items() if k != 'atSeconds'}, 'at': round(start + offset, 3)})
+        start += shot['seconds']
+    return accents, problems
+
+
+def audit_accents(accents, total):
+    """Problems with an audioPlan.accents list; empty when the plan can be mixed as written."""
+    if not accents:
+        return []
+    if not isinstance(accents, list):
+        return ['accent plan must be a list']
+    problems = []
+    if len(accents) > MAX_ACCENTS:
+        problems.append(f'accent plan has {len(accents)} accents; the maximum is {MAX_ACCENTS}')
+    hits = []
+    for number, accent in enumerate(accents, 1):
+        kind = accent.get('type') if isinstance(accent, dict) else None
+        if kind not in ACCENT_TYPES:
+            problems.append(f'accent plan item {number}: unknown type {kind!r}; use one of {", ".join(ACCENT_TYPES)}')
+            continue
+        at = accent.get('at')
+        if isinstance(at, bool) or not isinstance(at, (int, float)) or not 0 <= at <= total:
+            problems.append(f'accent plan item {number}: at must be a number between 0 and {total:g} seconds')
+            continue
+        if kind == 'riser-impact' and at < accent.get('riserSeconds', RISER_SECONDS):
+            problems.append(f'accent plan item {number}: the riser is longer than the time before it ends at {at:g} s')
+        if kind == 'stinger' and at + accent.get('tailSeconds', TAIL_SECONDS) > total + 0.05:
+            problems.append(f'accent plan item {number}: the stinger tail does not fit before the end of the film')
+        if kind == 'swell' and not 0.3 <= accent.get('seconds', SWELL_SECONDS) <= 3:
+            problems.append(f'accent plan item {number}: a swell lasts 0.3 to 3 s')
+        if kind == 'breath':
+            seconds, depth = accent.get('seconds', BREATH_SECONDS), accent.get('depth', BREATH_DEPTH)
+            if not 0.2 <= seconds <= 0.6 or not 0 <= depth <= 0.8 or at - seconds < 0:
+                problems.append(f'accent plan item {number}: a breath needs 0.2 to 0.6 s, depth 0 to 0.8, and must start inside the film')
+        if kind in ('impact', 'riser-impact', 'stinger'):
+            hits.append(at)
+    hits.sort()
+    for before, after in zip(hits, hits[1:]):
+        if after - before < 0.5:
+            problems.append(f'accent plan: impacts at {before:g} s and {after:g} s are closer than 0.5 s')
+    return problems
+
+
+def breath_filter(accents):
+    """ffmpeg volume expression (smooth ramps, no hard steps) that dips the soundtrack just before each hero cut."""
+    parts = []
+    for accent in accents or []:
+        if accent.get('type') != 'breath':
+            continue
+        end = float(accent['at'])
+        start = end - float(accent.get('seconds', BREATH_SECONDS))
+        depth = float(accent.get('depth', BREATH_DEPTH))
+        parts.append(f'(1-{1 - depth:.3f}*clip(min((t-{start:.3f})/{BREATH_RAMP},({end:.3f}-t)/{BREATH_RAMP}),0,1))')
+    return '*'.join(parts) or None
+
+
+def breath_chain(accents):
+    """The ffmpeg filter chain for all breaths (5 ms frames so the dip is smooth and recovers exactly on the cut), or None."""
+    expr = breath_filter(accents)
+    return f"asetnsamples=n={BREATH_FRAME}:p=0,volume='{expr}':eval=frame" if expr else None
+
+
+def breath_over_narration(accents, voice, rate=RATE, threshold=0.01):
+    """A breath ducks the whole soundtrack, so a breath that lands on speech is a problem."""
+    problems = []
+    for accent in accents or []:
+        if accent.get('type') != 'breath':
+            continue
+        end = float(accent['at'])
+        piece = voice[max(0, round((end - float(accent.get('seconds', BREATH_SECONDS))) * rate)):round(end * rate)]
+        if len(piece) and float(np.sqrt(np.mean(piece.astype(np.float32) ** 2))) > threshold:
+            problems.append(f'accent plan: the breath before {end:g} s overlaps narration; move it into a gap')
+    return problems
+
+
+def read_wav_mono(path):
+    with wave.open(str(path)) as wav:
+        data = np.frombuffer(wav.readframes(wav.getnframes()), dtype='<i2').astype(np.float32) / 32768
+        if wav.getnchannels() > 1:
+            data = data.reshape(-1, wav.getnchannels()).mean(axis=1)
+        return data, wav.getframerate()
+
+
 CUES = [(r'\brain', 'rain'), (r'\b(splash\w*|puddle\w*|ripple\w*)\b', 'splash'),
         (r'\b(click\w*|tick\w*|mechanical|gear\w*|servo\w*|beep\w*)\b', 'click'),
         (r'\b(rustl\w*|leaves|foliage|grass|bloom\w*|sprout\w*)\b', 'rustle'),
@@ -276,6 +433,9 @@ def audit_cues(data):
             problems.append(f'required sound cue {name}: matching field recording is missing')
         elif not any(name in planned_cues(shot) for shot in data['plan']['shots']):
             problems.append(f'required sound cue {name}: no shot schedules the cue')
+    resolved, hit_problems = resolve_accents(data)
+    problems.extend(hit_problems)
+    problems.extend(audit_accents(resolved, sum(shot['seconds'] for shot in data['plan']['shots'])))
     for name, source in samples.items():
         file = ROOT / str(source.get('file', ''))
         if name not in GAIN or not file.is_file() or file.suffix.lower() not in ('.ogg', '.wav', '.mp3'):
@@ -330,10 +490,23 @@ def recording_slice(source, seconds):
     return signal / peak * float(source.get('gain', 0.7))
 
 
-def build(shots, total, seed=311, foley_samples=None, continuous_room=False, recordings_only=False):
+def build(shots, total, seed=311, foley_samples=None, continuous_room=False, recordings_only=False, accents=None):
     rng = np.random.default_rng(seed)
     mix = np.zeros(round(total * RATE), dtype=np.float32)
     plan = []
+
+    def put_hit(signal, at, gain, fade_out=0.01):
+        """Place an accent so its first sample lands exactly on `at`: no fade-in, only a short fade-out."""
+        start = round(at * RATE)
+        if start < 0:
+            signal, start = signal[-start:], 0
+        count = min(len(signal), len(mix) - start)
+        if count > 0:
+            piece = signal[:count].astype(np.float32).copy()
+            ramp = min(count // 2, round(fade_out * RATE))
+            if ramp > 1:
+                piece[-ramp:] *= np.linspace(1, 0, ramp, dtype=np.float32)
+            mix[start:start + count] += piece * gain
 
     def put(signal, at, gain):
         start = round(at * RATE)
@@ -391,6 +564,21 @@ def build(shots, total, seed=311, foley_samples=None, continuous_room=False, rec
             elif name == 'rustle': put(rustle(min(length, 3.0), rng), at + 0.3, GAIN[name])
             plan.append((number, name))
         at += length
+    for accent in accents or []:  # opt-in; own generator so foley stays identical with or without accents
+        kind, when, gain = accent['type'], float(accent['at']), float(accent.get('gain', 1.0))
+        if kind in ('impact', 'riser-impact', 'stinger'):
+            put_hit(impact(), when, ACCENT_GAIN['impact'] * gain)
+        if kind == 'riser-impact':
+            lead = float(accent.get('riserSeconds', RISER_SECONDS))
+            put_hit(riser(lead), when - lead, ACCENT_GAIN['riser'] * gain)
+        if kind == 'stinger':
+            tail = min(float(accent.get('tailSeconds', TAIL_SECONDS)), total - when - 0.04)
+            if tail > 0.1:
+                put_hit(ring_out(tail), when + 0.04, ACCENT_GAIN['tail'] * gain, fade_out=0.05)
+        if kind == 'swell':
+            length = float(accent.get('seconds', SWELL_SECONDS))
+            put_hit(swell(length), when - length / 2, ACCENT_GAIN['swell'] * gain, fade_out=0.05)
+        plan.append((0, kind))
     return mix, plan
 
 
@@ -431,19 +619,30 @@ def main():
     total = sum(shot['seconds'] for shot in shots)
     from presentation_mode import choose
     recordings_only = (data.get('audioPlan') or {}).get('sfxPolicy') == 'recordings-only'
+    accents = resolve_accents(data)[0]
+    voice = work / 'voice-timeline.wav'
+    if any(a.get('type') == 'breath' for a in accents) and voice.is_file():
+        speech, speech_rate = read_wav_mono(voice)
+        overlap = breath_over_narration(accents, speech, speech_rate)
+        if overlap:
+            for problem in overlap:
+                print('BLOCKED:', problem)
+                gate_event('sound', 'blocked', sound_code(problem), problem)
+            raise SystemExit('Sound accent gate failed; refusing to mix a breath over narration')
     mix, plan = build(shots, total, foley_samples=(data.get('audioPlan') or {}).get('foleySamples'),
                       continuous_room=choose(data)['mode'] == 'asmr' or recordings_only,
-                      recordings_only=recordings_only)
+                      recordings_only=recordings_only, accents=accents)
     sfx = video.with_suffix('.sfx.wav')
     write_wav(sfx, mix)
     out = video.with_suffix('.sfx.mp4')
-    voice = work / 'voice-timeline.wav'
+    breath = breath_chain(accents)
+    base_chain = "[0:a]highpass=f=70,afftdn=nr=6:nf=-45" + (f',{breath}' if breath else '') + '[base]'
     graph = ('[1:a]aresample=48000[fx];[2:a]aresample=48000[key];'
              '[fx][key]sidechaincompress=threshold=0.003:ratio=20:attack=8:release=350[duck];'
-             '[0:a]highpass=f=70,afftdn=nr=6:nf=-45[base];[base][duck]amix=inputs=2:normalize=0:duration=first,loudnorm=I=-14:TP=-1.5:LRA=11[a]')
+             + base_chain + ';[base][duck]amix=inputs=2:normalize=0:duration=first,loudnorm=I=-14:TP=-1.5:LRA=11[a]')
     subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(video), '-i', str(sfx), '-i', str(voice), '-filter_complex', graph,
                     '-map', '0:v', '-map', '[a]', '-t', str(total), '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', str(out)], check=True)
-    print(f'Wrote {out.name}. Effects placed: ' + ', '.join(f'shot {n} {name}' for n, name in plan))
+    print(f'Wrote {out.name}. Effects placed: ' + ', '.join(f'shot {n} {name}' if n else f'accent {name}' for n, name in plan))
 
 
 if __name__ == '__main__':
