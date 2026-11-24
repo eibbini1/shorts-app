@@ -1218,3 +1218,8 @@ Next: implement audio fixes first (cheap, no GPU), then ending check.
 
 ## 2026-11-24 — Codex: Phase 2 face proposals
 - VERIFIED: fix/nonfood-shot-normalize, Phase 1 commit aba0c11. All 15 proposals pass face brief checks and preserve age, wardrobe and activity; Linh and Hiroshi listed first. Node 12/12. Approved catalogue and pins unchanged. Next: candidate sheets for Linh and Hiroshi only.
+
+## 2026-11-24 10:36 — Codex: Phase 3 candidate sheet review
+- VERIFIED: branch fix/nonfood-shot-normalize, base ba2bb15. FLUX generated 16/16 candidate views, seed 2200 at 768×1024, in storage/claude-experiments/sheets-v4-20261124. Each candidate folder has front-comparison.jpg and candidate-sheet.jpg. available-fronts.jpg compares the candidates with Adaeze, the other approved identity. Twelve catalogue entries lack approved sheets and were unavailable for visual comparison.
+- VERIFIED visual inspection: both fronts remain close to their approved versions. Linh retains the bob, earrings and sage shirt, but full-body substitutes dark trousers and shoes for cream trousers and white sneakers. In both hands views the face is in frame. Hiroshi's hands view also shows a second partial face and adds watch/ring. The candidates are visually distinct from each other and Adaeze; the portrait alone does not establish regional plausibility. The new descriptions did not visibly resolve the original concern. Recommend retaining the currently approved sheets.
+- PLANNED: owner reviews candidate grids before advancing. Phases 4–6 pending. Approved catalogue and hashes unchanged. Unrelated scripts/add-sfx.py edit left alone. No push.
