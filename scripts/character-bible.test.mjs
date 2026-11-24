@@ -22,17 +22,22 @@ test('four style packs load, name a render route and never cite a studio or fran
   assert.throws(() => loadStylePack('missing'), /Unknown/);
 });
 
-test('every person has all sheet slots, allowed styles that exist, and starts unreferenced', () => {
+test('every person has all sheet slots and allowed styles; approved people have a complete, unchanged sheet', () => {
   for (const c of catalogue.characters) {
     assert.deepEqual(Object.keys(c.referenceSheet).sort(), [...SHEET_SLOTS].sort(), c.id);
     for (const s of c.styles) loadStylePack(s);
     assert.ok(c.styles.includes(c.defaultStyle), c.id);
-    assert.equal(sheetStatus(c).approved, 0, c.id + ' has no approved images yet');
+    const sheet = sheetStatus(c);
+    assert.ok(!Object.values(sheet.slots).some((v) => v === 'changed' || v === 'invalid'), c.id + ' sheet changed after approval');
+    // Reference images live in the local, gitignored Studio store; a fresh clone has none of them.
+    const local = Object.values(sheet.slots).some((v) => v !== 'missing-file');
+    if (c.status === 'approved' && local) assert.equal(sheet.complete, true, c.id + ' approved sheet must be complete');
+    else assert.equal(sheet.approved, 0, c.id + ' has no approved images yet');
   }
 });
 
 test('a shot without references is text-only, action first, studio and style included, within limits', () => {
-  const c = findCharacter('chr-hanoi-linh-29', catalogue);
+  const c = findCharacter('chr-fez-latifa-61', catalogue);
   const shot = composeCharacterShot({ character: c, styleId: 'realistic', action: 'She lifts the phin filter off the cup', studioId: c.studioIds[0] });
   assert.equal(shot.status, 'text-only');
   assert.deepEqual(shot.references, []);
@@ -42,6 +47,8 @@ test('a shot without references is text-only, action first, studio and style inc
   assert.ok(shot.imagePrompt.length <= 1000);
   assert.throws(() => composeCharacterShot({ character: c, styleId: 'flat-2d', action: 'x' }), /not approved for style/);
   assert.throws(() => composeCharacterShot({ character: c, styleId: 'realistic', action: ' ' }), /action/);
+  const linh = composeCharacterShot({ character: findCharacter('chr-hanoi-linh-29', catalogue), styleId: 'realistic', action: 'She lifts the phin filter off the cup' });
+  assert.ok(linh.status === 'referenced' ? linh.references.length === 3 : linh.references.length === 0);
 });
 
 test('approved references are used only while their bytes still match the approved hash', () => {

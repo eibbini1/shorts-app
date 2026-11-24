@@ -4,7 +4,7 @@
   "characters": [
     {
       "id": "chr-lagos-adaeze-34",
-      "status": "draft",
+      "status": "approved",
       "fictional": true,
       "age": 34,
       "gender": "woman",
@@ -25,15 +25,40 @@
         "cel-2d"
       ],
       "referenceSheet": {
-        "front": null,
-        "three-quarter": null,
-        "profile": null,
-        "full-body": null,
-        "hands": null,
-        "expression-neutral": null,
-        "expression-smile": null,
-        "expression-thinking": null
-      }
+        "front": {
+          "refId": "f814254cbd914bbfe14a2645369f53a4",
+          "sha256": "d65a4eaf77aca1453495a78ce55a70503199b3c73602fbacc65454f5ceee37ab"
+        },
+        "three-quarter": {
+          "refId": "7e6e099f885b7840cabe73b39cbd718c",
+          "sha256": "1a4a4d651fda667094fb6b5f97027fe629853238df37bf725e9fe0f2b3c9af8d"
+        },
+        "profile": {
+          "refId": "4677f686615c763fd7edc86cbbd50f17",
+          "sha256": "ddd162dfb3a1c4caf012f8e406e1be8f7cbf8046f942b870d0ceeac28c1d9ba1"
+        },
+        "full-body": {
+          "refId": "1a44bf60aa5d8c886ab515d4214ecd04",
+          "sha256": "6955e6f76fcfb5461c1e3e5be099d0fe2aa9c1729b35c21fad1f1b3fe6772a57"
+        },
+        "hands": {
+          "refId": "74fa23e4f9ee87a85214dbd4d76f62c4",
+          "sha256": "27304d09de0e1d3e9fc2e1a9d4b9a59492cb04f29c9c3fba40f1ab23d44fe0a1"
+        },
+        "expression-neutral": {
+          "refId": "faf1c2ab1eeb03428f1dd930237799b6",
+          "sha256": "210c222186507091ef489596b1b1860d808028acb9535bc955ac82822b2d0cb2"
+        },
+        "expression-smile": {
+          "refId": "0551970dcce8ae34c1fffe1afdfacf7f",
+          "sha256": "fb2f4c6d5bb6e3c2527eb96fc1cbeab5e063300601b05e4207eccbfb4a0397e6"
+        },
+        "expression-thinking": {
+          "refId": "00c3c8d0fcf95cdb305e51dc7d949445",
+          "sha256": "147de2a3229b4a3e1fd6d275baabaa75f4886f7ae49e0cacd44f516bf760b2e1"
+        }
+      },
+      "approvedAt": "2026-11-24"
     },
     {
       "id": "chr-nairobi-otieno-52",
@@ -136,7 +161,7 @@
     },
     {
       "id": "chr-hanoi-linh-29",
-      "status": "draft",
+      "status": "approved",
       "fictional": true,
       "age": 29,
       "gender": "woman",
@@ -157,19 +182,44 @@
         "cel-2d"
       ],
       "referenceSheet": {
-        "front": null,
-        "three-quarter": null,
-        "profile": null,
-        "full-body": null,
-        "hands": null,
-        "expression-neutral": null,
-        "expression-smile": null,
-        "expression-thinking": null
-      }
+        "front": {
+          "refId": "7324545e9208047271ece3a723c0d0ae",
+          "sha256": "56bba833dd925612530dd028aa7ae28c15f1dbc3ffb19bd2d98f572e20375299"
+        },
+        "three-quarter": {
+          "refId": "e85d0cf955252d351f2d305bec64aa26",
+          "sha256": "5632a406248e383589689ccd769018f33c636ab75843db2267729bfd16dcb37e"
+        },
+        "profile": {
+          "refId": "fd95101a9ca23ab5d827c2d51d5a7a45",
+          "sha256": "b7a2831d28fc6998bca135a1ab4bf083015484553dd2b442f3e51f819d994204"
+        },
+        "full-body": {
+          "refId": "1a816e4d2ed73c320c95f4762f00aeec",
+          "sha256": "fd93333d96ee04aa40c4a8143e48841099e5c204ec02c5aa19b911d53a6fbd0c"
+        },
+        "hands": {
+          "refId": "5c330438c7206d04b309904fbadb256f",
+          "sha256": "49ea289b36d3b0d29b1ea78cd6e4d8fadced06a71a25237628166e51a493d218"
+        },
+        "expression-neutral": {
+          "refId": "e0ecc8eae1cda9655cbd5fd8871fbcdc",
+          "sha256": "cc551edcf9f86fab63f078a26724a2b3bb42dba601a684b8f026b3665cb074d7"
+        },
+        "expression-smile": {
+          "refId": "502ef23aa9c34ad353a704c4233cbcfe",
+          "sha256": "382ace1e8a135ae3b8358633e6bdb1d267cbdc541999edfe9338b3991f7a0a9a"
+        },
+        "expression-thinking": {
+          "refId": "cd87d80e079f1575fd8b7c9d1478d671",
+          "sha256": "cc82ca04a2b688f1b8e273cb05d5e44a5b099905c8ef6051c21c67b69e368c61"
+        }
+      },
+      "approvedAt": "2026-11-24"
     },
     {
       "id": "chr-tokyo-hiroshi-68",
-      "status": "draft",
+      "status": "approved",
       "fictional": true,
       "age": 68,
       "gender": "man",
@@ -190,15 +240,40 @@
         "cel-2d"
       ],
       "referenceSheet": {
-        "front": null,
-        "three-quarter": null,
-        "profile": null,
-        "full-body": null,
-        "hands": null,
-        "expression-neutral": null,
-        "expression-smile": null,
-        "expression-thinking": null
-      }
+        "front": {
+          "refId": "df8bc95757ea9a06c443580aaac8fc93",
+          "sha256": "8e4974934f78c03c3f6f7b6fa8bd7a8eff5d1851ec7c7be28f00b2787055e773"
+        },
+        "three-quarter": {
+          "refId": "ea4c6127a0c9b9e127f0a94fa20bb627",
+          "sha256": "41c6d8176310896c8710a582ca866e3dff23f0a877108668d9615188ea56c8dc"
+        },
+        "profile": {
+          "refId": "6c8dd67b3e50d8b92e4e11f1a947d36f",
+          "sha256": "489f343784e1ec4495e5a62b2d7c448c0149674dc252f50973ea91d72179f89f"
+        },
+        "full-body": {
+          "refId": "0ee2148213dd2842bbe1b5f6730bb4b9",
+          "sha256": "873498ac9fd8a62cba7191267e05f983b405392e8d2af1a52887b96230f9403f"
+        },
+        "hands": {
+          "refId": "17832cdc5d5dff23efc16fed62260c4e",
+          "sha256": "51e479656026f4b1625acfd3fa2c6073897ba3254a8f743a611ec77fc0cc65fb"
+        },
+        "expression-neutral": {
+          "refId": "47af0cd74760681abf2b6224e13b1285",
+          "sha256": "3851d09959a5252805de666cd12f64e282f1f0a42d142173bbe6b85b8d772eac"
+        },
+        "expression-smile": {
+          "refId": "c20eccaa3f2f64d4fe893d6398aedfb9",
+          "sha256": "9241c11ad5e45c3e9dfbe1f6171997b3b18b67ff83f30169ee6d03f73f2f9b06"
+        },
+        "expression-thinking": {
+          "refId": "98b7c8839f0441e02a564673edf8ba6c",
+          "sha256": "5222c3869ec9966651977168de0420f7568034f8b830f0ed01a8a4f75edbf433"
+        }
+      },
+      "approvedAt": "2026-11-24"
     },
     {
       "id": "chr-istanbul-emre-39",

@@ -15,7 +15,8 @@ test('catalogue holds fictional adults with unique ids and balanced metadata', (
     assert.ok(Number.isInteger(c.age) && c.age >= 25, c.id + ' must be an adult aged 25+');
     assert.ok(Number.isInteger(c.mst) && c.mst >= 1 && c.mst <= 10, c.id + ' needs a Monk Skin Tone 1-10');
     assert.match(c.sourceStatus, /^(sourced|inferred)$/);
-    assert.equal(c.status, 'draft');
+    assert.match(c.status, /^(draft|approved)$/);
+    if (c.status === 'approved') assert.ok(c.approvedAt, c.id + ' approval needs a date');
   }
   assert.ok(new Set(characters.map(c => c.gender)).size >= 2);
   assert.ok(new Set(characters.map(c => c.mst)).size >= 6, 'skin tones should span the scale');
