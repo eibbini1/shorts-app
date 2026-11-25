@@ -80,3 +80,86 @@ test('Crumb is drawn by its rigs in both styles and never routed through diffusi
   assert.equal(solid.route, 'rig-3d');
   for (const source of Object.values(crumb.rigSources)) assert.ok(fs.existsSync(new URL('../' + source, import.meta.url)), source);
 });
+
+// Existing entries are audited separately. A new ID must meet the current intake contract.
+const legacyCharacterIds = new Set([
+  'chr-lagos-adaeze-34', 'chr-nairobi-otieno-52', 'chr-fez-latifa-61',
+  'chr-mumbai-farzana-45', 'chr-hanoi-linh-29', 'chr-tokyo-hiroshi-68',
+  'chr-istanbul-emre-39', 'chr-dalarna-ingrid-73', 'chr-manchester-daniel-44',
+  'chr-puebla-rosario-50', 'chr-saopaulo-thiago-31', 'chr-lapaz-justina-44',
+  'chr-ontario-marie-58', 'chr-brisbane-jarrah-47', 'chr-antarctic-camila-41',
+]);
+
+const faceTraits = {
+  faceShape: /\b(?:oval|round|heart-shaped|broad|angular|oblong|square) face\b/i,
+  forehead: /\b(?:high|low|broad|narrow|rounded) forehead\b/i,
+  eyebrows: /\b(?:arched|straight|thick|thin|full|sparse|tapered) (?:brows|eyebrows)\b/i,
+  eyes: /\b(?:almond-shaped|round|hooded|deep-set|wide-set|close-set|upturned|downturned) eyes\b/i,
+  nose: /\b(?:(?:high|low|straight|flat|prominent) nose bridge|(?:wide|broad|narrow) nose)\b/i,
+  cheekbones: /\b(?:high|low|wide|broad|subtle|prominent) cheekbones\b/i,
+  lips: /\b(?:full|thin|medium-full) lips\b/i,
+  jaw: /\b(?:square|rounded|tapered|broad|soft|angular) jaw(?:line)?\b/i,
+  ears: /\b(?:visible|exposed|partly hidden|covered) ears\b/i,
+  hairTexture: /\b(?:(?:straight|wavy|curly|coily)(?: [a-z-]+){0,3} hair|tight curls)\b/i,
+  hairline: /\b(?:straight|rounded|receding|high|low) hairline\b/i,
+  facialHair: /\b(?:clean-shaven|stubble|beard|moustache|mustache)\b/i,
+};
+
+function checkNewFaceBrief(character) {
+  const matched = Object.values(faceTraits).filter((pattern) => pattern.test(character.identityBlock || ''));
+  assert.ok(matched.length >= 5, `${character.id}: expected at least five distinct face-structure traits, found ${matched.length}`);
+  assert.ok(typeof character.faceReviewNote === 'string' && character.faceReviewNote.trim()
+    && !/[\r\n]/.test(character.faceReviewNote), `${character.id}: expected a one-line faceReviewNote`);
+}
+
+test('new catalogue IDs require five distinct face traits and a one-line owner review note', () => {
+  for (const character of catalogue.characters) {
+    if (!legacyCharacterIds.has(character.id)) checkNewFaceBrief(character);
+  }
+});
+
+test('the face brief contract rejects repeated or incidental mentions and missing review notes', () => {
+  const character = {
+    id: 'new-fictional-adult',
+    identityBlock: 'Oval face, broad forehead, straight eyebrows, wide-set eyes, narrow nose.',
+    faceReviewNote: 'Check the broad forehead, straight eyebrows and eye spacing against the approved individual brief.',
+  };
+  assert.doesNotThrow(() => checkNewFaceBrief(character));
+  assert.throws(() => checkNewFaceBrief({
+    ...character,
+    identityBlock: 'Oval face, round face, angular face, square face, broad face, mole above an eyebrow.',
+  }), /found 1/);
+  assert.throws(() => checkNewFaceBrief({ ...character, faceReviewNote: '' }), /faceReviewNote/);
+  assert.throws(() => checkNewFaceBrief({ ...character, faceReviewNote: 'line one\nline two' }), /faceReviewNote/);
+});
+
+test('regional draft characters meet the face brief and cannot enter shot composition', () => {
+  const { characters } = loadCatalogue(new URL('../data/proposals/characters-levant-gulf-20261124.json', import.meta.url));
+  assert.equal(characters.length, 10);
+  assert.equal(characters.filter((character) => character.age < 18).length, 2);
+  assert.equal(new Set(characters.map((character) => character.id)).size, 10);
+  for (const character of characters) {
+    checkNewFaceBrief(character);
+    assert.equal(character.wardrobeSource, 'inferred');
+    assert.equal(character.requiresOwnerApproval, true);
+    assert.throws(() => composeCharacterShot({ character, action: character.activity }), /blocked/);
+    if (character.age < 18) {
+      assert.throws(() => composeCharacterShot({
+        character: { ...character, requiresOwnerApproval: false }, action: character.activity,
+      }), /blocked/);
+    }
+  }
+});
+
+test('face upgrade proposals preserve the existing identities, clothing text and actions', () => {
+  const { characters } = loadCatalogue(new URL('../data/proposals/characters-face-upgrade-20261124.json', import.meta.url));
+  assert.deepEqual(characters.slice(0, 2).map(({ id }) => id), ['chr-hanoi-linh-29', 'chr-tokyo-hiroshi-68']);
+  assert.deepEqual(characters.map(({ id }) => id).sort(), catalogue.characters.map(({ id }) => id).sort());
+  for (const proposal of characters) {
+    checkNewFaceBrief(proposal);
+    const original = findCharacter(proposal.id, catalogue);
+    assert.equal(proposal.age, original.age);
+    assert.equal(proposal.activity, original.activity);
+    assert.ok(proposal.identityBlock.endsWith(original.identityBlock.split(', ').slice(1).join(', ')));
+  }
+});

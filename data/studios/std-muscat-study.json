@@ -1,0 +1,21 @@
+{
+  "id": "std-muscat-study",
+  "name": "Muscat study",
+  "status": "prompt-only",
+  "sourceStatus": "inferred",
+  "style": "Naturalistic photography",
+  "set": "Quiet study with a recessed window and a pale limewashed wall",
+  "lighting": "Soft indirect daylight from camera left",
+  "camera": "50mm medium close-up",
+  "cameraMove": "Locked tripod",
+  "mood": "quiet",
+  "depth": "Clear foreground and soft background",
+  "props": [
+    "writing desk",
+    "desk lamp",
+    "closed book"
+  ],
+  "population": "One fictional subject. No crowds, readable text or logos.",
+  "continuity": "Keep the room layout, lighting and props consistent.",
+  "referenceFrames": {}
+}

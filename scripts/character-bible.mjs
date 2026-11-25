@@ -65,6 +65,9 @@ const fit = (text) => {
 // action is never cut off. Fails closed on forbidden style references and on changed reference images.
 export function composeCharacterShot({ character, styleId, action, studioId = null, lightingVariantId = 'base', refDir } = {}) {
   if (!character) throw new Error('A character is required.');
+  if (character.requiresOwnerApproval || (typeof character.age === 'number' && character.age < 18)) {
+    throw new Error('This character is blocked from shot composition pending owner review.');
+  }
   if (typeof action !== 'string' || !action.trim()) throw new Error('A concrete action is required.');
   const style = loadStylePack(styleId || character.defaultStyle || 'realistic');
   if (character.styles && !character.styles.includes(style.id)) throw new Error(`${character.id} is not approved for style ${style.id}.`);

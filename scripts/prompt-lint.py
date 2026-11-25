@@ -11,6 +11,8 @@ Usage: scripts/prompt-lint.py drafts/generated/A.local-scenario.json [B.json ...
 """
 import json, re, sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import still_lessons
 
 NEG = re.compile(r"\b(no|not|without|never)\s+(faces?|text|logos?|people|labels?|watermarks?)\b", re.I)
 ANY_NEG = re.compile(r"(?:^|[.,;:]\s*)(?:no|not|without|never|avoid)\b", re.I)
@@ -142,6 +144,15 @@ def story_score(plan, style, mode="voiced"):
     return max(c, 0), notes
 
 
+def lesson_notes(image_prompt):
+    """Advice from earlier vision rejections and passing stills of the same shot type; does not change scores."""
+    found = still_lessons.lessons_for(image_prompt)
+    notes = [f"[L] a {found['shotType']} still was rejected before: {reason[:140]}" for reason in found['rejected']]
+    if found['recipe']:
+        notes.append(f"[L] a {found['shotType']} still passed with: {found['recipe'][:140]}")
+    return notes
+
+
 def lint(path):
     d = json.load(open(path))
     plan = d['plan']
@@ -151,7 +162,7 @@ def lint(path):
     for i, s in enumerate(plan['shots'], 1):
         ic, inotes = score_image(s['imagePrompt'], subj)
         mc, mnotes = score_motion(s['motionPrompt'], s['seconds'])
-        rows.append(dict(shot=i, image=ic, motion=mc, notes=inotes + mnotes))
+        rows.append(dict(shot=i, image=ic, motion=mc, notes=inotes + mnotes + lesson_notes(s['imagePrompt'])))
         total += [ic, mc]
     sc, snotes = story_score(plan, d.get('style', ''), d.get('settings', {}).get('presentationMode', 'voiced'))
     avg = sum(total) / len(total)

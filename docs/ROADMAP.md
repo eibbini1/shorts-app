@@ -74,3 +74,9 @@ Recommended next, in order:
 - DONE: draft PRs #35 (this plan) and #36 (quality-aware render estimate) marked ready for review. Merging them was blocked by a permission check in the session; they need a merge click (or an explicit merge instruction).
 - NOT DONE (security setting): deleting the Hugging Face token `runpod-bench` needs the owner's HF account.
 - NOT DONE: FLUX 3 Image Klein A/B (download size unknown; mflux support not verified); over-long idea fail-fast (original failing input unknown).
+
+## 2026-11-24 additions
+- Garlic Crunch 10 s ad: rendered and mixed locally (VERIFIED by frames); sound judged by measurement only, awaiting owner listening. Next: smooth crust split, landing-sound accent.
+- Learning loop: still rejections and passing recipes are now logged (IMPLEMENTED, tested); planner integration PLANNED.
+- Optional Gemini TTS voice provider for Arabic/English: researched, PLANNED, needs owner approval.
+
