@@ -12,10 +12,29 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const FILE = process.env.STUDIO_USERS_FILE || path.join(ROOT, 'storage', 'studio-users.json');
 const BASE = (process.env.STUDIO_PUBLIC_URL || 'http://127.0.0.1:8787').replace(/\/$/, '');
-const load = () => { try { return JSON.parse(fs.readFileSync(FILE, 'utf8')); } catch { return { users: [] }; } };
-const save = (d) => { fs.mkdirSync(path.dirname(FILE), { recursive: true }); fs.writeFileSync(FILE, JSON.stringify(d, null, 2) + '\n', { mode: 0o600 }); fs.chmodSync(FILE, 0o600); };
+// A missing file means nobody was added yet. A file that is there but cannot be read as a users list is
+// never replaced: saving over it would silently drop every relative already in it.
+const load = () => {
+  let text;
+  try { text = fs.readFileSync(FILE, 'utf8'); } catch (error) { if (error.code === 'ENOENT') return { users: [] }; throw error; }
+  const data = JSON.parse(text);
+  if (!data || typeof data !== 'object' || !Array.isArray(data.users ?? [])) throw new Error('it has no "users" list');
+  return { ...data, users: data.users ?? [] };
+};
+// Written to a temporary file and renamed into place, so the running Studio (which rereads this file on
+// every request) never sees a half-written list.
+const save = (d) => {
+  fs.mkdirSync(path.dirname(FILE), { recursive: true });
+  const temporary = `${FILE}.${process.pid}.${crypto.randomBytes(4).toString('hex')}.tmp`;
+  fs.writeFileSync(temporary, JSON.stringify(d, null, 2) + '\n', { mode: 0o600, flag: 'wx' });
+  fs.renameSync(temporary, FILE);
+};
 const [cmd, name, perDay] = process.argv.slice(2);
-const data = load();
+let data;
+try { data = load(); } catch (error) {
+  console.error(`Cannot read ${FILE} (${error.message}). Fix or remove that file, then run this again.`);
+  process.exit(1);
+}
 if (cmd === 'add' && name) {
   if (data.users.some((u) => u.name.toLowerCase() === name.toLowerCase())) { console.error(`${name} already exists. Remove first to get a new link.`); process.exit(1); }
   const token = crypto.randomBytes(24).toString('base64url');

@@ -457,7 +457,7 @@ def main():
         if len(set(values)) != len(values):
             parser.error(f'Repeated {field} across shots. Edit the story before spending time on motion generation')
     if settings['seconds'] > 60: parser.error('Interactive local renderer supports up to 60 seconds per run')
-    aspect = settings['format']
+    aspect = render_quality.layout(settings)   # 'short' or 'wide': the names assemble-motion-video.py accepts
     width, height = render_quality.dimensions(settings)
     print(f'Render quality: {render_quality.pick(settings)} ({width}x{height})', flush=True)
     work.joinpath('refs').mkdir(parents=True, exist_ok=True)
