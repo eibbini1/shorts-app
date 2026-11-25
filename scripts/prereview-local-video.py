@@ -19,11 +19,13 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-import look_drift
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from audio_standards import PREREVIEW_MAX_TP_DB, PREREVIEW_TOLERANCE_LUFS, TARGET_LUFS  # noqa: E402
+import look_drift  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 CATEGORIES = ('continuity', 'realism', 'story', 'audio', 'payoff')
-TARGET_LUFS, LUFS_TOLERANCE, MAX_TRUE_PEAK = -15.0, 2.0, -1.0
+LUFS_TOLERANCE, MAX_TRUE_PEAK = PREREVIEW_TOLERANCE_LUFS, PREREVIEW_MAX_TP_DB
 QUIET_SHOT_GAP_DB = 12.0
 CONTINUITY_QUESTION = ('The left half and the right half are two moments from one cooking video. '
                        'Do both halves show the same kind of food with the same kind of topping?')
@@ -99,9 +101,9 @@ def audio_flags(integrated, true_peak, shot_means):
     if integrated is None:
         flags.append('loudness could not be measured')
     elif abs(integrated - TARGET_LUFS) > LUFS_TOLERANCE:
-        flags.append(f'integrated loudness {integrated:.1f} LUFS is outside {TARGET_LUFS:.0f}±{LUFS_TOLERANCE:.0f}')
+        flags.append(f'integrated loudness {integrated:.1f} LUFS is outside {TARGET_LUFS:g}±{LUFS_TOLERANCE:g}')
     if true_peak is not None and true_peak > MAX_TRUE_PEAK:
-        flags.append(f'true peak {true_peak:.1f} dBTP is above {MAX_TRUE_PEAK:.0f}')
+        flags.append(f'true peak {true_peak:.1f} dBTP is above {MAX_TRUE_PEAK:g}')
     measured = [value for value in shot_means if value is not None]
     if measured:
         median = statistics.median(measured)

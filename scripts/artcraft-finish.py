@@ -8,9 +8,13 @@ import argparse
 import json
 import re
 import subprocess
+import sys
 import tempfile
 import time
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from audio_standards import TARGET_LUFS  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 TOOLS = ROOT / 'storage/tools/artcraft'
@@ -45,7 +49,7 @@ def loudness(path):
     return float(data['input_i']), float(data['input_tp'])
 
 
-def soundcraft_mix(source, target, lufs=-16.0, peak=-1.0):
+def soundcraft_mix(source, target, lufs=TARGET_LUFS, peak=-1.0):
     """Clip gain into SoundCraft's Compressor/Limiter, bounced; gain is searched to hit the loudness target."""
     cli = tool('soundcraft')
     gain, best = 12.0, None

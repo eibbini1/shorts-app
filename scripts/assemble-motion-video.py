@@ -3,7 +3,11 @@
 import argparse
 import json
 import subprocess
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from audio_standards import loudnorm_filter  # noqa: E402
 
 FPS = 24
 
@@ -108,9 +112,9 @@ def main():
         audio_filter = (f'[1:a]aresample=48000[bed];[2:a]highpass=f=80,'
                         f'volume=2.1,adelay={delay}:all=1[voice];'
                         '[bed][voice]amix=inputs=2:duration=first:normalize=0,'
-                        'loudnorm=I=-16:TP=-1.5:LRA=11[a]')
+                        f'{loudnorm_filter()}[a]')
     else:
-        audio_filter = ('[1:a]aresample=48000,loudnorm=I=-16:TP=-1.5:LRA=11[a]'
+        audio_filter = (f'[1:a]aresample=48000,{loudnorm_filter()}[a]'
                         if soundtrack else '[1:a]aresample=48000[a]')
     output.parent.mkdir(parents=True, exist_ok=True)
     command += ['-filter_complex', audio_filter, '-map', '0:v', '-map', '[a]',

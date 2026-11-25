@@ -7,7 +7,7 @@
   "set": "Private reading room with soft daylight and a plain sand-colored wall",
   "lighting": "Soft indirect daylight from camera left",
   "camera": "50mm medium close-up",
-  "cameraMove": "Locked tripod",
+  "cameraMove": "Static camera on a locked tripod. The full focal subject stays inside the fixed frame.",
   "mood": "quiet",
   "depth": "Clear foreground and soft background",
   "props": [
@@ -17,5 +17,22 @@
   ],
   "population": "One fictional subject. No crowds, readable text or logos.",
   "continuity": "Keep the room layout, lighting and props consistent.",
-  "referenceFrames": {}
+  "referenceFrames": {},
+  "lightingVariants": [
+    {
+      "id": "base",
+      "lighting": "Soft indirect daylight from camera left",
+      "mood": "quiet"
+    },
+    {
+      "id": "soft-evening",
+      "lighting": "Soft low evening light from camera left, gentle warm highlights, stable exposure.",
+      "mood": "quiet, warm, reflective"
+    },
+    {
+      "id": "diffuse-daylight",
+      "lighting": "Soft diffuse daylight from camera left, gentle neutral shadows, stable exposure.",
+      "mood": "natural, calm, attentive"
+    }
+  ]
 }
