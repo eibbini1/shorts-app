@@ -10,7 +10,7 @@ def sha256(file):
         return hashlib.file_digest(source, 'sha256').hexdigest()
 
 
-def write_manifest(work, scenario, references):
+def write_manifest(work, scenario, references, review_method=None):
     work = Path(work).resolve()
     data = {
         'schemaVersion': 1,
@@ -18,6 +18,8 @@ def write_manifest(work, scenario, references):
         'frames': [{'shot': i + 1, 'file': str(Path(file).resolve().relative_to(work)),
                     'sha256': sha256(file)} for i, file in enumerate(references)],
     }
+    if review_method:
+        data['reviewMethod'] = review_method
     if data['frames']:
         data['sharedIdentityReference'] = dict(data['frames'][0])
     reference_hash = manifest_sha256(work)

@@ -663,10 +663,12 @@ export default function App() {
       .then((result) => { if (result.id) pickProject(result.id); })
       .catch((error) => setErr(error.message));
   }, [job.status, job.kind, job.id, job.scenario, job.sequence?.currentShot, job.sequence?.stage]);
-  // Up next: when a job ends and Auto mode is not still chaining it, start the first queued idea.
+  const useServerQueue = Boolean(me?.canRunUnattended && (unattended || live.unattendedQueue?.items?.length));
+  const serverQueue = useServerQueue ? (live.unattendedQueue || { autoNext: true, items: [] }) : null;
+  // Up next: when a job ends and Auto mode is not still chaining it, start the first browser-queued idea (attended mode).
   const nextSeen = useRef('');
   useEffect(() => {
-    if (!autoNext || anyRunning || !job.status || job.status === 'idle') return;
+    if (useServerQueue || !autoNext || anyRunning || !job.status || job.status === 'idle') return;
     const key = job.id + ':' + job.kind + ':' + job.status; if (nextSeen.current === key) return; nextSeen.current = key;
     if (autoRef.current && job.status === 'done') return; // Auto mode will continue this video first
     if (!readQueue().length) return;
@@ -675,10 +677,19 @@ export default function App() {
       writeQueue(q.slice(1)); setPrompt(q[0]); draftWith({ prompt: q[0] }, { ignoreDuplicate: true });
     }, 1500);
     return () => clearTimeout(t);
-  }, [job.status, job.kind, job.id, autoNext, anyRunning]);
+  }, [job.status, job.kind, job.id, autoNext, anyRunning, useServerQueue]);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [job.steps?.length, job.status, job.video]);
 
   const run2 = (fn) => async (...a) => { setErr(''); try { await fn(...a); } catch (e) { setErr(e.message); } };
+  const enqueueUnattended = run2(async (ideaText) => {
+    await post('/api/queue', {
+      action: 'add',
+      item: { prompt: ideaText, look, seconds, orientation, quality, audio, continuityAnchor, setting, ending },
+    });
+  });
+  const moveServerQueue = run2(async (index, delta) => { await post('/api/queue', { action: 'move', index, delta }); });
+  const removeServerQueue = run2(async (id) => { await post('/api/queue', { action: 'remove', id }); });
+  const toggleServerQueue = run2(async (enabled) => { await post('/api/queue', { action: 'toggle', autoNext: enabled }); });
   const run = (fn) => async () => {
     if (submitting.current) return;
     submitting.current = true;
@@ -844,7 +855,7 @@ export default function App() {
               {job.status === 'done' && job.kind === 'draft' && !job.plan && <p className="muted">Plan saved: {job.scenario}</p>}
               {job.previousVideo && job.previousVideo !== job.video && <details className="card"><summary>Previous export</summary><Player src={'/media?p=' + encodeURIComponent(job.previousVideo)} /></details>}
               {job.video && <ExportReview key={job.video} job={job} review={review.video === job.video ? review : { status: 'pending' }} weak={weak} notes={notes} busy={busy || refining} renderDisabled={me?.rendersLeft === 0} onRetake={retakeShot} onRepair={prepareRepair} onCompare={me?.canCompare && sessions.filter((p) => p.hasVideo).length > 1 ? () => setCompare(true) : undefined} />}
-              <UpNext show={running} autoNext={autoNext} setAutoNext={setAutoNext} />
+              <UpNext show={running} autoNext={autoNext} setAutoNext={setAutoNext} serverQueue={serverQueue} onAddServer={enqueueUnattended} onMoveServer={moveServerQueue} onRemoveServer={removeServerQueue} onToggleServer={toggleServerQueue} />
               {me?.canSeeLog && <button className="ghost" onClick={() => setShowLog(!showLog)}>{showLog ? 'Hide' : 'Show'} log</button>}
               {showLog && <pre className="log" ref={logRef}>{(job.lines || []).map(displayPipelineLine).join('\n')}</pre>}
             </div>
@@ -881,7 +892,9 @@ export default function App() {
             <ReadinessCheck />
           </div>
         </details>
-        {anyRunning && <div className="hint tip">Your Mac is making another video right now{live.prompt ? ` ("${live.prompt.slice(0, 40)}...")` : ''}. Up next is saved in this browser. Leave Studio open for automatic start.</div>}
+        {anyRunning && <div className="hint tip">Your Mac is making another video right now{live.prompt ? ` ("${live.prompt.slice(0, 40)}...")` : ''}. {useServerQueue
+          ? 'Up next is saved on this Mac server — you can close this tab and queued ideas will still run unattended.'
+          : 'Up next is saved in this browser. Leave Studio open for automatic start.'}</div>}
         <label htmlFor="video-brief" className="brief-label">Video idea</label>
         <div className="composer">
           <textarea id="video-brief" dir="auto" value={prompt} onChange={(e) => {
@@ -893,7 +906,12 @@ export default function App() {
           }} onKeyDown={onKey} rows={2}
             placeholder="A baker cracks a chocolate shell to reveal pistachio cream." />
           {anyRunning
-            ? <button className="primary" disabled={!prompt.trim()} title="Your Mac is busy with another video. This adds your idea to Up next." onClick={() => { writeQueue([...readQueue(), prompt.trim()].slice(0, 10)); setAutoNext(true); setPrompt(''); }}>Add to Up next</button>
+            ? <button className="primary" disabled={!prompt.trim()} title="Your Mac is busy with another video. This adds your idea to Up next." onClick={() => {
+                const nextIdea = prompt.trim();
+                if (useServerQueue) enqueueUnattended(nextIdea);
+                else { writeQueue([...readQueue(), nextIdea].slice(0, 10)); setAutoNext(true); }
+                setPrompt('');
+              }}>Add to Up next</button>
             : <button className={planAwaiting ? 'ghost composer-secondary' : 'primary'} onClick={draft} disabled={!prompt.trim() || sending || refining || planDisabled} title={planAwaiting ? 'Starts a new story from this idea. Your current plan is kept.' : undefined}>{refining ? 'Refining your story…' : refinement ? 'Refine story again' : 'Review story'}</button>}
         </div>
         <p className="muted small">Your idea and settings are saved locally in this browser.</p>

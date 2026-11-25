@@ -81,6 +81,33 @@ class StudioDraftTests(unittest.TestCase):
         self.assertIn('visible price is not sourced', problems)
         self.assertIn('shot 1 has no supported ASMR cue', problems)
 
+    def test_unattended_review_retries_before_blocking(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            scn_rel = 'drafts/generated/retry-unattended.local-scenario.json'
+            scn_abs = root / scn_rel
+            scn_abs.parent.mkdir(parents=True, exist_ok=True)
+            scn_abs.write_text('{}')
+
+            class PlanProcess:
+                def __init__(self):
+                    self.stdout = iter([f'Review the shot plan: {scn_rel}\n'])
+                def wait(self):
+                    return 0
+
+            checks_mock = unittest.mock.MagicMock(side_effect=[['unattended review required: auto repair'], []])
+            output = io.StringIO()
+            with patch.dict(STUDIO_DRAFT['main'].__globals__, {'ROOT': root, 'checks': checks_mock}), \
+                 patch.object(sys, 'argv', ['studio-draft.py', '--answers', 'answers.json', '--tries', '3']), \
+                 patch.object(STUDIO_DRAFT['subprocess'], 'Popen', side_effect=lambda *a, **k: PlanProcess()) as popen, \
+                 contextlib.redirect_stdout(output):
+                rc = STUDIO_DRAFT['main']()
+            self.assertEqual(rc, 0)
+            self.assertEqual(popen.call_count, 2)
+            self.assertEqual(checks_mock.call_count, 2)
+            self.assertIn('Story passed every check on attempt 2.', output.getvalue())
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -479,26 +479,37 @@ export function StepTrack({ job }) {
 const QKEY = 'studio-up-next';
 export function readQueue() { try { return JSON.parse(localStorage.getItem(QKEY) || '[]'); } catch { return []; } }
 export function writeQueue(q) { try { localStorage.setItem(QKEY, JSON.stringify(q)); } catch { /* storage blocked */ } window.dispatchEvent(new Event('studio-queue')); }
-export function UpNext({ show, autoNext, setAutoNext }) {
-  const [q, setQ] = useState(readQueue);
+export function UpNext({ show, autoNext, setAutoNext, serverQueue, onAddServer, onMoveServer, onRemoveServer, onToggleServer }) {
+  const [localQ, setLocalQ] = useState(readQueue);
   const [text, setText] = useState('');
-  useEffect(() => { const f = () => setQ(readQueue()); window.addEventListener('studio-queue', f); return () => window.removeEventListener('studio-queue', f); }, []);
-  if (!show && !q.length) return null;
-  const add = () => { const t = text.trim(); if (!t) return; writeQueue([...q, t].slice(0, 10)); setText(''); };
+  useEffect(() => { const f = () => setLocalQ(readQueue()); window.addEventListener('studio-queue', f); return () => window.removeEventListener('studio-queue', f); }, []);
+  const usingServer = Boolean(serverQueue);
+  const items = usingServer ? (serverQueue.items || []) : localQ.map((prompt, index) => ({ id: String(index), prompt }));
+  const activeAutoNext = usingServer ? serverQueue.autoNext !== false : autoNext;
+  if (!show && !items.length) return null;
+  const add = () => {
+    const t = text.trim();
+    if (!t) return;
+    if (usingServer && onAddServer) onAddServer(t);
+    else writeQueue([...localQ, t].slice(0, 10));
+    setText('');
+  };
   return (
     <div className="card upnext">
       <h3>Up next</h3>
-      <p className="muted small">Write your next idea while this one works. It uses the same look, length and sound settings.</p>
+      <p className="muted small">{usingServer
+        ? 'Write your next idea while this one works. Saved on this Mac server so queued ideas run unattended even if you close this tab.'
+        : 'Write your next idea while this one works. It uses the same look, length and sound settings.'}</p>
       <div className="row"><input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} placeholder="e.g. A tiny dragon toasts a marshmallow, then shares it with a mouse" /><button className="ghost" onClick={add}>Add</button></div>
-      {q.length > 0 && <ol>{q.map((t, i) => <li key={i}>
-        <span className="queue-prompt">{t}</span>
+      {items.length > 0 && <ol>{items.map((item, i) => <li key={item.id || i}>
+        <span className="queue-prompt">{item.prompt}</span>
         <span className="queue-actions">
-          <button type="button" className="link" disabled={i === 0} aria-label={`Move idea ${i + 1} up`} onClick={() => writeQueue(moveQueueItem(q, i, -1))}>↑</button>
-          <button type="button" className="link" disabled={i === q.length - 1} aria-label={`Move idea ${i + 1} down`} onClick={() => writeQueue(moveQueueItem(q, i, 1))}>↓</button>
-          <button type="button" className="link" aria-label={`Remove idea ${i + 1}: ${t}`} onClick={() => writeQueue(q.filter((_, k) => k !== i))}>remove</button>
+          <button type="button" className="link" disabled={i === 0} aria-label={`Move idea ${i + 1} up`} onClick={() => usingServer ? onMoveServer?.(i, -1) : writeQueue(moveQueueItem(localQ, i, -1))}>↑</button>
+          <button type="button" className="link" disabled={i === items.length - 1} aria-label={`Move idea ${i + 1} down`} onClick={() => usingServer ? onMoveServer?.(i, 1) : writeQueue(moveQueueItem(localQ, i, 1))}>↓</button>
+          <button type="button" className="link" aria-label={`Remove idea ${i + 1}: ${item.prompt}`} onClick={() => usingServer ? onRemoveServer?.(item.id) : writeQueue(localQ.filter((_, k) => k !== i))}>remove</button>
         </span>
       </li>)}</ol>}
-      <label className="small"><input type="checkbox" checked={autoNext} onChange={(ev) => setAutoNext(ev.target.checked)} /> Start the next idea by itself when this job ends</label>
+      <label className="small"><input type="checkbox" checked={activeAutoNext} onChange={(ev) => usingServer ? onToggleServer?.(ev.target.checked) : setAutoNext(ev.target.checked)} /> Start the next idea by itself when this job ends</label>
     </div>
   );
 }

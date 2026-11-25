@@ -131,6 +131,9 @@ def main():
         if not last:
             say(f'Story passed every check on attempt {attempt}.'); say('Plan ready:', scn); return 0
         if any(problem.startswith('unattended review required:') for problem in last):
+            if attempt < a.tries:
+                say('Fixing: ' + '; '.join(last) + '; writing a fresh version')
+                continue
             say('Plan saved:', scn)
             for problem in last: say('BLOCKED:', problem); gate_event('story', 'blocked', 'unattended-review', problem)
             say('NEEDS-CHOICE: still-blocked')

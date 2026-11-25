@@ -14,6 +14,7 @@ import { createSessionId, draftIdleTimeoutMs, draftTimeoutMs, normalizeSessionPr
 import { MAX_AUTO_RETRIES, WATCHED_KINDS, checkStall, classifyExit, isLocalCommand, isOrphanScenarioMember, keepAwakeCommand, mayReapOrphan, parsePsProcessIdentities, parsePsProcessIdentity, retryDecision, stallMessage, watchdogLimits } from './studio-watchdog.mjs';
 import { availableTakes, commitTakes, motionState, reserveTake, sha256, summarizeTakeScreens, technicalObservations, verifiedTake } from './studio-motion-state.mjs';
 import { FeedbackError, LIMITS as FEEDBACK_LIMITS, SCREENSHOT as FEEDBACK_SCREENSHOT, boundedJson, createFeedbackStore, parseScreenshot, validateSubmission } from './studio-feedback.mjs';
+import { createUnattendedQueueStore, resolveUnattendedRefinement } from './studio-unattended-queue.mjs';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -23,6 +24,9 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ideaService = createIdeaService({ root: ROOT });
 const ideaRefiner = createIdeaRefiner();
+const unattendedQueue = createUnattendedQueueStore({
+  file: process.env.STUDIO_QUEUE_FILE || path.join(ROOT, 'storage', 'studio-unattended-queue.json'),
+});
 let localIdeaBusy = false;
 const PORT = Number(process.env.STUDIO_PORT || 8787);
 const DIST = path.join(ROOT, 'studio', 'dist');
@@ -236,8 +240,9 @@ function legacyBrief(session) {
   candidates.sort((a, b) => a.distance - b.distance);
   return candidates[0]?.answers || null;
 }
-const view = (user, x = job) => !x ? { status: 'idle' } : canSee(user, x) ? snap(x)
-  : { id: 'other', name: 'Another video', prompt: '', options: {}, status: x.status, kind: x.kind, startedAt: x.startedAt, steps: [], lines: [], events: [], busyElsewhere: true };
+const withOwnerQueue = (user, payload) => user?.role === 'owner' ? { ...payload, unattendedQueue: unattendedQueue.read() } : payload;
+const view = (user, x = job) => withOwnerQueue(user, !x ? { status: 'idle' } : canSee(user, x) ? snap(x)
+  : { id: 'other', name: 'Another video', prompt: '', options: {}, status: x.status, kind: x.kind, startedAt: x.startedAt, steps: [], lines: [], events: [], busyElsewhere: true });
 const emit = () => { for (const c of clients) c.write(`data: ${JSON.stringify(view(c.user))}\n\n`); };
 
 function busyReason() {
@@ -661,7 +666,7 @@ function start(kind, args, extra = {}) {
     x.scenario = null;
   }
   job = x;
-  const reportFile = kind === 'sequence-motion' || (kind === 'render' && extra.pinFrames)
+  const reportFile = kind === 'sequence-motion' || (kind === 'render' && (extra.pinFrames || extra.trackTakes))
     ? path.join(SESS_DIR, `take-${crypto.randomUUID()}.report`) : null;
   x.takeJob = reportFile ? { id: path.basename(reportFile), shot: extra.takeRequest?.shot ?? x.sequence?.currentShot ?? null,
     take: extra.takeRequest?.take ?? null, optional: Boolean(extra.takeRequest) } : null;
@@ -840,22 +845,108 @@ function start(kind, args, extra = {}) {
     if (job === x && extra.unattended && x.status === 'done' && ['draft', 'stills'].includes(kind)) {
       const blocked = x.lines.some((line) => /^(BLOCKED|NEEDS-CHOICE):/.test(line));
       if (!blocked && x.plan && x.scenario) {
-        const args = ['--scenario', x.scenario];
-        if (kind === 'draft') args.push('--stills-only', '--best-of-3-stills');
-        if (x.options.allowRepeat) args.push('--allow-repeat');
-        if (x.options.chain && kind === 'stills') args.push('--chain-images');
+        const chainShots = Boolean(x.options?.chain || x.options?.continuityAnchor === 'previous-end');
+        if (kind === 'draft' && chainShots) {
+          const renderArgs = ['--scenario', x.scenario, '--best-of-3-stills', '--chain-images',
+            ...(x.options?.allowRepeat ? ['--allow-repeat'] : [])];
+          start('render', renderArgs, { session: x, scenario: x.scenario, unattended: true, pinFrames: false, trackTakes: true });
+          if (job === x) emit();
+          return;
+        }
+        const nextArgs = ['--scenario', x.scenario];
+        if (kind === 'draft') nextArgs.push('--stills-only', '--best-of-3-stills');
+        if (x.options?.allowRepeat) nextArgs.push('--allow-repeat');
+        if (chainShots && kind === 'stills') nextArgs.push('--chain-images');
         try {
           if (kind === 'stills') frameManifest(x.scenario);
-          start(kind === 'draft' ? 'stills' : 'render', args, { session: x, scenario: x.scenario, unattended: true, pinFrames: kind === 'stills' });
+          start(kind === 'draft' ? 'stills' : 'render', nextArgs, { session: x, scenario: x.scenario, unattended: true, pinFrames: kind === 'stills' });
+          if (job === x) emit();
+          return;
         } catch (error) {
           x.status = 'failed'; x.error = error.message; persist(x);
         }
       }
     }
     if (job === x) emit();
+    scheduleNextUnattendedFromQueue();
   });
   persist(x);
   return x;
+}
+
+const STUDIO_LOOKS = {
+  food: { style: 'luxury cinematic food film', set: 'dark luxury kitchen' },
+  cartoon: { style: 'hand-drawn 2D cartoon animation, bold outlines, flat vibrant colors, expressive characters', set: 'a colourful storybook world that fits the story' },
+  night: { style: 'hand-drawn 2D cartoon animation at night, deep navy blue sky and shadows with warm creamy ivory highlights, glowing cream lights, limited navy and cream palette, bold outlines', set: 'a moonlit navy-blue night scene with cream-coloured lights' },
+  custom: { style: 'cinematic short film matching the idea', set: 'a setting that fits the idea' },
+};
+let queueDrainTimer = null;
+function scheduleNextUnattendedFromQueue() {
+  const snapshot = unattendedQueue.read();
+  if (!snapshot.autoNext || snapshot.items.length === 0 || queueDrainTimer) return;
+  queueDrainTimer = setTimeout(async () => {
+    queueDrainTimer = null;
+    const current = unattendedQueue.read();
+    if (!current.autoNext || current.items.length === 0 || busyReason()) return;
+    const nextItem = unattendedQueue.shift();
+    if (!nextItem) return;
+    emit();
+    const ownerUser = { name: 'owner', role: 'owner' };
+    const look = STUDIO_LOOKS[nextItem.look] ? nextItem.look : 'food';
+    const learningEvidence = buildLearningContext(readLedger(), { user: ownerUser, look });
+    let resolved = null;
+    if (!localIdeaBusy && !ideaRefiner.active) {
+      localIdeaBusy = true;
+      try {
+        const refined = await ideaRefiner.refine({
+          prompt: nextItem.prompt, look, seconds: nextItem.seconds,
+          orientation: nextItem.orientation, setting: nextItem.setting,
+          ending: nextItem.ending, learningEvidence,
+        });
+        resolved = resolveUnattendedRefinement(refined, nextItem.prompt);
+      } catch {
+        resolved = null;
+      } finally {
+        localIdeaBusy = false;
+      }
+    }
+    if (busyReason()) {
+      unattendedQueue.unshiftFront(nextItem);
+      emit();
+      return;
+    }
+    const storyPrompt = resolved?.prompt || nextItem.prompt;
+    const parts = storyPrompt.split(/\s*(?:,\s*(?:and\s+)?then|\bthen\b|[,;.])\s*/i).map((s) => s.trim()).filter((s) => s.length > 3);
+    if (!parts.length) parts.push(storyPrompt);
+    const answers = {
+      topic: storyPrompt,
+      style: STUDIO_LOOKS[look].style,
+      set: nextItem.setting || STUDIO_LOOKS[look].set,
+      hook: String(resolved?.hook || parts[0]).trim().slice(0, 300),
+      mustShow: String(resolved?.mustShow || nextItem.prompt).trim().slice(0, 600),
+      obstacle: String(resolved?.obstacle || '').trim().slice(0, 300),
+      turn: String(resolved?.turn || '').trim().slice(0, 300),
+      ending: String(resolved?.ending || nextItem.ending || (parts.length > 1 ? parts[parts.length - 1] : storyPrompt)).trim().slice(0, 300),
+      audio: nextItem.audio,
+      seconds: nextItem.seconds,
+      orientation: nextItem.orientation,
+    };
+    const answerFile = path.join(ROOT, 'storage', `studio-answers-${Date.now()}-${crypto.randomUUID()}.json`);
+    fs.writeFileSync(answerFile, JSON.stringify(answers, null, 1));
+    const options = {
+      look, setting: nextItem.setting, quality: nextItem.quality,
+      seconds: answers.seconds, orientation: answers.orientation, audio: answers.audio, ending: answers.ending,
+      continuityAnchor: nextItem.continuityAnchor, originalPrompt: nextItem.prompt, storyPrompt,
+      brief: answers, ideaModel: resolved?.model || null, learningGuidanceCount: learningEvidence.guidanceCount,
+      allowRepeat: false, chain: look !== 'food' || nextItem.continuityAnchor === 'previous-end', unattended: true,
+    };
+    start('draft', ['--answers', path.relative(ROOT, answerFile)], {
+      cmd: ['python3', 'scripts/studio-draft.py'], user: 'owner', prompt: nextItem.prompt,
+      learningEvidence, unattended: true, options,
+    });
+    emit();
+  }, 400);
+  queueDrainTimer.unref?.();
 }
 
 // ---- learning ledger: every run and every rating is appended to storage/studio-learning/runs.jsonl ----
@@ -1199,12 +1290,14 @@ function serveFile(req, res, file, roots) {
   if (!fs.existsSync(real) || !fs.statSync(real).isFile()) return json(res, 404, { error: 'Not found' });
   // Follow symlinks before serving: a link inside an allowed folder must not lead to a file outside it. The
   // folders are resolved as well, so a storage folder that is itself a link to another disk keeps working.
+  let streamPath = real;
   if (roots) {
     const target = fs.realpathSync(real);
     const holds = (r) => { try { return target.startsWith(fs.realpathSync(r) + path.sep); } catch { return false; } };
     if (!roots.some(holds)) return json(res, 403, { error: 'Not allowed' });
+    streamPath = target;
   }
-  const size = fs.statSync(real).size; const type = MIME[path.extname(real)] || 'application/octet-stream';
+  const size = fs.statSync(streamPath).size; const type = MIME[path.extname(streamPath)] || 'application/octet-stream';
   if (req.headers.range) {
     const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range);
     const start = range?.[1] ? Number(range[1]) : Math.max(0, size - Number(range?.[2]));
@@ -1214,12 +1307,12 @@ function serveFile(req, res, file, roots) {
       return res.end();
     }
     res.writeHead(206, { 'Content-Type': type, 'Content-Range': `bytes ${start}-${end}/${size}`, 'Accept-Ranges': 'bytes', 'Content-Length': end - start + 1 });
-    const stream = fs.createReadStream(real, { start, end });
+    const stream = fs.createReadStream(streamPath, { start, end });
     stream.on('error', () => res.destroy());
     return stream.pipe(res);
   }
   res.writeHead(200, { 'Content-Type': type, 'Content-Length': size, 'Accept-Ranges': 'bytes' });
-  fs.createReadStream(real).pipe(res);
+  fs.createReadStream(streamPath).pipe(res);
 }
 
 // Optional private remote access (for example `tailscale serve` or `tailscale funnel` in front of this server).
@@ -1241,7 +1334,9 @@ function readUsers() {
   let text;
   try { text = fs.readFileSync(USERS_FILE, 'utf8'); } catch (error) { return error.code === 'ENOENT' ? [] : null; }
   try {
-    const users = JSON.parse(text).users ?? [];
+    const parsed = JSON.parse(text);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+    const users = parsed.users ?? [];
     return Array.isArray(users) ? users.filter((u) => u && u.name && u.token) : null;
   } catch { return null; }
 }
@@ -1355,6 +1450,28 @@ http.createServer(async (req, res) => {
     } finally { localIdeaBusy = false; }
   }
   if (url.pathname === '/api/state') return json(res, 200, view(me));
+  if (url.pathname === '/api/queue') {
+    if (!isOwner) return json(res, 403, { error: 'Only the owner can manage the unattended queue.' });
+    if (req.method === 'GET') return json(res, 200, unattendedQueue.read());
+    if (req.method !== 'POST') return json(res, 405, { error: 'Use GET or POST for the unattended queue.' });
+    const parsed = await boundedJsonBody(req, 64 * 1024);
+    if (parsed.error) return json(res, parsed.status, { error: 'The queue request is invalid.' });
+    const b = parsed.value || {};
+    try {
+      let state;
+      if (b.action === 'add') state = unattendedQueue.add(b.item && typeof b.item === 'object' ? b.item : b);
+      else if (b.action === 'remove') state = unattendedQueue.remove(b.id);
+      else if (b.action === 'move') state = unattendedQueue.move(b.index, b.delta);
+      else if (b.action === 'toggle') state = unattendedQueue.setAutoNext(b.autoNext);
+      else if (b.action === 'clear') state = unattendedQueue.clear();
+      else return json(res, 400, { error: 'Choose a valid queue action.' });
+      emit();
+      scheduleNextUnattendedFromQueue();
+      return json(res, 200, state);
+    } catch (error) {
+      return json(res, 400, { error: error.message || 'Could not update the unattended queue.' });
+    }
+  }
   if (url.pathname === '/api/events') {
     res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
     res.write(`data: ${JSON.stringify(view(me))}\n\n`);
@@ -1416,14 +1533,8 @@ http.createServer(async (req, res) => {
     // Split "A, then B" into first action (hook) and last action (ending) so the story audit can match both.
     const parts = prompt.split(/\s*(?:,\s*(?:and\s+)?then|\bthen\b|[,;.])\s*/i).map((x) => x.trim()).filter((x) => x.length > 3);
     if (!parts.length) parts.push(prompt);
-    const LOOKS = {
-      food: { style: 'luxury cinematic food film', set: 'dark luxury kitchen' },
-      cartoon: { style: 'hand-drawn 2D cartoon animation, bold outlines, flat vibrant colors, expressive characters', set: 'a colourful storybook world that fits the story' },
-      night: { style: 'hand-drawn 2D cartoon animation at night, deep navy blue sky and shadows with warm creamy ivory highlights, glowing cream lights, limited navy and cream palette, bold outlines', set: 'a moonlit navy-blue night scene with cream-coloured lights' },
-      custom: { style: 'cinematic short film matching the idea', set: 'a setting that fits the idea' },
-    };
     const setting = retrySession?.options?.setting || String(b.setting || '').trim().slice(0, 200);
-    let answers = retryBrief || { topic: prompt, style: LOOKS[look].style, set: setting || LOOKS[look].set,
+    let answers = retryBrief || { topic: prompt, style: STUDIO_LOOKS[look].style, set: setting || STUDIO_LOOKS[look].set,
       hook: String(refined?.hook || b.hook || parts[0]).trim().slice(0, 300),
       mustShow: String(refined?.mustShow || b.mustShow || originalPrompt).trim().slice(0, 600),
       obstacle: String(refined?.obstacle || b.obstacle || '').trim().slice(0, 300),
@@ -1457,7 +1568,7 @@ http.createServer(async (req, res) => {
     const f = path.join(ROOT, 'storage', `studio-answers-${Date.now()}-${crypto.randomUUID()}.json`);
     fs.writeFileSync(f, JSON.stringify(answers, null, 1));
     const options = { ...(retrySession?.options || {}), look, setting, quality: b.quality === 'high' || (b.quality === undefined && retrySession?.options?.quality === 'high') ? 'high' : 'standard', seconds: answers.seconds, orientation: answers.orientation, audio: answers.audio, ending: answers.ending,
-      continuityAnchor: retrySession?.options?.continuityAnchor || (b.continuityAnchor === 'previous-end' ? 'previous-end' : 'identity'), originalPrompt, storyPrompt: repairing ? prompt : retrySession?.options?.storyPrompt || prompt, brief: answers, ...(repairing ? { repairGuidance: b.repairGuidance.trim() } : {}), ideaModel: retrySession?.options?.ideaModel || refined?.model || null, learningGuidanceCount: learningEvidence.guidanceCount, allowRepeat: retrySession ? Boolean(retrySession.options?.allowRepeat) : Boolean(b.allowRepeat), chain: retrySession ? Boolean(retrySession.options?.chain) : look !== 'food', unattended: !repairing && isOwner && b.unattended === true };
+      continuityAnchor: retrySession?.options?.continuityAnchor || (b.continuityAnchor === 'previous-end' ? 'previous-end' : 'identity'), originalPrompt, storyPrompt: repairing ? prompt : retrySession?.options?.storyPrompt || prompt, brief: answers, ...(repairing ? { repairGuidance: b.repairGuidance.trim() } : {}), ideaModel: retrySession?.options?.ideaModel || refined?.model || null, learningGuidanceCount: learningEvidence.guidanceCount, allowRepeat: retrySession ? Boolean(retrySession.options?.allowRepeat) : Boolean(b.allowRepeat), chain: retrySession ? Boolean(retrySession.options?.chain) : (look !== 'food' || b.continuityAnchor === 'previous-end'), unattended: !repairing && isOwner && b.unattended === true };
     const x = start('draft', ['--answers', path.relative(ROOT, f), ...(options.allowRepeat ? ['--allow-repeat'] : [])], {
       cmd: ['python3', 'scripts/studio-draft.py'], user: me.name, prompt: originalPrompt, learningEvidence,
       unattended: !repairing && isOwner && b.unattended === true, options, requestId,
@@ -1638,6 +1749,15 @@ http.createServer(async (req, res) => {
     }
     const retryingFailedSession = owner?.status === 'failed';
     const unattendedRun = Boolean(isOwner && b.resumeUnattended === true && owner?.options?.unattended === true);
+    if (unattendedRun && (owner?.options?.chain || owner?.options?.continuityAnchor === 'previous-end')) {
+      const renderArgs = ['--scenario', sc, '--best-of-3-stills', '--chain-images',
+        ...(owner?.options?.allowRepeat ? ['--allow-repeat'] : [])];
+      const resumed = start('render', renderArgs, {
+        session: owner, scenario: sc, archiveAttempt: retryingFailedSession,
+        unattended: true, pinFrames: false, trackTakes: true,
+      });
+      return json(res, 202, snap(resumed));
+    }
     let sequence = null;
     const stillArgs = ['--scenario', sc, '--stills-only', '--best-of-3-stills',
       ...(!unattendedRun ? ['--allow-pending-visual-review'] : []),

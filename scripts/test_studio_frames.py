@@ -102,3 +102,14 @@ class StudioFramesTests(unittest.TestCase):
             manifest.write_text(json.dumps(data))
             with self.assertRaisesRegex(ValueError, 'shared identity reference'):
                 read_manifest_details(work, scenario, 1)
+
+    def test_vision_review_method_is_persisted_when_supplied(self):
+        with tempfile.TemporaryDirectory() as directory:
+            work = Path(directory)
+            scenario = work / 'story.json'
+            scenario.write_text('{}')
+            frame = work / 'frame.png'
+            frame.write_bytes(b'vision-approved')
+            write_manifest(work, scenario, [frame], review_method='vision')
+            _, details = read_manifest_details(work, scenario, 1)
+            self.assertEqual(details.get('reviewMethod'), 'vision')

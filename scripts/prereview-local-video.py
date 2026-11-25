@@ -151,16 +151,19 @@ def contact_sheet(frames, labels, target):
     if len(frames) != len(labels) or not frames or len(frames) % 3:
         raise ValueError('contact sheet needs three labeled samples per shot')
     inputs = [arg for frame in frames for arg in ('-i', frame)]
-    columns, rows = 3, (len(frames) + 2) // 3
+    columns = 3
     layout = '|'.join(f'{(i % columns) * 270}_{(i // columns) * 480}' for i in range(len(frames)))
     tiles = []
     for i, label in enumerate(labels):
         safe_label = re.sub(r'[^A-Z0-9 .:-]', '', label.upper())[:48]
         tiles.append(f'[{i}:v]scale=270:480,drawbox=x=0:y=0:w=iw:h=30:color=black@0.68:t=fill,'
                      f"drawtext=text='{safe_label}':fontcolor=white:fontsize=14:x=8:y=8[s{i}]")
-    graph = ';'.join(tiles) + ';' + ''.join(f'[s{i}]' for i in range(len(frames))) + f'xstack=inputs={len(frames)}:layout={layout}'
-    result = ffmpeg('-y', *inputs, '-filter_complex', graph, target)
+    stack = ''.join(f'[s{i}]' for i in range(len(frames))) + f'xstack=inputs={len(frames)}:layout={layout}'
+    result = ffmpeg('-y', *inputs, '-filter_complex', ';'.join(tiles) + ';' + stack, target)
     if result.returncode:
+        plain_tiles = [f'[{i}:v]scale=270:480[s{i}]' for i in range(len(frames))]
+        result = ffmpeg('-y', *inputs, '-filter_complex', ';'.join(plain_tiles) + ';' + stack, target)
+    if result.returncode or not Path(target).is_file():
         raise RuntimeError('could not build the contact sheet')
     return Path(target)
 
@@ -231,7 +234,10 @@ def main():
             frame = grab(video, item[key], work / f"shot{item['shot']}-{stage.lower()}.png")
             bucket.append(frame); samples.append(frame)
             sample_labels.append(f"SHOT {item['shot']} {stage} {item[key]:.1f}s")
-    sheet = contact_sheet(samples, sample_labels, video.with_suffix('.contact.png'))
+    try:
+        sheet = contact_sheet(samples, sample_labels, video.with_suffix('.contact.png'))
+    except RuntimeError:
+        sheet = None
     integrated, peak = loudness(video)
     means = [shot_mean_volume(video, a, b) for a, b in windows]
     audio = audio_flags(integrated, peak, means)
@@ -251,6 +257,8 @@ def main():
             continuity = ask(vision, side_by_side(starts[0], ends[-1], work / 'food.png'),
                              [CONTINUITY_QUESTION if is_food_film(scenario) else SUBJECT_QUESTION], cache)
     flags, unchecked = categorize(shot_results, payoff, continuity, audio)
+    if sheet is None:
+        unchecked.append('start/middle/end contact sheet could not be built')
     if not expected_ending:
         unchecked.append('final frame: no explicit ending outcome in the plan')
     if len(starts) > 1:
@@ -270,7 +278,8 @@ def main():
         'checkedAt': datetime.now(timezone.utc).isoformat(), 'video': str(video),
         'videoSha256': hashlib.sha256(video.read_bytes()).hexdigest(),
         'scenarioSha256': hashlib.sha256(args.scenario.read_bytes()).hexdigest(),
-        'contactSheet': str(sheet), 'contactSheetSha256': hashlib.sha256(sheet.read_bytes()).hexdigest(),
+        'contactSheet': str(sheet) if sheet else None,
+        'contactSheetSha256': hashlib.sha256(sheet.read_bytes()).hexdigest() if sheet else None,
         'sampleTimeline': timeline, 'loudnessLUFS': integrated, 'truePeakDBTP': peak,
         'shotMeanVolumeDB': means, 'shotMotion': motion, 'shots': shot_results, 'payoffFrame': payoff, 'foodContinuity': continuity,
         'visionChecked': not args.skip_vision,
@@ -285,7 +294,8 @@ def main():
             print(f'  {key}: {flag}')
     for item in unchecked:
         print(f'  unchecked: {item}')
-    print(f'Contact sheet: {sheet}')
+    if sheet:
+        print(f'Contact sheet: {sheet}')
     print(f'Report: {output}')
     return 0 if not likely_low else 1
 

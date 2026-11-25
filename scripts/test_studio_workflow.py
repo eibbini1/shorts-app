@@ -19,6 +19,7 @@ def run_fixture():
     shutil.copy('scripts/studio-learning-signals.mjs',root/'scripts')
     shutil.copy('scripts/studio-learning-memory.mjs',root/'scripts')
     shutil.copy('scripts/studio-feedback.mjs',root/'scripts')
+    shutil.copy('scripts/studio-unattended-queue.mjs',root/'scripts')
     shutil.copy('scripts/story-action-gate.mjs',root/'scripts')
     shutil.copy('scripts/creative-learning.mjs',root/'scripts')
     shutil.copy('scripts/pipeline-events.mjs',root/'scripts')

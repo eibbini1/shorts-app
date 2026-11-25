@@ -131,8 +131,8 @@ def main():
         if len(ending_words.intersection(words(shots[-1]['motionPrompt']))) < min(2, len(ending_words)):
             problems.append('final moving shot does not depict the requested ending')
     first = shots[0]['narration'].strip()
-    if len(first.split()) > 12: problems.append('opening narration exceeds 12 words')
-    if re.match(r'^(this|these|the|a|an)\b', first, re.I): notes.append('opening could name the subject sooner')
+    if presentation['voice'] and len(first.split()) > 12: problems.append('opening narration exceeds 12 words')
+    if presentation['voice'] and re.match(r'^(this|these|the|a|an)\b', first, re.I): notes.append('opening could name the subject sooner')
     protagonist_words = words(data.get('storyArc', {}).get('protagonist', ''))
     setting_words = words(data.get('storyArc', {}).get('setting', ''))
     for i, shot in enumerate(shots, 1):
