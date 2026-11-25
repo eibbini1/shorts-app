@@ -1197,6 +1197,13 @@ function serveFile(req, res, file, roots) {
   const real = path.resolve(file);
   if (roots && !roots.some((r) => real.startsWith(r + path.sep))) return json(res, 403, { error: 'Not allowed' });
   if (!fs.existsSync(real) || !fs.statSync(real).isFile()) return json(res, 404, { error: 'Not found' });
+  // Follow symlinks before serving: a link inside an allowed folder must not lead to a file outside it. The
+  // folders are resolved as well, so a storage folder that is itself a link to another disk keeps working.
+  if (roots) {
+    const target = fs.realpathSync(real);
+    const holds = (r) => { try { return target.startsWith(fs.realpathSync(r) + path.sep); } catch { return false; } };
+    if (!roots.some(holds)) return json(res, 403, { error: 'Not allowed' });
+  }
   const size = fs.statSync(real).size; const type = MIME[path.extname(real)] || 'application/octet-stream';
   if (req.headers.range) {
     const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range);
@@ -1227,11 +1234,21 @@ function sameToken(a, b) {
   const x = Buffer.from(String(a || '')), y = Buffer.from(String(b || ''));
   return x.length === y.length && x.length > 0 && crypto.timingSafeEqual(x, y);
 }
-function readUsers() { try { return (JSON.parse(fs.readFileSync(USERS_FILE, 'utf8')).users || []).filter((u) => u.name && u.token); } catch { return []; } }
-const authOn = () => Boolean(TOKEN) || readUsers().length > 0;
+// Relatives listed in the users file. A missing file means none were added. null means the file is there but
+// cannot be read as a users list (damaged, or caught mid-write). Callers must treat null as locked, never as
+// "no users": with no users and no owner token, every request is let in as the owner.
+function readUsers() {
+  let text;
+  try { text = fs.readFileSync(USERS_FILE, 'utf8'); } catch (error) { return error.code === 'ENOENT' ? [] : null; }
+  try {
+    const users = JSON.parse(text).users ?? [];
+    return Array.isArray(users) ? users.filter((u) => u && u.name && u.token) : null;
+  } catch { return null; }
+}
+const authOn = () => { const users = readUsers(); return Boolean(TOKEN) || users === null || users.length > 0; };
 function userFor(candidate) {
   if (TOKEN && sameToken(candidate, TOKEN)) return { name: 'owner', role: 'owner' };
-  for (const u of readUsers()) {
+  for (const u of readUsers() || []) {
     const name = String(u.name).slice(0, 40);
     if (name.trim().toLowerCase() !== 'owner' && sameToken(candidate, u.token)) {
       return { name, role: 'creator', dailyRenders: Number(u.dailyRenders) || 3 };
@@ -1248,7 +1265,12 @@ function mayUse(user, value) {
   if (path.isAbsolute(file) || path.normalize(file) !== file) return false;
   const keys = ownKeys(user);
   if (file.startsWith('drafts/generated/')) return keys.includes(keyOf(file));
-  if (file.startsWith('storage/any-local/')) return keys.includes(file.split('/')[2]);
+  // Work folders are named after the whole story file (storage/any-local/<id>.local-scenario), not the bare id.
+  if (file.startsWith('storage/any-local/')) {
+    const folder = file.split('/')[2];
+    return [...sessions.values()].some((x) => x.user === user.name && x.scenario &&
+      path.basename(String(x.scenario), '.json') === folder);
+  }
   const output = file.startsWith('outputs/') ? file.slice('outputs/'.length) : file;
   return !output.includes('/') && keys.some((key) => output.startsWith(key + '-'));
 }
@@ -1733,10 +1755,13 @@ http.createServer(async (req, res) => {
         }
         selections.set(selection.shot, selection.candidate);
       }
+      // No sequential review is active on this path. A session saved before sequential review has no
+      // sequence at all, so the chained-frame check applies only when one was left behind.
+      const sequence = owner.sequence;
       const frames = [];
       for (let shot = 1; shot <= count; shot += 1) {
-        const predecessor = sequence.endFrames.find((frame) => frame.shot === shot - 1);
-        if (sequence.chainSourceHashes?.[shot] && sequence.chainSourceHashes[shot] !== predecessor?.endFrameSha256) {
+        const predecessor = sequence?.endFrames?.find((frame) => frame.shot === shot - 1);
+        if (sequence?.chainSourceHashes?.[shot] && sequence.chainSourceHashes[shot] !== predecessor?.endFrameSha256) {
           return json(res, 409, { error: 'The preceding take changed. Regenerate this frame before approval.' });
         }
         const entry = data.frames.find((item) => item.shot === shot);

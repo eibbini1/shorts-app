@@ -2,7 +2,7 @@
 
 Run: python3 -m unittest scripts/test_render_quality.py
 """
-import importlib.util, json, os, sys, unittest
+import importlib.util, json, os, subprocess, sys, tempfile, unittest
 from pathlib import Path
 from unittest.mock import patch
 
@@ -43,6 +43,37 @@ class PresetTests(unittest.TestCase):
             for w, h in sizes.values():
                 self.assertEqual((w % 32, h % 32), (0, 0))  # LTX two-stage needs multiples of 32
         self.assertEqual(rq.FRAMES, 97)  # 8k+1; assembly and caching assume it
+
+    def test_layout_names_landscape_wide_whatever_the_scenario_calls_it(self):
+        self.assertEqual(rq.layout({'format': 'short'}), 'short')
+        self.assertEqual(rq.layout({}), 'short')
+        self.assertEqual(rq.layout({'format': 'long'}), 'wide')  # scenario-schema.mjs allows only short or long
+        self.assertEqual(rq.layout({'format': 'wide'}), 'wide')
+
+
+class ManifestAspectTests(unittest.TestCase):
+    """A landscape scenario (format: long) must reach the assembler under a name it accepts."""
+
+    def assembler_error(self, aspect):
+        with tempfile.TemporaryDirectory() as folder:
+            manifest = Path(folder) / 'film-manifest.json'
+            manifest.write_text(json.dumps({'aspect': aspect, 'shots': []}))
+            return subprocess.run([sys.executable, str(ROOT / 'scripts/assemble-motion-video.py'), '--manifest', str(manifest),
+                                   '--output', str(Path(folder) / 'out.mp4')], capture_output=True, text=True).stderr
+
+    def test_every_scenario_format_passes_the_assembler_aspect_check(self):
+        for scenario_format in ('short', 'long'):
+            error = self.assembler_error(rq.layout({'format': scenario_format}))
+            self.assertNotIn('aspect must be', error, scenario_format)
+            self.assertIn('nonempty shots', error, scenario_format)  # stopped by the empty fixture, not by the aspect
+
+    def test_the_raw_scenario_format_is_what_the_assembler_rejects(self):
+        self.assertIn('aspect must be short or wide', self.assembler_error('long'))
+
+    def test_renderer_writes_the_layout_name_into_the_manifest(self):
+        text = (ROOT / 'scripts/render-any-local.py').read_text()
+        self.assertIn('aspect = render_quality.layout(settings)', text)
+        self.assertNotIn("aspect = settings['format']", text)
 
 
 class CachedClipCheckTests(unittest.TestCase):

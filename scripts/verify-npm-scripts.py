@@ -21,9 +21,12 @@ def main():
             errors.append(f'{name}: invalid command quoting: {error}')
             continue
         if len(parts) >= 3 and parts[:2] == ['node', '--test']:
-            target = ROOT / parts[2]
-            if not target.is_file():
-                errors.append(f'{name}: missing entry point {parts[2]}')
+            # Every test file listed must exist; options such as --test-concurrency=1 are not files.
+            for part in parts[2:]:
+                if part in ('&&', '||', ';', '|'):
+                    break
+                if not part.startswith('-') and not (ROOT / part).is_file():
+                    errors.append(f'{name}: missing entry point {part}')
             continue
         if len(parts) >= 2 and parts[0] in {'bash', 'python3', 'node', 'tsx'}:
             target = ROOT / parts[1]

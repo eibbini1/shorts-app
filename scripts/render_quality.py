@@ -26,10 +26,17 @@ def pick(settings=None):
     return normalize(chosen)
 
 
+def layout(settings):
+    """'short' (vertical) or 'wide' (landscape): the names the size table and the assembler's manifest use.
+
+    Scenarios call landscape 'long' (scripts/scenario-schema.mjs), so any format other than 'short' is wide.
+    """
+    return 'short' if (settings or {}).get('format', 'short') == 'short' else 'wide'
+
+
 def dimensions(settings):
     """(width, height) for the scenario's format at the chosen quality."""
-    layout = 'short' if (settings or {}).get('format', 'short') == 'short' else 'wide'
-    return QUALITIES[pick(settings)][layout]
+    return QUALITIES[pick(settings)][layout(settings)]
 
 
 def known_sizes():

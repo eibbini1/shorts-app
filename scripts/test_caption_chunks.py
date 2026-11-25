@@ -1,6 +1,7 @@
 import importlib.util, pathlib, unittest
 import subprocess
 import tempfile
+from unittest.mock import patch
 spec = importlib.util.spec_from_file_location('finish', pathlib.Path(__file__).with_name('finish-local-video.py'))
 finish = importlib.util.module_from_spec(spec); spec.loader.exec_module(finish)
 
@@ -62,6 +63,43 @@ class OpeningHook(unittest.TestCase):
         self.assertTrue(escaped.endswith(r'\}'))
         ass = finish.brand_ass([(0, 1, text)], (0, 1.5, text))
         self.assertEqual(ass.count(escaped), 2)
+
+
+class CaptionTiming(unittest.TestCase):
+    """voice-N.wav is the take as recorded; the timeline plays it at `tempo`, so captions follow the played length."""
+
+    def span(self, tempo=None):
+        line = {'atSeconds': 1.0, 'text': 'One two three four five six'}
+        if tempo is not None:
+            line['tempo'] = tempo
+        # The recorded take: 0.5 s of silence, then 2.0 s of speech.
+        with patch.object(finish, 'speech_span', return_value=(0.5, 2.0)):
+            cues = finish.captions([line], 10.0, pathlib.Path('work'))
+        self.assertEqual(' '.join(text for _, _, text in cues), line['text'])
+        return cues[0][0], cues[-1][1]
+
+    def test_normal_speed_is_unchanged(self):
+        for tempo in (None, 1):
+            start, end = self.span(tempo)
+            self.assertAlmostEqual(start, 1.5)
+            self.assertAlmostEqual(end, 3.5)
+
+    def test_sped_up_line_starts_and_ends_sooner(self):
+        start, end = self.span(1.25)
+        self.assertAlmostEqual(start, 1.4)   # 0.5 s of silence plays in 0.4 s
+        self.assertAlmostEqual(end, 3.0)     # 2.0 s of speech plays in 1.6 s
+
+    def test_slowed_line_runs_longer(self):
+        start, end = self.span(0.8)
+        self.assertAlmostEqual(start, 1.625)
+        self.assertAlmostEqual(end, 4.125)
+
+    def test_captions_never_run_past_the_next_line(self):
+        lines = [{'atSeconds': 0.0, 'text': 'One two three', 'tempo': 0.8}, {'atSeconds': 2.0, 'text': 'Four five six'}]
+        with patch.object(finish, 'speech_span', return_value=(0.5, 2.0)):
+            cues = finish.captions(lines, 6.0, pathlib.Path('work'))
+        first_line = [cue for cue in cues if cue[2] in 'One two three']
+        self.assertLessEqual(max(end for _, end, _ in first_line), 2.0)
 
 
 if __name__ == '__main__':

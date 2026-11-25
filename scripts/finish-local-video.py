@@ -71,6 +71,10 @@ def captions(lines, total, work=None):
         chunks = phrase_chunks(words)
         span = speech_span(work / f'voice-{number}.wav') if work else None
         lead, real = span if span else (0.0, None)
+        # voice-N.wav is the take as recorded. The timeline plays it at `tempo` (narrate-any-local.mjs speeds up a
+        # long line, or slows an ElevenLabs line), so there its pause and its speech both last 1/tempo as long.
+        tempo = line.get('tempo') or 1
+        lead, real = lead / tempo, (real / tempo if real else None)
         speech = min(end - start - lead, real if real else len(words) / WORDS_PER_SECOND)
         weights = [len(' '.join(chunk)) for chunk in chunks]   # time follows letters, so "Hic!" is not given as long as a full phrase
         at = start + lead
