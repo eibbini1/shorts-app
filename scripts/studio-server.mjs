@@ -798,6 +798,24 @@ http.createServer(async (req, res) => {
     });
     return json(res, 202, snap(x));
   }
+  if (url.pathname === '/api/cartoon/truffle' && req.method === 'POST') {
+    if (!isOwner) return json(res, 403, { error: 'Only the owner can run unattended.' });
+    const { requestId } = await body(req);
+    if (typeof requestId !== 'string' || !/^[\w.:-]{1,128}$/.test(requestId)) {
+      return json(res, 400, { error: 'Invalid request ID.' });
+    }
+    const previous = [...sessions.values()].find((item) => item.requestIds?.includes(requestId));
+    if (previous) return canSee(me, previous) ? json(res, 200, snap(previous)) : json(res, 409, { error: 'This request has already been processed.' });
+    const why = busyReason();
+    if (why) return json(res, 409, { error: why });
+    const output = `outputs/runaway-truffle-story-${crypto.randomUUID()}.mp4`;
+    const x = start('render', [output, '--story'], {
+      cmd: ['bash', 'scripts/render-truffle-cartoon.sh'], user: me.name,
+      prompt: 'The Runaway Truffle • 30-second 3D cartoon', unattended: true, requestId,
+      options: { look: 'cartoon', preset: 'runaway-truffle', seconds: 30, orientation: 'vertical', audio: 'voiced', unattended: true },
+    });
+    return json(res, 202, snap(x));
+  }
   if (url.pathname === '/api/hosted/dry-run') {
     if (req.method !== 'POST') return json(res, 405, { error: 'Use POST for a hosted simulation.' });
     if (!TOKEN || !isOwner) return json(res, 403, { error: 'Sign in with the Studio owner link to simulate a hosted shot.' });

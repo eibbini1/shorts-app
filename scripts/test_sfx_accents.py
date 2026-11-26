@@ -179,6 +179,9 @@ class MusicBedTests(unittest.TestCase):
 
     def test_plan_problems_are_named(self):
         self.assertEqual(sfx.audit_music(None, 8), [])
+        for choice in ('none', 'no music', 'off', 'silent'):
+            self.assertTrue(sfx.music_disabled(choice))
+            self.assertEqual(sfx.audit_music(choice, 8), [])
         self.assertTrue(any('path' in p for p in sfx.audit_music({'gainDb': -10}, 8)))
         self.assertTrue(any('not found' in p for p in sfx.audit_music({'path': '/nope.mp3'}, 8)))
         bad = sfx.audit_music({'path': str(self.track), 'dropAt': 3}, 8)
@@ -275,6 +278,17 @@ class BreathFilterTests(unittest.TestCase):
         self.assertAlmostEqual(rms(seg(out, 2.1, 2.9)) / base, 1.0, delta=0.03)
         self.assertGreaterEqual(rms(seg(out, 2.0, 2.1)) / base, 0.97)
         self.assertLess(float(np.max(np.abs(np.diff(out)))), 0.25)
+
+
+class RequiredRecordedActionsTest(unittest.TestCase):
+    def test_proxy_and_missing_source_cannot_satisfy_exact_action(self):
+        expected = {'crunch': 'Spoon breaks a caramelized sugar crust'}
+        proxy = {'recordedAction': 'Lollipop bite', 'sourceUrl': 'https://example.com/snap', 'license': 'CC0'}
+        self.assertTrue(sfx.audit_recorded_actions(expected, {'crunch': proxy}, {'crunch'}))
+        match = {**proxy, 'recordedAction': expected['crunch']}
+        self.assertEqual(sfx.audit_recorded_actions(expected, {'crunch': match}, {'crunch'}), [])
+        self.assertTrue(sfx.audit_recorded_actions(expected, {'crunch': match}, set()))
+        self.assertTrue(sfx.audit_recorded_actions(expected, {'crunch': {**match, 'license': 'CC BY-NC'}}, {'crunch'}))
 
 
 if __name__ == '__main__':

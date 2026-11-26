@@ -341,6 +341,10 @@ export default function App() {
   };
   const draft = () => refineIdea();
   const render = run(async () => { const r = await post('/api/render', { scenario: job.scenario, sessionId: job.id }); pickProject(r.id); });
+  const renderTruffleStory = run(async () => {
+    const result = await post('/api/cartoon/truffle', { requestId: globalThis.crypto.randomUUID() });
+    await pickProject(result.id);
+  });
   const stills = run(async () => { const r = await post('/api/stills', { scenario: job.scenario, sessionId: job.id }); pickProject(r.id); });
   const resumeUnattended = run(async () => { const r = await post('/api/stills', { scenario: job.scenario, sessionId: job.id, resumeUnattended: true }); pickProject(r.id); });
   const approveFrames = async (selections) => {
@@ -446,9 +450,9 @@ export default function App() {
           )}
           {job.status && job.status !== 'idle' && (
             <>
-              <div className="bubble user">{job.prompt || 'New video idea'}{job.kind === 'render' && <div className="muted">Rendering the approved plan</div>}</div>
+              <div className="bubble user">{job.prompt || 'New video idea'}{job.kind === 'render' && <div className="muted">{job.options?.preset === 'runaway-truffle' ? 'Unattended 3D preset' : 'Rendering the approved plan'}</div>}</div>
               <div className="bubble bot">
-                <StageBar job={job} />
+                {job.options?.preset !== 'runaway-truffle' && <StageBar job={job} />}
                 <p className={phase.k === 'blocked' || phase.k === 'failed' ? 'bad' : 'muted'} role="status">{phase.t}</p>
                 <ul className="steps">
                   {(job.steps || []).map((s, i) => (
@@ -457,7 +461,7 @@ export default function App() {
                   {running && !(job.steps || []).length && <li className="now">Starting</li>}
                 </ul>
                 {running && <p className="muted">Elapsed <Elapsed startedAt={job.startedAt} />{prog ? ` · ${prog.n} of ${prog.of}` : ''}</p>}
-                <StepTrack job={job} />
+                {job.options?.preset !== 'runaway-truffle' && <StepTrack job={job} />}
                 {running && <div className="bar"><div className={prog ? 'fill' : 'fill indet'} style={prog ? { width: `${Math.round((prog.n / prog.of) * 100)}%` } : {}} /></div>}
                 {running && job.lines?.length > 0 && <p className="muted">{displayPipelineLine(job.lines[job.lines.length - 1])}</p>}
                 {(() => { const w = watchdogLabel(job.watchdog, job.status); return w && <p className={`hint ${w.tone}`}>{w.text}</p>; })()}
@@ -568,6 +572,12 @@ export default function App() {
             </div>
           </div>}
           <IdeaRefinement result={refinement} onUse={useRefinedIdea} />
+          {look === 'cartoon' && me?.canRunUnattended && <div className="opts">
+            <button type="button" className="ghost" onClick={renderTruffleStory} disabled={anyRunning || sending}>
+              Render The Runaway Truffle · 30s
+            </button>
+            <span>Renders the fixed 3D story with narration and quiet Foley, unattended.</span>
+          </div>}
           {me?.canRunUnattended && <div className="opts">
             <label><input type="checkbox" checked={unattended} onChange={(e) => setUnattended(e.target.checked)} /> Run unattended</label>
             {unattended && <span>Studio checks the plan and first frames, then renders and runs QA. You can close this tab. Leave the Mac and Studio server running.</span>}

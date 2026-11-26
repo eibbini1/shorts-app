@@ -85,6 +85,7 @@
     "review:shot:local": "python3 scripts/record-shot-review.py",
     "video:prereview:mac": "python3 scripts/prereview-local-video.py",
     "review:video:mac": "python3 scripts/record-editorial-review.py",
+    "cartoon:truffle:mac": "bash scripts/render-truffle-cartoon.sh",
     "studio": "node scripts/studio-server.mjs",
     "studio:build": "cd studio && npm install --userconfig /dev/null --registry=https://registry.npmjs.org/ && npm run build"
   },

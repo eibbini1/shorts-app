@@ -382,6 +382,7 @@ export function PlanCard({ job, idea, onStills, onReference, onCharacter, disabl
   const approvedPreflightFixes = preflightApproval.key === approvalKey && preflightApproval.approved;
   const qualityChecks = job.plan?.qualityChecks || plan.qualityChecks || {};
   const preflightFixes = Array.isArray(qualityChecks.preflightPromptFixes) ? qualityChecks.preflightPromptFixes : [];
+  const stillAdvice = Array.isArray(job.plan?.stillPlannerAdvice) ? job.plan.stillPlannerAdvice : [];
   const previousAttempt = job.attempts?.at(-1);
   const previousPlan = previousAttempt?.plan?.plan || previousAttempt?.plan;
   const repairPromptChanges = job.options?.repairGuidance && Array.isArray(previousPlan?.shots)
@@ -456,6 +457,13 @@ export function PlanCard({ job, idea, onStills, onReference, onCharacter, disabl
         <label className="preflight-approval"><input type="checkbox" checked={approvedPreflightFixes} onChange={(event) => approvePromptChanges(event.target.checked)} />
           I reviewed and approve these prompt changes before first-frame generation.</label>
       </section>}
+      {stillAdvice.length > 0 && <details>
+        <summary>Still review guidance ({stillAdvice.length})</summary>
+        <ul>{stillAdvice.map(({ shot, id, shotType, advice }) => (
+          <li key={`${shot}-${id}`}>Shot {shot} · {shotType}: {advice}</li>
+        ))}</ul>
+        <p className="muted small">These suggestions come from earlier frame reviews. This plan still needs its own checks.</p>
+      </details>}
       {onCharacter && <CharacterReferences key={job.id} job={job} canApply={canAttachReferences && !job.sequence?.active}
         disabled={disabled} onApply={async (id) => {
           const result = await onCharacter(id);

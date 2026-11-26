@@ -163,3 +163,26 @@ test('face upgrade proposals preserve the existing identities, clothing text and
     assert.ok(proposal.identityBlock.endsWith(original.identityBlock.split(', ').slice(1).join(', ')));
   }
 });
+
+test('opt-in portrait selection requires three hash-pinned angles and can choose one', () => {
+  const refDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bible-angles-'));
+  const character = structuredClone(findCharacter('chr-hanoi-linh-29', catalogue));
+  const options = { character, refDir, action: 'She looks up', preferredAngle: 'three-quarter-right' };
+  try {
+    assert.throws(() => composeCharacterShot({ ...options, referenceMode: 'three-angle' }), /require approved/);
+    for (const slot of ['front', 'three-quarter-left', 'three-quarter-right']) {
+      const refId = crypto.randomBytes(16).toString('hex');
+      fs.writeFileSync(path.join(refDir, refId + '.png'), slot);
+      character.referenceSheet[slot] = { refId, sha256: crypto.createHash('sha256').update(slot).digest('hex') };
+    }
+    assert.deepEqual(composeCharacterShot({ ...options, referenceMode: 'three-angle' }).references.map(({ slot }) => slot),
+      ['three-quarter-right', 'front', 'three-quarter-left']);
+    assert.deepEqual(composeCharacterShot({ ...options, referenceMode: 'closest-angle' }).references.map(({ slot }) => slot),
+      ['three-quarter-right']);
+    const right = character.referenceSheet['three-quarter-right'];
+    fs.writeFileSync(path.join(refDir, right.refId + '.png'), 'changed');
+    assert.throws(() => composeCharacterShot({ ...options, referenceMode: 'three-angle' }), /changed after approval/);
+  } finally {
+    fs.rmSync(refDir, { recursive: true, force: true });
+  }
+});

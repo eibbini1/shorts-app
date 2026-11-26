@@ -265,9 +265,13 @@ def swell(length=SWELL_SECONDS):
     return ((np.sin(2 * np.pi * 55 * t) + 0.4 * np.sin(2 * np.pi * 110 * t)) * env).astype(np.float32)
 
 
+def music_disabled(music):
+    return isinstance(music, str) and music.strip().lower() in ('none', 'no music', 'off', 'silent')
+
+
 def audit_music(music, total):
     """Problems with audioPlan.music; empty when the bed can be mixed as written."""
-    if not music:
+    if not music or music_disabled(music):
         return []
     if not isinstance(music, dict) or not music.get('path'):
         return ['music needs a "path" to a licensed track you supplied']
@@ -466,6 +470,30 @@ def planned_cues(shot):
     return names
 
 
+def audit_recorded_actions(requirements, samples, scheduled):
+    """Compare declared recording provenance with the action required by the brief."""
+    if not isinstance(requirements, dict):
+        return ['required sound cue recorded actions must map cues to nonempty action descriptions']
+    problems = []
+    for cue, expected in requirements.items():
+        if cue not in GAIN or cue not in scheduled:
+            problems.append(f'required sound cue {cue}: no shot schedules this supported cue')
+            continue
+        if not isinstance(expected, str) or not expected.strip():
+            problems.append(f'required sound cue {cue}: missing expected recorded action')
+            continue
+        source = samples.get(cue) or {}
+        action = source.get('recordedAction') or ''
+        license_name = str(source.get('license') or '').strip().casefold()
+        if not isinstance(action, str) or ' '.join(action.casefold().split()) != ' '.join(expected.casefold().split()):
+            problems.append(f'required sound cue {cue}: no recording declared for "{expected}"')
+        elif not source.get('sourceUrl') or license_name not in {
+            'cc0', 'cc0 1.0', 'public domain', 'cc by 4.0', 'cc by 3.0',
+        }:
+            problems.append(f'required sound cue {cue}: needs a source URL and a supported free license')
+    return problems
+
+
 def audit_cues(data):
     """Fail before GPU use when an ASMR sound plan cannot create its stated cues."""
     from presentation_mode import choose
@@ -494,6 +522,9 @@ def audit_cues(data):
             problems.append(f'required sound cue {name}: matching field recording is missing')
         elif not any(name in planned_cues(shot) for shot in data['plan']['shots']):
             problems.append(f'required sound cue {name}: no shot schedules the cue')
+    if 'requiredRecordedActions' in audio_plan:
+        scheduled = {cue for shot in data['plan']['shots'] for cue in planned_cues(shot)}
+        problems.extend(audit_recorded_actions(audio_plan['requiredRecordedActions'], samples, scheduled))
     problems.extend(audit_music(audio_plan.get('music'), sum(shot['seconds'] for shot in data['plan']['shots'])))
     resolved, hit_problems = resolve_accents(data)
     problems.extend(hit_problems)
@@ -584,10 +615,10 @@ def build(shots, total, seed=311, foley_samples=None, continuous_room=False, rec
     if continuous_room:
         # An ASMR film still has an acoustic floor between discrete actions.
         # This is quiet kitchen ambience, not a music bed.
-        if recordings_only:
-            if not foley_samples or 'room' not in foley_samples:
-                raise ValueError('recordings-only ASMR needs recorded room ambience')
+        if 'room' in (foley_samples or {}):
             put(recording_slice(foley_samples['room'], total), 0, GAIN['room'] * 0.6)
+        elif recordings_only:
+            raise ValueError('recordings-only ASMR needs recorded room ambience')
         else:
             put(room(total, rng), 0, GAIN['room'] * 0.6)
 
@@ -697,15 +728,19 @@ def main():
                 print('BLOCKED:', problem)
                 gate_event('sound', 'blocked', sound_code(problem), problem)
             raise SystemExit('Sound accent gate failed; refusing to mix a breath over narration')
-    mix, plan = build(shots, total, foley_samples=(data.get('audioPlan') or {}).get('foleySamples'),
-                      continuous_room=choose(data)['mode'] == 'asmr' or recordings_only,
+    audio_plan = data.get('audioPlan') or {}
+    foley_samples = audio_plan.get('foleySamples') or {}
+    mix, plan = build(shots, total, foley_samples=foley_samples,
+                      continuous_room=choose(data)['mode'] == 'asmr' or recordings_only or 'room' in foley_samples,
                       recordings_only=recordings_only, accents=accents)
     sfx = video.with_suffix('.sfx.wav')
     write_wav(sfx, mix)
     out = video.with_suffix('.sfx.mp4')
     breath = breath_chain(accents)
     base_chain = "[0:a]highpass=f=70,afftdn=nr=6:nf=-45" + (f',{breath}' if breath else '') + '[base]'
-    music = (data.get('audioPlan') or {}).get('music') or None
+    music = audio_plan.get('music') or None
+    if music_disabled(music):
+        music = None
     graph = mix_graph(base_chain, total, music)
     inputs = ['-i', str(video), '-i', str(sfx), '-i', str(voice)]
     if music:

@@ -18,6 +18,7 @@ const PROMPT_LIMIT = 1000;
 export const SHEET_SLOTS = ['front', 'three-quarter', 'profile', 'full-body', 'hands', 'expression-neutral',
   'expression-smile', 'expression-thinking'];
 // FLUX.2 klein on this Mac takes up to three references; these are the ones that carry identity best.
+export const THREE_ANGLE_SLOTS = ['front', 'three-quarter-left', 'three-quarter-right'];
 const SHOT_REFERENCES = ['front', 'three-quarter', 'full-body'];
 
 export function loadStylePack(id) {
@@ -40,7 +41,7 @@ export function findCharacter(id, catalogue = loadCatalogue()) {
 // A slot counts only when its image exists in the Studio's reference store and still has the approved hash.
 export function sheetStatus(character, { refDir = path.join(ROOT, 'storage', 'studio-characters') } = {}) {
   const slots = {};
-  for (const slot of SHEET_SLOTS) {
+  for (const slot of new Set([...SHEET_SLOTS, ...THREE_ANGLE_SLOTS.filter((slot) => character.referenceSheet?.[slot])])) {
     const entry = character.referenceSheet?.[slot];
     if (!entry) { slots[slot] = 'missing'; continue; }
     if (!REF_ID.test(String(entry.refId)) || !/^[0-9a-f]{64}$/.test(String(entry.sha256))) { slots[slot] = 'invalid'; continue; }
@@ -50,7 +51,7 @@ export function sheetStatus(character, { refDir = path.join(ROOT, 'storage', 'st
     slots[slot] = actual === entry.sha256 ? 'approved' : 'changed';
   }
   const approved = Object.values(slots).filter((s) => s === 'approved').length;
-  return { slots, approved, complete: approved === SHEET_SLOTS.length };
+  return { slots, approved, complete: SHEET_SLOTS.every((slot) => slots[slot] === 'approved') };
 }
 
 const sentence = (text) => { const t = String(text || '').trim(); return !t ? '' : /[.!?]$/.test(t) ? t : t + '.'; };
@@ -63,7 +64,7 @@ const fit = (text) => {
 
 // What one shot of this character needs. Action first, then identity, place and style, so the
 // action is never cut off. Fails closed on forbidden style references and on changed reference images.
-export function composeCharacterShot({ character, styleId, action, studioId = null, lightingVariantId = 'base', refDir } = {}) {
+export function composeCharacterShot({ character, styleId, action, studioId = null, lightingVariantId = 'base', refDir, referenceMode = 'legacy', preferredAngle = 'front' } = {}) {
   if (!character) throw new Error('A character is required.');
   if (character.requiresOwnerApproval || (typeof character.age === 'number' && character.age < 18)) {
     throw new Error('This character is blocked from shot composition pending owner review.');
@@ -80,7 +81,18 @@ export function composeCharacterShot({ character, styleId, action, studioId = nu
   const studio = studioId ? loadStudioPreset(studioId, lightingVariantId) : null;
   const sheet = sheetStatus(character, { refDir });
   if (Object.values(sheet.slots).includes('changed')) throw new Error(`${character.id} reference sheet changed after approval; re-approve it.`);
-  const references = SHOT_REFERENCES.filter((slot) => sheet.slots[slot] === 'approved')
+  let referenceSlots = SHOT_REFERENCES;
+  if (referenceMode === 'three-angle' || referenceMode === 'closest-angle') {
+    if (!THREE_ANGLE_SLOTS.includes(preferredAngle)) throw new Error('Invalid preferred reference angle.');
+    referenceSlots = [preferredAngle, ...THREE_ANGLE_SLOTS.filter((slot) => slot !== preferredAngle)];
+    if (!THREE_ANGLE_SLOTS.every((slot) => sheet.slots[slot] === 'approved')) {
+      throw new Error('Three-angle references require approved front, left, and right portraits.');
+    }
+    if (referenceMode === 'closest-angle') referenceSlots = referenceSlots.slice(0, 1);
+  } else if (referenceMode !== 'legacy') {
+    throw new Error('Unknown character reference mode.');
+  }
+  const references = referenceSlots.filter((slot) => sheet.slots[slot] === 'approved')
     .map((slot) => ({ slot, refId: character.referenceSheet[slot].refId, sha256: character.referenceSheet[slot].sha256 }));
   const imagePrompt = fit([sentence(action), sentence(character.identityBlock),
     studio && `Setting: ${sentence(studio.set)}`, studio && `Light: ${sentence(studio.lighting)}`,

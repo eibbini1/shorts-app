@@ -171,6 +171,25 @@ def review_still_with_retries(initial_reference, prompt, subject, required, seed
     raise RuntimeError(f'Vision review did not complete after {attempts} attempts')
 
 
+def fixed_stage_checks(shot, checks, explicit=False):
+    """A locked shot requires its start state and excludes its finished result."""
+    state = shot.get('sceneState') or {}
+    before = str(state.get('before', '')).strip()
+    after = str(state.get('after', '')).strip()
+    if not before or not after or before == after:
+        raise ValueError('locked shot requires different first and final states')
+    if explicit:
+        for key in ('mustShow', 'mustNotShow'):
+            if not checks.get(key) or any(not item.strip() or len(item) > 180 for item in checks[key]):
+                raise ValueError('explicit locked-beat checks require short visible required and forbidden facts')
+        return checks
+    return {
+        **checks,
+        'mustShow': list(dict.fromkeys([before, *checks.get('mustShow', [])])),
+        'mustNotShow': list(dict.fromkeys([after, *checks.get('mustNotShow', [])])),
+    }
+
+
 def review_vision(reference, prompt, checks, cache_dir):
     command = ['python3', ROOT / 'scripts/check-still-vision.py', '--image', reference,
                '--prompt', prompt, '--cache-dir', cache_dir]
@@ -420,9 +439,19 @@ def main():
                 any(not isinstance(value, str) for value in checks.get(key, []))
                 for key in ('mustShow', 'mustNotShow', 'questions')):
             parser.error(f'visualChecks shot {number} must contain string lists named mustShow, mustNotShow and questions')
+    if source_data.get('fixedBeatCount'):
+        if source_data['fixedBeatCount'] != len(plan['shots']):
+            parser.error('The locked beat count must match the storyboard.')
+        try:
+            explicit = source_data.get('fixedBeatVisualChecks') == 'explicit'
+            visual_checks = [fixed_stage_checks(shot, checks, explicit)
+                             for shot, checks in zip(plan['shots'], visual_checks)]
+        except ValueError as error:
+            parser.error(str(error))
     pinned = None
     pinned_review_method = None
     approved_pinned = False
+    human_approved_pinned = False
     if os.environ.get('SHORTS_STUDIO_PIN_FRAMES') == '1':
         try:
             pinned, pinned_manifest = read_manifest_details(work, scenario, len(plan['shots']))
@@ -430,6 +459,9 @@ def main():
             parser.error(f'Pinned Studio frames are invalid: {error}')
         pinned_review_method = pinned_manifest.get('reviewMethod')
         approved_pinned = pinned_review_method in ('human', 'vision')
+        human_approved_pinned = pinned_review_method == 'human'
+    if source_data.get('fixedBeatCount') and args.skip_vision_gate and not human_approved_pinned:
+        parser.error('Locked beats require a vision check or hash-pinned human-approved first frames.')
     if not args.skip_vision_gate and not approved_pinned:
         try:
             with urllib.request.urlopen('http://127.0.0.1:11434/api/tags', timeout=5) as response:
@@ -593,7 +625,8 @@ def main():
                                 'reason': assessment.get('reason', '')})
             selected_file = str(selected.relative_to(work)) if selected and selected.is_relative_to(work) else None
             entry = {'shot': index + 1, 'candidates': entries, 'selectedFile': selected_file,
-                     'visualChecks': checks}
+                     'visualChecks': checks,
+                     'sourceReferenceSha256': file_hash(source) if source else None}
             pending_frames[:] = [item for item in pending_frames if item['shot'] != index + 1]
             pending_frames.append(entry)
             pending_frames.sort(key=lambda item: item['shot'])

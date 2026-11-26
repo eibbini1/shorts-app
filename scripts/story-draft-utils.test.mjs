@@ -144,3 +144,12 @@ test('identity wrapping is idempotent even when a model echoes it or truncates i
   assert.ok(applyVisualIdentityLock(truncated, 'A red fox', 'Orange coat and black paws.', action).startsWith(action));
   assert.throws(() => applyVisualIdentityLock(truncated, 'A red fox', 'Orange coat'), /no visual content/);
 });
+
+test('repair validates the changed state after reconciling the previous shot', () => {
+  const previous = 'An undusted truffle rests on the board.';
+  const state = { before: 'The baker holds the truffle.', action: 'The baker dusts the truffle with cocoa.', after: previous };
+  assert.equal(repairSceneState(state, '', (text) => /dusts/.test(text), previous), true);
+  assert.equal(state.before, previous);
+  assert.notEqual(state.after, state.before);
+  assert.match(state.after, /dusts the truffle with cocoa/);
+});
