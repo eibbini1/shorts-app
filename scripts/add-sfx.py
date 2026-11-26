@@ -33,6 +33,7 @@ import sys
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from audio_standards import loudnorm_filter  # noqa: E402
 from pipeline_events import gate as gate_event  # noqa: E402
 
 SOUND_CODES = (('accent plan', 'accent-plan'), ('has a gap', 'asmr-gap'), ('sound line is empty', 'cue-missing'), ('needs a matching field recording', 'recording-missing'),
@@ -310,7 +311,7 @@ def mix_graph(base_chain, breath_total, music=None):
     mixed = '[base][duck]' + ('[musd]' if music else '')
     return ('[1:a]aresample=48000[fx];' + narration + bed +
             '[fx][key]sidechaincompress=threshold=0.003:ratio=20:attack=8:release=350[duck];' + base_chain +
-            f';{mixed}amix=inputs={inputs}:normalize=0:duration=first,loudnorm=I=-14:TP=-1.5:LRA=11[a]')
+            f';{mixed}amix=inputs={inputs}:normalize=0:duration=first,{loudnorm_filter()}[a]')
 
 
 def resolve_accents(data):

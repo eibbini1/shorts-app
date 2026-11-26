@@ -3,7 +3,7 @@
 
   python3 scripts/qa-local-video.py --video outputs/ID.captioned.mp4 [--pack outputs/ID.pack.json] [--work-dir storage/any-local/ID.local-scenario]
 
-Checks: black frames, frozen picture, loudness (target about -16 LUFS), clipping, silence over 1 s,
+Checks: black frames, frozen picture, loudness (target about -15 LUFS), clipping, silence over 1 s,
 length 20-35 s, and that narration starts within 1 s (hook spoken early). Exit 1 when a check fails.
 """
 import argparse
@@ -14,9 +14,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-from first_checks import longest_freeze as measure_freeze
-from first_checks import picture_problem
-from presentation_mode import choose as choose_presentation
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from audio_standards import loudnorm_filter, qa_loudness_ok  # noqa: E402
+from first_checks import longest_freeze as measure_freeze  # noqa: E402
+from first_checks import picture_problem  # noqa: E402
+from presentation_mode import choose as choose_presentation  # noqa: E402
 
 
 def ffmpeg_log(args):
@@ -54,12 +56,12 @@ def main():
     longest_freeze = longest_freeze_s
     results['frozenPicture'] = {'longestSeconds': longest_freeze, 'ok': longest_freeze < 2.5}
 
-    loud = ffmpeg_log(['-i', str(video), '-af', 'loudnorm=I=-16:TP=-1.5:print_format=json', '-vn', '-f', 'null', '-'])
+    loud = ffmpeg_log(['-i', str(video), '-af', loudnorm_filter(print_json=True), '-vn', '-f', 'null', '-'])
     block = re.search(r'\{[^{}]*"input_i"[^{}]*\}', loud)
     if block:
         stats = json.loads(block.group(0))
         lufs, peak = float(stats['input_i']), float(stats['input_tp'])
-        results['loudness'] = {'lufs': lufs, 'truePeakDb': peak, 'ok': -19 <= lufs <= -13 and peak <= -0.5}
+        results['loudness'] = {'lufs': lufs, 'truePeakDb': peak, 'ok': qa_loudness_ok(lufs, peak)}
     else:
         results['loudness'] = {'ok': False, 'note': 'could not measure'}
     silence = re.findall(r'silence_duration: ([\d.]+)', ffmpeg_log(['-i', str(video), '-af', 'silencedetect=n=-45dB:d=1.0', '-vn', '-f', 'null', '-']))

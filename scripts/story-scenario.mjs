@@ -301,7 +301,7 @@ for(let i=0;i<count;i++){
     if(!hasVisiblePhysicalAction(shot.sceneState.action)||normalize(shot.sceneState.before)===normalize(shot.sceneState.after)||
       (shots.length>0&&normalize(shot.sceneState.before)!==normalize(shots.at(-1).sceneState.after))) issues.push('state');
     if(audioChoice==='asmr'&&!hasSupportedAsmrCue(shot.sound)) issues.push('sound');
-    if(seenNarration.some(value=>similar(value,shot.narration,0.85))||words>maxWords||words<minWords||fragmentEnd.test(shot.narration)) issues.push('narration');
+    if(audioChoice!=='asmr'&&(seenNarration.some(value=>similar(value,shot.narration,0.85))||words>maxWords||words<minWords||fragmentEnd.test(shot.narration))) issues.push('narration');
     if(!issues.length) break;
     rewriteCount++;
     if(attempt===2){
@@ -435,7 +435,7 @@ for(const field of ['imagePrompt','motionPrompt']){
     seen.add(key);
   }
 }
-const overlong=shots.flatMap((shot,i)=>shot.narration.split(/\s+/).length>Math.ceil(shot.seconds*2.5)?[i+1]:[]);
+const overlong=audioChoice==='asmr'?[]:shots.flatMap((shot,i)=>shot.narration.split(/\s+/).length>Math.ceil(shot.seconds*2.5)?[i+1]:[]);
 if(overlong.length) throw new Error(`Narration too long in shots ${overlong.join(', ')}; rerun with a more specific ending`);
 const plan={ideas:outline.ideas,title:outline.title,hook:creativeBrief.hookImage||outline.hook,payoff:outline.payoff,shots,claimsToCheck:[]};
 verifyScenario(plan,settings);

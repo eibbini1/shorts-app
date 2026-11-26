@@ -92,6 +92,8 @@ test('an unreadable users file locks the Studio instead of opening it', { timeou
     assert.equal(await status(server.base, '/api/me', ANA), 401);
     fs.writeFileSync(usersFile(root), JSON.stringify({ users: 'not a list' }));
     assert.equal(await status(server.base, '/api/me'), 401, 'a users file of the wrong shape must not unlock the Studio');
+    fs.writeFileSync(usersFile(root), '[]');
+    assert.equal(await status(server.base, '/api/me'), 401, 'a JSON array users file must fail closed instead of unlocking as empty');
 
     // Repairing the file restores the relatives' links.
     writeUsers(root);
@@ -137,6 +139,9 @@ test('a creator opens files in their own work folder and nobody else\'s', { time
     fs.mkdirSync(path.join(root, 'storage/any-local/ana-film.local-scenario-copy'), { recursive: true });
     fs.writeFileSync(path.join(root, 'storage/any-local/ana-film.local-scenario-copy/x.png'), 'other');
     assert.equal(await status(server.base, '/media?p=storage/any-local/ana-film.local-scenario-copy/x.png', ANA), 403);
+    // Unattended server queue belongs exclusively to the owner.
+    assert.equal(await status(server.base, '/api/queue', ANA), 403);
+    assert.equal(await status(server.base, '/api/queue', OWNER), 200);
   } finally {
     await stop(server);
     fs.rmSync(root, { recursive: true, force: true });

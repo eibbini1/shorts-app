@@ -6,7 +6,7 @@ import { selectPeopleStory } from './people-stories.mjs';
 
 const studios = fs.readdirSync(new URL('../data/studios/', import.meta.url)).filter(name=>name.endsWith('.json') && name!=='luxury-kitchen.json');
 test('every everyday studio has three valid lighting choices and no claimed plates',()=>{
-  assert.equal(studios.length,31); // 16 everyday + 15 worldwide
+  assert.equal(studios.length,35); // 16 everyday + 15 worldwide + 4 Levant/Gulf
   for(const name of studios){
     const base=loadStudioPreset(name.slice(0,-5));
     assert.equal(base.status,'prompt-only');

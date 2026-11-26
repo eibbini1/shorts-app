@@ -7,22 +7,11 @@ def run_fixture():
     root=pathlib.Path(tempfile.mkdtemp(prefix='ishorts-ux-check-'))
     for folder in ['scripts','outputs','storage/studio-sessions','storage/studio-learning','drafts/generated','bin']:
         (root/folder).mkdir(parents=True)
-    shutil.copy('scripts/studio-server.mjs',root/'scripts')
-    shutil.copy('scripts/studio-motion-state.mjs',root/'scripts')
-    shutil.copy('scripts/motion_takes.py',root/'scripts')
-    shutil.copy('scripts/studio-session-utils.mjs',root/'scripts')
-    shutil.copy('scripts/studio-export-review.mjs',root/'scripts')
-    shutil.copy('scripts/studio-ideas.mjs',root/'scripts')
-    shutil.copy('scripts/studio-refine-idea.mjs',root/'scripts')
-    shutil.copy('scripts/story-draft-utils.mjs',root/'scripts')
-    shutil.copy('scripts/shot-normalize.mjs',root/'scripts')
-    shutil.copy('scripts/studio-learning-signals.mjs',root/'scripts')
-    shutil.copy('scripts/studio-learning-memory.mjs',root/'scripts')
-    shutil.copy('scripts/studio-feedback.mjs',root/'scripts')
-    shutil.copy('scripts/story-action-gate.mjs',root/'scripts')
-    shutil.copy('scripts/creative-learning.mjs',root/'scripts')
-    shutil.copy('scripts/pipeline-events.mjs',root/'scripts')
-    shutil.copy('scripts/studio-watchdog.mjs',root/'scripts')
+    src_scripts = pathlib.Path(__file__).resolve().parent
+    for mjs in src_scripts.glob('*.mjs'):
+        if '.test.' not in mjs.name and not mjs.name.startswith('test-'):
+            shutil.copy(mjs, root / 'scripts')
+    shutil.copy(src_scripts / 'motion_takes.py', root / 'scripts')
     (root/'scripts/check-env.py').write_text("import sys\nprint('OK  ffmpeg')\nprint('FAIL FLUX model  -> run the setup script')\nsys.exit(1)\n")
     (root/'studio/dist').mkdir(parents=True)
     (root/'studio/dist/index.html').write_text('<html>Studio fixture</html>')

@@ -421,14 +421,16 @@ def main():
                 for key in ('mustShow', 'mustNotShow', 'questions')):
             parser.error(f'visualChecks shot {number} must contain string lists named mustShow, mustNotShow and questions')
     pinned = None
-    human_approved_pinned = False
+    pinned_review_method = None
+    approved_pinned = False
     if os.environ.get('SHORTS_STUDIO_PIN_FRAMES') == '1':
         try:
             pinned, pinned_manifest = read_manifest_details(work, scenario, len(plan['shots']))
         except (OSError, ValueError) as error:
             parser.error(f'Pinned Studio frames are invalid: {error}')
-        human_approved_pinned = pinned_manifest.get('reviewMethod') == 'human'
-    if not args.skip_vision_gate and not human_approved_pinned:
+        pinned_review_method = pinned_manifest.get('reviewMethod')
+        approved_pinned = pinned_review_method in ('human', 'vision')
+    if not args.skip_vision_gate and not approved_pinned:
         try:
             with urllib.request.urlopen('http://127.0.0.1:11434/api/tags', timeout=5) as response:
                 models = json.load(response).get('models', [])
@@ -607,8 +609,12 @@ def main():
                     persist_pending(candidate)
                     return 'review-required', f'First picture: {problem}'
                 print('First picture check passed', flush=True)
-            if human_approved_pinned:
+            if pinned_review_method == 'human':
                 candidate_reviews[candidate] = {'status': 'human-approved', 'reason': 'Exact frame selected in Studio'}
+                persist_pending(candidate)
+                return None
+            if pinned_review_method == 'vision':
+                candidate_reviews[candidate] = {'status': 'passed', 'reason': 'Verified by pre-motion vision gate'}
                 persist_pending(candidate)
                 return None
             if args.skip_vision_gate:
@@ -729,10 +735,12 @@ def main():
     if args.stills_only:
         review_required = any(status != 'passed' for status in frame_review_statuses)
         if not review_required and args.shot_only is None:
-            write_manifest(work, scenario, references)
+            write_manifest(work, scenario, references, review_method='vision')
         print('First frames ready for human review; no motion generated.' if review_required
               else 'First frames ready; no motion generated.', flush=True)
         return
+    if pinned is None and not any(status != 'passed' for status in frame_review_statuses):
+        write_manifest(work, scenario, references, review_method='vision')
     manifest = {'aspect': aspect, 'shots': segments,
                 'soundtrack': 'soundtrack.wav',
                 'voice': {'file': 'voice-timeline.wav', 'startSeconds': 0}}
