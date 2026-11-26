@@ -72,7 +72,7 @@
     "creative:learn:mac": "node scripts/creative-learning.mjs",
     "test:learning:feedback": "node --test scripts/test-creative-learning-feedback.mjs",
     "test:learning:signals": "node --test scripts/test-studio-learning-signals.mjs scripts/test-studio-learning-memory.mjs",
-    "test:studio:watchdog": "node --test --test-concurrency=1 scripts/studio-watchdog.test.mjs scripts/studio-watchdog.integration.test.mjs scripts/studio-watchdog-orphan.integration.test.mjs scripts/studio-take-worker-recovery.integration.test.mjs scripts/studio-unattended-queue.test.mjs scripts/studio-access.integration.test.mjs scripts/studio-users.test.mjs",
+    "test:studio:watchdog": "node --test --test-concurrency=1 scripts/studio-watchdog.test.mjs scripts/studio-watchdog.integration.test.mjs scripts/studio-watchdog-orphan.integration.test.mjs scripts/studio-take-worker-recovery.integration.test.mjs scripts/studio-unattended-queue.test.mjs scripts/studio-auth.test.mjs scripts/studio-media-files.test.mjs scripts/studio-presets.test.mjs scripts/studio-access.integration.test.mjs scripts/studio-users.test.mjs",
     "test:studio:brief:mac": "python3 scripts/test_director_brief.py && python3 scripts/test_studio_draft.py",
     "learn:run:mac": "python3 scripts/log-local-run.py",
     "score:video:mac": "python3 scripts/score-local-video.py",

@@ -3,8 +3,12 @@ import argparse
 import hashlib
 import json
 import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from flux_prompt import check_prompt  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL = ROOT / 'storage/models/flux2-klein-4b-4bit'
@@ -36,6 +40,9 @@ def main():
         parser.error('width and height must be multiples of 16 and at least 256')
     for item in (MODEL / 'transformer/0.safetensors', MODEL / 'text_encoder/0.safetensors'):
         if not item.is_file(): parser.error(f'Model incomplete: {item}. Run bash scripts/setup-mflux-mac.sh')
+    prompt_notes = check_prompt(args.prompt)
+    if prompt_notes:
+        print(f'FLUX prompt note: {"; ".join(prompt_notes)}', file=sys.stderr)
     command = [BIN / ('mflux-generate-flux2-edit' if source else 'mflux-generate-flux2'),
                '--model', MODEL, '--base-model', 'flux2-klein-4b', '--prompt', args.prompt,
                '--width', args.width, '--height', args.height, '--steps', 4,
@@ -48,7 +55,8 @@ def main():
     record = {'createdAt': datetime.now(timezone.utc).isoformat(),
               'model': 'mlx-community/flux2-klein-4b-4bit',
               'revision': '860e87183ceb29e39627c0612ebd66d8ea66e68c',
-              'runtime': 'mflux==0.24.0', 'prompt': args.prompt, 'seed': args.seed,
+              'runtime': 'mflux==0.24.0', 'prompt': args.prompt,
+              'promptNotes': prompt_notes, 'seed': args.seed,
               'width': args.width, 'height': args.height,
               'source': str(source) if source else None,
               'sourceSha256': digest(source) if source else None,

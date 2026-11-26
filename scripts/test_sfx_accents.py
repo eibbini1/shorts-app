@@ -172,7 +172,7 @@ class MusicBedTests(unittest.TestCase):
         bed_path = self.dir / 'bed.wav'
         write_test_wav(bed_path, 0.3 * np.sin(2 * np.pi * 440 * t))
         music = {'path': str(bed_path), 'gainDb': 0, 'fadeOut': 0}
-        graph = sfx.mix_graph('[0:a]anull[base]', 4, music).replace(',loudnorm=I=-14:TP=-1.5:LRA=11', '')
+        graph = sfx.mix_graph('[0:a]anull[base]', 4, music).replace(f',{sfx.loudnorm_filter()}', '')
         mixed = run_filter(graph, [film, fx, voice_path, bed_path], 4)
         level = lambda a, b: rms(mixed[int(a * R):int(b * R)])
         self.assertLess(level(1.8, 2.3), 0.5 * level(0.2, 1.0))
