@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pipeline_events import gate as gate_event  # noqa: E402
 from gate_severity import split as split_problems  # noqa: E402
 from look_profiles import default_studio_for, min_prompt_score_for  # noqa: E402
+from runtime_env import media_python  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SCN = re.compile(r'(drafts/generated/[^\s\'"]+\.local-scenario\.json)')
@@ -51,7 +52,7 @@ def checks(scn, allow_repeat):
         ('audit-local-story.py', [sys.executable, str(ROOT / 'scripts/audit-local-story.py'), scn]),
         ('evidence_gate.py', [sys.executable, str(ROOT / 'scripts/evidence_gate.py'), scn]),
     ]
-    audio_python = Path(os.environ.get('SHORTS_MEDIA_PY') or (ROOT / 'storage/tools/ComfyUI/.venv/bin/python'))
+    audio_python = media_python(ROOT)
     gates.append(('add-sfx.py', [str(audio_python), str(ROOT / 'scripts/add-sfx.py'), '--scenario', scn, '--audit']))
     for label, command in gates:
         problems, notes = run_gate(label, command)

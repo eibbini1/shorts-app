@@ -7,8 +7,12 @@ import os
 import plistlib
 import shutil
 import subprocess
+import sys
 import time
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from output_spec import check_output_file  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -95,6 +99,7 @@ def main():
         raise SystemExit(f'FilmCraft export failed: {exported}')
     report = {'input': str(video), 'inputSha256': hashlib.sha256(video.read_bytes()).hexdigest(),
               'output': str(output), 'outputSha256': hashlib.sha256(output.read_bytes()).hexdigest(),
+              'outputSpec': check_output_file(output),
               'project': str(project), 'filmcraftCliVersion': version, 'contrast': args.contrast,
               'elapsedSeconds': round(time.monotonic() - started, 2), 'export': exported}
     report_path = output.with_suffix('.filmcraft.json')

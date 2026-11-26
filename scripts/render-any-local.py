@@ -19,6 +19,7 @@ from presentation_mode import choose as choose_presentation
 import render_quality
 import motion_takes
 import still_lessons
+from runtime_env import ltx_cli, media_python
 from select_still_local import select as select_still_local
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -319,7 +320,7 @@ def clip(work, index, part, shot, seed, reference, width, height, model, gemma, 
     if cache_only:
         raise RuntimeError(f'Cache-only mode: missing valid motion for shot {index + 1}.{part + 1}: {target}')
     print(f'Generating local LTX motion {index + 1}.{part + 1}: {target.name}', flush=True)
-    command = [ROOT / 'storage/tools/ltx-2-mlx/.venv/bin/ltx-2-mlx', 'generate',
+    command = [ltx_cli(ROOT), 'generate',
         '--model', model, '--gemma', gemma, '--distilled', '--low-ram', '--no-audio',
         '--seed', seed, '--image', reference, 0, 1.0, *(['--image', end, LAST_FRAME, 1.0] if end is not None else []), '--prompt', prompt,
         '-H', height, '-W', width, '-f', 97, '--frame-rate', FPS, '-o', target]
@@ -520,7 +521,7 @@ def main():
         with ThreadPoolExecutor(max_workers=2) as pool:
             voice_job = (pool.submit(run, 'node', ROOT / 'scripts/narrate-any-local.mjs', scenario, work)
                          if presentation['voice'] else None)
-            sound_job = pool.submit(run, Path(os.environ.get('SHORTS_MEDIA_PY') or (ROOT / 'storage/tools/ComfyUI/.venv/bin/python')),
+            sound_job = pool.submit(run, media_python(ROOT),
                                     ROOT / 'scripts/sound-any-local.py', scenario, work)
             if voice_job:
                 voice_job.result()

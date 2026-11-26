@@ -18,7 +18,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from audio_standards import loudnorm_filter, qa_loudness_ok  # noqa: E402
 from first_checks import longest_freeze as measure_freeze  # noqa: E402
 from first_checks import picture_problem  # noqa: E402
+from output_spec import OUTPUT_SPEC, check_output_file  # noqa: E402
 from presentation_mode import choose as choose_presentation  # noqa: E402
+
+_QA = OUTPUT_SPEC['qa']
 
 
 def ffmpeg_log(args):
@@ -44,17 +47,27 @@ def main():
     args = parser.parse_args()
     video = args.video.resolve()
     video_sha256 = file_sha256(video)
+    scenario_data = json.loads(args.scenario.read_text(encoding='utf-8-sig')) if args.scenario else None
+    scenario_format = ((scenario_data or {}).get('settings') or {}).get('format')
+    expected_orientation = ('wide' if scenario_format in ('long', 'wide') else 'vertical') if scenario_format else None
     duration = float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', str(video)],
                                     capture_output=True, text=True).stdout.strip())
     results, failures = {}, []
 
+    spec_result = check_output_file(video, orientation=expected_orientation)
+    results['videoSpec'] = {
+        'ok': spec_result['ok'],
+        'specVersion': spec_result['specVersion'],
+        'issues': spec_result['issues'],
+    }
+
     black = re.findall(r'black_duration:([\d.]+)', ffmpeg_log(['-i', str(video), '-vf', 'blackdetect=d=0.3:pix_th=0.10', '-an', '-f', 'null', '-']))
     longest_black = max(map(float, black), default=0)
-    results['blackFrames'] = {'longestSeconds': longest_black, 'ok': longest_black < 0.5}
+    results['blackFrames'] = {'longestSeconds': longest_black, 'ok': longest_black < _QA['maxBlackSeconds']}
     # Each clip is a still brought to life; a long frozen stretch means the motion model returned a still.
     longest_freeze_s = measure_freeze(video)
     longest_freeze = longest_freeze_s
-    results['frozenPicture'] = {'longestSeconds': longest_freeze, 'ok': longest_freeze < 2.5}
+    results['frozenPicture'] = {'longestSeconds': longest_freeze, 'ok': longest_freeze < _QA['maxFreezeSeconds']}
 
     loud = ffmpeg_log(['-i', str(video), '-af', loudnorm_filter(print_json=True), '-vn', '-f', 'null', '-'])
     block = re.search(r'\{[^{}]*"input_i"[^{}]*\}', loud)
@@ -66,11 +79,11 @@ def main():
         results['loudness'] = {'ok': False, 'note': 'could not measure'}
     silence = re.findall(r'silence_duration: ([\d.]+)', ffmpeg_log(['-i', str(video), '-af', 'silencedetect=n=-45dB:d=1.0', '-vn', '-f', 'null', '-']))
     longest_silence = max(map(float, silence), default=0)
-    results['silence'] = {'longestSeconds': longest_silence, 'ok': longest_silence < 1.5}
+    results['silence'] = {'longestSeconds': longest_silence, 'ok': longest_silence < _QA['maxSilenceSeconds']}
     expected = args.expected_seconds
     results['length'] = ({'seconds': round(duration, 2), 'expectedSeconds': expected,
-                          'ok': abs(duration - expected) <= 0.15} if expected is not None else
-                         {'seconds': round(duration, 1), 'ok': 20 <= duration <= 35})
+                          'ok': abs(duration - expected) <= _QA['durationToleranceSeconds']} if expected is not None else
+                         {'seconds': round(duration, 1), 'ok': _QA['defaultMinSeconds'] <= duration <= _QA['defaultMaxSeconds']})
 
     work = args.work_dir
     if work is None:
@@ -79,7 +92,7 @@ def main():
         stem = re.sub(r'-\d{8}-\d{6}$', '', stem)
         candidate = video.parent.parent / 'storage/any-local' / f'{stem}.local-scenario'
         work = candidate if candidate.is_dir() else None
-    presentation = choose_presentation(json.loads(args.scenario.read_text(encoding='utf-8-sig'))) if args.scenario else {'mode': 'voiced'}
+    presentation = choose_presentation(scenario_data) if scenario_data else {'mode': 'voiced'}
     if presentation['mode'] == 'asmr':
         problem = picture_problem(video, at=0.2)
         results['visualHookEarly'] = {'firstFrameAtSeconds': 0.2, 'ok': problem is None,
@@ -87,7 +100,7 @@ def main():
     elif work and (work / 'voice-provenance.json').is_file():
         lines = json.loads((work / 'voice-provenance.json').read_text())['lines']
         start = lines[0]['atSeconds'] if lines else None
-        results['hookSpokenEarly'] = {'firstLineAtSeconds': start, 'ok': start is not None and start <= 1.0}
+        results['hookSpokenEarly'] = {'firstLineAtSeconds': start, 'ok': start is not None and start <= _QA['maxFirstVoiceSeconds']}
     else:
         results['hookSpokenEarly'] = {'ok': False,
                                       'note': 'voice timeline not found; cannot verify early spoken hook'}

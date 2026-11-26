@@ -12,6 +12,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from runtime_env import ltx_cli, media_python  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -44,12 +47,13 @@ def main():
     needed = {
         'FLUX image tool (mflux)': ROOT / 'storage/tools/mflux/.venv/bin/mflux-generate-flux2',
         'FLUX model': ROOT / 'storage/models/flux2-klein-4b-4bit',
-        'LTX video tool': ROOT / 'storage/tools/ltx-2-mlx/.venv/bin/ltx-2-mlx',
+        'LTX video tool': ltx_cli(ROOT),
         'Kokoro voice (node)': ROOT / 'storage/tools/kokoro/node_modules/kokoro-js',
-        'Soundtrack python': Path(os.environ.get('SHORTS_MEDIA_PY') or (ROOT / 'storage/tools/ComfyUI/.venv/bin/python')),
+        'Soundtrack python': media_python(ROOT),
     }
     for name, path in needed.items():
-        report(path.exists(), name, f'missing {path.relative_to(ROOT)}; run the setup script for it (scripts/setup-*.sh)')
+        shown = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path
+        report(path.exists(), name, f'missing {shown}; run the setup script for it (scripts/setup-*.sh)')
     mflux_python = ROOT / 'storage/tools/mflux/.venv/bin/python'
     if mflux_python.exists() and not args.skip_gpu:
         try:

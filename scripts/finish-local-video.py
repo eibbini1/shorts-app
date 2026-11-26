@@ -11,9 +11,13 @@ import json
 import re
 import subprocess
 import shutil
+import sys
 from pathlib import Path
-from presentation_mode import choose as choose_presentation
-from evidence_gate import check as check_evidence
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from output_spec import check_output_file  # noqa: E402
+from presentation_mode import choose as choose_presentation  # noqa: E402
+from evidence_gate import check as check_evidence  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 WORDS_PER_SECOND = 2.6   # Kokoro speed 1 reads about this fast; only used to split one line into short captions
@@ -213,11 +217,17 @@ def main():
     music_note = '\n\nMusic: ' + music_credit if music_credit else ''
     release_problems = evidence_problems + [note for note in evidence_notes if
         'history is empty' in note or 'signature missing' in note or 'outside the four-format' in note]
+    expected_orientation = 'wide' if settings.get('format') in ('long', 'wide') else 'vertical'
+    output_spec_check = (
+        None if args.prepare_only
+        else check_output_file(out, orientation=expected_orientation)
+    )
     pack = {'title': plan['title'][:100],
             'description': f"{plan['hook']}\n\n{plan['payoff']}{price_note}{recipe_note}{music_note}\n\n#shorts",
             'tags': tags, 'claimsToCheck': plan.get('claimsToCheck', []),
             'video': out.name, 'captions': caption_name, 'presentationMode': presentation['mode'],
             'presentationReason': presentation['reason'], 'seconds': settings['seconds'],
+            **({'outputSpec': output_spec_check} if output_spec_check is not None else {}),
             'note': 'Review before upload. Nothing is uploaded by this script.',
             'evidenceGate': {'passed': not evidence_problems, 'problems': evidence_problems, 'reviewNotes': evidence_notes},
             'uploadChecklist': {

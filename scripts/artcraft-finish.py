@@ -15,6 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from audio_standards import TARGET_LUFS  # noqa: E402
+from output_spec import check_output_file  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 TOOLS = ROOT / 'storage/tools/artcraft'
@@ -241,6 +242,7 @@ def main():
     if not output.is_file() or not output.stat().st_size:
         raise SystemExit(f'FilmCraft export failed: {exported}')
     report = {'output': str(output), 'project': str(project), 'segments': [s.name for s in segments],
+              'outputSpec': check_output_file(output),
               'soundcraftMix': mixed, 'voice': voice_report, 'title': args.title, 'captions': str(args.captions) if args.captions else None,
               'captionRender': 'post-filmcraft-ass' if arabic_captions else ('filmcraft-overlay' if args.captions else None),
               'sharpen': args.sharpen, 'fps': args.fps,

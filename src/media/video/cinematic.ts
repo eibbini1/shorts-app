@@ -5,9 +5,11 @@
  * filter-graph assembler (docs/DECISIONS.md D1).
  */
 
-export const OUT_WIDTH = 1080;
-export const OUT_HEIGHT = 1920;
-export const FPS = 30;
+import { OUTPUT_SPEC, buildLoudnormFilter } from './OutputSpec.js';
+
+export const OUT_WIDTH = OUTPUT_SPEC.video.vertical.width;
+export const OUT_HEIGHT = OUTPUT_SPEC.video.vertical.height;
+export const FPS = OUTPUT_SPEC.video.defaultTsFps;
 /** Stills are pre-scaled by this factor before zoompan so slow moves stay sub-pixel smooth (no jitter). */
 export const STILL_SUPERSAMPLE = 1.25;
 
@@ -163,10 +165,10 @@ export const NARRATION_CHAIN =
   'highpass=f=80,equalizer=f=250:t=q:w=1:g=-2,equalizer=f=3500:t=q:w=1:g=2.5,acompressor=threshold=-18dB:ratio=3:attack=8:release=120:makeup=3';
 
 /**
- * Final master: YouTube normalises to roughly -14 LUFS; delivering there avoids YouTube
- * turning a quiet Short down OR crushing a loud one. Single-pass loudnorm + true-peak limit.
+ * Final master: uses the shared OutputSpec loudness target (-15 LUFS, -1.5 dBTP)
+ * plus a true-peak safety limiter so TS and local pipelines deliver consistent levels.
  */
-export const MASTER_CHAIN = 'loudnorm=I=-14:TP=-1.5:LRA=9,alimiter=limit=0.84:level=disabled';
+export const MASTER_CHAIN = `${buildLoudnormFilter()},alimiter=limit=0.84:level=disabled`;
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, v));
