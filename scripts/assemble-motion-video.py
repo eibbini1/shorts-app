@@ -1,7 +1,9 @@
 """Assemble generated motion clips and local audio into a reviewed video."""
 
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -28,6 +30,56 @@ def resolve(base, value):
     return (path if path.is_absolute() else base / path).resolve()
 
 
+def build_segment_filter(start_frame, end_frame, target_frames, width, height, fps=FPS):
+    """Build FFmpeg video filter for a shot segment.
+
+    Skips CPU bidirectional optical flow (minterpolate) when native clip frames already
+    satisfy target_frames within the 8k+1 margin (target_frames <= source_frames <= target_frames + 2),
+    preserving native motion fidelity and avoiding optical-flow CPU overhead.
+    """
+    source_frames = end_frame - start_frame
+    scale_crop = (f'scale={width}:{height}:force_original_aspect_ratio=increase,'
+                  f'crop={width}:{height},setsar=1,format=yuv420p')
+    if target_frames <= source_frames <= target_frames + 2:
+        exact_end = start_frame + target_frames
+        return f'trim=start_frame={start_frame}:end_frame={exact_end},setpts=PTS-STARTPTS,{scale_crop}'
+    speed = (target_frames + 2) / source_frames
+    return (f'trim=start_frame={start_frame}:end_frame={end_frame},'
+            f'setpts={speed:.9f}*(PTS-STARTPTS),'
+            f'minterpolate=fps={fps}:mi_mode=mci:mc_mode=aobmc:me_mode=bidir,'
+            f'tpad=stop_mode=clone:stop_duration=0.125,'
+            f'trim=end_frame={target_frames},setpts=PTS-STARTPTS,'
+            f'{scale_crop}')
+
+
+def assemble_segment(index, total_shots, shot, base, work, width, height):
+    source = resolve(base, shot['file'])
+    if not source.is_file():
+        raise ValueError(f'Missing motion clip: {source}')
+    frames = round(float(shot['seconds']) * FPS)
+    if frames < FPS // 2:
+        raise ValueError(f'Shot {index} is too short')
+    data = probe(source)
+    if data['r_frame_rate'] != '24/1':
+        raise ValueError(f'Shot {index} must be 24 fps')
+    source_frames = int(data['nb_frames'])
+    start_frame = int(shot.get('startFrame', 0))
+    end_frame = int(shot.get('endFrame', source_frames))
+    if not 0 <= start_frame < end_frame <= source_frames:
+        raise ValueError(f'Shot {index} has invalid source frame bounds')
+    destination = work / f'segment-{index:03d}.mp4'
+    vf = build_segment_filter(start_frame, end_frame, frames, width, height, fps=FPS)
+    fast = 'minterpolate' not in vf
+    mode = 'native-trim' if fast else 'minterpolate'
+    print(f'Assembling shot {index + 1}/{total_shots} ({mode}): {source.name}', flush=True)
+    run('ffmpeg', '-y', '-hide_banner', '-loglevel', 'error', '-i', source,
+        '-vf', vf, '-frames:v', frames, '-an', '-c:v', 'libx264',
+        '-crf', 18, '-preset', 'veryfast', '-r', FPS, destination)
+    if int(probe(destination)['nb_frames']) != frames:
+        raise RuntimeError(f'Wrong frame count in shot {index}')
+    return destination, frames
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--manifest', required=True, type=Path)
@@ -49,40 +101,19 @@ def main():
     total_frames = 0
     work = output.parent / (output.stem + '.assembly')
     work.mkdir(parents=True, exist_ok=True)
-    segments = []
-    for index, shot in enumerate(shots):
-        source = resolve(base, shot['file'])
-        if not source.is_file():
-            parser.error(f'Missing motion clip: {source}')
-        frames = round(float(shot['seconds']) * FPS)
-        if frames < FPS // 2:
-            parser.error(f'Shot {index} is too short')
-        data = probe(source)
-        if data['r_frame_rate'] != '24/1':
-            parser.error(f'Shot {index} must be 24 fps')
-        source_frames = int(data['nb_frames'])
-        start_frame = int(shot.get('startFrame', 0))
-        end_frame = int(shot.get('endFrame', source_frames))
-        if not 0 <= start_frame < end_frame <= source_frames:
-            parser.error(f'Shot {index} has invalid source frame bounds')
-        source_frames = end_frame - start_frame
-        speed = (frames + 2) / source_frames
-        destination = work / f'segment-{index:03d}.mp4'
-        vf = (f'trim=start_frame={start_frame}:end_frame={end_frame},'
-              f'setpts={speed:.9f}*(PTS-STARTPTS),'
-              f'minterpolate=fps={FPS}:mi_mode=mci:mc_mode=aobmc:me_mode=bidir,'
-              f'tpad=stop_mode=clone:stop_duration=0.125,'
-              f'trim=end_frame={frames},setpts=PTS-STARTPTS,'
-              f'scale={width}:{height}:force_original_aspect_ratio=increase,'
-              f'crop={width}:{height},setsar=1,format=yuv420p')
-        print(f'Assembling shot {index + 1}/{len(shots)}: {source.name}', flush=True)
-        run('ffmpeg', '-y', '-hide_banner', '-loglevel', 'error', '-i', source,
-            '-vf', vf, '-frames:v', frames, '-an', '-c:v', 'libx264',
-            '-crf', 18, '-preset', 'veryfast', '-r', FPS, destination)
-        if int(probe(destination)['nb_frames']) != frames:
-            raise RuntimeError(f'Wrong frame count in shot {index}')
-        segments.append(destination)
-        total_frames += frames
+    max_workers = max(1, min(len(shots), int(os.environ.get('SHORTS_ASSEMBLE_WORKERS', min(4, os.cpu_count() or 2)))))
+    try:
+        if max_workers == 1:
+            built = [assemble_segment(i, len(shots), shot, base, work, width, height) for i, shot in enumerate(shots)]
+        else:
+            with ThreadPoolExecutor(max_workers=max_workers) as pool:
+                futures = [pool.submit(assemble_segment, i, len(shots), shot, base, work, width, height)
+                           for i, shot in enumerate(shots)]
+                built = [future.result() for future in futures]
+    except ValueError as error:
+        parser.error(str(error))
+    segments = [item[0] for item in built]
+    total_frames = sum(item[1] for item in built)
     listing = work / 'concat.txt'
     listing.write_text(''.join(f"file '{item}'\n" for item in segments))
     base_video = work / 'base.mp4'

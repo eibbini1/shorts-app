@@ -6,11 +6,14 @@ import type { HostedMotionDispatcher } from './HostedMotionDispatcher.js';
 export interface HostedMotionWorkerOptions {
   pollIntervalMs: number;
   batchSize: number;
+  maxConcurrency?: number;
   limitsForProvider(provider: string): HostedJobConcurrencyLimits;
   artifactOptionsForProvider(provider: string): HostedArtifactTransferOptions;
 }
 
 export class HostedMotionWorker {
+  private readonly maxConcurrency: number;
+
   constructor(
     private readonly dispatcher: HostedMotionDispatcher,
     private readonly jobs: HostedJobsRepository,
@@ -22,23 +25,36 @@ export class HostedMotionWorker {
     if (!Number.isSafeInteger(options.batchSize) || options.batchSize <= 0) {
       throw new ConfigError('Hosted worker batchSize must be a positive safe integer.');
     }
+    const maxConcurrency = options.maxConcurrency ?? options.batchSize;
+    if (!Number.isSafeInteger(maxConcurrency) || maxConcurrency <= 0) {
+      throw new ConfigError('Hosted worker maxConcurrency must be a positive safe integer.');
+    }
+    this.maxConcurrency = maxConcurrency;
   }
 
   async runOnce(): Promise<HostedJob[]> {
     const states = new Map<string, HostedJob>();
-    for (const job of [...await this.dispatcher.expire(), ...await this.dispatcher.recover()]) {
+    const [expired, recovered] = [
+      await this.dispatcher.expire(this.maxConcurrency),
+      await this.dispatcher.recover(this.maxConcurrency),
+    ];
+    for (const job of [...expired, ...recovered]) {
       states.set(job.jobId, job);
     }
-    for (const job of states.values()) {
-      if (job.status === 'succeeded' && (!job.artifactPath || !job.artifactSha256)) {
-        await this.dispatcher.transferArtifact(job.jobId, this.options.artifactOptionsForProvider(job.provider));
-        states.set(job.jobId, this.jobs.getById(job.jobId));
-      }
-    }
 
-    for (const job of this.jobs.queuedJobs().slice(0, this.options.batchSize)) {
-      states.set(job.jobId, await this.dispatcher.dispatch(job.jobId, this.options.limitsForProvider(job.provider)));
-    }
+    const pendingTransfers = [...states.values()].filter(
+      (job) => job.status === 'succeeded' && (!job.artifactPath || !job.artifactSha256),
+    );
+    await runBounded(pendingTransfers, this.maxConcurrency, async (job) => {
+      await this.dispatcher.transferArtifact(job.jobId, this.options.artifactOptionsForProvider(job.provider));
+      states.set(job.jobId, this.jobs.getById(job.jobId));
+    });
+
+    const queued = this.jobs.queuedJobs().slice(0, this.options.batchSize);
+    await runBounded(queued, this.maxConcurrency, async (job) => {
+      const updated = await this.dispatcher.dispatch(job.jobId, this.options.limitsForProvider(job.provider));
+      states.set(job.jobId, updated);
+    });
     return [...states.values()];
   }
 
@@ -48,6 +64,24 @@ export class HostedMotionWorker {
       await delay(this.options.pollIntervalMs, signal);
     }
   }
+}
+
+async function runBounded<T>(
+  items: readonly T[],
+  limit: number,
+  worker: (item: T) => Promise<void>,
+): Promise<void> {
+  if (items.length === 0) return;
+  let nextIndex = 0;
+  const slots = Math.min(limit, items.length);
+  await Promise.all(
+    Array.from({ length: slots }, async () => {
+      while (nextIndex < items.length) {
+        const current = items[nextIndex++]!;
+        await worker(current);
+      }
+    }),
+  );
 }
 
 function delay(milliseconds: number, signal: AbortSignal): Promise<void> {

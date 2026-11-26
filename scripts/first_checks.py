@@ -40,17 +40,27 @@ def log(args):
     return subprocess.run(['ffmpeg', '-hide_banner', '-nostats', *args], capture_output=True, text=True).stderr
 
 
+def parse_black_seconds(text):
+    """Longest black interval in seconds from FFmpeg blackdetect log output."""
+    return max(map(float, re.findall(r'black_duration:([\d.]+)', text)), default=0.0)
+
+
+def parse_freeze_seconds(text, total_duration):
+    """Longest frozen stretch in seconds from FFmpeg freezedetect log output."""
+    starts = [float(x) for x in re.findall(r'freeze_start: ([\d.]+)', text)]
+    ends = [float(x) for x in re.findall(r'freeze_end: ([\d.]+)', text)]
+    longest = max(map(float, re.findall(r'freeze_duration: ([\d.]+)', text)), default=0.0)
+    if len(starts) > len(ends) and total_duration > 0:
+        longest = max(longest, total_duration - starts[-1])
+    return longest
+
+
 def longest_freeze(path):
     """Longest frozen stretch in seconds. ffmpeg prints no duration when the freeze runs to the end, so count that from the start time."""
     text = log(['-i', str(path), '-vf', 'freezedetect=n=-55dB:d=1.5', '-an', '-f', 'null', '-'])
     total = float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', str(path)],
                                  capture_output=True, text=True).stdout.strip() or 0)
-    starts = [float(x) for x in re.findall(r'freeze_start: ([\d.]+)', text)]
-    ends = [float(x) for x in re.findall(r'freeze_end: ([\d.]+)', text)]
-    longest = max(map(float, re.findall(r'freeze_duration: ([\d.]+)', text)), default=0)
-    if len(starts) > len(ends):
-        longest = max(longest, total - starts[-1])
-    return longest
+    return parse_freeze_seconds(text, total)
 
 
 def check_still(path):
@@ -61,10 +71,13 @@ def check_clip(path):
     problem = picture_problem(path)
     if problem:
         return 'first frame: ' + problem
-    black = max(map(float, re.findall(r'black_duration:([\d.]+)', log(['-i', str(path), '-vf', 'blackdetect=d=0.3:pix_th=0.10', '-an', '-f', 'null', '-']))), default=0)
+    text = log(['-i', str(path), '-vf', 'blackdetect=d=0.3:pix_th=0.10,freezedetect=n=-55dB:d=1.5', '-an', '-f', 'null', '-'])
+    black = parse_black_seconds(text)
     if black >= 0.5:
         return f'clip has {black:.1f} s of black'
-    frozen = longest_freeze(path)
+    total = float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', str(path)],
+                                 capture_output=True, text=True).stdout.strip() or 0)
+    frozen = parse_freeze_seconds(text, total)
     if frozen >= 2.5:
         return f'motion model returned a still picture for {frozen:.1f} s'
     return None

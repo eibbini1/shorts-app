@@ -100,4 +100,62 @@ describe('HostedMotionWorker', () => {
     expect(jobs.getById(job.jobId).artifactPath).toContain(job.jobId);
     expect(spend.getReservation(job.idempotencyKey)).toMatchObject({ status: 'settled', actualUsd: 0.2 });
   });
+
+  it('dispatches and polls multiple jobs concurrently up to maxConcurrency', async () => {
+    let activeSubmissions = 0;
+    let peakSubmissions = 0;
+    let seq = 0;
+    vi.mocked(adapter.submit).mockImplementation(async () => {
+      activeSubmissions += 1;
+      peakSubmissions = Math.max(peakSubmissions, activeSubmissions);
+      await new Promise((resolve) => setTimeout(resolve, 25));
+      activeSubmissions -= 1;
+      return { providerJobId: `remote-${++seq}` };
+    });
+
+    const parallelWorker = new HostedMotionWorker(dispatcher, jobs, {
+      pollIntervalMs: 100,
+      batchSize: 4,
+      maxConcurrency: 4,
+      limitsForProvider: () => ({ controller: 4, provider: 4 }),
+      artifactOptionsForProvider: () => ({
+        storageRoot,
+        allowedHosts: ['storage.example'],
+        maxBytes: 16,
+        timeoutMs: 1_000,
+        fetcher: vi.fn<typeof fetch>().mockImplementation(async () => new Response(new Uint8Array([1, 2, 3]), {
+          status: 200,
+          headers: { 'content-length': '3' },
+        })),
+      }),
+    });
+
+    for (let i = 0; i < 4; i += 1) {
+      dispatcher.enqueue({
+        idempotencyKey: `parallel-job-${i}`,
+        runId: 'parallel-run',
+        provider: 'provider-a',
+        engineId: 'engine-a',
+        request: { ...request, seed: i + 1 },
+        maximumChargeUsd: 0.25,
+        capUsd: 2,
+        dispatchTimeoutMs: 5_000,
+        queueTimeoutMs: 5_000,
+        workerTimeoutMs: 10_000,
+      });
+    }
+
+    const dispatched = await parallelWorker.runOnce();
+    expect(dispatched.filter((j) => j.status === 'submitted')).toHaveLength(4);
+    expect(peakSubmissions).toBeGreaterThanOrEqual(2);
+
+    vi.mocked(adapter.getStatus).mockImplementation(async (providerJobId) => ({
+      status: 'succeeded',
+      artifactRef: `object-${providerJobId}`,
+      actualCostUsd: 0.1,
+    }));
+
+    const completed = await parallelWorker.runOnce();
+    expect(completed.filter((j) => j.status === 'succeeded' && j.artifactSha256)).toHaveLength(4);
+  });
 });

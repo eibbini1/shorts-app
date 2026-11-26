@@ -44,16 +44,22 @@ def file_hash(path):
     return sha.hexdigest()
 
 
-def valid_video(path):
+def valid_video(path, expected_frames=None):
     if not path.is_file(): return False
+    target_frames = expected_frames or render_quality.FRAMES
     try:
         stream = json.loads(subprocess.check_output(['ffprobe', '-v', 'error',
             '-select_streams', 'v:0', '-show_entries',
             'stream=nb_frames,width,height,r_frame_rate', '-of', 'json', str(path)]))['streams'][0]
-        return (stream['nb_frames'] == str(render_quality.FRAMES) and stream['r_frame_rate'] == '24/1'
+        return (stream['nb_frames'] == str(target_frames) and stream['r_frame_rate'] == '24/1'
                 and (int(stream['width']), int(stream['height'])) in render_quality.known_sizes())
     except (KeyError, IndexError, ValueError, subprocess.CalledProcessError):
         return False
+
+
+def should_batch_stills_before_motion(chain_images, stills_only, shot_only):
+    """Batch all stills + vision checks before motion when shots do not depend on previous motion end frames."""
+    return not chain_images and not stills_only and shot_only is None
 
 
 def prep_still(work, reference):
@@ -191,9 +197,10 @@ def fixed_stage_checks(shot, checks, explicit=False):
     }
 
 
-def review_vision(reference, prompt, checks, cache_dir):
+def review_vision(reference, prompt, checks, cache_dir, keep_alive_after='0'):
     command = ['python3', ROOT / 'scripts/check-still-vision.py', '--image', reference,
-               '--prompt', prompt, '--cache-dir', cache_dir]
+               '--prompt', prompt, '--cache-dir', cache_dir,
+               '--keep-alive-after', str(keep_alive_after)]
     for value in checks.get('mustShow', []):
         command.extend(['--must-show', value])
     for value in checks.get('mustNotShow', []):
@@ -302,16 +309,20 @@ def end_anchor(shot, work, width, height):
     return target
 
 
-def clip(work, index, part, shot, seed, reference, width, height, model, gemma, progress, cache_only=False):
+def clip(work, index, part, shot, seed, reference, width, height, model, gemma, progress, cache_only=False,
+         frames=None):
+    clip_frames = frames or render_quality.FRAMES
+    last_frame_idx = clip_frames - 1
     prompt = shot['motionPrompt'].strip() + ' One continuous camera take with coherent physical movement, stable subject identity and lighting.'
     end = end_anchor(shot, work, width, height)
     identity = {'prompt': prompt, 'seed': seed, 'referenceHash': file_hash(reference),
-                'model': model, 'gemma': gemma, 'frames': 97, 'width': width, 'height': height}
+                'model': model, 'gemma': gemma, 'frames': clip_frames, 'width': width, 'height': height}
     if end is not None:  # added only when set, so clips cached before this option keep their names
         identity['endHash'] = file_hash(end)
     key = digest(identity)
     target = work / 'motion' / f'shot-{index:02d}-part-{part:02d}-{key}.mp4'
-    if valid_video(target):
+    is_valid = valid_video(target) if frames is None else valid_video(target, expected_frames=clip_frames)
+    if is_valid:
         print(f'Reusing motion {index + 1}.{part + 1}: {target.name}', flush=True)
         target.touch()  # the Studio shows the newest clip per shot, so a reused earlier take becomes the current one
         progress.mark_complete(index, part)
@@ -322,8 +333,8 @@ def clip(work, index, part, shot, seed, reference, width, height, model, gemma, 
     print(f'Generating local LTX motion {index + 1}.{part + 1}: {target.name}', flush=True)
     command = [ltx_cli(ROOT), 'generate',
         '--model', model, '--gemma', gemma, '--distilled', '--low-ram', '--no-audio',
-        '--seed', seed, '--image', reference, 0, 1.0, *(['--image', end, LAST_FRAME, 1.0] if end is not None else []), '--prompt', prompt,
-        '-H', height, '-W', width, '-f', 97, '--frame-rate', FPS, '-o', target]
+        '--seed', seed, '--image', reference, 0, 1.0, *(['--image', end, last_frame_idx, 1.0] if end is not None else []), '--prompt', prompt,
+        '-H', height, '-W', width, '-f', clip_frames, '--frame-rate', FPS, '-o', target]
     started = time.monotonic()
     process = subprocess.Popen([str(item) for item in command], cwd=ROOT)
     try:
@@ -338,7 +349,8 @@ def clip(work, index, part, shot, seed, reference, width, height, model, gemma, 
         process.wait()
         raise
     if code: raise subprocess.CalledProcessError(code, command)
-    if not valid_video(target): raise RuntimeError(f'Motion failed verification: {target}')
+    post_valid = valid_video(target) if frames is None else valid_video(target, expected_frames=clip_frames)
+    if not post_valid: raise RuntimeError(f'Motion failed verification: {target}')
     progress.observed.append(time.monotonic()-started)
     progress.mark_complete(index, part)
     print(progress(), flush=True)
@@ -353,9 +365,9 @@ def matches_approved_take(take, scenario_hash, reference_hash, render_settings):
 
 
 def select_motion_segment(work, index, part, shot, seed, reference, width, height, model, gemma,
-                          progress, cache_only=False, expected=None):
+                          progress, cache_only=False, expected=None, frames=None):
     path = clip(work, index, part, shot, seed, reference, width, height, model, gemma, progress,
-                cache_only=cache_only or expected is not None)
+                cache_only=cache_only or expected is not None, frames=frames)
     segment = {'clip': str(path.relative_to(work)), 'sha256': file_hash(path), 'seed': seed}
     if expected is not None and segment != expected:
         raise RuntimeError(f'Shot {index + 1}: selected motion cache no longer matches the reviewed take.')
@@ -512,6 +524,8 @@ def main():
     bumps_file = work / 'refs' / 'seed-bumps.json'  # written by the Studio when you press Regenerate on a first frame
     try: bumps = json.loads(bumps_file.read_text()) if bumps_file.is_file() else {}
     except ValueError: bumps = {}
+    run_started = time.monotonic()
+    stage_timings_ms = {'audioPrep': 0, 'stillsAndVision': 0, 'motion': 0, 'assembly': 0}
     if args.stills_only:
         print('First-frame review only: skipping narration, soundtrack, and motion preparation.', flush=True)
     else:
@@ -532,6 +546,7 @@ def main():
                 silent.writeframes(b'\0' * settings['seconds'] * 48000 * 4)
             (work / 'voice-provenance.json').write_text(json.dumps({'engine': 'none', 'voice': None,
                 'lines': [], 'presentation': presentation}, indent=2) + '\n')
+        stage_timings_ms['audioPrep'] = round((time.monotonic() - audio_started) * 1000)
         print(f'Parallel voice and soundtrack preparation: {time.monotonic() - audio_started:.1f}s', flush=True)
         # A deliberate music or recorded-room bed can carry a visual pause. Final-file QA
         # still rejects actual silence; a bare voice track with dead air stops before GPU.
@@ -564,9 +579,12 @@ def main():
         progress_state.write_text(json.dumps({'scenarioSha256': file_hash(scenario),
             'output': str(output.resolve()), 'completed': []}) + '\n')
         print(progress(), flush=True)
-    for index, shot in enumerate(plan['shots']):
-        if args.shot_only is not None and index + 1 != args.shot_only:
-            continue
+
+    use_native_frames = os.environ.get('SHORTS_NATIVE_CLIP_FRAMES') == '1'
+
+    def prepare_shot_still(index, shot, vision_keep_alive='0'):
+        nonlocal story_anchor
+        t_still = time.monotonic()
         checks = visual_checks[index] or {}
         candidate_paths = []
         candidate_reviews = {}
@@ -655,7 +673,7 @@ def main():
                 candidate_reviews[candidate] = {'status': 'unverified', 'reason': 'Vision gate explicitly skipped'}
                 persist_pending(candidate)
                 return None
-            result = review_vision(candidate, prompt, checks, work / 'refs')
+            result = review_vision(candidate, prompt, checks, work / 'refs', keep_alive_after=vision_keep_alive)
             candidate_reviews[candidate] = {'status': 'passed', 'reason': ''} if result is None else {
                 'status': result[0], 'reason': result[1][:300]}
             persist_pending(candidate)
@@ -699,12 +717,13 @@ def main():
         end_still = end_still_for(work, index, shot, 1200 + index, reference, width, height, args.cache_only)
         if end_still is not None and 'endStill' not in shot:
             print(f'End frame ready for shot {index + 1}: {Path(end_still).name}', flush=True)
-        if args.stills_only:
-            print(f'First frame ready for shot {index + 1}: {reference.name}', flush=True)
-            continue
-        approved_reference = reference
-        if args.prep_stills:
-            reference = prep_still(work, reference)
+        stage_timings_ms['stillsAndVision'] += round((time.monotonic() - t_still) * 1000)
+        return reference, end_still
+
+    def render_shot_motion(index, shot, approved_reference, end_still):
+        nonlocal previous
+        t_motion = time.monotonic()
+        reference = prep_still(work, approved_reference) if args.prep_stills else approved_reference
         parts = math.ceil(shot['seconds'] / 5)
         total_frames = shot['seconds'] * FPS
         frame_counts = [total_frames // parts + (1 if part < total_frames % parts else 0) for part in range(parts)]
@@ -712,8 +731,13 @@ def main():
         committed = committed_takes.get(str(index), {}).get('completed', {}).get(str(take))
         scenario_hash = file_hash(scenario)
         reference_hash = file_hash(approved_reference)
+        shot_clip_frames = [
+            render_quality.frames_for_seconds(fc / FPS, fps=FPS, native=True) if use_native_frames else None
+            for fc in frame_counts
+        ]
         render_settings = {'quality': render_quality.pick(settings), 'width': width, 'height': height,
-                           'frames': render_quality.FRAMES, 'fps': FPS,
+                           'frames': shot_clip_frames[0] if use_native_frames and len(set(shot_clip_frames)) == 1 else render_quality.FRAMES,
+                           'fps': FPS,
                            'editor': 'artcraft' if args.prep_stills else 'ffmpeg', 'model': model, 'gemma': gemma}
         if take_shot and take_shot != index + 1 and committed and committed.get('renderSettings') != render_settings:
             raise RuntimeError(f'Shot {index + 1}: render settings changed. Render the full video before retaking a shot.')
@@ -727,6 +751,7 @@ def main():
         started_take = time.monotonic()
         technical_flags = []
         technical_screen = []
+        previous_clip = None
         for part, frame_count in enumerate(frame_counts):
             if part:
                 anchor = work / 'motion' / f'shot-{index:02d}-part-{part - 1:02d}-anchor.png'
@@ -740,7 +765,8 @@ def main():
             previous_clip, segment = select_motion_segment(
                 work, index, part, clip_shot, seed, reference, width, height, model, gemma, progress,
                 cache_only=args.cache_only or bool(take_shot and take_shot != index + 1),
-                expected=selected_segments[part] if selected_segments is not None else None)
+                expected=selected_segments[part] if selected_segments is not None else None,
+                frames=shot_clip_frames[part])
             shot_segments.append(segment)
             screen_first = gate and index == 0 and part == 0
             problem = None
@@ -755,6 +781,7 @@ def main():
                 print('First clip check passed', flush=True)
             segments.append({'file': str(previous_clip), 'seconds': frame_count / FPS})
         previous = extract_end_frame(work, index, previous_clip) if args.chain_images else reference
+        stage_timings_ms['motion'] += round((time.monotonic() - t_motion) * 1000)
         if take_report:
             motion_rows.append({
                 'schemaVersion': 1, 'shot': index + 1, 'take': take, 'parts': parts,
@@ -766,6 +793,29 @@ def main():
                 **({'technicalScreen': technical_screen} if technical_screen else {}),
                 **({'endFrame': str(previous.relative_to(work)), 'endFrameSha256': file_hash(previous)} if args.chain_images else {}),
             })
+
+    total_shots = len(plan['shots'])
+    if should_batch_stills_before_motion(args.chain_images, args.stills_only, args.shot_only):
+        # Stage-batch all stills + vision checks first (keeping qwen3-vl warm until the final still),
+        # then run all LTX motion clips contiguously without FLUX <-> Qwen <-> LTX swap thrashing.
+        prepared_stills = []
+        for index, shot in enumerate(plan['shots']):
+            keep_alive = '2m' if index < total_shots - 1 else '0'
+            approved_ref, end_still = prepare_shot_still(index, shot, vision_keep_alive=keep_alive)
+            prepared_stills.append((index, shot, approved_ref, end_still))
+        for index, shot, approved_ref, end_still in prepared_stills:
+            render_shot_motion(index, shot, approved_ref, end_still)
+    else:
+        for index, shot in enumerate(plan['shots']):
+            if args.shot_only is not None and index + 1 != args.shot_only:
+                continue
+            keep_alive = '2m' if args.stills_only and args.shot_only is None and index < total_shots - 1 else '0'
+            approved_ref, end_still = prepare_shot_still(index, shot, vision_keep_alive=keep_alive)
+            if args.stills_only:
+                print(f'First frame ready for shot {index + 1}: {approved_ref.name}', flush=True)
+                continue
+            render_shot_motion(index, shot, approved_ref, end_still)
+
     if args.stills_only:
         review_required = any(status != 'passed' for status in frame_review_statuses)
         if not review_required and args.shot_only is None:
@@ -783,7 +833,10 @@ def main():
     manifest_path = work / 'film-manifest.json'
     manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
     print(progress(), flush=True)
+    t_assemble = time.monotonic()
     run('python3', ROOT / 'scripts/assemble-motion-video.py', '--manifest', manifest_path, '--output', output)
+    stage_timings_ms['assembly'] = round((time.monotonic() - t_assemble) * 1000)
+    stage_timings_ms['total'] = round((time.monotonic() - run_started) * 1000)
     provenance = {'scenario': str(scenario), 'scenarioSha256': file_hash(scenario),
                   'output': str(output), 'outputSha256': file_hash(output),
                   'imageModel': 'user-supplied stills (FLUX for any missing shot)' if args.stills else 'FLUX.2 Klein 4B q4 via MFLUX', 'videoModel': model,
@@ -794,7 +847,8 @@ def main():
                             else 'original local synthesis'), 'chainImages': args.chain_images,
                   'presentation': presentation,
                   'stillVisionGate': 'skipped explicitly' if args.skip_vision_gate else 'local qwen3-vl:4b before motion',
-                  'motionClips': len(segments), 'totalSeconds': settings['seconds']}
+                  'motionClips': len(segments), 'totalSeconds': settings['seconds'],
+                  'stageTimingsMs': stage_timings_ms}
     output.with_suffix('.provenance.json').write_text(json.dumps(provenance, indent=2) + '\n')
     print(progress(), flush=True)
     print(f'Finished local video: {output}')
