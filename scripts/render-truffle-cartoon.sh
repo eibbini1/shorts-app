@@ -19,7 +19,7 @@ fi
 chrome="${SHORTS_CHROME:-/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}"
 [[ -x "$chrome" ]] || { echo 'Set SHORTS_CHROME to an installed Chrome executable.' >&2; exit 1; }
 work="$(mktemp -d "${TMPDIR:-/tmp}/shorts-truffle.XXXXXX")"
-trap 'rm -f "$work"/{picture.mp4,voice.wav,line-0.wav,line-1.wav,line-2.wav,voice-provenance.json}; rmdir "$work" 2>/dev/null || true' EXIT
+trap 'rm -f "$work"/{picture.mp4,premix.wav,voice.wav,line-0.wav,line-1.wav,line-2.wav,voice-provenance.json}; rmdir "$work" 2>/dev/null || true' EXIT
 
 echo 'Recording narration with local Kokoro'
 node --input-type=module - "$work" "$seconds" <<'JS'
@@ -70,14 +70,39 @@ mix='[room][slide][voice]amix=inputs=3:normalize=0:duration=first,alimiter=limit
 if [[ "$mode" == --story ]]; then
   room="[1:a]aresample=48000,highpass=f=135,volume=-8dB,afade=t=out:st=29.5:d=0.5[room]"
   voice="[3:a]aresample=48000,highpass=f=95,acompressor=threshold=0.15:ratio=2[voice]"
-  mix="[room][slide][voice]amix=inputs=3:normalize=0:duration=first,loudnorm=I=-16:TP=-1.8:LRA=11[audio]"
+  mix="[room][slide][voice]amix=inputs=3:normalize=0:duration=first[audio]"
 fi
 echo 'Finishing and exporting'
-ffmpeg -n -v error -i "$work/picture.mp4" \
-  -ss 18 -t "$seconds" -i assets/foley/public-domain/ambient-kitchen.ogg \
-  -ss 0.53 -t 0.36 -i assets/foley/freesound-cc0/634155-ceramic-slide.mp3 \
-  -i "$work/voice.wav" -filter_complex "$room;$slide;$voice;$mix" \
-  -map 0:v:0 -map '[audio]' -c:v copy -c:a aac -b:a 192k -ar 48000 -t "$seconds" "$output"
+if [[ "$mode" == --story ]]; then
+  # Two-pass loudness with the shared Studio targets (single-pass loudnorm undershoots sparse speech).
+  ffmpeg -n -v error -i "$work/picture.mp4" \
+    -ss 18 -t "$seconds" -i assets/foley/public-domain/ambient-kitchen.ogg \
+    -ss 0.53 -t 0.36 -i assets/foley/freesound-cc0/634155-ceramic-slide.mp3 \
+    -i "$work/voice.wav" -filter_complex "$room;$slide;$voice;$mix" \
+    -map '[audio]' -t "$seconds" "$work/premix.wav"
+  normalize="$(python3 - "$work/premix.wav" <<'PY3'
+import json, subprocess, sys
+sys.path.insert(0, 'scripts')
+from audio_standards import loudnorm_filter
+log = subprocess.run(['ffmpeg', '-hide_banner', '-i', sys.argv[1], '-af', loudnorm_filter(print_json=True),
+                      '-f', 'null', '-'], capture_output=True, text=True).stderr
+m, _ = json.JSONDecoder().raw_decode(log[log.rindex('{'):])
+print(loudnorm_filter() + (f":measured_I={m['input_i']}:measured_TP={m['input_tp']}"
+      f":measured_LRA={m['input_lra']}:measured_thresh={m['input_thresh']}"
+      f":offset={m['target_offset']}:linear=true"))
+PY3
+)"
+fi
+if [[ "$mode" == --story ]]; then
+  ffmpeg -n -v error -i "$work/picture.mp4" -i "$work/premix.wav" -af "$normalize" \
+    -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 192k -ar 48000 -t "$seconds" "$output"
+else
+  ffmpeg -n -v error -i "$work/picture.mp4" \
+    -ss 18 -t "$seconds" -i assets/foley/public-domain/ambient-kitchen.ogg \
+    -ss 0.53 -t 0.36 -i assets/foley/freesound-cc0/634155-ceramic-slide.mp3 \
+    -i "$work/voice.wav" -filter_complex "$room;$slide;$voice;$mix" \
+    -map 0:v:0 -map '[audio]' -c:v copy -c:a aac -b:a 192k -ar 48000 -t "$seconds" "$output"
+fi
 
 printf 'Exported %s\n' "$output"
 
