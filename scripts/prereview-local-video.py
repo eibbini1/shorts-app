@@ -2,7 +2,7 @@
 """Screen the exact finished film before a person rates it.
 
 The still gate checks pictures before motion; LTX can still morph the food while it moves. This
-re-asks each shot's visual questions on the final frame of that shot in the exported MP4, checks
+re-asks each shot's visual questions on its middle frame, samples tool movement across frames, checks
 that the opening and final dish match, measures loudness and per-shot sound, and builds a contact
 sheet for a fast continuity look. It never awards editorial points: the result only says which
 categories are likely to score below 4/5 so they can be fixed before the review.
@@ -22,21 +22,18 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from audio_standards import PREREVIEW_MAX_TP_DB, PREREVIEW_TOLERANCE_LUFS, TARGET_LUFS  # noqa: E402
 import look_drift  # noqa: E402
+from look_profiles import FOOD_RE, continuity_question_for, get_look_profile, is_food_scenario  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 CATEGORIES = ('continuity', 'realism', 'story', 'audio', 'payoff')
 LUFS_TOLERANCE, MAX_TRUE_PEAK = PREREVIEW_TOLERANCE_LUFS, PREREVIEW_MAX_TP_DB
 QUIET_SHOT_GAP_DB = 12.0
-CONTINUITY_QUESTION = ('The left half and the right half are two moments from one cooking video. '
-                       'Do both halves show the same kind of food with the same kind of topping?')
-SUBJECT_QUESTION = ('The left half and the right half are two moments from one short film. '
-                    'Do both halves show the same main character or object, looking the same?')
-FOOD_RE = re.compile(r'\b(food|dish|plate|bowl|meal|cook\w*|chef|kitchen|steak|burger|kebab|sushi|pasta|pizza|cake|dessert|sauce|soup|salad|egg|bread|wagyu|truffle|caviar|cheese|fries|taco)\b', re.I)
+CONTINUITY_QUESTION = get_look_profile('food')['continuityQuestion']
+SUBJECT_QUESTION = get_look_profile('custom')['continuityQuestion']
 
 
 def is_food_film(scenario):
-    text = ' '.join(str(shot.get('imagePrompt', '')) for shot in scenario['plan']['shots']) + ' ' + str(scenario.get('topic', ''))
-    return bool(FOOD_RE.search(text))
+    return is_food_scenario(scenario)
 
 
 def ending_question(scenario):
@@ -94,6 +91,58 @@ def motion_questions(scenario, checks, index):
     if action:
         return [f'Does this frame plausibly show the planned action underway: "{action[:180]}"?']
     return shot_questions(scenario, checks, index)
+
+
+UTENSIL = re.compile(r"\b(?:teaspoons?|tablespoons?|spoons?|forks?|knives|knife|spatulas?|tongs|whisks?|ladles?|"
+                     r"peelers?|graters?|chopsticks?|skewers?|rolling pins?|sieves?|sifters?|"
+                     r"cookie cutters?|pastry brushes?|kitchen torches?)\b", re.I)
+
+
+def utensil_for(shot):
+    """Prefer the motion wording so decorative utensils do not override the moving one."""
+    state = shot.get('sceneState') or {}
+    for value in (state.get('action'), shot.get('motionPrompt'), shot.get('imagePrompt')):
+        if match := UTENSIL.search(str(value or '')):
+            return match.group(0).lower()
+    return None
+
+
+def utensil_timeline(start, end):
+    # Include near-edge samples to catch an implausible entry or exit at either cut.
+    return [round(start + (end - start) * f, 3) for f in (0.03, 0.18, 0.38, 0.58, 0.79, 0.97)]
+
+
+def utensil_questions(shot, utensil):
+    ordered = 'Six consecutive samples of one shot, read left to right, top row then bottom. '
+    action = str((shot.get('sceneState') or {}).get('action') or shot.get('motionPrompt') or '')
+    first_action = action.split('.', 1)[0][:100]
+    return [
+        ordered + f'Does the {utensil} keep one shape and follow a physically plausible path into, through and out of view, without jumping, reversing abruptly, duplicating or bending? If it stays in view, judge the visible path.',
+        ordered + f'Planned action: {first_action}. Does the {utensil} visibly make the intended contact and cause the expected change at that spot? A nearby tool or a result without contact is insufficient.',
+    ]
+
+
+def check_utensil_motion(video, windows, shots, work, vision=None, cache=None):
+    results = []
+    for index, (shot, (start, end)) in enumerate(zip(shots, windows), 1):
+        utensil = utensil_for(shot)
+        if utensil is None:
+            continue
+        times = utensil_timeline(start, end)
+        result = {'shot': index, 'utensil': utensil, 'sampleSeconds': times}
+        if vision is None:
+            result.update(status='unavailable', issues=['ordered-frame vision review was skipped'])
+        else:
+            try:
+                frames = [grab(video, at, work / f'utensil-{index}-{sample}.png', width=270)
+                          for sample, at in enumerate(times, 1)]
+                labels = [f'{sample} · {at:.2f}s' for sample, at in enumerate(times, 1)]
+                sheet = contact_sheet(frames, labels, work / f'utensil-{index}-sheet.png')
+                result.update(ask(vision, sheet, utensil_questions(shot, utensil), cache))
+            except (OSError, ValueError, RuntimeError) as error:
+                result.update(status='unavailable', issues=[str(error)])
+        results.append(result)
+    return results
 
 
 def audio_flags(integrated, true_peak, shot_means):
@@ -246,9 +295,9 @@ def main():
     motion = [shot_motion(video, a, b) for a, b in windows]
     shot_results, payoff, continuity = [], None, None
     expected_ending = ending_question(scenario)
-    if not args.skip_vision:
-        vision = load_vision()
-        cache = video.parent / 'prereview-cache'
+    vision = None if args.skip_vision else load_vision()
+    cache = video.parent / 'prereview-cache'
+    if vision is not None:
         middle_questions = [motion_questions(scenario, checks, index) for index in range(len(windows))]
         # Middle frame: the shot's action is under way. An action that completes (an oven door closing)
         # legitimately hides the subject by the last frame, so only the final shot is checked at its end.
@@ -257,10 +306,18 @@ def main():
         payoff = ask(vision, ends[-1], [expected_ending], cache) if expected_ending else None
         if len(windows) > 1:
             continuity = ask(vision, side_by_side(starts[0], ends[-1], work / 'food.png'),
-                             [CONTINUITY_QUESTION if is_food_film(scenario) else SUBJECT_QUESTION], cache)
+                             [continuity_question_for(scenario)], cache)
+    utensil_motion = check_utensil_motion(video, windows, scenario['plan']['shots'], work, vision, cache)
     flags, unchecked = categorize(shot_results, payoff, continuity, audio)
     if sheet is None:
         unchecked.append('start/middle/end contact sheet could not be built')
+    for result in utensil_motion:
+        label = f"shot {result['shot']} {result['utensil']} motion"
+        issue = f'{label}: {"; ".join(result["issues"])}'
+        if result['status'] == 'unavailable':
+            unchecked.append(issue)
+        elif result['status'] != 'pass':
+            flags['realism'].append(issue)
     if not expected_ending:
         unchecked.append('final frame: no explicit ending outcome in the plan')
     if len(starts) > 1:
@@ -284,9 +341,9 @@ def main():
         'contactSheetSha256': hashlib.sha256(sheet.read_bytes()).hexdigest() if sheet else None,
         'sampleTimeline': timeline, 'loudnessLUFS': integrated, 'truePeakDBTP': peak,
         'shotMeanVolumeDB': means, 'shotMotion': motion, 'shots': shot_results, 'payoffFrame': payoff, 'foodContinuity': continuity,
-        'visionChecked': not args.skip_vision,
+        'visionChecked': not args.skip_vision, 'utensilMotion': utensil_motion,
         'flags': flags, 'likelyBelow4': likely_low, 'unchecked': unchecked,
-        'notMachineChecked': ['story', 'same kitchen across shots (use the contact sheet)', 'narration naturalness', 'sound cue timing by ear', 'whether the motion looks believable (only the amount of motion is measured)'],
+        'notMachineChecked': ['story', 'same kitchen across shots (use the contact sheet)', 'narration naturalness', 'sound cue timing by ear', 'full-speed motion and tool realism between sampled frames'],
         'note': 'Advisory screen of the final file. It adds no score; a person must still watch and listen.',
     }
     output.write_text(json.dumps(report, indent=2) + '\n')

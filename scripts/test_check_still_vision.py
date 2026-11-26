@@ -30,6 +30,26 @@ class VisionGateTests(unittest.TestCase):
                               questions=['Is the pan full of diced shallots?'])
                 self.assertEqual(call.call_count, 1)
 
+    def test_optional_question_cannot_override_premature_truffle_rejection(self):
+        with tempfile.TemporaryDirectory() as folder:
+            image = Path(folder) / 'premature-rolling-frame.png'
+            image.write_bytes(b'fixture for a round truffle already formed before rolling')
+            replies = [
+                {'answer': 'yes', 'reason': 'Chocolate is on the marble board'},
+                {'answer': 'yes', 'reason': 'A round formed truffle is visible'},
+            ]
+            with patch.object(vision, 'release'), patch.object(
+                vision.urllib.request, 'urlopen',
+                side_effect=[io.BytesIO(json.dumps({'message': {'content': json.dumps(reply)}}).encode())
+                             for reply in replies]
+            ) as model:
+                report, _ = vision.review(
+                    image, 'Roll the mound', must_show=['Chocolate on the board'],
+                    must_not_show=['A round formed truffle'], questions=['Is there chocolate?'])
+            self.assertEqual(report['status'], 'review-required')
+            self.assertEqual([c['kind'] for c in report['checks']], ['required', 'forbidden'])
+            self.assertEqual(model.call_count, 2)
+
     def test_empty_model_answer_fails_closed_and_is_not_cached_as_pass(self):
         with tempfile.TemporaryDirectory() as folder:
             image = Path(folder) / 'shot.png'

@@ -9,6 +9,8 @@ from pathlib import Path
 from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from look_profiles import LOOK_IDS, is_valid_look  # noqa: E402
 
 QUESTIONS = (
     ('topic', 'What is the video about? Name the exact dish or subject', ''),
@@ -81,16 +83,24 @@ def validate(raw):
         raise ValueError('Length must be 10–60 seconds')
     if brief['orientation'] == 'wide' and brief['seconds'] != 60:
         raise ValueError('The current wide scenario path requires 60 seconds')
+    raw_look = str(raw.get('look') or '').strip()
+    if raw_look:
+        if not is_valid_look(raw_look):
+            raise ValueError(f'Look must be one of {", ".join(LOOK_IDS)}')
+        brief['look'] = raw_look
     return brief
 
 
 def draft_command(brief, identifier, model):
-    return ['node', 'scripts/story-scenario.mjs', brief['topic'], identifier,
-            '--style', brief['style'], '--set', brief['set'], '--hook', brief['hook'],
-            '--must-show', brief['mustShow'], '--obstacle', brief['obstacle'],
-            '--turn', brief['turn'], '--ending', brief['ending'], '--audio', brief['audio'],
-            '--format', 'long' if brief['orientation'] == 'wide' else 'short',
-            '--seconds', str(brief['seconds']), '--model', model]
+    cmd = ['node', 'scripts/story-scenario.mjs', brief['topic'], identifier,
+           '--style', brief['style'], '--set', brief['set'], '--hook', brief['hook'],
+           '--must-show', brief['mustShow'], '--obstacle', brief['obstacle'],
+           '--turn', brief['turn'], '--ending', brief['ending'], '--audio', brief['audio'],
+           '--format', 'long' if brief['orientation'] == 'wide' else 'short',
+           '--seconds', str(brief['seconds']), '--model', model]
+    if brief.get('look'):
+        cmd.extend(['--look', brief['look']])
+    return cmd
 
 
 def main():

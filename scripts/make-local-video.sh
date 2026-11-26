@@ -140,7 +140,7 @@ env_args=()
 python3 scripts/check-env.py ${env_args[@]+"${env_args[@]}"} || { gate_event environment blocked env-check-failed 4; echo "Fix the FAIL lines above, then run this again." >&2; exit 4; }
 echo "Step 2/4  Pre-render check (topic, hook, length, currency, claims)"
 if [[ -z "$cache_only" ]]; then
-  python3 scripts/soft_gate.py --stage prompt --soft-all -- python3 scripts/prompt-lint.py "$scenario" --min-prompts="${SHORTS_MIN_PROMPT_SCORE:-85}" || { gate_event prompt blocked prompt-score-low 3; echo "Prompt gate blocked this scenario before any FLUX/LTX time. Run: python3 scripts/refine-prompts.py '$scenario' --studio luxury-kitchen --in-place (or set SHORTS_MIN_PROMPT_SCORE)." >&2; exit 3; }
+  python3 scripts/soft_gate.py --stage prompt --soft-all -- python3 scripts/prompt-lint.py "$scenario" --min-prompts="${SHORTS_MIN_PROMPT_SCORE:-auto}" || { gate_event prompt blocked prompt-score-low 3; echo "Prompt gate blocked this scenario before any FLUX/LTX time. Run: python3 scripts/refine-prompts.py '$scenario' --studio luxury-kitchen --in-place (or set SHORTS_MIN_PROMPT_SCORE)." >&2; exit 3; }
 fi
 python3 scripts/soft_gate.py --stage preflight -- python3 scripts/preflight-short.py "$scenario" --strict ${allow_repeat:+$allow_repeat} || { gate_event preflight blocked preflight-blocked 3; echo "Preflight blocked this scenario. Fix the listed problems before rendering." >&2; exit 3; }
 python3 scripts/soft_gate.py --stage story -- python3 scripts/audit-local-story.py "$scenario" || { gate_event story blocked story-blocked 3; echo 'Story gate blocked this scenario. Edit the plan before rendering.' >&2; exit 3; }

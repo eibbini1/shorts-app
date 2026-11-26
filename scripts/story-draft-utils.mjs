@@ -22,10 +22,10 @@ export function hasDanglingTail(text) {
 // Fill a missing or static scene-state action from the shot's own motion prompt. Local models often write
 // "stands tall" as the action or repeat the same text for before and after; the motion prompt already
 // holds a concrete movement, so reuse it instead of discarding the whole plan.
-export function repairSceneState(sceneState, motionPrompt, hasAction) {
+export function repairSceneState(sceneState, motionPrompt, hasAction, previousAfter = null) {
   if (!sceneState || typeof sceneState !== 'object') return false;
   const norm = value => String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-  let changed = false;
+  let changed = previousAfter !== null && reconcileSceneStateBefore(sceneState, previousAfter);
   if (!hasAction(sceneState.action)) {
     const sentence = String(motionPrompt || '').match(/[^.!?]+[.!?]?/)?.[0]?.trim();
     if (sentence && hasAction(sentence)) { sceneState.action = sentence.slice(0, 300); changed = true; }

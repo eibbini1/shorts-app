@@ -1,0 +1,161 @@
+{
+  "version": 1,
+  "note": "Catalogue only. Audio files live under assets/foley and stay out of Git. Run scripts/sfx_library.py scan after adding entries.",
+  "entries": [
+    {
+      "id": "crunch-husk-01",
+      "file": "assets/foley/public-domain/crunching.ogg",
+      "category": "crunch",
+      "license": "PUBLIC-DOMAIN",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Crunching_munching_grinding.ogg",
+      "recordedAction": "crushed pistachio husks (stand-in for a crispy crust)",
+      "tags": [
+        "crispy",
+        "dry",
+        "asmr"
+      ],
+      "durationSeconds": 16.797,
+      "peakDb": -7.2,
+      "rmsDb": -38.5,
+      "firstHitSeconds": 0.56,
+      "sha256": "366bed96ce1e3e06e74187a62833bfe9c352dce8cbf03e832cb5df1deb2344c0"
+    },
+    {
+      "id": "crunch-wafer-01",
+      "file": "assets/foley/freesound-cc0/723851-dry-crackle.mp3",
+      "category": "crunch",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://freesound.org/people/cognito%20perceptu/sounds/723851/",
+      "recordedAction": "wafer snap, dry crust break",
+      "tags": [
+        "crust",
+        "snap",
+        "dry"
+      ],
+      "durationSeconds": 2.308,
+      "peakDb": -12.7,
+      "rmsDb": -46.4,
+      "firstHitSeconds": 0.31,
+      "sha256": "2d027ac723177287f482dab90144d196e7c3253d4527b9e2038bdee011bd6b26"
+    },
+    {
+      "id": "bite-toast-01",
+      "file": "assets/foley/freesound-cc0/816237-toast-bite.mp3",
+      "category": "bite",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://freesound.org/people/qubodup/sounds/816237/",
+      "recordedAction": "single toast bite",
+      "tags": [
+        "toast",
+        "single"
+      ],
+      "durationSeconds": 0.399,
+      "peakDb": -2.7,
+      "rmsDb": -22.7,
+      "firstHitSeconds": 0.02,
+      "sha256": "b693efa2d24f2ce9dc9adc2403eb1cd440ff6b4ddd5203a7a03cc1b744aed5b9"
+    },
+    {
+      "id": "bite-crispbread-01",
+      "file": "assets/foley/freesound-cc0/535012-crispbread-bite.mp3",
+      "category": "bite",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://freesound.org/people/ursenfuns/sounds/535012/",
+      "recordedAction": "rice cakes and crispbread bites",
+      "tags": [
+        "crispbread",
+        "multiple"
+      ],
+      "durationSeconds": 3.472,
+      "peakDb": -8.0,
+      "rmsDb": -33.7,
+      "firstHitSeconds": 0.39,
+      "sha256": "0beaf35bf843e96156eb47a5b2d0591e056821d656a37f092417cbee5715af11"
+    },
+    {
+      "id": "sizzle-fries-01",
+      "file": "assets/foley/public-domain/frying-fries.ogg",
+      "category": "sizzle",
+      "license": "PUBLIC-DOMAIN",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Frying_fries_going_in_and_out_of_oil.ogg",
+      "recordedAction": "fries frying in oil",
+      "tags": [
+        "oil",
+        "fryer"
+      ],
+      "durationSeconds": 29.962,
+      "peakDb": -11.1,
+      "rmsDb": -43.9,
+      "firstHitSeconds": 2.42,
+      "sha256": "7f933637d2e180cee3ac286e311a9de7e83ff2436950e5b03106bc5438a4ed6b"
+    },
+    {
+      "id": "sizzle-beef-01",
+      "file": "assets/foley/public-domain/minced-beef-frying.ogg",
+      "category": "sizzle",
+      "license": "PUBLIC-DOMAIN",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Kj%C3%B8ttdeig.ogv",
+      "recordedAction": "minced beef frying on a pan",
+      "tags": [
+        "beef",
+        "griddle"
+      ],
+      "durationSeconds": 12.098,
+      "peakDb": -10.2,
+      "rmsDb": -29.6,
+      "firstHitSeconds": 0.01,
+      "sha256": "19e40b3cea8f6f0c05677ac5012df91ea70f8a8bc7dea4ded932b91f1107df69"
+    },
+    {
+      "id": "contact-ceramic-01",
+      "file": "assets/foley/freesound-cc0/634155-ceramic-slide.mp3",
+      "category": "contact",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://freesound.org/people/Erbsland-Music/sounds/634155/",
+      "recordedAction": "ceramic plate sliding on a ceramic surface",
+      "tags": [
+        "plate",
+        "slide"
+      ],
+      "durationSeconds": 2.375,
+      "peakDb": -1.6,
+      "rmsDb": -24.3,
+      "firstHitSeconds": 0.63,
+      "sha256": "5206c6c9cad9661907e487a6644eb1f5f99f876b9049d373a0d447144f9d1688"
+    },
+    {
+      "id": "contact-cutlery-01",
+      "file": "assets/foley/public-domain/wood-and-cutlery.ogg",
+      "category": "contact",
+      "license": "PUBLIC-DOMAIN",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Wood_and_cutlery.ogg",
+      "recordedAction": "cutlery placed on a wooden surface",
+      "tags": [
+        "cutlery",
+        "wood"
+      ],
+      "durationSeconds": 2.351,
+      "peakDb": -1.4,
+      "rmsDb": -28.2,
+      "firstHitSeconds": 0.53,
+      "sha256": "2af0dfc1e3aeb3334c58c0db73126fa992509bde15902d21efee6485979edbf8"
+    },
+    {
+      "id": "ambience-kitchen-01",
+      "file": "assets/foley/public-domain/ambient-kitchen.ogg",
+      "category": "ambience",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Ambient_Kitchen_Sounds.wav",
+      "recordedAction": "kitchen room tone",
+      "tags": [
+        "room",
+        "kitchen"
+      ],
+      "durationSeconds": 315.13,
+      "peakDb": -0.8,
+      "rmsDb": -27.3,
+      "firstHitSeconds": 0.27,
+      "sha256": "3aa4a9ae935412ae9f360ee7f09a656538f0fd83c0040d95b080d4bb9576c459"
+    }
+  ]
+}

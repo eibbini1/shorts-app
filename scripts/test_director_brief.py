@@ -74,6 +74,14 @@ class DirectorBriefTests(unittest.TestCase):
         self.assertRegex('The subject moves visibly while the camera tracks the action.', ABSTRACT_MOTION)
         self.assertRegex('It needs a little more moisture to balance the.', FRAGMENT_END)
 
+    def test_look_option_is_validated_and_appended_to_draft_command(self):
+        brief = validate({'topic': 'a red fox walking in snow', 'look': 'cartoon', 'seconds': '20', 'audio': 'asmr'})
+        self.assertEqual(brief['look'], 'cartoon')
+        cmd = draft_command(brief, 'fox-id', 'gemma-local')
+        self.assertEqual(cmd[-2:], ['--look', 'cartoon'])
+        with self.assertRaisesRegex(ValueError, 'Look must be one of'):
+            validate({'topic': 'a red fox', 'look': 'invalid-look'})
+
 
 if __name__ == '__main__':
     unittest.main()

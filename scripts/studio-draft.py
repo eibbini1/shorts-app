@@ -5,12 +5,13 @@ Usage: studio-draft.py --answers FILE [--allow-repeat] [--tries 3]
 Never shows a dead end for a fixable problem. Exit 0 = a plan that passed every gate;
 exit 3 = still blocked (the last BLOCKED lines say why; NEEDS-CHOICE lines name a user decision).
 """
-import argparse, os, re, subprocess, sys
+import argparse, json, os, re, subprocess, sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pipeline_events import gate as gate_event  # noqa: E402
 from gate_severity import split as split_problems  # noqa: E402
+from look_profiles import default_studio_for, min_prompt_score_for  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SCN = re.compile(r'(drafts/generated/[^\s\'"]+\.local-scenario\.json)')
@@ -79,16 +80,32 @@ def checks(scn, allow_repeat):
 _polished = set()
 
 
+def _load_scenario_dict(scn):
+    try:
+        target = Path(scn)
+        if not target.is_absolute():
+            target = ROOT / target
+        return json.loads(target.read_text(encoding='utf-8-sig'))
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
 def polish(scn):
-    """Food films must pass the picture-prompt score (85) before any FLUX/LTX time; the refiner lifts most plans past it."""
-    if os.environ.get('SHORTS_MIN_PROMPT_SCORE') == '0':
-        return []  # the Studio sets this for non-food looks, where the food-prompt score does not apply
-    lint = ['--min-prompts=85']
+    """Enforce the look profile's minimum picture-prompt score before FLUX/LTX time; refine when a studio preset applies."""
+    env_override = os.environ.get('SHORTS_MIN_PROMPT_SCORE')
+    if env_override == '0':
+        return []
+    scenario_data = _load_scenario_dict(scn)
+    min_score = min_prompt_score_for(scenario_data, env_override=env_override, look=os.environ.get('SHORTS_LOOK'))
+    if min_score <= 0:
+        return []
+    lint = [f'--min-prompts={min_score}']
     first = subprocess.run([sys.executable, str(ROOT / 'scripts/prompt-lint.py'), scn, *lint], cwd=ROOT, capture_output=True, text=True)
     if first.returncode == 0:
         return []
     before = re.search(r'prompts (\d+)', first.stdout)
-    subprocess.run([sys.executable, str(ROOT / 'scripts/refine-prompts.py'), scn, '--studio', 'luxury-kitchen', '--in-place'], cwd=ROOT, capture_output=True, text=True)
+    studio = default_studio_for(scenario_data, look=os.environ.get('SHORTS_LOOK')) or 'luxury-kitchen'
+    subprocess.run([sys.executable, str(ROOT / 'scripts/refine-prompts.py'), scn, '--studio', studio, '--in-place'], cwd=ROOT, capture_output=True, text=True)
     second = subprocess.run([sys.executable, str(ROOT / 'scripts/prompt-lint.py'), scn, *lint], cwd=ROOT, capture_output=True, text=True)
     after = re.search(r'prompts (\d+)', second.stdout)
     if second.returncode == 0:
@@ -96,7 +113,7 @@ def polish(scn):
             _polished.add(scn)
             say(f"Fixed automatically: picture prompts polished ({before.group(1) if before else '?'} to {after.group(1) if after else '?'})")
         return []
-    return [f"picture prompts score {after.group(1) if after else '?'} (need 85)"]
+    return [f"picture prompts score {after.group(1) if after else '?'} (need {min_score})"]
 
 
 def main():

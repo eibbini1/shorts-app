@@ -15,7 +15,7 @@ from pathlib import Path
 
 
 MODEL = 'qwen3-vl:4b'
-PROMPT_VERSION = 14
+PROMPT_VERSION = 15
 URL = 'http://127.0.0.1:11434/api/chat'
 # A still frame cannot show temperature, taste or smell. Such criteria (often copied from words like "warm cream")
 # would fail every honest image, so they are skipped and listed in the report. Lighting and colour words
@@ -69,9 +69,11 @@ def review(image, prompt, must_show=(), must_not_show=(), model=MODEL, cache_dir
     first_clause = prompt.split('.', 1)[0][:180]
     first_clause = re.sub(r'^(?:extreme )?(?:macro|wide|close-up) (?:view|shot) of ', '', first_clause,
                           flags=re.I)
-    checks = ([('direct', item) for item in questions] if questions else
-              ([('required', item) for item in must_show] or [('required', first_clause)]) +
-              [('forbidden', item) for item in must_not_show])
+    checks = ([('required', item) for item in must_show]
+              + [('forbidden', item) for item in must_not_show]
+              + [('direct', item) for item in questions])
+    if not any(kind != 'forbidden' for kind, _ in checks):
+        checks.insert(0, ('required', first_clause))
     # Skip criteria a still cannot answer, but never skip them all: keep the original list if nothing else remains.
     skipped = [item for _, item in checks if NON_VISUAL.search(item)]
     kept = [(kind, item) for kind, item in checks if not NON_VISUAL.search(item)]

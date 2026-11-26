@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "actions": {
+    "crust-break": [
+      {
+        "file": "assets/foley/freesound-cc0/723851-dry-crackle.mp3",
+        "offsetSeconds": 0,
+        "recordedAction": "wafer snap",
+        "sourceUrl": "https://freesound.org/people/cognito%20perceptu/sounds/723851/",
+        "license": "CC0-1.0"
+      }
+    ],
+    "bite": [
+      {
+        "file": "assets/foley/freesound-cc0/816237-toast-bite.mp3",
+        "offsetSeconds": 0,
+        "recordedAction": "single toast bite",
+        "sourceUrl": "https://freesound.org/people/qubodup/sounds/816237/",
+        "license": "CC0-1.0"
+      },
+      {
+        "file": "assets/foley/freesound-cc0/535012-crispbread-bite.mp3",
+        "offsetSeconds": 0,
+        "recordedAction": "crispbread and rice cake bites",
+        "sourceUrl": "https://freesound.org/people/ursenfuns/sounds/535012/",
+        "license": "CC0-1.0"
+      }
+    ],
+    "countertop-contact": [
+      {
+        "file": "assets/foley/public-domain/wood-and-cutlery.ogg",
+        "offsetSeconds": 0.49,
+        "recordedAction": "cutlery placed on wood; proxy for light countertop contact",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Wood_and_cutlery.ogg",
+        "license": "public domain"
+      }
+    ],
+    "beef-sizzle": [
+      {
+        "file": "assets/foley/public-domain/minced-beef-frying.ogg",
+        "offsetSeconds": 0,
+        "recordedAction": "minced beef frying",
+        "sourceUrl": "https://commons.wikimedia.org/wiki/File:Kj%C3%B8ttdeig.ogv",
+        "license": "public domain"
+      }
+    ]
+  }
+}

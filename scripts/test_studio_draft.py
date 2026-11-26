@@ -108,6 +108,22 @@ class StudioDraftTests(unittest.TestCase):
             self.assertEqual(checks_mock.call_count, 2)
             self.assertIn('Story passed every check on attempt 2.', output.getvalue())
 
+    def test_polish_skips_food_prompt_gate_for_non_food_look_profile(self):
+        import json, tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            scn_path = Path(tmp) / 'cartoon.local-scenario.json'
+            scn_path.write_text(json.dumps({
+                'schemaVersion': 1,
+                'settings': {'format': 'short', 'seconds': 10, 'look': 'cartoon'},
+                'plan': {'shots': []},
+            }), encoding='utf-8')
+            with patch.dict(STUDIO_DRAFT['os'].environ, {}, clear=False), \
+                 patch.object(STUDIO_DRAFT['subprocess'], 'run') as run_mock:
+                STUDIO_DRAFT['os'].environ.pop('SHORTS_MIN_PROMPT_SCORE', None)
+                STUDIO_DRAFT['os'].environ.pop('SHORTS_LOOK', None)
+                self.assertEqual(STUDIO_DRAFT['polish'](str(scn_path)), [])
+                self.assertEqual(run_mock.call_count, 0)
+
 
 if __name__ == '__main__':
     unittest.main()
