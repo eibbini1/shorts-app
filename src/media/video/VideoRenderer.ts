@@ -5,13 +5,13 @@ import type { RenderInput, RenderedVideo, SfxCue } from '../../shared/types.js';
 import { RenderError } from '../../shared/errors.js';
 import { runFfmpeg } from '../shared/ffmpegExec.js';
 import {
-  FPS, MASTER_CHAIN, NARRATION_CHAIN, STILL_SUPERSAMPLE,
+  FPS, MASTER_CHAIN, NARRATION_CHAIN, OUT_HEIGHT, OUT_WIDTH, STILL_SUPERSAMPLE,
   buildCinematicGrade, escapeFilterPath, pickCameraMove, pickTransition, videoPushExpr,
   type GradeOptions, type SceneRole, type XfadeTransition,
 } from './cinematic.js';
 
-const WIDTH = 1080;
-const HEIGHT = 1920;
+const WIDTH = OUT_WIDTH;
+const HEIGHT = OUT_HEIGHT;
 /** Bundled caption fonts (assets/fonts) so captions look identical on every machine. */
 const FONTS_DIR = fileURLToPath(new URL('../../../assets/fonts', import.meta.url));
 const MUSIC_VOLUME = 0.16;
@@ -189,7 +189,7 @@ export class VideoRenderer {
       hasMusic,
       sfxCues,
     });
-    // Master the final mix to ~-14 LUFS / -1.5 dBTP (YouTube's playback target).
+    // Master the final mix to the shared OutputSpec target (-15 LUFS / -1.5 dBTP).
     const mixOut = audioMix.filter ? '[aout]' : `[${audioInputIndex}:a]`;
     filterComplex += `${audioMix.filter ? `;${audioMix.filter}` : ''};${mixOut}aresample=48000,${MASTER_CHAIN}[amaster]`;
 
@@ -204,7 +204,7 @@ export class VideoRenderer {
       '-maxrate', '14M',
       '-bufsize', '28M',
       '-movflags', '+faststart',
-      '-r', '30',
+      '-r', String(FPS),
       '-pix_fmt', 'yuv420p',
       '-c:a', 'aac',
       '-b:a', '256k',

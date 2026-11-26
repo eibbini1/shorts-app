@@ -6,6 +6,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from runtime_env import ltx_cli, media_python  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[1]
 WORK = Path(os.environ.get('STEAK_CRUST_WORK_DIR', ROOT / 'storage/steak-crust-local')).expanduser().resolve()
 GOLD = Path(os.environ.get('GOLD_STEAK_WORK_DIR', ROOT / 'storage/gold-steak-local')).expanduser().resolve()
@@ -71,7 +74,7 @@ def main():
     hook = motion('crust-hook', crust, 'An extreme close-up of the same single browned steak in its black cast-iron skillet. The crisp crust glistens as a few tiny clear butter bubbles form at its lower edge and pop. A trace of steam rises. The camera makes one slow controlled move closer and stops on the readable browned texture. The steak stays in one piece, the rosemary remains at the pan edge, warm side light, one continuous take.', 810)
     season = motion('sparse-season', raw, 'Locked macro shot of the same single raw marbled steak on its dark walnut board. A brief pinch of a few fine salt crystals falls during the first second, bounces once and settles as a sparse scattering. The sprinkle then stops and the red marbling remains visible. The rosemary and one knife remain in place under warm side light. One continuous take.', 811)
     run('node', ROOT / 'scripts/steak-crust/narrate.mjs')
-    subprocess.run([str(ROOT / 'storage/tools/ComfyUI/.venv/bin/python'),
+    subprocess.run([str(media_python(ROOT)),
                     str(ROOT / 'scripts/gold-steak/sound.py')], cwd=ROOT, check=True,
                    env={**os.environ, 'GOLD_STEAK_WORK_DIR': str(WORK)})
     shots = [(hook, 4), (season, 4), (old[0], 4), (old[1], 4), (old[2], 5), (old[3], 5), (old[4], 4)]

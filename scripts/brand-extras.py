@@ -10,6 +10,9 @@ import os
 import argparse, textwrap, json, subprocess, tempfile, sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from runtime_env import media_python  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[1]
 FONT = ROOT / 'assets/fonts/Poppins-Bold.ttf'
 
@@ -61,7 +64,7 @@ def seal(a):
     stamp = a.stamp or ROOT / 'outputs/_check/stamp.png'
     if not stamp.exists():
         stamp.parent.mkdir(parents=True, exist_ok=True)
-        local_python = Path(os.environ.get('SHORTS_MEDIA_PY') or (ROOT / 'storage/tools/ComfyUI/.venv/bin/python'))
+        local_python = media_python(ROOT)
         run([str(local_python if local_python.is_file() else sys.executable),
              str(ROOT / 'scripts/make-stamp.py'), '--out', str(stamp)])
     with tempfile.TemporaryDirectory() as tmp:

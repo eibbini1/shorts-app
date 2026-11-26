@@ -1,11 +1,12 @@
 import { atomicJson } from '../automation/spec.js';
+import { OUTPUT_SPEC, buildLoudnormFilter, isQaLoudnessOk } from '../media/video/OutputSpec.js';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 
 /**
  * Pre-upload QA gate for a rendered video. Exit code 1 if any hard check fails.
  *   npm run qa-check -- --video storage/episodes/x/x-final.mp4 [--expect portrait|landscape] [--max-sec 60]
- * Checks: orientation/resolution, duration, audio present, loudness (-14 LUFS target, +-2), true peak <= -1 dBFS,
+ * Checks: orientation/resolution, duration, audio present, shared OutputSpec loudness & true peak,
  * black frames, long silences, frame rate. Shorts must be vertical and under 3 minutes to count as Shorts.
  */
 const arg = (n: string, d?: string) => {
@@ -29,7 +30,7 @@ const [fn, fd] = (v?.r_frame_rate ?? '0/1').split('/').map(Number);
 const fps = fn! / (fd || 1);
 const portrait = (v?.height ?? 0) > (v?.width ?? 0);
 
-const ln = run('ffmpeg', ['-hide_banner', '-nostats', '-i', video, '-af', 'loudnorm=I=-14:TP=-1:LRA=11:print_format=json', '-f', 'null', '-']);
+const ln = run('ffmpeg', ['-hide_banner', '-nostats', '-i', video, '-af', buildLoudnormFilter({ printJson: true }), '-f', 'null', '-']);
 const jm = ln.stderr.match(/\{[\s\S]*?"target_offset"[\s\S]*?\}/);
 const loud = jm ? (JSON.parse(jm[0]) as { input_i: string; input_tp: string; input_lra: string }) : null;
 const bd = run('ffmpeg', ['-hide_banner', '-nostats', '-i', video, '-vf', 'blackdetect=d=0.5:pix_th=0.06', '-an', '-f', 'null', '-']);
@@ -50,8 +51,9 @@ add('frame rate', fps >= 23, `${fps.toFixed(2)} fps`);
 if (loud) {
   const i = Number(loud.input_i);
   const tp = Number(loud.input_tp);
-  add('loudness', Math.abs(i + 14) <= 2, `${i.toFixed(1)} LUFS (target -14)`);
-  add('true peak', tp <= -1, `${tp.toFixed(1)} dBTP (max -1)`);
+  const { targetLufs, qaMinLufs, qaMaxLufs, qaMaxTruePeakDb } = OUTPUT_SPEC.audio;
+  add('loudness', isQaLoudnessOk(i, qaMaxTruePeakDb), `${i.toFixed(1)} LUFS (target ${targetLufs}, band ${qaMinLufs}..${qaMaxLufs})`);
+  add('true peak', tp <= qaMaxTruePeakDb, `${tp.toFixed(1)} dBTP (max ${qaMaxTruePeakDb})`);
 } else add('loudness', false, 'could not measure');
 if (process.argv.includes('--require-motion')) {
   const motion = run('ffmpeg', ['-hide_banner', '-nostats', '-i', video, '-vf', 'freezedetect=n=-50dB:d=2.5', '-an', '-f', 'null', '-']);

@@ -23,6 +23,7 @@ Optional per accent: "gain" (multiplier). A breath ducks the whole existing soun
 """
 import argparse
 import json
+import os
 import re
 import subprocess
 import wave
@@ -36,6 +37,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from audio_standards import loudnorm_filter  # noqa: E402
 from look_profiles import FOOD_ONLY_AUDIO_CUES, is_food_text  # noqa: E402
 from pipeline_events import gate as gate_event  # noqa: E402
+from sfx_library import (  # noqa: E402
+    MANIFEST as SFX_LIBRARY_MANIFEST,
+    _resolve_under_root as resolve_under_root,
+    load as load_sfx_library,
+    resolve_library_samples,
+)
 
 SOUND_CODES = (('accent plan', 'accent-plan'), ('has a gap', 'asmr-gap'), ('sound line is empty', 'cue-missing'), ('needs a matching field recording', 'recording-missing'),
                ('recordings-only mix needs', 'room-recording-missing'), ('required sound cue', 'required-cue'), ('foley sample', 'sample-invalid'))
@@ -488,10 +495,42 @@ def audit_recorded_actions(requirements, samples, scheduled):
         if not isinstance(action, str) or ' '.join(action.casefold().split()) != ' '.join(expected.casefold().split()):
             problems.append(f'required sound cue {cue}: no recording declared for "{expected}"')
         elif not source.get('sourceUrl') or license_name not in {
-            'cc0', 'cc0 1.0', 'public domain', 'cc by 4.0', 'cc by 3.0',
+            'cc0', 'cc0 1.0', 'cc0-1.0', 'public domain', 'public-domain',
+            'own-recording', 'pixabay-content', 'cc by 4.0', 'cc by 3.0',
         }:
             problems.append(f'required sound cue {cue}: needs a source URL and a supported free license')
     return problems
+
+
+def effective_foley_samples(data, root=ROOT, manifest_data=None):
+    """Return explicit audioPlan.foleySamples, optionally augmented from assets/sfx/library.json."""
+    audio_plan = data.get('audioPlan') or {}
+    samples = dict(audio_plan.get('foleySamples') or {})
+    library_opt = audio_plan.get('sfxLibrary')
+    use_library = bool(library_opt) or os.environ.get('SHORTS_SFX_LIBRARY') == '1'
+    if not use_library:
+        return samples
+    if manifest_data is None:
+        if isinstance(library_opt, str) and library_opt.strip().lower() not in ('auto', 'true', '1'):
+            manifest_path = resolve_under_root(root, library_opt.strip())
+            if manifest_path is None or not manifest_path.is_file():
+                return samples
+        else:
+            manifest_path = Path(root) / 'assets' / 'sfx' / 'library.json'
+            if not manifest_path.is_file():
+                manifest_path = SFX_LIBRARY_MANIFEST
+        if not manifest_path.is_file():
+            return samples
+        manifest_data = load_sfx_library(manifest_path)
+    from presentation_mode import choose
+    shots = (data.get('plan') or {}).get('shots') or []
+    needed = []
+    for shot in shots:
+        needed.extend(planned_cues(shot))
+    needed.extend(audio_plan.get('requiredCues') or [])
+    if choose(data)['mode'] == 'asmr' or audio_plan.get('sfxPolicy') == 'recordings-only':
+        needed.append('room')
+    return resolve_library_samples(needed, data=manifest_data, root=root, existing=samples)
 
 
 def audit_cues(data):
@@ -500,7 +539,7 @@ def audit_cues(data):
     mode = choose(data)['mode']
     problems = []
     audio_plan = data.get('audioPlan') or {}
-    samples = audio_plan.get('foleySamples') or {}
+    samples = effective_foley_samples(data)
     recordings_only = audio_plan.get('sfxPolicy') == 'recordings-only'
     required = audio_plan.get('requiredCues') or []
     for number, shot in enumerate(data['plan']['shots'], 1):
@@ -530,8 +569,8 @@ def audit_cues(data):
     problems.extend(hit_problems)
     problems.extend(audit_accents(resolved, sum(shot['seconds'] for shot in data['plan']['shots']), samples))
     for name, source in samples.items():
-        file = ROOT / str(source.get('file', ''))
-        if name not in GAIN or not file.is_file() or file.suffix.lower() not in ('.ogg', '.wav', '.mp3'):
+        file = resolve_under_root(ROOT, str(source.get('file', '')))
+        if name not in GAIN or file is None or not file.is_file() or file.suffix.lower() not in ('.ogg', '.wav', '.mp3'):
             problems.append(f'foley sample {name}: supported local audio file is missing')
         if recordings_only and not all(str(source.get(key, '')).strip() for key in ('recordedAction', 'sourceUrl', 'license')):
             problems.append(f'foley sample {name}: recordedAction, sourceUrl and license are required')
@@ -729,7 +768,7 @@ def main():
                 gate_event('sound', 'blocked', sound_code(problem), problem)
             raise SystemExit('Sound accent gate failed; refusing to mix a breath over narration')
     audio_plan = data.get('audioPlan') or {}
-    foley_samples = audio_plan.get('foleySamples') or {}
+    foley_samples = effective_foley_samples(data)
     mix, plan = build(shots, total, foley_samples=foley_samples,
                       continuous_room=choose(data)['mode'] == 'asmr' or recordings_only or 'room' in foley_samples,
                       recordings_only=recordings_only, accents=accents)

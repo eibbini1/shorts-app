@@ -1,13 +1,16 @@
-import os
 import json
 import subprocess
+import sys
 import tempfile
 import unittest
 import wave
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-VENVPY = Path(os.environ.get('SHORTS_MEDIA_PY') or (ROOT / 'storage/tools/ComfyUI/.venv/bin/python'))
+sys.path.insert(0, str(ROOT / 'scripts'))
+from runtime_env import media_python  # noqa: E402
+
+VENVPY = media_python(ROOT)
 
 
 class SoundtrackIntentTests(unittest.TestCase):

@@ -97,6 +97,56 @@ class SfxLibraryTest(unittest.TestCase):
             found = lib.problems(data, root)
         self.assertTrue(any('file path escapes root' in line for line in found))
 
+    def test_resolve_library_samples_verifies_license_hash_and_keeps_explicit_overrides(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            good_crunch = root / 'crunch-ok.wav'
+            bad_hash = root / 'crunch-bad.wav'
+            bad_lic = root / 'pour-nc.wav'
+            good_room = root / 'room.wav'
+            for path in (good_crunch, bad_hash, bad_lic, good_room):
+                write_tone(path)
+            manifest = {'entries': [
+                self.entry('crunch-ok', file='crunch-ok.wav', category='crunch', sha256=lib.sha256(good_crunch)),
+                self.entry('crunch-bad', file='crunch-bad.wav', category='crunch', sha256='0' * 64),
+                self.entry('pour-nc', file='pour-nc.wav', category='pour', license='CC-BY-NC-4.0', sha256=lib.sha256(bad_lic)),
+                self.entry('room-01', file='room.wav', category='ambience', sha256=lib.sha256(good_room)),
+                self.entry('escape-01', file='../outside.wav', category='sizzle'),
+            ]}
+            explicit = {'sizzle': {'file': 'custom-sizzle.wav', 'recordedAction': 'pan', 'sourceUrl': 'https://x', 'license': 'CC0-1.0'}}
+            resolved = lib.resolve_library_samples(['crunch', 'pour', 'room', 'sizzle'], data=manifest, root=root, existing=explicit)
+            self.assertEqual(resolved['sizzle'], explicit['sizzle'])
+            self.assertEqual(resolved['crunch']['file'], 'crunch-ok.wav')
+            self.assertEqual(resolved['crunch']['libraryId'], 'crunch-ok')
+            self.assertEqual(resolved['room']['file'], 'room.wav')
+            self.assertNotIn('pour', resolved)
+
+    def test_add_sfx_effective_foley_samples_uses_library_when_opted_in(self):
+        import runpy, sys, types
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            wav = root / 'assets/foley/crunch.wav'
+            wav.parent.mkdir(parents=True)
+            write_tone(wav)
+            manifest = {'entries': [
+                self.entry('crunch-01', file='assets/foley/crunch.wav', category='crunch', sha256=lib.sha256(wav)),
+            ]}
+            prev_np = sys.modules.get('numpy')
+            if prev_np is None:
+                sys.modules['numpy'] = types.ModuleType('numpy')
+            try:
+                add_sfx = runpy.run_path(str(lib.ROOT / 'scripts/add-sfx.py'))
+            finally:
+                if prev_np is None:
+                    sys.modules.pop('numpy', None)
+            scenario = {
+                'settings': {'presentationMode': 'voiced'},
+                'audioPlan': {'sfxLibrary': True},
+                'plan': {'shots': [{'seconds': 4, 'imagePrompt': 'Golden bread crust', 'motionPrompt': 'Knife cuts crisp bread', 'sound': 'crisp crunch'}]},
+            }
+            resolved = add_sfx['effective_foley_samples'](scenario, root=root, manifest_data=manifest)
+            self.assertEqual(resolved['crunch']['file'], 'assets/foley/crunch.wav')
+
 
 if __name__ == '__main__':
     unittest.main()

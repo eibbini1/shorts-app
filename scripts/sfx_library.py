@@ -126,6 +126,19 @@ def pick(data, category, seed=0, avoid=()):
     return random.Random(seed).choice(sorted(fresh, key=lambda e: e['id']))
 
 
+CUE_TO_CATEGORY = {
+    'crunch': 'crunch',
+    'chew': 'bite',
+    'sizzle': 'sizzle',
+    'pour': 'pour',
+    'slice': 'chop',
+    'scrape': 'contact',
+    'clink': 'contact',
+    'whoosh': 'whoosh',
+    'room': 'ambience',
+}
+
+
 def foley_samples(data, mapping, seed=0):
     """Build an audioPlan `foleySamples` object: {cueName: category} -> sample records."""
     used, samples = [], {}
@@ -138,6 +151,51 @@ def foley_samples(data, mapping, seed=0):
             'offsetSeconds': entry.get('firstHitSeconds', 0),
         }
     return samples
+
+
+def resolve_library_samples(cues, data=None, root=ROOT, seed=311, existing=None):
+    """Fill missing cue recordings from the verified SFX library without overwriting explicit entries."""
+    resolved = dict(existing or {})
+    if data is None:
+        if not MANIFEST.is_file():
+            return resolved
+        data = load(MANIFEST)
+    entries = data.get('entries', []) if isinstance(data, dict) else []
+    used = {entry.get('libraryId') for entry in resolved.values() if isinstance(entry, dict) and entry.get('libraryId')}
+    for index, cue in enumerate(dict.fromkeys(cues)):
+        if cue in resolved:
+            continue
+        category = CUE_TO_CATEGORY.get(cue, cue)
+        if category not in CATEGORIES:
+            continue
+        eligible = []
+        for entry in entries:
+            if entry.get('category') != category:
+                continue
+            if entry.get('license') not in ALLOWED_LICENSES:
+                continue
+            if not all(entry.get(key) for key in REQUIRED):
+                continue
+            audio = _resolve_under_root(root, entry['file'])
+            if audio is None or not audio.is_file():
+                continue
+            if entry.get('sha256') and sha256(audio) != entry['sha256']:
+                continue
+            eligible.append(entry)
+        if not eligible:
+            continue
+        fresh = [e for e in eligible if e['id'] not in used] or eligible
+        chosen = random.Random(seed + index).choice(sorted(fresh, key=lambda e: e['id']))
+        used.add(chosen['id'])
+        resolved[cue] = {
+            'file': chosen['file'],
+            'recordedAction': chosen['recordedAction'],
+            'sourceUrl': chosen['sourceUrl'],
+            'license': chosen['license'],
+            'offsetSeconds': chosen.get('firstHitSeconds', 0),
+            'libraryId': chosen['id'],
+        }
+    return resolved
 
 
 def scan(data, root=ROOT):

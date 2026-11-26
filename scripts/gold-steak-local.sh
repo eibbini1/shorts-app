@@ -48,6 +48,6 @@ else
 fi
 python3 scripts/gold-steak/produce.py motion
 node scripts/gold-steak/narrate.mjs
-storage/tools/ComfyUI/.venv/bin/python scripts/gold-steak/sound.py
+"${SHORTS_MEDIA_PY:-storage/tools/ComfyUI/.venv/bin/python}" scripts/gold-steak/sound.py
 python3 scripts/assemble-motion-video.py --manifest "$GOLD_STEAK_WORK_DIR/film-manifest.json" --output "$OUTPUT"
 echo "Review the complete video before publication: $OUTPUT"

@@ -1,19 +1,27 @@
 """Shared broadcast/Shorts audio loudness targets and FFmpeg loudnorm filter builder.
 
 Keeps mixing, SFX ducking, ArtCraft bounces, technical QA, and editorial pre-review
-aligned around a single integrated loudness target (-15.0 LUFS, -1.5 dBTP).
+aligned around the single shared audio specification in data/output-spec.json
+(-15.0 LUFS, -1.5 dBTP).
 """
+import sys
+from pathlib import Path
 
-TARGET_LUFS = -15.0
-TARGET_TP_DB = -1.5
-TARGET_LRA = 11.0
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from output_spec import OUTPUT_SPEC  # noqa: E402
 
-QA_MIN_LUFS = -18.0
-QA_MAX_LUFS = -13.0
-QA_MAX_TP_DB = -0.5
+_AUDIO = OUTPUT_SPEC['audio']
 
-PREREVIEW_TOLERANCE_LUFS = 2.5
-PREREVIEW_MAX_TP_DB = -0.8
+TARGET_LUFS = float(_AUDIO['targetLufs'])
+TARGET_TP_DB = float(_AUDIO['targetTruePeakDb'])
+TARGET_LRA = float(_AUDIO['targetLra'])
+
+QA_MIN_LUFS = float(_AUDIO['qaMinLufs'])
+QA_MAX_LUFS = float(_AUDIO['qaMaxLufs'])
+QA_MAX_TP_DB = float(_AUDIO['qaMaxTruePeakDb'])
+
+PREREVIEW_TOLERANCE_LUFS = float(_AUDIO['prereviewToleranceLufs'])
+PREREVIEW_MAX_TP_DB = float(_AUDIO['prereviewMaxTruePeakDb'])
 
 
 def loudnorm_filter(target_lufs=TARGET_LUFS, tp_db=TARGET_TP_DB, lra=TARGET_LRA, print_json=False):

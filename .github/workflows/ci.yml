@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Build, Lint & Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install FFmpeg and media Python dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core
+          python3 -m venv "$RUNNER_TEMP/media-venv"
+          "$RUNNER_TEMP/media-venv/bin/pip" install --upgrade pip
+          "$RUNNER_TEMP/media-venv/bin/pip" install numpy
+          echo "SHORTS_MEDIA_PY=$RUNNER_TEMP/media-venv/bin/python" >> "$GITHUB_ENV"
+
+      - name: Install Node dependencies
+        run: |
+          npm ci
+          npm --prefix studio ci
+
+      - name: TypeScript build, ESLint, and script syntax checks
+        run: |
+          npm run build
+          npm run lint
+          npm run scripts:verify
+          npm --prefix studio run build
+
+      - name: Run Studio watchdog, learning, and brief suites
+        run: |
+          npm run test:studio:watchdog
+          npm run test:learning:signals
+          npm run test:studio:brief:mac
+
+      - name: Run all standalone Node script tests
+        run: |
+          node --test --test-concurrency=1 scripts/*.test.mjs scripts/test-*.mjs
+
+      - name: Run Vitest suite
+        run: npx vitest run
+
+      - name: Run Python unittest suite
+        env:
+          PYTHONPATH: scripts
+        run: |
+          "$SHORTS_MEDIA_PY" -m unittest discover -s scripts -p 'test_*.py'
