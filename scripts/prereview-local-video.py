@@ -255,8 +255,15 @@ def shot_motion(video, start, end, width=96, height=170, fps=8):
     return round(total / (len(frames) - 1), 2)
 
 
-def ask(vision, image, questions, cache):
-    report, path = vision.review(image, '', questions=tuple(questions), cache_dir=cache)
+def ask(vision, image, questions, cache, keep_alive_after='2m'):
+    kwargs = {'questions': tuple(questions), 'cache_dir': cache}
+    try:
+        import inspect
+        if 'keep_alive_after' in inspect.signature(vision.review).parameters:
+            kwargs['keep_alive_after'] = keep_alive_after
+    except (TypeError, ValueError):
+        pass
+    report, path = vision.review(image, '', **kwargs)
     report['reportPath'] = str(path)
     return summarize(report)
 
@@ -297,17 +304,21 @@ def main():
     expected_ending = ending_question(scenario)
     vision = None if args.skip_vision else load_vision()
     cache = video.parent / 'prereview-cache'
-    if vision is not None:
-        middle_questions = [motion_questions(scenario, checks, index) for index in range(len(windows))]
-        # Middle frame: the shot's action is under way. An action that completes (an oven door closing)
-        # legitimately hides the subject by the last frame, so only the final shot is checked at its end.
-        for index, frame in enumerate(mids):
-            shot_results.append(ask(vision, frame, middle_questions[index], cache))
-        payoff = ask(vision, ends[-1], [expected_ending], cache) if expected_ending else None
-        if len(windows) > 1:
-            continuity = ask(vision, side_by_side(starts[0], ends[-1], work / 'food.png'),
-                             [continuity_question_for(scenario)], cache)
-    utensil_motion = check_utensil_motion(video, windows, scenario['plan']['shots'], work, vision, cache)
+    try:
+        if vision is not None:
+            middle_questions = [motion_questions(scenario, checks, index) for index in range(len(windows))]
+            # Middle frame: the shot's action is under way. An action that completes (an oven door closing)
+            # legitimately hides the subject by the last frame, so only the final shot is checked at its end.
+            for index, frame in enumerate(mids):
+                shot_results.append(ask(vision, frame, middle_questions[index], cache))
+            payoff = ask(vision, ends[-1], [expected_ending], cache) if expected_ending else None
+            if len(windows) > 1:
+                continuity = ask(vision, side_by_side(starts[0], ends[-1], work / 'food.png'),
+                                 [continuity_question_for(scenario)], cache)
+        utensil_motion = check_utensil_motion(video, windows, scenario['plan']['shots'], work, vision, cache)
+    finally:
+        if vision is not None and hasattr(vision, 'release') and hasattr(vision, 'MODEL'):
+            vision.release(vision.MODEL)
     flags, unchecked = categorize(shot_results, payoff, continuity, audio)
     if sheet is None:
         unchecked.append('start/middle/end contact sheet could not be built')

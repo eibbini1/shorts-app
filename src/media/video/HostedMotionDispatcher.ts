@@ -197,42 +197,41 @@ export class HostedMotionDispatcher {
     return this.cancelWithOutcome(jobId, 'cancelled');
   }
 
-  async expire(): Promise<HostedJob[]> {
+  async expire(concurrency = 6): Promise<HostedJob[]> {
     const expired = this.jobs.expiredJobs();
-    const results: HostedJob[] = [];
-    for (const item of expired) {
+    return mapWithConcurrency(expired, concurrency, async (item) => {
       if (item.timeout === 'dispatch') {
         const timedOut = this.jobs.expireQueued(item.job.jobId);
         this.releaseUndispatchedSpend(timedOut);
-        results.push(timedOut);
-      } else {
-        results.push(await this.cancelWithOutcome(item.job.jobId, 'timed_out'));
+        return timedOut;
       }
-    }
-    return results;
+      return this.cancelWithOutcome(item.job.jobId, 'timed_out');
+    });
   }
 
-  async recover(): Promise<HostedJob[]> {
-    const recovered: HostedJob[] = [];
-    for (const job of this.jobs.recoverableJobs()) {
+  async recover(concurrency = 6): Promise<HostedJob[]> {
+    const jobs = this.jobs.recoverableJobs();
+    return mapWithConcurrency(jobs, concurrency, async (job) => {
       if (job.status === 'queued') {
-        recovered.push(job);
-      } else if (job.status === 'succeeded') {
-        recovered.push(job);
-      } else if (job.status === 'submitting') {
+        return job;
+      }
+      if (job.status === 'succeeded') {
+        return job;
+      }
+      if (job.status === 'submitting') {
         const uncertain = this.jobs.markUncertain(job.jobId, 'Controller stopped during submission; reconcile before retrying.');
         this.holdUncertainSpend(uncertain);
-        recovered.push(uncertain);
-      } else if (job.status === 'cancelling') {
-        recovered.push(await this.cancelWithOutcome(job.jobId, 'cancelled'));
-      } else if (job.providerJobId) {
-        recovered.push(await this.poll(job.jobId));
-      } else {
-        this.holdUncertainSpend(job);
-        recovered.push(job);
+        return uncertain;
       }
-    }
-    return recovered;
+      if (job.status === 'cancelling') {
+        return this.cancelWithOutcome(job.jobId, 'cancelled');
+      }
+      if (job.providerJobId) {
+        return this.poll(job.jobId);
+      }
+      this.holdUncertainSpend(job);
+      return job;
+    });
   }
 
   async transferArtifact(jobId: string, options: HostedArtifactTransferOptions): Promise<TransferredHostedArtifact> {
@@ -310,4 +309,24 @@ function messageOf(error: unknown): string {
       }
     })
     .replace(/((?:token|signature|secret|api[_-]?key)\s*[=:]\s*)[^\s,;]+/gi, '$1[redacted]');
+}
+
+async function mapWithConcurrency<T, R>(
+  items: readonly T[],
+  concurrency: number,
+  worker: (item: T) => Promise<R>,
+): Promise<R[]> {
+  if (items.length === 0) return [];
+  const limit = Math.max(1, Math.min(Math.trunc(concurrency) || 1, items.length));
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+  await Promise.all(
+    Array.from({ length: limit }, async () => {
+      while (nextIndex < items.length) {
+        const index = nextIndex++;
+        results[index] = await worker(items[index]!);
+      }
+    }),
+  );
+  return results;
 }

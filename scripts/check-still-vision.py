@@ -55,7 +55,14 @@ def release(model):
         pass
 
 
-def review(image, prompt, must_show=(), must_not_show=(), model=MODEL, cache_dir=None, questions=()):
+def _normalize_keep_alive(value):
+    if value is None or value == 0 or str(value).strip() == '0':
+        return 0
+    return str(value).strip()
+
+
+def review(image, prompt, must_show=(), must_not_show=(), model=MODEL, cache_dir=None, questions=(),
+           keep_alive_after=0):
     image = Path(image)
     raw_image = image.read_bytes()
     key = hashlib.sha256(raw_image + json.dumps([PROMPT_VERSION, prompt, list(must_show), list(must_not_show),
@@ -81,6 +88,7 @@ def review(image, prompt, must_show=(), must_not_show=(), model=MODEL, cache_dir
         checks = kept
     else:
         skipped = []
+    final_keep_alive = _normalize_keep_alive(keep_alive_after)
     image_b64 = base64.b64encode(raw_image).decode()
     outcomes = []
     diagnostics = []
@@ -93,10 +101,10 @@ def review(image, prompt, must_show=(), must_not_show=(), model=MODEL, cache_dir
                      'Use a factual reason of at most 10 words. Return only the JSON verdict; no analysis. /no_think')
         wanted = 'no' if kind == 'forbidden' else 'yes'
         last = (kind, item) == checks[-1]
-        # Release the 3.4 GB vision model right after the last question: on a 16 GB Mac it otherwise stays
-        # resident for Ollama's default five minutes and overlaps the LTX motion job (swap was ~97% full).
+        # Release the 3.4 GB vision model when requested (default 0 on standalone runs); multi-shot batches
+        # pass a warm TTL (e.g. '2m') for intermediate stills and '0' on the final still before LTX motion.
         body = {'model': model, 'stream': False, 'think': False, 'format': SCHEMA,
-                'keep_alive': 0 if last else '30s',
+                'keep_alive': final_keep_alive if last else '30s',
                 # Qwen3-VL can spend its first tokens thinking even with
                 # think=false. Leave enough room for the bounded JSON verdict.
                 'options': {'temperature': 0, 'num_predict': 4096, 'num_ctx': 8192},
@@ -118,7 +126,8 @@ def review(image, prompt, must_show=(), must_not_show=(), model=MODEL, cache_dir
             outcomes.append({'criterion': item, 'kind': kind, 'expected': wanted, 'answer': answer})
             uncertain = bool(UNCERTAIN_REASON.search(answer['reason']))
             if answer['answer'] != wanted or uncertain:
-                release(model)
+                if final_keep_alive == 0:
+                    release(model)
                 verdict = {'criticalMatches': False,
                            'missingOrWrong': [
                                f"{item}: {'uncertain visual match: ' if uncertain else ''}{answer['reason'][:200]}".strip()
@@ -150,9 +159,11 @@ def main():
     parser.add_argument('--question', action='append', default=[], help='Short direct visual question for a reviewed shot')
     parser.add_argument('--model', default=MODEL)
     parser.add_argument('--cache-dir', type=Path)
+    parser.add_argument('--keep-alive-after', default='0',
+                        help="Ollama keep_alive TTL after the last question ('0' unloads immediately; e.g. '2m' keeps warm across a still batch)")
     args = parser.parse_args()
     report, path = review(args.image, args.prompt, args.must_show, args.must_not_show,
-                          args.model, args.cache_dir, args.question)
+                          args.model, args.cache_dir, args.question, keep_alive_after=args.keep_alive_after)
     print(f"Still vision gate: {report['status']} | {path}")
     for issue in report['verdict']['missingOrWrong']:
         print('REVIEW:', issue)

@@ -41,3 +41,17 @@ def dimensions(settings):
 
 def known_sizes():
     return {size for sizes in QUALITIES.values() for size in sizes.values()}
+
+
+def frames_for_seconds(seconds, fps=24, *, native=None, min_frames=25, max_frames=145):
+    """Return LTX clip frame count: fixed FRAMES (97) by default, or exact 8k+1 when native mode is enabled."""
+    use_native = (os.environ.get('SHORTS_NATIVE_CLIP_FRAMES') == '1') if native is None else bool(native)
+    if not use_native:
+        return FRAMES
+    raw = max(min_frames, int(round(float(seconds) * fps)))
+    k = max(0, (raw - 1 + 7) // 8)
+    frames = min(max_frames, max(min_frames, k * 8 + 1))
+    # Clamp back onto exact 8k+1 boundary if max_frames is not 8k+1.
+    while (frames - 1) % 8 != 0 and frames > min_frames:
+        frames -= 1
+    return frames
