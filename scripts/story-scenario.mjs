@@ -14,13 +14,16 @@ import {motionPackFor,motionPackGuidance} from './topic-pack-motion.mjs';
 import {applyTypedShots, createShotTypeContext} from './shot-type-planner.mjs';
 import {applyVisualIdentityLock, collectPromptChanges, firstClause, fitOutlineIdeas, hasSupportedAsmrCue, lockRequestedEnding, narrationWordBand, repairSceneState, shortenNarration} from './story-draft-utils.mjs';
 import {hasVisiblePhysicalAction, preserveOpeningHook, preserveRequestedActions, requestedActionClauses} from './story-action-gate.mjs';
+import {isFoodLook, isValidLook} from './look-profiles.mjs';
 
-const args=parseArgs({allowPositionals:true,options:{style:{type:'string',default:'cinematic'},ending:{type:'string',default:''},title:{type:'string',default:''},set:{type:'string',default:''},hook:{type:'string',default:''},'must-show':{type:'string',default:''},obstacle:{type:'string',default:''},turn:{type:'string',default:''},audio:{type:'string',default:'auto'},format:{type:'string',default:'short'},seconds:{type:'string',default:'30'},model:{type:'string',default:'qwen3:1.7b'}}});
+const args=parseArgs({allowPositionals:true,options:{style:{type:'string',default:'cinematic'},look:{type:'string',default:''},ending:{type:'string',default:''},title:{type:'string',default:''},set:{type:'string',default:''},hook:{type:'string',default:''},'must-show':{type:'string',default:''},obstacle:{type:'string',default:''},turn:{type:'string',default:''},audio:{type:'string',default:'auto'},format:{type:'string',default:'short'},seconds:{type:'string',default:'30'},model:{type:'string',default:'qwen3:1.7b'}}});
 const execFileAsync=promisify(execFile);
 const masterPrompts=JSON.parse(await readFile(new URL('../data/master-prompts.json',import.meta.url),'utf8'));
 const [topic,id]=args.positionals;
-if (!topic?.trim() || !/^[a-z0-9][a-z0-9-]{0,79}$/.test(id??'')) throw new Error('Usage: node scripts/story-scenario.mjs "subject" draft-id [--style ...] [--ending ...] [--seconds 30]');
-const foodProcess=/حلوم|المقلاة|طبخ|وصفة|\bhalloumi\b/i.test(topic)||/\b(cook|cooking|sear|toast|assemble|bake|baking|food|hot dog|burger|scallop|steak|pizza|chocolate|pastry|dessert|bread|garlic|dumplings?|pasta|noodles?|drink|coffee|kebab|cabbage|arancini|recipe)\b/i.test(topic);
+if (!topic?.trim() || !/^[a-z0-9][a-z0-9-]{0,79}$/.test(id??'')) throw new Error('Usage: node scripts/story-scenario.mjs "subject" draft-id [--style ...] [--look ...] [--ending ...] [--seconds 30]');
+const explicitLook=String(args.values.look||'').trim();
+if (explicitLook && !isValidLook(explicitLook)) throw new Error('--look must be food, cartoon, night, or custom');
+const foodProcess=isFoodLook(explicitLook||undefined, topic);
 const ingredients=foodProcess
   ?ingredientContract(topic,args.values['must-show'],args.values.ending):null;
 const audioChoice=args.values.audio.toLowerCase();
@@ -47,8 +50,7 @@ const forbiddenModern=/\b(fairlane|ford|chevrolet|ferrari|engine|carburetor|gaso
 function subjectIssue(value){
   return (prehistoricCars && forbiddenModern.test(value)) || Boolean(ingredients?.unexpected(value).length);
 }
-const settings=scenarioSettings({brand:'Local Studio',format:args.values.format,seconds:args.values.seconds});
-settings.presentationMode=audioChoice;
+const settings=scenarioSettings({brand:'Local Studio',format:args.values.format,seconds:args.values.seconds,...(explicitLook?{look:explicitLook}:{}),presentationMode:audioChoice});
 if (settings.seconds>60) throw new Error('Local story builder supports up to 60 seconds');
 const model=args.values.model;
 if (model.endsWith(':cloud')) throw new Error('Use an installed local Ollama model');
@@ -501,7 +503,7 @@ const creativeSignature={
   set:outline.setting,
   hookPattern:hookOverlay?.patternId||creativeBrief.hookImage||outline.hook,
 };
-const saved={...(fixedBeats?{fixedBeatCount:fixedBeats.length}:{}),...(batchEnabled?{batchPlanning:{schemaValid:batchShots.filter(Boolean).length,accepted:batchAccepted}}:{}),...(stillAdviceUsed.size?{stillPlannerAdvice:[...stillAdviceUsed.values()]}:{}),...(hookOverlay?{hookOverlay}:{}),...(shotRecipes?{shotRecipes}:{}),status:'review-required',settings,model,promptPackVersion:masterPrompts.version,creativeBrief,...(motionPack?{motionPackId:motionPack.id}:{}),creativeSignature,topic,style:args.values.style,requestedEnding:visualEnding||null,requestedEndingOriginal:args.values.ending||null,totalSeconds:settings.seconds,storyArc:{protagonist:outline.protagonist,setting:outline.setting,goal:outline.goal,obstacle:outline.obstacle,turn:outline.turn,visualBible:outline.visualBible,beats},qualityChecks:{exactTiming:true,uniquePromptText:true,narrationFits:true,endingLockedFromUser:endingLocked,hookActionCoverage:hookActionCoverage.status,requiredActionCoverage:requestedActionCoverage.status,requiredActionInsertions:requestedActionCoverage.inserted.length,preflightPromptFixes,rewrites:rewriteCount,fieldsNeedingRepair:fallbackCount,reviewedShotExamplesUsed:reviewedShotExamples.length},plan};
+const saved={schemaVersion:1,...(fixedBeats?{fixedBeatCount:fixedBeats.length}:{}),...(batchEnabled?{batchPlanning:{schemaValid:batchShots.filter(Boolean).length,accepted:batchAccepted}}:{}),...(stillAdviceUsed.size?{stillPlannerAdvice:[...stillAdviceUsed.values()]}:{}),...(hookOverlay?{hookOverlay}:{}),...(shotRecipes?{shotRecipes}:{}),status:'review-required',settings,model,promptPackVersion:masterPrompts.version,creativeBrief,...(motionPack?{motionPackId:motionPack.id}:{}),creativeSignature,topic,style:args.values.style,requestedEnding:visualEnding||null,requestedEndingOriginal:args.values.ending||null,totalSeconds:settings.seconds,storyArc:{protagonist:outline.protagonist,setting:outline.setting,goal:outline.goal,obstacle:outline.obstacle,turn:outline.turn,visualBible:outline.visualBible,beats},qualityChecks:{exactTiming:true,uniquePromptText:true,narrationFits:true,endingLockedFromUser:endingLocked,hookActionCoverage:hookActionCoverage.status,requiredActionCoverage:requestedActionCoverage.status,requiredActionInsertions:requestedActionCoverage.inserted.length,preflightPromptFixes,rewrites:rewriteCount,fieldsNeedingRepair:fallbackCount,reviewedShotExamplesUsed:reviewedShotExamples.length},plan};
 await mkdir('drafts/generated',{recursive:true});
 const file=`drafts/generated/${id}.local-scenario.json`;
 await writeFile(file,JSON.stringify(saved,null,2)+'\n',{flag:'wx'});

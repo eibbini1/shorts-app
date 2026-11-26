@@ -81,6 +81,16 @@ def sha256(path):
     return digest.hexdigest()
 
 
+def _resolve_under_root(root, rel_path):
+    base = Path(root).resolve()
+    candidate = (base / rel_path).resolve()
+    try:
+        candidate.relative_to(base)
+    except ValueError:
+        return None
+    return candidate
+
+
 def problems(data, root=ROOT):
     """Return a list of human-readable problems; empty means the manifest is usable."""
     found, seen = [], set()
@@ -97,8 +107,10 @@ def problems(data, root=ROOT):
         if entry.get('license') and entry['license'] not in ALLOWED_LICENSES:
             found.append(f'{name}: licence {entry["license"]!r} is not allowed (need no credit, commercial OK)')
         if entry.get('file'):
-            audio = root / entry['file']
-            if not audio.is_file():
+            audio = _resolve_under_root(root, entry['file'])
+            if audio is None:
+                found.append(f'{name}: file path escapes root ({entry["file"]})')
+            elif not audio.is_file():
                 found.append(f'{name}: file missing ({entry["file"]})')
             elif entry.get('sha256') and sha256(audio) != entry['sha256']:
                 found.append(f'{name}: file changed since it was catalogued (sha256 differs)')
@@ -130,9 +142,9 @@ def foley_samples(data, mapping, seed=0):
 
 def scan(data, root=ROOT):
     for entry in data.get('entries', []):
-        audio = root / entry['file']
-        if not audio.is_file():
-            print(f'skip {entry["id"]}: file missing', file=sys.stderr)
+        audio = _resolve_under_root(root, entry['file'])
+        if audio is None or not audio.is_file():
+            print(f'skip {entry["id"]}: file missing or outside root', file=sys.stderr)
             continue
         entry.update(measure(audio))
         entry['sha256'] = sha256(audio)

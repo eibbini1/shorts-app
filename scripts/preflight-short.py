@@ -14,8 +14,11 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from presentation_mode import choose as choose_presentation
-import hook_bank
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from presentation_mode import choose as choose_presentation  # noqa: E402
+import hook_bank  # noqa: E402
+from scenario_v1 import validate_scenario  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 NON_USD = re.compile(r'\b(yen|dirhams?|rupees?|pounds?|euros?|£|€)\b|[£€¥]', re.I)
@@ -91,6 +94,8 @@ def main():
     presentation = choose_presentation(data)
     pack = motion_pack(data.get('motionPackId'))
     problems, warnings = [], []
+    for issue in validate_scenario(data):
+        warnings.append(f'Scenario v1: {issue}')
     topic = subprocess.run([sys.executable, str(ROOT / 'scripts/topic-check.py'), plan['title'] + ' ' + data.get('topic', ''), '--allow'],
                            capture_output=True, text=True)
     print('Topic:', topic.stdout.strip())

@@ -64,3 +64,26 @@ test('rejects a broken state handoff between adjacent shots', () => {
   scenario.shots[2].sceneState.before = 'A different state';
   assert.throws(() => verifyScenario(scenario, scenarioSettings()), /must continue shot 2/);
 });
+test('preserves validated optional look, presentationMode, quality, and voice in scenarioSettings', () => {
+  const settings = scenarioSettings({
+    brand: 'Local Studio',
+    format: 'short',
+    seconds: 20,
+    look: 'cartoon',
+    presentationMode: 'asmr',
+    quality: 'high',
+    voice: 'af_heart',
+  });
+  assert.deepEqual(settings, {
+    brand: 'Local Studio',
+    format: 'short',
+    seconds: 20,
+    look: 'cartoon',
+    presentationMode: 'asmr',
+    quality: 'high',
+    voice: 'af_heart',
+  });
+  assert.throws(() => scenarioSettings({ look: 'sci-fi' }));
+  assert.throws(() => scenarioSettings({ presentationMode: 'music-only' }));
+  assert.throws(() => scenarioSettings({ quality: 'ultra' }));
+});

@@ -34,6 +34,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from audio_standards import loudnorm_filter  # noqa: E402
+from look_profiles import FOOD_ONLY_AUDIO_CUES, is_food_text  # noqa: E402
 from pipeline_events import gate as gate_event  # noqa: E402
 
 SOUND_CODES = (('accent plan', 'accent-plan'), ('has a gap', 'asmr-gap'), ('sound line is empty', 'cue-missing'), ('needs a matching field recording', 'recording-missing'),
@@ -451,12 +452,11 @@ def cues_for(text):
     return found
 
 
-FOOD_ONLY = {'clink', 'sizzle', 'crunch', 'chew', 'pour', 'slice', 'scrape', 'fizz'}
-FOOD_WORDS = re.compile(r'\b(food|dish|plate|bowl|meal|cook\w*|chef|kitchen|steak|beef|burger|kebab|sushi|pasta|pizza|cake|dessert|sauce|soup|salad|egg|bread|wagyu|truffle|caviar|drink|coffee|champagne|cheese|fries|taco)\b', re.I)
+FOOD_ONLY = FOOD_ONLY_AUDIO_CUES
 
 
 def is_food(shot):
-    return bool(FOOD_WORDS.search(' '.join(str(shot.get(k, '')) for k in ('imagePrompt', 'motionPrompt'))))
+    return is_food_text(' '.join(str(shot.get(k, '')) for k in ('imagePrompt', 'motionPrompt')))
 
 
 def planned_cues(shot):

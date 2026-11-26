@@ -9,10 +9,11 @@ Usage: scripts/prompt-lint.py drafts/generated/A.local-scenario.json [B.json ...
 --min=N prints PASS/FAIL per file and exits 1 if any film scores under N (the render gate).
 --min-prompts=N gates only on the guide-based image/motion prompt score (used by make-local-video.sh).
 """
-import json, re, sys
+import json, os, re, sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import still_lessons
+from look_profiles import default_studio_for, min_prompt_score_for
 
 NEG = re.compile(r"\b(no|not|without|never)\s+(faces?|text|logos?|people|labels?|watermarks?)\b", re.I)
 ANY_NEG = re.compile(r"(?:^|[.,;:]\s*)(?:no|not|without|never|avoid)\b", re.I)
@@ -178,9 +179,10 @@ if __name__ == '__main__':
         print(json.dumps(results, indent=2)); sys.exit()
     mins = [int(a.split('=')[1]) for a in sys.argv if a.startswith('--min=')]
     gate = mins[0] if mins else None
-    prompt_mins = [int(a.split('=')[1]) for a in sys.argv if a.startswith('--min-prompts=')]
-    prompt_gate = prompt_mins[0] if prompt_mins else None
-    for r in results:
+    prompt_mins = [a.split('=', 1)[1].strip() for a in sys.argv if a.startswith('--min-prompts=')]
+    prompt_gate_raw = prompt_mins[0] if prompt_mins else None
+    prompt_failed = False
+    for path, r in zip(args, results):
         print(f"\n== {r['file']}  overall {r['overall']}  (prompts {r['prompt_avg']}, story {r['story']})")
         for s in r['shots']:
             print(f"  shot {s['shot']}: image {s['image']}  motion {s['motion']}")
@@ -190,11 +192,19 @@ if __name__ == '__main__':
             print(f"  story: {n}")
         if gate is not None:
             print(f"  GATE {'PASS' if r['overall'] >= gate else 'FAIL'}: {r['overall']} vs minimum {gate}" + ('' if r['overall'] >= gate else ' -> fix the lines above, then rerun'))
-        if prompt_gate is not None:
+        if prompt_gate_raw is not None:
+            scenario_data = json.loads(Path(path).read_text(encoding='utf-8-sig'))
+            if prompt_gate_raw.lower() == 'auto':
+                prompt_gate = min_prompt_score_for(scenario_data, env_override='auto', look=os.environ.get('SHORTS_LOOK'))
+            else:
+                prompt_gate = int(prompt_gate_raw)
+            studio = default_studio_for(scenario_data, look=os.environ.get('SHORTS_LOOK')) or 'luxury-kitchen'
             ok = r['prompt_avg'] >= prompt_gate
+            if not ok:
+                prompt_failed = True
             print(f"  PROMPT GATE {'PASS' if ok else 'FAIL'}: {r['prompt_avg']} vs minimum {prompt_gate}" +
-                  ('' if ok else ' -> run scripts/refine-prompts.py SCENARIO --studio luxury-kitchen --in-place, then fix what is left'))
+                  ('' if ok else f' -> run scripts/refine-prompts.py SCENARIO --studio {studio} --in-place, then fix what is left'))
     if gate is not None and any(r['overall'] < gate for r in results):
         sys.exit(1)
-    if prompt_gate is not None and any(r['prompt_avg'] < prompt_gate for r in results):
+    if prompt_failed:
         sys.exit(1)

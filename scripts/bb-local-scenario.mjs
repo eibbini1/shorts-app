@@ -114,5 +114,5 @@ const { total } = verifyScenario(plan, settings);
 const directory = 'drafts/generated';
 await mkdir(directory, { recursive: true });
 const file = path.join(directory, id + '.local-scenario.json');
-await writeFile(file, JSON.stringify({ status: 'review-required', settings, channel: profile, model, selectedTrend: trend, reviewedShotExamplesUsed: reviewedShotExamples.length, durationAdjustedFromSeconds: originalTotal !== total ? originalTotal : null, totalSeconds: total, catalogTitlesChecked: catalog.length, plan }, null, 2) + '\n', { flag: 'wx' });
+await writeFile(file, JSON.stringify({ schemaVersion: 1, status: 'review-required', settings, channel: profile, model, selectedTrend: trend, reviewedShotExamplesUsed: reviewedShotExamples.length, durationAdjustedFromSeconds: originalTotal !== total ? originalTotal : null, totalSeconds: total, catalogTitlesChecked: catalog.length, plan }, null, 2) + '\n', { flag: 'wx' });
 console.log('Saved review draft: ' + file);

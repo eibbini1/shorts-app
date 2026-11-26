@@ -22,21 +22,18 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from audio_standards import PREREVIEW_MAX_TP_DB, PREREVIEW_TOLERANCE_LUFS, TARGET_LUFS  # noqa: E402
 import look_drift  # noqa: E402
+from look_profiles import FOOD_RE, continuity_question_for, get_look_profile, is_food_scenario  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 CATEGORIES = ('continuity', 'realism', 'story', 'audio', 'payoff')
 LUFS_TOLERANCE, MAX_TRUE_PEAK = PREREVIEW_TOLERANCE_LUFS, PREREVIEW_MAX_TP_DB
 QUIET_SHOT_GAP_DB = 12.0
-CONTINUITY_QUESTION = ('The left half and the right half are two moments from one cooking video. '
-                       'Do both halves show the same kind of food with the same kind of topping?')
-SUBJECT_QUESTION = ('The left half and the right half are two moments from one short film. '
-                    'Do both halves show the same main character or object, looking the same?')
-FOOD_RE = re.compile(r'\b(food|dish|plate|bowl|meal|cook\w*|chef|kitchen|steak|burger|kebab|sushi|pasta|pizza|cake|dessert|sauce|soup|salad|egg|bread|wagyu|truffle|caviar|cheese|fries|taco)\b', re.I)
+CONTINUITY_QUESTION = get_look_profile('food')['continuityQuestion']
+SUBJECT_QUESTION = get_look_profile('custom')['continuityQuestion']
 
 
 def is_food_film(scenario):
-    text = ' '.join(str(shot.get('imagePrompt', '')) for shot in scenario['plan']['shots']) + ' ' + str(scenario.get('topic', ''))
-    return bool(FOOD_RE.search(text))
+    return is_food_scenario(scenario)
 
 
 def ending_question(scenario):
@@ -309,7 +306,7 @@ def main():
         payoff = ask(vision, ends[-1], [expected_ending], cache) if expected_ending else None
         if len(windows) > 1:
             continuity = ask(vision, side_by_side(starts[0], ends[-1], work / 'food.png'),
-                             [CONTINUITY_QUESTION if is_food_film(scenario) else SUBJECT_QUESTION], cache)
+                             [continuity_question_for(scenario)], cache)
     utensil_motion = check_utensil_motion(video, windows, scenario['plan']['shots'], work, vision, cache)
     flags, unchecked = categorize(shot_results, payoff, continuity, audio)
     if sheet is None:

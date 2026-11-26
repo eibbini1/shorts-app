@@ -19,6 +19,7 @@ import { body, boundedJsonBody, exportArtifacts, json, runReadinessCheck, serveF
 import { createStudioManifests } from './studio-manifests.mjs';
 import { createStudioLedger } from './studio-ledger.mjs';
 import { createOrphanRecovery } from './studio-orphan-recovery.mjs';
+import { STUDIO_LOOKS, chainByDefaultForLook, isValidLook, minPromptScoreForLook, resolveLookId } from './look-profiles.mjs';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -315,7 +316,12 @@ function start(kind, args, extra = {}) {
     ...(extra.learningEvidence ? { SHORTS_STUDIO_LEARNING_EVIDENCE: JSON.stringify(extra.learningEvidence) } : {}),
     ...(kind === 'draft' ? { SHORTS_STUDIO_UNATTENDED: x.options?.unattended === true ? '1' : '0' } : {}),
     SHORTS_RENDER_QUALITY: x.options?.quality === 'high' ? 'high' : 'standard', // opt-in 704x1280 (scripts/render_quality.py); standard stays the fast default
-    ...(x.options && x.options.look && x.options.look !== 'food' ? { SHORTS_MIN_PROMPT_SCORE: '0' } : {}) } });
+    ...(x.options?.look && isValidLook(x.options.look) ? { SHORTS_LOOK: x.options.look } : {}),
+    ...(x.options?.look && minPromptScoreForLook(x.options.look) === 0
+      ? { SHORTS_MIN_PROMPT_SCORE: '0' }
+      : (process.env.SHORTS_MIN_PROMPT_SCORE === undefined && x.options?.look
+        ? { SHORTS_MIN_PROMPT_SCORE: String(minPromptScoreForLook(x.options.look)) }
+        : {})) } });
   x.proc = proc; // not serialised: snap() copies named fields only
   const spawnCmd = extra.cmd ? extra.cmd[0] : 'bash';
   const spawnArgs = extra.cmd ? [...extra.cmd.slice(1), ...args] : ['scripts/make-local-video.sh', ...args];
@@ -511,12 +517,6 @@ function start(kind, args, extra = {}) {
   return x;
 }
 
-const STUDIO_LOOKS = {
-  food: { style: 'luxury cinematic food film', set: 'dark luxury kitchen' },
-  cartoon: { style: 'hand-drawn 2D cartoon animation, bold outlines, flat vibrant colors, expressive characters', set: 'a colourful storybook world that fits the story' },
-  night: { style: 'hand-drawn 2D cartoon animation at night, deep navy blue sky and shadows with warm creamy ivory highlights, glowing cream lights, limited navy and cream palette, bold outlines', set: 'a moonlit navy-blue night scene with cream-coloured lights' },
-  custom: { style: 'cinematic short film matching the idea', set: 'a setting that fits the idea' },
-};
 let queueDrainTimer = null;
 function scheduleNextUnattendedFromQueue() {
   const snapshot = unattendedQueue.read();
@@ -529,7 +529,7 @@ function scheduleNextUnattendedFromQueue() {
     if (!nextItem) return;
     emit();
     const ownerUser = { name: 'owner', role: 'owner' };
-    const look = STUDIO_LOOKS[nextItem.look] ? nextItem.look : 'food';
+    const look = resolveLookId(nextItem.look);
     const learningEvidence = buildLearningContext(readLedger(), { user: ownerUser, look });
     let resolved = null;
     if (!localIdeaBusy && !ideaRefiner.active) {
@@ -557,6 +557,7 @@ function scheduleNextUnattendedFromQueue() {
     if (!parts.length) parts.push(storyPrompt);
     const answers = {
       topic: storyPrompt,
+      look,
       style: STUDIO_LOOKS[look].style,
       set: nextItem.setting || STUDIO_LOOKS[look].set,
       hook: String(resolved?.hook || parts[0]).trim().slice(0, 300),
@@ -575,7 +576,7 @@ function scheduleNextUnattendedFromQueue() {
       seconds: answers.seconds, orientation: answers.orientation, audio: answers.audio, ending: answers.ending,
       continuityAnchor: nextItem.continuityAnchor, originalPrompt: nextItem.prompt, storyPrompt,
       brief: answers, ideaModel: resolved?.model || null, learningGuidanceCount: learningEvidence.guidanceCount,
-      allowRepeat: false, chain: look !== 'food' || nextItem.continuityAnchor === 'previous-end', unattended: true,
+      allowRepeat: false, chain: chainByDefaultForLook(look) || nextItem.continuityAnchor === 'previous-end', unattended: true,
     };
     start('draft', ['--answers', path.relative(ROOT, answerFile)], {
       cmd: ['python3', 'scripts/studio-draft.py'], user: 'owner', prompt: nextItem.prompt,
@@ -638,7 +639,7 @@ http.createServer(async (req, res) => {
   }
   if (url.pathname === '/api/idea' && req.method === 'POST') {
     const input = await body(req);
-    if (!['food', 'cartoon', 'night', 'custom'].includes(input.look)) return json(res, 400, { error: 'Choose a film look.' });
+    if (!isValidLook(input.look)) return json(res, 400, { error: 'Choose a film look.' });
     const seconds = Math.min(isOwner ? 60 : CREATOR_MAX_SECONDS, Math.max(10, Number(input.seconds) || 10));
     const history = readLedger().filter((item) => item.type === 'idea' && item.user === me.name && item.look === input.look).slice(-16).map((item) => item.prompt);
     const projects = [...sessions.values()].filter((item) => canSee(me, item) && item.options?.look === input.look).slice(-8).map((item) => item.prompt);
@@ -736,7 +737,7 @@ http.createServer(async (req, res) => {
     if (why) return json(res, 409, { error: why });
     if (!isOwner && !retrySession && today(me, 'draft') >= CREATOR_DAILY_DRAFTS) return json(res, 429, { error: `That is today's limit of ${CREATOR_DAILY_DRAFTS} new ideas. Try again tomorrow.` });
     let prompt = submittedPrompt;
-    const look = retrySession?.options?.look || (['food', 'cartoon', 'night', 'custom'].includes(b.look) ? b.look : 'food');
+    const look = retrySession?.options?.look || resolveLookId(b.look);
     const learningEvidence = buildLearningContext(readLedger(), { user: me, look });
     if (b.unattended && !isOwner) return json(res, 403, { error: 'Only the owner can run unattended.' });
     let refined = null;
@@ -756,7 +757,7 @@ http.createServer(async (req, res) => {
     const parts = prompt.split(/\s*(?:,\s*(?:and\s+)?then|\bthen\b|[,;.])\s*/i).map((x) => x.trim()).filter((x) => x.length > 3);
     if (!parts.length) parts.push(prompt);
     const setting = retrySession?.options?.setting || String(b.setting || '').trim().slice(0, 200);
-    let answers = retryBrief || { topic: prompt, style: STUDIO_LOOKS[look].style, set: setting || STUDIO_LOOKS[look].set,
+    let answers = retryBrief || { topic: prompt, look, style: STUDIO_LOOKS[look].style, set: setting || STUDIO_LOOKS[look].set,
       hook: String(refined?.hook || b.hook || parts[0]).trim().slice(0, 300),
       mustShow: String(refined?.mustShow || b.mustShow || originalPrompt).trim().slice(0, 600),
       obstacle: String(refined?.obstacle || b.obstacle || '').trim().slice(0, 300),
@@ -776,6 +777,7 @@ http.createServer(async (req, res) => {
       }
       answers = {
         ...retryBrief,
+        look: retryBrief.look || look,
         topic: originalPrompt,
         hook: b.hook.trim(),
         mustShow: b.mustShow.trim(),
@@ -790,7 +792,7 @@ http.createServer(async (req, res) => {
     const f = path.join(ROOT, 'storage', `studio-answers-${Date.now()}-${crypto.randomUUID()}.json`);
     fs.writeFileSync(f, JSON.stringify(answers, null, 1));
     const options = { ...(retrySession?.options || {}), look, setting, quality: b.quality === 'high' || (b.quality === undefined && retrySession?.options?.quality === 'high') ? 'high' : 'standard', seconds: answers.seconds, orientation: answers.orientation, audio: answers.audio, ending: answers.ending,
-      continuityAnchor: retrySession?.options?.continuityAnchor || (b.continuityAnchor === 'previous-end' ? 'previous-end' : 'identity'), originalPrompt, storyPrompt: repairing ? prompt : retrySession?.options?.storyPrompt || prompt, brief: answers, ...(repairing ? { repairGuidance: b.repairGuidance.trim() } : {}), ideaModel: retrySession?.options?.ideaModel || refined?.model || null, learningGuidanceCount: learningEvidence.guidanceCount, allowRepeat: retrySession ? Boolean(retrySession.options?.allowRepeat) : Boolean(b.allowRepeat), chain: retrySession ? Boolean(retrySession.options?.chain) : (look !== 'food' || b.continuityAnchor === 'previous-end'), unattended: !repairing && isOwner && b.unattended === true };
+      continuityAnchor: retrySession?.options?.continuityAnchor || (b.continuityAnchor === 'previous-end' ? 'previous-end' : 'identity'), originalPrompt, storyPrompt: repairing ? prompt : retrySession?.options?.storyPrompt || prompt, brief: answers, ...(repairing ? { repairGuidance: b.repairGuidance.trim() } : {}), ideaModel: retrySession?.options?.ideaModel || refined?.model || null, learningGuidanceCount: learningEvidence.guidanceCount, allowRepeat: retrySession ? Boolean(retrySession.options?.allowRepeat) : Boolean(b.allowRepeat), chain: retrySession ? Boolean(retrySession.options?.chain) : (chainByDefaultForLook(look) || b.continuityAnchor === 'previous-end'), unattended: !repairing && isOwner && b.unattended === true };
     const x = start('draft', ['--answers', path.relative(ROOT, f), ...(options.allowRepeat ? ['--allow-repeat'] : [])], {
       cmd: ['python3', 'scripts/studio-draft.py'], user: me.name, prompt: originalPrompt, learningEvidence,
       unattended: !repairing && isOwner && b.unattended === true, options, requestId,

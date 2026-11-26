@@ -89,6 +89,14 @@ class SfxLibraryTest(unittest.TestCase):
         found = [line for line in lib.problems(data) if 'file missing' not in line and 'file changed' not in line]
         self.assertEqual(found, [])
 
+    def test_validate_blocks_file_paths_escaping_root(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / 'repo'
+            root.mkdir()
+            data = {'entries': [self.entry('escape', file='../outside.wav')]}
+            found = lib.problems(data, root)
+        self.assertTrue(any('file path escapes root' in line for line in found))
+
 
 if __name__ == '__main__':
     unittest.main()

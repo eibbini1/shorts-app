@@ -3,18 +3,17 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { compare, fingerprint } from './variation.js';
 import { atomicJson } from '../automation/spec.js';
+import { validateScenarioV1, type ScenarioV1 } from '../media/video/ScenarioV1.js';
 
-interface Scenario {
-  status: string;
-  settings?: { brand?: string };
-  plan: { title: string; hook: string; payoff: string; shots: { narration: string; seconds: number }[]; claimsToCheck: string[] };
-}
 const file = process.argv[2];
 if (!file) throw new Error('Usage: npm run scenario:review -- drafts/generated/ID.local-scenario.json');
 const text = await readFile(file, 'utf8');
-const draft = JSON.parse(text.replace(/^\uFEFF/, '')) as Scenario;
-if (!draft.plan?.shots?.length || !Array.isArray(draft.plan.claimsToCheck)) throw new Error('A complete local scenario is required');
-const brand = draft.settings?.brand ?? 'Billionaire Bites';
+const parsedDraft = validateScenarioV1(JSON.parse(text.replace(/^\uFEFF/, '')));
+if (!parsedDraft.ok) {
+  throw new Error(`A complete Scenario v1 local scenario is required: ${parsedDraft.issues.join('; ')}`);
+}
+const draft: ScenarioV1 = parsedDraft.scenario;
+const brand = draft.settings.brand ?? 'Billionaire Bites';
 const current = fingerprint(draft.plan.shots.map(shot => shot.narration));
 const repetitions: { file: string; issues: string[] }[] = [];
 const unreadable: string[] = [];
@@ -22,11 +21,13 @@ for (const name of await readdir(path.dirname(file))) {
   if (!name.endsWith('.local-scenario.json')) continue;
   const otherFile = path.join(path.dirname(file), name);
   if (path.resolve(otherFile) === path.resolve(file)) continue;
-  let other: Scenario;
-  try { other = JSON.parse((await readFile(otherFile, 'utf8')).replace(/^\uFEFF/, '')) as Scenario; }
-  catch { unreadable.push(name); continue; }
-  if ((other.settings?.brand ?? 'Billionaire Bites') !== brand) continue;
-  if (!other.plan?.shots?.length) { unreadable.push(name); continue; }
+  let other: ScenarioV1;
+  try {
+    const parsedOther = validateScenarioV1(JSON.parse((await readFile(otherFile, 'utf8')).replace(/^\uFEFF/, '')));
+    if (!parsedOther.ok) { unreadable.push(name); continue; }
+    other = parsedOther.scenario;
+  } catch { unreadable.push(name); continue; }
+  if ((other.settings.brand ?? 'Billionaire Bites') !== brand) continue;
   const issues = compare(current, fingerprint(other.plan.shots.map(shot => shot.narration)));
   if (other.plan.title.trim().toLowerCase() === draft.plan.title.trim().toLowerCase()) issues.push('identical title');
   if (issues.length) repetitions.push({ file: name, issues });
