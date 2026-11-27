@@ -33,7 +33,8 @@ HARD_REAL = [
     'too few distinct shots; motion would repeat or stretch',
     'visible price is not sourced',
     'scenario schema validation failed: bad json',
-    'unattended review required: story model repaired fields automatically',
+    'unattended review required: shot 2 omits the named setting',
+    'shot 1: ASMR sound line needs a supported Foley cue that fits this scene',
     'a brand new gate message nobody classified',
 ]
 
