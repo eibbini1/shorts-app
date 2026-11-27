@@ -30,7 +30,7 @@ export function draftTimeoutMs(seconds, configured = '') {
   const override = Number(configured);
   if (String(configured).trim() && Number.isFinite(override) && override > 0) return override;
   const duration = Number(seconds);
-  return Math.max(1200000, (Number.isFinite(duration) && duration > 0 ? duration : 30) * 90000);
+  return Math.max(480000, (Number.isFinite(duration) && duration > 0 ? duration : 30) * 16000);
 }
 
 export function draftIdleTimeoutMs(seconds, configured = '') {

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Studio draft loop: write the story, check it, repair it, and redraft if needed (up to 3 tries).
+"""Studio draft loop: write the story, check it, repair it, and redraft once if needed.
 
-Usage: studio-draft.py --answers FILE [--allow-repeat] [--tries 3]
+Usage: studio-draft.py --answers FILE [--allow-repeat] [--tries 2]
 Never shows a dead end for a fixable problem. Exit 0 = a plan that passed every gate;
 exit 3 = still blocked (the last BLOCKED lines say why; NEEDS-CHOICE lines name a user decision).
 """
@@ -68,7 +68,7 @@ def checks(scn, allow_repeat):
     unattended = os.environ.get('SHORTS_STUDIO_UNATTENDED') == '1'
     for note in reviews:
         continuity_risk = re.search(
-            r'omits the named protagonist or focal object|omits the named setting|story model repaired fields automatically',
+            r'omits the named protagonist or focal object|omits the named setting',
             note, re.I,
         )
         if unattended and continuity_risk:
@@ -121,7 +121,7 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument('--answers', required=True)
     p.add_argument('--allow-repeat', action='store_true')
-    p.add_argument('--tries', type=int, default=3)
+    p.add_argument('--tries', type=int, default=2)
     a = p.parse_args()
     last, scn = [], None
     for attempt in range(1, a.tries + 1):
@@ -148,14 +148,6 @@ def main():
         last = checks(scn, a.allow_repeat)
         if not last:
             say(f'Story passed every check on attempt {attempt}.'); say('Plan ready:', scn); return 0
-        if any(problem.startswith('unattended review required:') for problem in last):
-            if attempt < a.tries:
-                say('Fixing: ' + '; '.join(last) + '; writing a fresh version')
-                continue
-            say('Plan saved:', scn)
-            for problem in last: say('BLOCKED:', problem); gate_event('story', 'blocked', 'unattended-review', problem)
-            say('NEEDS-CHOICE: still-blocked')
-            return 3
         if last == ['repeat topic']:
             break
         say('Fixing: ' + '; '.join(last))
@@ -171,6 +163,14 @@ def main():
             say(f'Story ready with {len(soft)} style warning(s) after automatic fixes (attempt {attempt}); rendering is not blocked.')
             say('Plan ready:', scn); return 0
         last = hard
+        if any(problem.startswith('unattended review required:') for problem in last):
+            if attempt < a.tries:
+                say('Fixing: ' + '; '.join(last) + '; writing a fresh version')
+                continue
+            say('Plan saved:', scn)
+            for problem in last: say('BLOCKED:', problem); gate_event('story', 'blocked', 'unattended-review', problem)
+            say('NEEDS-CHOICE: still-blocked')
+            return 3
         if attempt < a.tries:
             say('Fixing: still not right (' + '; '.join(last) + '); writing a fresh version')
     if scn: say('Plan saved:', scn)

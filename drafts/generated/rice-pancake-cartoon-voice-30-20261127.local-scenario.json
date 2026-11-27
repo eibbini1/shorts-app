@@ -1,0 +1,177 @@
+{
+  "schemaVersion": 1,
+  "status": "review-required",
+  "settings": {
+    "brand": "Local Studio",
+    "format": "short",
+    "seconds": 30,
+    "look": "custom",
+    "presentationMode": "voiced"
+  },
+  "model": "manual-gate-repair",
+  "promptPackVersion": "2026-11-15",
+  "creativeBrief": {
+    "set": "One cozy home kitchen, black skillet, cream ceramic bowl, and warm morning light.",
+    "hookImage": "A fork mixes leftover rice, egg, and scallions before they become golden pancakes.",
+    "mustShow": "Mix one cup cooked rice with egg, scallions, and salt; press thin patties, pan-fry until golden, flip once, reveal a tender center, and serve warm.",
+    "obstacle": "Loose rice grains can crumble instead of forming a pancake.",
+    "turn": "Egg binds the rice; thin patties and patient browning create a crisp crust.",
+    "audio": "voiced"
+  },
+  "creativeSignature": {
+    "format": "single-recipe-food-story",
+    "set": "One cozy home kitchen, black skillet, cream ceramic bowl, and warm morning light.",
+    "hookPattern": "action-first-curiosity"
+  },
+  "topic": "Crispy rice pancakes made from leftover rice, egg, and scallions.",
+  "style": "Whimsical polished 3D cartoon food animation, cozy warm lighting, tactile ingredients, and crisp macro close-ups.",
+  "requestedEnding": "A warm stack of golden rice pancakes is served with crisp edges and a fluffy rice center.",
+  "requestedEndingOriginal": "A warm stack of golden rice pancakes is served with crisp edges and a fluffy rice center.",
+  "totalSeconds": 30,
+  "storyArc": {
+    "protagonist": "Crispy rice pancakes made from leftover cooked rice, egg, and scallions.",
+    "setting": "One cozy home kitchen with a black skillet, cream ceramic bowl, and warm morning light.",
+    "goal": "Turn leftover rice into golden pancakes with crisp edges and a tender center.",
+    "obstacle": "Loose rice grains can crumble instead of forming a pancake.",
+    "turn": "Egg binds the rice; thin patties and patient browning create a crisp crust.",
+    "visualBible": "Use the same cream ceramic bowl, black skillet, plate, and warm kitchen throughout. Keep the rice, egg, and chopped scallions visually consistent. Show whimsical polished 3D cartoon food animation with appetizing tactile ingredients, warm morning light, and crisp macro close-ups.",
+    "beats": [
+      { "number": 1, "label": "Hook and mix", "seconds": 5 },
+      { "number": 2, "label": "Shape", "seconds": 5 },
+      { "number": 3, "label": "Sizzle", "seconds": 5 },
+      { "number": 4, "label": "Flip", "seconds": 5 },
+      { "number": 5, "label": "Texture reveal", "seconds": 5 },
+      { "number": 6, "label": "Serve", "seconds": 5 }
+    ]
+  },
+  "qualityChecks": {
+    "exactTiming": true,
+    "uniquePromptText": true,
+    "narrationFits": true,
+    "endingLockedFromUser": true,
+    "hookActionCoverage": "manually-checked",
+    "requiredActionCoverage": "manually-checked",
+    "requiredActionInsertions": 0,
+    "preflightPromptFixes": [],
+    "rewrites": 0,
+    "fieldsNeedingRepair": 0,
+    "reviewedShotExamplesUsed": 0
+  },
+  "plan": {
+    "ideas": [
+      { "title": "The Golden Rice Flip", "angle": "Turn leftover rice into thin pancakes with a crisp crust and soft middle." },
+      { "title": "Crisp Edges, Tender Center", "angle": "A close-up texture story from mixing bowl to skillet." },
+      { "title": "One Egg, One Skillet", "angle": "A simple leftover-rice transformation with a clean golden flip." },
+      { "title": "Scallion Rice Pancakes", "angle": "A fast, savory pancake built from cooked rice and fresh scallions." },
+      { "title": "The Leftover Rice Makeover", "angle": "A cozy cartoon cooking short that makes yesterday's rice irresistible." }
+    ],
+    "title": "Rice Pancakes: The Golden Flip",
+    "hook": "Can yesterday's leftover rice turn into a golden, crispy pancake?",
+    "payoff": "A warm stack of golden rice pancakes is served with crisp edges and a fluffy rice center.",
+    "claimsToCheck": [],
+    "shots": [
+      {
+        "seconds": 5,
+        "narration": "Can yesterday's leftover rice turn into a golden, crispy pancake?",
+        "imagePrompt": "A fork folds egg through a bowl of leftover rice as scallions tumble in. Whimsical polished 3D cartoon food animation, cream ceramic bowl, black skillet warming nearby, warm morning light, and tactile rice grains.",
+        "motionPrompt": "A fork mixes one egg and chopped scallions through one cup of cooked rice until the grains cling together. Keep the cream bowl and warming black skillet in the same kitchen.",
+        "sound": "Soft fork scrape and a gentle rustle of rice grains.",
+        "sceneState": {
+          "before": "One cup of cooked rice, one egg, chopped scallions, and salt sit beside a cream bowl and black skillet in a warm kitchen.",
+          "action": "A fork folds egg, scallions, and salt through the cooked rice until the grains bind.",
+          "after": "Egg and scallions coat the cooked rice in the cream bowl; the black skillet warms nearby."
+        },
+        "visualChecks": {
+          "mustShow": ["Cooked rice, egg, and chopped scallions", "Cream ceramic bowl", "Black skillet nearby"],
+          "mustNotShow": ["Unlisted ingredients", "Text, captions, or logos"],
+          "questions": ["Does the first shot show a clear cooking action?", "Is the cartoon food texture appetizing and readable?"]
+        }
+      },
+      {
+        "seconds": 5,
+        "narration": "Press two thin patties, keeping their edges thin for crispness.",
+        "imagePrompt": "Two small round rice patties take shape on a cream plate beside the warm black skillet. Whimsical polished 3D cartoon food animation, visible scallion flecks, warm morning light, and soft kitchen shadows.",
+        "motionPrompt": "Hands press the sticky rice mixture into two thin, even patties on the cream plate, keeping the edges neat and compact.",
+        "sound": "Soft patting against the plate and a light grain rustle.",
+        "sceneState": {
+          "before": "Egg and scallions coat the cooked rice in the cream bowl; the black skillet warms nearby.",
+          "action": "Hands press the bound rice mixture into two thin, even patties.",
+          "after": "Two thin raw rice patties rest on the cream plate beside the warming black skillet."
+        },
+        "visualChecks": {
+          "mustShow": ["Two thin rice patties", "Scallion flecks in the rice", "Same cream plate and black skillet"],
+          "mustNotShow": ["Extra patties", "Cheese, sauce, or other unlisted ingredients"],
+          "questions": ["Are the patties thin enough to brown evenly?", "Does this continue directly from the mixed rice?"]
+        }
+      },
+      {
+        "seconds": 5,
+        "narration": "Pan-fry in a little oil; wait as the bottoms turn golden.",
+        "imagePrompt": "The two rice patties sizzle in a thin sheen of oil inside the black skillet. Whimsical polished 3D cartoon food animation, small bubbles at the edges, warm highlights, and close-up rice texture.",
+        "motionPrompt": "A spatula lowers both rice patties into a lightly oiled black skillet; the edges sizzle while their tops remain pale.",
+        "sound": "A gentle skillet sizzle with a few oil pops.",
+        "sceneState": {
+          "before": "Two thin raw rice patties rest on the cream plate beside the warming black skillet.",
+          "action": "A spatula lowers both patties into a lightly oiled skillet to fry.",
+          "after": "Two rice patties fry in the skillet; their bottoms begin turning gold while their tops remain pale."
+        },
+        "visualChecks": {
+          "mustShow": ["Two patties in the black skillet", "Light oil and sizzling edges", "Pale upper sides"],
+          "mustNotShow": ["Deep-frying", "Burnt or smoking food"],
+          "questions": ["Does the pan action look gentle and controlled?", "Are the patties still the same size and shape?"]
+        }
+      },
+      {
+        "seconds": 5,
+        "narration": "Listen for the sizzle; flip once when the bottoms turn golden.",
+        "imagePrompt": "A spatula turns one rice patty to reveal its crisp golden underside in the black skillet. Whimsical polished 3D cartoon food animation, warm highlights, scallion flecks, and appetizing crisp edges.",
+        "motionPrompt": "A spatula lifts each patty and turns it over once, revealing an even golden crust; the uncooked sides settle back into the skillet.",
+        "sound": "A crisp skillet sizzle and a soft spatula tap.",
+        "sceneState": {
+          "before": "Two rice patties fry in the skillet; their bottoms begin turning gold while their tops remain pale.",
+          "action": "A spatula flips both patties once to reveal their golden, crisp bottoms.",
+          "after": "Both patties have crisp golden bottoms and continue cooking on their opposite sides in the skillet."
+        },
+        "visualChecks": {
+          "mustShow": ["Golden underside on the flipped patties", "Same black skillet", "Scallion flecks"],
+          "mustNotShow": ["Patties breaking apart", "Blackened or burnt crust"],
+          "questions": ["Is the flip a single clear action?", "Does the crust look crisp but not burnt?"]
+        }
+      },
+      {
+        "seconds": 5,
+        "narration": "The crust turns crisp and golden, while the middle stays tender.",
+        "imagePrompt": "One hot rice pancake opens to reveal a fluffy rice center inside its crisp golden crust. Whimsical polished 3D cartoon food animation, visible scallion flecks, gentle steam, and a tight texture close-up.",
+        "motionPrompt": "A cooked pancake is lifted from the skillet and gently split once; crisp crumbs fall as the tender rice center steams.",
+        "sound": "A delicate crust crackle and a soft steam release.",
+        "sceneState": {
+          "before": "Both patties have crisp golden bottoms and continue cooking on their opposite sides in the skillet.",
+          "action": "One cooked pancake is lifted and gently split to reveal its tender rice center.",
+          "after": "A broken pancake shows a crisp golden crust and fluffy rice center; the second patty remains whole."
+        },
+        "visualChecks": {
+          "mustShow": ["Crisp golden crust", "Fluffy rice center", "Gentle steam"],
+          "mustNotShow": ["Raw center", "Burnt crust", "New ingredients"],
+          "questions": ["Is the inside visibly cooked and tender?", "Does the crust contrast clearly with the middle?"]
+        }
+      },
+      {
+        "seconds": 5,
+        "narration": "Stack them warm, scatter scallions, and show that tender center.",
+        "imagePrompt": "A warm stack of golden rice pancakes sits on a cream plate, with one split open to show its fluffy center. Whimsical polished 3D cartoon food animation, fresh scallion garnish, warm morning light, and appetizing macro detail.",
+        "motionPrompt": "The warm pancakes stack on the cream plate; a few scallions fall over the top as the split pancake turns toward camera, showing its tender center.",
+        "sound": "A soft plate set-down, fresh scallion sprinkle, and gentle crisp crackle.",
+        "sceneState": {
+          "before": "A broken pancake shows a crisp golden crust and fluffy rice center; the second patty remains whole.",
+          "action": "The pancakes stack on a cream plate and receive a light scattering of scallions.",
+          "after": "A warm stack of golden rice pancakes is served with crisp edges and a fluffy rice center."
+        },
+        "visualChecks": {
+          "mustShow": ["Warm stack of golden rice pancakes", "Scallion garnish", "Split pancake showing fluffy center"],
+          "mustNotShow": ["Additional sauces or toppings", "Packaging, text, or logos"],
+          "questions": ["Does the final plate match the promised payoff?", "Are the crisp edges and fluffy center both visible?"]
+        }
+      }
+    ]
+  }
+}

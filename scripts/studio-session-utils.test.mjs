@@ -18,10 +18,11 @@ test('session IDs remain unique when multiple jobs start in one millisecond', ()
 });
 
 test('draft watchdog scales with video length and ignores invalid overrides', () => {
-  assert.equal(draftTimeoutMs(10), 1200000);
-  assert.equal(draftTimeoutMs(60), 5400000);
+  assert.equal(draftTimeoutMs(10), 480000);
+  assert.equal(draftTimeoutMs(30), 480000);
+  assert.equal(draftTimeoutMs(60), 960000);
   assert.equal(draftTimeoutMs(60, '12000'), 12000);
-  assert.equal(draftTimeoutMs(60, 'invalid'), 5400000);
+  assert.equal(draftTimeoutMs(60, 'invalid'), 960000);
   assert.equal(draftIdleTimeoutMs(10), 900000);
   assert.equal(draftIdleTimeoutMs(60), 900000);
   assert.equal(draftIdleTimeoutMs(120, 'invalid'), 1800000);
